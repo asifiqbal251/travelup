@@ -1,0 +1,152 @@
+{
+  "name": "Destination",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Destination or route name"
+    },
+    "country": {
+      "type": "string"
+    },
+    "region": {
+      "type": "string"
+    },
+    "image_url": {
+      "type": "string"
+    },
+    "intro": {
+      "type": "string"
+    },
+    "strong_months": {
+      "type": "array",
+      "items": {
+        "type": "integer"
+      }
+    },
+    "shoulder_months": {
+      "type": "array",
+      "items": {
+        "type": "integer"
+      }
+    },
+    "min_days": {
+      "type": "integer"
+    },
+    "max_days": {
+      "type": "integer"
+    },
+    "budget_categories": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "interest_tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "climate_tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "pace_tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "activity_levels": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "traveller_types": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "dietary_notes": {
+      "type": "string"
+    },
+    "top_experiences": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "seasonal_packing": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "day_templates": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "morning": {
+            "type": "string"
+          },
+          "afternoon": {
+            "type": "string"
+          },
+          "evening": {
+            "type": "string"
+          },
+          "food_note": {
+            "type": "string"
+          },
+          "interests": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "intensity": {
+            "type": "string"
+          },
+          "flexible": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "best_for_summary": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "name",
+    "country",
+    "region"
+  ],
+  "rls": {
+    "read": {},
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}
