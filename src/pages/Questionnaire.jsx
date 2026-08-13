@@ -13,7 +13,7 @@ import {
   MONTHS, INTERESTS, CLIMATES, PACES, ACTIVITIES, DIETARY,
   TRAVELLER_TYPES, BUDGETS, COUNTRIES
 } from "@/lib/options";
-import { setPrefs, getPrefs } from "@/lib/storage";
+import { setPrefs, getPrefs, setSelectedDestinationId } from "@/lib/storage";
 
 const STEPS = [
   "Your travel basics",
@@ -47,8 +47,23 @@ const blank = {
 export default function Questionnaire() {
   const navigate = useNavigate();
   const [step, setStep] = useState(0);
-  const [form, setForm] = useState(() => getPrefs() || { ...blank });
+  const [form, setForm] = useState(() => {
+    const p = getPrefs();
+    if (!p) return { ...blank };
+    return {
+      ...blank,
+      ...p,
+      visitedCountries: Array.isArray(p.visitedCountries)
+        ? p.visitedCountries.join(", ")
+        : p.visitedCountries || "",
+      excludedDestinations: Array.isArray(p.excludedDestinations)
+        ? p.excludedDestinations.join(", ")
+        : p.excludedDestinations || ""
+    };
+  });
   const [errors, setErrors] = useState({});
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
 
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
 
@@ -90,19 +105,32 @@ export default function Questionnaire() {
   const back = () => setStep((s) => Math.max(s - 1, 0));
 
   const submit = () => {
-    const prefs = {
-      ...form,
-      departureCity: form.departureCity.trim(),
-      dietary: form.dietary === "Other" ? form.dietaryOther.trim() || "Other" : form.dietary,
-      visitedCountries: form.visitedCountries
-        ? form.visitedCountries.split(",").map((s) => s.trim()).filter(Boolean)
-        : [],
-      excludedDestinations: form.excludedDestinations
-        ? form.excludedDestinations.split(",").map((s) => s.trim()).filter(Boolean)
-        : []
-    };
-    setPrefs(prefs);
-    navigate("/results");
+    setSubmitError("");
+    if (submitting) return;
+    if (!validate()) return;
+    setSubmitting(true);
+    try {
+      const toArray = (v) =>
+        Array.isArray(v)
+          ? v.map((s) => String(s).trim()).filter(Boolean)
+          : v
+          ? String(v).split(",").map((s) => s.trim()).filter(Boolean)
+          : [];
+      const prefs = {
+        ...form,
+        departureCity: form.departureCity.trim(),
+        dietary: form.dietary === "Other" ? (form.dietaryOther || "").trim() || "Other" : form.dietary,
+        visitedCountries: toArray(form.visitedCountries),
+        excludedDestinations: toArray(form.excludedDestinations)
+      };
+      setPrefs(prefs);
+      setSelectedDestinationId(null);
+      navigate("/results");
+    } catch (e) {
+      setSubmitError("Something went wrong saving your answers. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const toggleInterest = (i) =>
@@ -256,6 +284,7 @@ export default function Questionnaire() {
               <ReviewRow label="Visited" value={form.visitedCountries || "None"} />
               <ReviewRow label="Excluded" value={form.excludedDestinations || "None"} />
             </dl>
+            {submitError && <ErrorText>{submitError}</ErrorText>}
           </Step>
         )}
 
@@ -271,9 +300,10 @@ export default function Questionnaire() {
               Next <ArrowRight className="w-4 h-4 ml-2 flex-shrink-0" />
             </Button>
           ) : (
-            <Button onClick={submit}
+            <Button onClick={submit} disabled={submitting}
               className="bg-[#FF6B5B] hover:bg-[#FF6B5B]/90 text-white min-h-11 w-full sm:w-auto max-w-full whitespace-normal break-words text-center">
-              See my recommendations <ArrowRight className="w-4 h-4 ml-2 flex-shrink-0" />
+              {submitting ? "Finding recommendations…" : "See my recommendations"}
+              {!submitting && <ArrowRight className="w-4 h-4 ml-2 flex-shrink-0" />}
             </Button>
           )}
         </div>

@@ -4,6 +4,7 @@
 // length — no cycling, no repetition, no "(continued)" days. Daily intensity
 // reflects the actual authored activity, nudged by the user's pace/activity.
 import { ACTIVITY_ORDER } from "@/lib/options";
+import { applyDietToItinerary } from "@/lib/diet";
 
 const INT_ORDER = ["Light", "Moderate", "High"];
 
@@ -44,5 +45,5 @@ export function generateItinerary(dest, prefs) {
       flexible: !!t.flexible
     });
   }
-  return sequence;
+  return applyDietToItinerary(sequence, prefs.dietary);
 }
