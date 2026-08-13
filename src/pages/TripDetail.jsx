@@ -49,7 +49,7 @@ export default function TripDetail() {
   return (
     <div className="max-w-3xl mx-auto px-4 py-8">
       <Button variant="ghost" onClick={() => navigate("/results")} className="mb-4 min-h-11">
-        <ArrowLeft className="w-4 h-4 mr-2" /> Back to matches
+        <ArrowLeft className="w-4 h-4 mr-2" /> Back to recommendations
       </Button>
 
       <div className="relative h-52 sm:h-64 rounded-2xl overflow-hidden mb-6">
@@ -95,7 +95,7 @@ function ItineraryView({ itinerary }) {
   return (
     <div className="space-y-4">
       <p className="text-sm text-[#0B1F3A]/60">
-        A suggested {itinerary.length}-day plan based on your interests, pace and activity level. Adjust as you like.
+        A suggested {itinerary.length}-day plan based on your interests, pace and activity level. Use this as a starting point.
       </p>
       {itinerary.map((d) => (
         <div key={d.day} className="bg-white rounded-2xl border border-[#E6E2D8] shadow-sm p-5">

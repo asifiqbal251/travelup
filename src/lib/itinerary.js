@@ -1,96 +1,48 @@
 // Deterministic itinerary generation from curated destination day templates.
+// Each destination's day_templates are authored in a geographically sensible
+// order. The generator takes the first N templates for the requested trip
+// length — no cycling, no repetition, no "(continued)" days. Daily intensity
+// reflects the actual authored activity, nudged by the user's pace/activity.
+import { ACTIVITY_ORDER } from "@/lib/options";
+
 const INT_ORDER = ["Light", "Moderate", "High"];
 
-function shiftToward(current, target) {
-  const ci = INT_ORDER.indexOf(current);
-  const ti = INT_ORDER.indexOf(target);
-  if (ci < 0 || ti < 0 || ci === ti) return current;
-  const ni = ci + Math.sign(ti - ci);
+function applyPaceShift(intensity, shift) {
+  const i = INT_ORDER.indexOf(intensity);
+  if (i < 0 || shift === 0) return intensity;
+  const ni = Math.max(0, Math.min(INT_ORDER.length - 1, i + shift));
   return INT_ORDER[ni];
-}
-function downshift(c) {
-  const i = INT_ORDER.indexOf(c);
-  return i <= 0 ? INT_ORDER[0] : INT_ORDER[i - 1];
-}
-function upshift(c) {
-  const i = INT_ORDER.indexOf(c);
-  if (i < 0) return c;
-  return i >= INT_ORDER.length - 1 ? INT_ORDER[INT_ORDER.length - 1] : INT_ORDER[i + 1];
-}
-
-const ACTIVITY_TO_INTENSITY = {
-  Light: "Light",
-  Moderate: "Moderate",
-  Active: "High",
-  "Highly active": "High"
-};
-
-function restDay(dayNum) {
-  return {
-    day: dayNum,
-    title: "Rest & flexible day",
-    morning: "Sleep in and enjoy a slow, unrushed morning at your accommodation.",
-    afternoon: "Revisit a favourite spot, wander nearby, or simply relax.",
-    evening: "An easy dinner close by and some quiet downtime.",
-    food_note: "Try a relaxed local café or room service favourite.",
-    intensity: "Light",
-    flexible: true
-  };
-}
-
-function buildDay(template, dayNum, desiredIntensity, recycled) {
-  let intensity = template.intensity || "Moderate";
-  intensity = shiftToward(intensity, desiredIntensity);
-  return {
-    day: dayNum,
-    title: recycled ? `${template.title} (continued)` : template.title,
-    morning: template.morning,
-    afternoon: template.afternoon,
-    evening: template.evening,
-    food_note: template.food_note || "",
-    intensity,
-    flexible: !!template.flexible
-  };
 }
 
 export function generateItinerary(dest, prefs) {
-  const totalDays = prefs.travelDays || 7;
+  const totalDays = Math.min(Math.max(prefs.travelDays || 7, 1), 14);
   const templates = (dest.day_templates || []).slice();
   if (!templates.length) return [];
 
-  const userInterests = prefs.interests || [];
-  let desired = ACTIVITY_TO_INTENSITY[prefs.activity] || "Moderate";
-  if (prefs.pace === "Relaxed") desired = downshift(desired);
-  if (prefs.pace === "Fast-paced") desired = upshift(desired);
-
-  // Rank templates by interest overlap, then non-flexible first.
-  const ranked = templates
-    .map((t, i) => ({
-      t,
-      i,
-      interestScore: (t.interests || []).filter((x) => userInterests.includes(x)).length,
-      flex: !!t.flexible
-    }))
-    .sort((a, b) => b.interestScore - a.interestScore || (a.flex ? 1 : 0) - (b.flex ? 1 : 0));
+  // Combine pace and activity into a single clamped shift so each day keeps its
+  // own authored intensity (actual activity) rather than one uniform label.
+  let shift = 0;
+  if (prefs.pace === "Relaxed") shift -= 1;
+  else if (prefs.pace === "Fast-paced") shift += 1;
+  const ai = ACTIVITY_ORDER.indexOf(prefs.activity);
+  if (ai === 0) shift -= 1;          // Light activity
+  else if (ai >= 2) shift += 1;      // Active / Highly active
+  shift = Math.max(-1, Math.min(1, shift));
 
   const sequence = [];
-  let activeCount = 0;
-  let pickIndex = 0;
-
-  for (let day = 1; day <= totalDays; day++) {
-    const wantRest =
-      prefs.pace === "Relaxed" && activeCount > 0 && activeCount % 3 === 0;
-    if (wantRest && !ranked[pickIndex % ranked.length].flex) {
-      sequence.push(restDay(day));
-      activeCount = 0;
-      continue;
-    }
-    const pick = ranked[pickIndex % ranked.length];
-    pickIndex++;
-    const recycled = pickIndex > ranked.length;
-    sequence.push(buildDay(pick.t, day, desired, recycled));
-    if (!pick.flexible) activeCount++;
+  for (let i = 0; i < totalDays && i < templates.length; i++) {
+    const t = templates[i];
+    const intensity = applyPaceShift(t.intensity || "Moderate", shift);
+    sequence.push({
+      day: i + 1,
+      title: t.title,
+      morning: t.morning,
+      afternoon: t.afternoon,
+      evening: t.evening,
+      food_note: t.food_note || "",
+      intensity,
+      flexible: !!t.flexible
+    });
   }
-
   return sequence;
 }

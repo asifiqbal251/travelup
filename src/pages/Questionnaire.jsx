@@ -123,7 +123,7 @@ export default function Questionnaire() {
 
       <div className="bg-white rounded-2xl border border-[#E6E2D8] shadow-sm p-6 sm:p-8">
         {step === 0 && (
-          <Step title="Your travel basics" subtitle="So we can tailor destination and visa hints.">
+          <Step title="Your travel basics" subtitle="So we can tailor your travel recommendations.">
             <SelectField label="Country of residence" value={form.residenceCountry}
               onChange={(v) => set("residenceCountry", v)} error={errors.residenceCountry}
               placeholder="Select country">
@@ -260,17 +260,20 @@ export default function Questionnaire() {
         )}
 
         {/* Nav */}
-        <div className="flex items-center justify-between mt-8 pt-6 border-t border-[#E6E2D8]">
-          <Button variant="ghost" onClick={back} disabled={step === 0} className="min-h-11">
-            <ArrowLeft className="w-4 h-4 mr-2" /> Back
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mt-8 pt-6 border-t border-[#E6E2D8]">
+          <Button variant="ghost" onClick={back} disabled={step === 0}
+            className="min-h-11 w-full sm:w-auto justify-center">
+            <ArrowLeft className="w-4 h-4 mr-2 flex-shrink-0" /> Back
           </Button>
           {step < STEPS.length - 1 ? (
-            <Button onClick={next} className="bg-[#0B1F3A] hover:bg-[#0B1F3A]/90 min-h-11">
-              Next <ArrowRight className="w-4 h-4 ml-2" />
+            <Button onClick={next}
+              className="bg-[#0B1F3A] hover:bg-[#0B1F3A]/90 text-white min-h-11 w-full sm:w-auto">
+              Next <ArrowRight className="w-4 h-4 ml-2 flex-shrink-0" />
             </Button>
           ) : (
-            <Button onClick={submit} className="bg-[#FF6B5B] hover:bg-[#FF6B5B]/90 text-white min-h-11">
-              See my recommendations <ArrowRight className="w-4 h-4 ml-2" />
+            <Button onClick={submit}
+              className="bg-[#FF6B5B] hover:bg-[#FF6B5B]/90 text-white min-h-11 w-full sm:w-auto max-w-full whitespace-normal break-words text-center">
+              See my recommendations <ArrowRight className="w-4 h-4 ml-2 flex-shrink-0" />
             </Button>
           )}
         </div>

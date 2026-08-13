@@ -24,7 +24,7 @@ export function generatePackingList(dest, prefs) {
   };
 
   // Base — universal core
-  add("Documents and money", "Passport (valid 6+ months)");
+  add("Documents and money", "Passport — verify destination validity requirements");
   add("Documents and money", "Travel insurance documents");
   add("Documents and money", "Credit and debit cards");
   add("Documents and money", "Some local currency");

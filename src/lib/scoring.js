@@ -96,6 +96,7 @@ export function scoreDestination(dest, prefs) {
 
   // Previously visited → lower priority (penalty), not excluded
   let visited = false;
+  let visitedPenalty = 0;
   if (prefs.visitedCountries && prefs.visitedCountries.length) {
     const visitedList = (prefs.visitedCountries || [])
       .map((s) => s.toLowerCase().trim())
@@ -105,6 +106,7 @@ export function scoreDestination(dest, prefs) {
       visitedList.includes((dest.name || "").toLowerCase())
     ) {
       visited = true;
+      visitedPenalty = VISITED_PENALTY;
       score -= VISITED_PENALTY;
     }
   }
@@ -114,7 +116,8 @@ export function scoreDestination(dest, prefs) {
     breakdown: { season, interest, budget, length, climate, pace },
     seasonNote,
     matchedInterests,
-    visited
+    visited,
+    visitedPenalty
   };
 }
 
@@ -165,7 +168,7 @@ export function buildReasons(dest, prefs, result) {
     reasons.push("Enjoyable in your chosen month");
   }
   if (result.breakdown.budget >= 15) {
-    reasons.push(`Matches your ${prefs.budget.toLowerCase()} budget`);
+    reasons.push("Fits your selected budget level");
   } else if (result.breakdown.budget >= 8) {
     reasons.push(`Close to your ${prefs.budget.toLowerCase()} budget`);
   }

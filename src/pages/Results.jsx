@@ -102,6 +102,9 @@ function DestinationCard({ dest, result, prefs, onSelect }) {
     ["Climate", b.climate, 10],
     ["Pace & activity", b.pace, 10]
   ];
+  if (result.visited) {
+    rows.push(["Visited before", -result.visitedPenalty, result.visitedPenalty]);
+  }
   const budgetLabel = (dest.budget_categories || []).join(" – ") || "Varies";
   const climateLabel = (dest.climate_tags || []).join(", ") || "Varies";
 
@@ -157,16 +160,23 @@ function DestinationCard({ dest, result, prefs, onSelect }) {
         </button>
         {open && (
           <div className="mt-3 space-y-2">
-            {rows.map(([label, got, max]) => (
-              <div key={label}>
-                <div className="flex justify-between text-xs mb-1">
-                  <span>{label}</span><span className="font-medium">{got}/{max}</span>
+            {rows.map(([label, got, max]) => {
+              const penalty = got < 0;
+              return (
+                <div key={label}>
+                  <div className="flex justify-between text-xs mb-1">
+                    <span>{label}</span>
+                    <span className={`font-medium ${penalty ? "text-[#FF6B5B]" : ""}`}>
+                      {penalty ? `${got}` : `${got}/${max}`}
+                    </span>
+                  </div>
+                  <div className="h-1.5 rounded-full bg-[#E6E2D8] overflow-hidden">
+                    <div className={penalty ? "h-full bg-[#FF6B5B]" : "h-full bg-[#2EC4B6]"}
+                      style={{ width: `${Math.max(0, (got / max) * 100)}%` }} />
+                  </div>
                 </div>
-                <div className="h-1.5 rounded-full bg-[#E6E2D8] overflow-hidden">
-                  <div className="h-full bg-[#2EC4B6]" style={{ width: `${(got / max) * 100}%` }} />
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
 
