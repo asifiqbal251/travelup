@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Image } from "@/components/ui/image";
 import { base44 } from "@/api/base44Client";
 import { getPrefs, setSelectedDestinationId } from "@/lib/storage";
+import { TRAVEL_FALLBACK_IMAGE } from "@/lib/fallbackImage";
 import { rankDestinations, buildReasons, buildSuggestions } from "@/lib/scoring";
 import { ArrowLeft, ArrowRight, Info, MapPin, Clock, Wallet, Plane } from "lucide-react";
 
@@ -142,7 +143,7 @@ function DestinationCard({ dest, result, prefs, onSelect }) {
   return (
     <article className="bg-white rounded-2xl border border-[#E6E2D8] shadow-sm overflow-hidden">
       <div className="relative h-48 sm:h-56">
-        <Image src={dest.image_url} alt={`${dest.name}, ${dest.country}`} fittingType="fill" className="w-full h-full" />
+        <Image src={dest.image_url} alt={`${dest.name}, ${dest.country}`} fittingType="fill" fallbackSrc={TRAVEL_FALLBACK_IMAGE} className="w-full h-full" />
         <div className="absolute top-3 right-3 bg-[#0B1F3A] text-white text-sm font-semibold px-3 py-1 rounded-full">
           {finalScore}/100
         </div>

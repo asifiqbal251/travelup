@@ -14,6 +14,7 @@ import {
 } from "@/lib/storage";
 import { generateItinerary } from "@/lib/itinerary";
 import { generatePackingList } from "@/lib/packing";
+import { TRAVEL_FALLBACK_IMAGE } from "@/lib/fallbackImage";
 import { ArrowLeft, Check, Plus, Trash2, RotateCcw, Info } from "lucide-react";
 
 export default function TripDetail() {
@@ -54,7 +55,7 @@ export default function TripDetail() {
 
       <div className="relative h-52 sm:h-64 rounded-2xl overflow-hidden mb-6">
         <Image src={dest.image_url} alt={`${dest.name}, ${dest.country}`} fittingType="fill"
-          className="w-full h-full" />
+          fallbackSrc={TRAVEL_FALLBACK_IMAGE} className="w-full h-full" />
         <div className="absolute inset-0 bg-gradient-to-t from-[#0B1F3A]/85 to-transparent" />
         <div className="absolute bottom-0 p-5 text-white">
           <h1 className="text-2xl font-semibold">{dest.name}</h1>
