@@ -182,10 +182,11 @@ export default function Questionnaire() {
               {MONTHS.map((m, i) => <SelectItem key={m} value={String(i + 1)}>{m}</SelectItem>)}
             </SelectField>
             <div>
-              <Label>Number of travel days: <span className="font-semibold text-[#0B1F3A]">{form.travelDays} days</span></Label>
+              <Label>Total trip length: <span className="font-semibold text-[#0B1F3A]">{form.travelDays} days</span></Label>
+              <p className="text-xs text-[#0B1F3A]/55 mt-1">Include all travel time—from leaving home until returning—including flights, driving, trains, buses, ferries and transfers.</p>
               <div className="mt-3">
                 <Slider value={[form.travelDays]} min={3} max={14} step={1}
-                  onValueChange={(v) => set("travelDays", v[0])} aria-label="Number of travel days" />
+                  onValueChange={(v) => set("travelDays", v[0])} aria-label="Total trip length in days" />
               </div>
               <div className="flex justify-between text-xs text-[#0B1F3A]/50 mt-1">
                 <span>3 days</span><span>14 days</span>
@@ -280,7 +281,8 @@ export default function Questionnaire() {
             <dl className="divide-y divide-[#E6E2D8]">
               <ReviewRow label="Residence / departure / citizenship"
                 value={`${form.residenceCountry || "—"} · ${form.departureCity || "—"} · ${form.citizenship || "—"}`} />
-              <ReviewRow label="When" value={`${form.travelMonth === "flexible" || !form.travelMonth ? "Flexible" : MONTHS[Number(form.travelMonth) - 1]} · ${form.travelDays} days`} />
+              <ReviewRow label="When" value={form.travelMonth === "flexible" || !form.travelMonth ? "Flexible" : MONTHS[Number(form.travelMonth) - 1]} />
+              <ReviewRow label="Total trip" value={`${form.travelDays} days, including travel time`} />
               <ReviewRow label="Domestic" value={form.allowDomestic ? "Included" : "International only"} />
               <ReviewRow label="Traveller & budget" value={`${form.travellerType || "—"} · ${form.budget || "—"}`} />
               <ReviewRow label="Interests" value={form.interests.join(", ") || "—"} />

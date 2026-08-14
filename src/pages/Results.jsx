@@ -121,7 +121,7 @@ function DestinationCard({ dest, result, prefs, onSelect }) {
     ["Budget fit", b.budget, 15],
     ["Trip length", b.length, 15],
     ["Climate", b.climate, 10],
-    ["Pace & activity", b.pace, 10]
+    ["Pace, activity & traveller", b.pace, 10]
   ];
   if (result.visited) {
     rows.push(["Visited before", -result.visitedPenalty, result.visitedPenalty]);
@@ -159,9 +159,14 @@ function DestinationCard({ dest, result, prefs, onSelect }) {
       </div>
 
       <div className="p-5">
-        <div className="flex items-start gap-2 mb-4 bg-[#FBFAF7] border border-[#E6E2D8] rounded-lg p-3">
-          <Plane className="w-4 h-4 text-[#2EC4B6] flex-shrink-0 mt-0.5" />
-          <p className="text-sm text-[#0B1F3A]/80">{prac.explanation}</p>
+        <div className="bg-[#FBFAF7] border border-[#E6E2D8] rounded-lg p-3 mb-4">
+          <div className="flex items-start gap-2 text-sm">
+            <Plane className="w-4 h-4 text-[#2EC4B6] flex-shrink-0 mt-0.5" />
+            <span><span className="font-medium text-[#0B1F3A]">Likely travel: </span>{prac.travelMode}</span>
+          </div>
+          <div className="text-sm text-[#0B1F3A]/70 mt-1.5">Estimated travel: Approximately {prac.oneWayHours} hours each way</div>
+          <div className="text-sm text-[#0B1F3A]/70 mt-0.5">Usable destination time: Approximately {prac.usableDestinationDays} of {prefs.travelDays} days</div>
+          <p className="text-sm text-[#0B1F3A]/80 mt-2">{prac.message}</p>
         </div>
 
         <ul className="space-y-1.5 mb-4">
@@ -206,7 +211,7 @@ function DestinationCard({ dest, result, prefs, onSelect }) {
                   <div className="flex justify-between text-xs mb-1">
                     <span>{label}</span>
                     <span className={`font-medium ${penalty ? "text-[#FF6B5B]" : ""}`}>
-                      {penalty ? `${got}` : `${got}/${max}`}
+                      {penalty ? `${got}` : `${Math.round(got)}/${max}`}
                     </span>
                   </div>
                   <div className="h-1.5 rounded-full bg-[#E6E2D8] overflow-hidden">

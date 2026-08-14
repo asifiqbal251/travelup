@@ -1,7 +1,8 @@
-// Deterministic travel-practicality assessment for TravelUp.
-// Uses departure city, destination gateway coordinates, a geographic-distance
-// band, an airport/transfer allowance, a curated internal-access penalty and
-// the selected trip duration. No live geocoding or flight APIs.
+// Deterministic, destination-specific travel-practicality assessment.
+// One-way door-to-door time = flight-time band + airport/immigration overhead +
+// expected connection time + curated internal-access (onward ground) time.
+// Practicality is based on the share of the total trip consumed by round-trip
+// travel. No live geocoding, flight, schedule or mapping APIs.
 
 import { getCityCoords, getDestinationCoords } from "@/lib/coordinates";
 
@@ -22,8 +23,8 @@ export function haversineKm(a, b) {
   return 2 * EARTH_R * Math.asin(Math.min(1, Math.sqrt(h)));
 }
 
-// Approximate one-way flight time by distance band (hours). These are planning
-// bands, not claims about live schedules; no direct flights are implied.
+// Approximate one-way flight time by distance band (hours). Planning bands,
+// not claims about live schedules; no direct flights are implied.
 function flightHours(distanceKm) {
   if (distanceKm == null) return null;
   if (distanceKm < 400) return 2.5;
@@ -36,17 +37,8 @@ function flightHours(distanceKm) {
   return 17;
 }
 
-// Airport check-in, security and ground transfers at both ends (one-way).
-const TRANSFER_ALLOWANCE = 2.5;
-
-export function practicalThreshold(tripDays) {
-  const d = Number(tripDays);
-  if (d <= 3) return 5;
-  if (d === 4) return 7;
-  if (d <= 6) return 10;
-  if (d <= 9) return 15;
-  return 22; // 10-14
-}
+const DOMESTIC_OVERHEAD = 1.5; // check-in, security, station/airport transfer
+const INTERNATIONAL_OVERHEAD = 2.5; // adds immigration/customs
 
 export function assessPracticality(dest, prefs) {
   const destCoords = getDestinationCoords(dest);
@@ -55,43 +47,80 @@ export function assessPracticality(dest, prefs) {
     prefs && prefs.residenceCountry
   );
   const internalAccess = Number((dest && dest.internal_access_penalty) || 0);
+  const connectionHours = Number((dest && dest.connection_hours) || 0);
+  const isDomestic =
+    !!prefs &&
+    !!prefs.residenceCountry &&
+    !!dest &&
+    String(prefs.residenceCountry).toLowerCase().trim() ===
+      String(dest.country).toLowerCase().trim();
 
   let distanceKm = null;
-  let oneWayHours;
+  let baseHours;
   let known = true;
 
   if (origin && destCoords) {
     distanceKm = haversineKm(origin, destCoords);
-    oneWayHours = flightHours(distanceKm) + TRANSFER_ALLOWANCE + internalAccess;
+    baseHours = flightHours(distanceKm);
   } else {
-    // Conservative fallback when a city is not recognized.
+    // Transparent country-level fallback when a city is not recognized.
     known = false;
-    oneWayHours = 8.5 + internalAccess;
+    baseHours = 8;
   }
 
-  const threshold = practicalThreshold(prefs && prefs.travelDays);
-  const stretchUpper = threshold * 1.5;
+  const overhead = isDomestic ? DOMESTIC_OVERHEAD : INTERNATIONAL_OVERHEAD;
+  const oneWayHours = baseHours + overhead + connectionHours + internalAccess;
+  const roundTripHours = oneWayHours * 2;
+
+  const tripDays = Number((prefs && prefs.travelDays) || 0);
+  const tripHours = tripDays * 24;
+  const travelShare = tripHours > 0 ? roundTripHours / tripHours : 0;
 
   let level;
-  if (oneWayHours <= threshold) level = "Practical";
-  else if (oneWayHours <= stretchUpper) level = "Stretch";
-  else level = "Poor";
+  let message;
+  if (travelShare <= 0.2) {
+    level = "Practical";
+    message = "Practical for your selected trip length.";
+  } else if (travelShare <= 0.3) {
+    level = "Manageable";
+    message = "Manageable for your trip length, but allow time for travel.";
+  } else if (travelShare <= 0.45) {
+    level = "Stretch";
+    message = "Travel may consume a significant share of this trip.";
+  } else {
+    level = "Poor practical fit";
+    message = "A large share of this trip would be spent travelling.";
+  }
 
-  const days = prefs && prefs.travelDays ? prefs.travelDays : "short";
-  const explanation =
-    level === "Practical"
-      ? "Practical for your selected trip length."
-      : level === "Stretch"
-      ? "Possible, but travel time may consume a significant part of your trip."
-      : `Not practical for a ${days}-day trip from your departure location.`;
+  let penalty;
+  if (travelShare <= 0.2) penalty = 0;
+  else if (travelShare <= 0.3) penalty = ((travelShare - 0.2) / 0.1) * 10;
+  else if (travelShare <= 0.45)
+    penalty = 10 + ((travelShare - 0.3) / 0.15) * 20;
+  else penalty = Math.min(50, 30 + ((travelShare - 0.45) / 0.25) * 20);
+
+  const usableRaw = tripHours > 0 ? tripDays - roundTripHours / 24 : 0;
+  const usableDestinationDays = Math.max(0, Math.round(usableRaw * 2) / 2);
+
+  let travelMode =
+    (dest && dest.travel_mode) ||
+    (isDomestic
+      ? "Domestic flight + local ground transportation"
+      : "International flight + local ground transportation");
+  if (isDomestic && travelMode.includes("International flight"))
+    travelMode = travelMode.replace("International flight", "Domestic flight");
 
   return {
     level,
+    message,
     oneWayHours: Math.round(oneWayHours * 10) / 10,
-    threshold,
-    stretchUpper,
+    roundTripHours: Math.round(roundTripHours * 10) / 10,
+    travelShare,
+    travelPenalty: penalty,
+    usableDestinationDays,
+    travelMode,
     distanceKm: distanceKm ? Math.round(distanceKm) : null,
     known,
-    explanation
+    isDomestic
   };
 }
