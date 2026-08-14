@@ -187,6 +187,31 @@ function buildTravelDay(kind, o) {
       overnight: `Overnight in ${dest.name}.`
     };
   }
+  if (kind === "returnBegins") {
+    return {
+      title: `Return begins: ${dest.name} → ${origin}`,
+      location: "In transit",
+      intensity: "Light",
+      isTravel: true,
+      flexible: false,
+      highlights: ["Check-out", "Return begins", "In transit"],
+      morning: "Check out and head to the airport or station.",
+      afternoon: "Check in and begin the return journey.",
+      evening: "Travel home; the journey continues overnight.",
+      food_note: "A meal or snack before departure.",
+      timeline: [
+        seq("Check-out", "Check out and depart", "Leave your accommodation in good time."),
+        seq("Return begins", "Head to airport or station", "Allow time for transfer and check-in."),
+        seq("Departure", "Check-in and depart", "Begin the return journey; confirm your departure."),
+        seq("In transit", "Travel home", journey)
+      ],
+      journey,
+      gettingAround: "Allow extra time for the transfer and check-in.",
+      planAhead: "Reconfirm your departure time and documents.",
+      optionalSwap: "Leave earlier to avoid rush.",
+      overnight: "Overnight in transit."
+    };
+  }
   // return final day
   const timeline = isLong
     ? [
@@ -273,7 +298,7 @@ export function generateItinerary(dest, prefs) {
 
   let startTravel = 0, arrival = 0, tailTravel = 0;
   if (tier === "medium") { startTravel = 1; tailTravel = 1; }
-  else if (tier === "long") { startTravel = 1; arrival = 1; tailTravel = 1; }
+  else if (tier === "long") { startTravel = 1; arrival = 1; tailTravel = 2; }
   const travelDays = startTravel + arrival + tailTravel;
 
   const paceWantsRecovery = totalDays >= 10 && (pace === "Relaxed" || pace === "Balanced");
@@ -327,14 +352,11 @@ export function generateItinerary(dest, prefs) {
     // long
     days.push(buildTravelDay("outbound", { dest, origin, dShort, oneWay, long: true, hasConnection }));
     days.push(buildTravelDay("arrival", { dest, origin, dShort, oneWay, long: true, hasConnection }));
-    const penultimate = selected.length ? selected[selected.length - 1] : null;
-    const middle = selected.length > 1 ? selected.slice(0, selected.length - 1) : [];
-    insertRecovery(middle).forEach((t) => {
+    insertRecovery(selected).forEach((t) => {
       if (t) days.push(buildTemplateDay(t, dest, shift, {}));
       else days.push(buildRecoveryDay(dest, pace, false));
     });
-    if (penultimate) days.push(buildTemplateDay(penultimate, dest, shift, { returnFoldLong: true, origin, dShort, oneWay }));
-    else days.push(buildTravelDay("return", { dest, origin, dShort, oneWay, long: true, hasConnection }));
+    days.push(buildTravelDay("returnBegins", { dest, origin, dShort, oneWay, long: true, hasConnection }));
     days.push(buildTravelDay("return", { dest, origin, dShort, oneWay, long: true, hasConnection }));
   }
 
