@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Image } from "@/components/ui/image";
 import { base44 } from "@/api/base44Client";
 import { getPrefs, setSelectedDestinationId } from "@/lib/storage";
-import { rankDestinations, buildReasons } from "@/lib/scoring";
-import { ArrowLeft, ArrowRight, Info, MapPin, Clock, Wallet } from "lucide-react";
+import { rankDestinations, buildReasons, buildSuggestions } from "@/lib/scoring";
+import { ArrowLeft, ArrowRight, Info, MapPin, Clock, Wallet, Plane } from "lucide-react";
 
 export default function Results() {
   const navigate = useNavigate();
@@ -50,6 +50,7 @@ export default function Results() {
   if (error) return <div className="max-w-2xl mx-auto px-4 py-20 text-center text-[#FF6B5B]">{error}</div>;
 
   const top = ranked.slice(0, 3);
+  const suggestions = buildSuggestions(ranked, prefs);
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-8">
@@ -57,7 +58,7 @@ export default function Results() {
         <div>
           <h1 className="text-2xl font-semibold">Your top {top.length} matches</h1>
           <p className="text-sm text-[#0B1F3A]/60 mt-1">
-            Scored out of 100 from your answers. Estimates only — see why below each card.
+            Final scores combine your preference fit with travel practicality for your trip length. Estimates only.
           </p>
         </div>
         <Button variant="outline" onClick={() => navigate("/questionnaire")} className="min-h-11 flex-shrink-0">
@@ -69,10 +70,29 @@ export default function Results() {
         <Info className="w-5 h-5 text-[#0B1F3A] flex-shrink-0 mt-0.5" />
         <p className="text-sm text-[#0B1F3A]/75">
           Scores are estimates based on your preferences and curated destination data, not live
-          availability. Always verify visa and entry requirements through official government sources
-          for your citizenship.
+          availability or flight schedules. Always verify visa and entry requirements through official
+          government sources for your citizenship.
         </p>
       </div>
+
+      {suggestions.length > 0 && (
+        <div className="bg-[#FF6B5B]/10 border border-[#FF6B5B]/30 rounded-xl p-4 mb-6">
+          <p className="text-sm font-medium text-[#0B1F3A]">
+            These are the closest available options, but some are not strong matches for your current preferences.
+          </p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {suggestions.map((s, i) => (
+              <Link
+                key={i}
+                to={`/questionnaire?step=${s.step}`}
+                className="inline-flex items-center gap-1.5 text-sm font-medium bg-white border border-[#E6E2D8] hover:border-[#2EC4B6] rounded-lg px-3 py-2 min-h-9"
+              >
+                {s.label} <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
 
       {top.length === 0 ? (
         <div className="text-center py-16 text-[#0B1F3A]/60">
@@ -105,16 +125,30 @@ function DestinationCard({ dest, result, prefs, onSelect }) {
   if (result.visited) {
     rows.push(["Visited before", -result.visitedPenalty, result.visitedPenalty]);
   }
+
+  const finalScore = result.finalScore;
+  const labelClass =
+    finalScore >= 70
+      ? "bg-[#2EC4B6] text-white"
+      : finalScore >= 50
+      ? "bg-[#0B1F3A] text-white"
+      : finalScore >= 30
+      ? "bg-[#E8A33D] text-white"
+      : "bg-[#FF6B5B] text-white";
+  const prac = result.practicality;
+  const pracLabel = prac.level === "Practical" ? "Practical" : prac.level === "Stretch" ? "Stretch" : "Poor practical fit";
   const budgetLabel = (dest.budget_categories || []).join(" – ") || "Varies";
   const climateLabel = (dest.climate_tags || []).join(", ") || "Varies";
 
   return (
     <article className="bg-white rounded-2xl border border-[#E6E2D8] shadow-sm overflow-hidden">
       <div className="relative h-48 sm:h-56">
-        <Image src={dest.image_url} alt={`${dest.name}, ${dest.country}`} fittingType="fill"
-          className="w-full h-full" />
+        <Image src={dest.image_url} alt={`${dest.name}, ${dest.country}`} fittingType="fill" className="w-full h-full" />
         <div className="absolute top-3 right-3 bg-[#0B1F3A] text-white text-sm font-semibold px-3 py-1 rounded-full">
-          {result.score}/100
+          {finalScore}/100
+        </div>
+        <div className={`absolute top-3 left-3 text-xs font-semibold px-2.5 py-1 rounded-full ${labelClass}`}>
+          {result.matchLabel}
         </div>
         <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-[#0B1F3A]/85 to-transparent p-4">
           <h2 className="text-white text-lg font-semibold flex items-center gap-2">
@@ -125,6 +159,11 @@ function DestinationCard({ dest, result, prefs, onSelect }) {
       </div>
 
       <div className="p-5">
+        <div className="flex items-start gap-2 mb-4 bg-[#FBFAF7] border border-[#E6E2D8] rounded-lg p-3">
+          <Plane className="w-4 h-4 text-[#2EC4B6] flex-shrink-0 mt-0.5" />
+          <p className="text-sm text-[#0B1F3A]/80">{prac.explanation}</p>
+        </div>
+
         <ul className="space-y-1.5 mb-4">
           {reasons.map((r, i) => (
             <li key={i} className="text-sm text-[#0B1F3A]/80 flex gap-2">
@@ -177,6 +216,20 @@ function DestinationCard({ dest, result, prefs, onSelect }) {
                 </div>
               );
             })}
+            <div className="border-t border-[#E6E2D8] pt-3 mt-2 space-y-1.5">
+              <div className="flex justify-between text-xs">
+                <span>Base preference score</span>
+                <span className="font-medium">{result.baseScore}</span>
+              </div>
+              <div className="flex justify-between text-xs">
+                <span>Travel practicality ({pracLabel.toLowerCase()})</span>
+                <span className="font-medium text-[#FF6B5B]">{result.practicalityAdjustment > 0 ? "+" : ""}{result.practicalityAdjustment}</span>
+              </div>
+              <div className="flex justify-between text-sm font-semibold pt-1">
+                <span>Final match score</span>
+                <span>{finalScore}/100</span>
+              </div>
+            </div>
           </div>
         )}
 

@@ -18,6 +18,19 @@
     "intro": {
       "type": "string"
     },
+    "gateway_lat": {
+      "type": "number",
+      "description": "Latitude of the primary gateway city for travel-practicality estimates"
+    },
+    "gateway_lng": {
+      "type": "number",
+      "description": "Longitude of the primary gateway city for travel-practicality estimates"
+    },
+    "internal_access_penalty": {
+      "type": "number",
+      "description": "Approximate hours of onward/ground travel normally needed beyond the gateway",
+      "default": 0
+    },
     "strong_months": {
       "type": "array",
       "items": {

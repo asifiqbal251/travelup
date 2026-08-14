@@ -1,0 +1,186 @@
+// Deterministic city/country coordinate lookup for TravelUp practicality.
+// No live geocoding. Major cities are hand-coded; an unrecognized city falls
+// back to a country centroid, then to null (handled conservatively upstream).
+
+function norm(s) {
+  if (!s) return "";
+  return String(s)
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "") // strip accents
+    .toLowerCase()
+    .replace(/[^a-z0-9 ]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+const CITIES = {
+  // Brazil
+  "sao paulo": { lat: -23.55, lng: -46.63 },
+  "sao paulo city": { lat: -23.55, lng: -46.63 },
+  "rio de janeiro": { lat: -22.91, lng: -43.17 },
+  rio: { lat: -22.91, lng: -43.17 },
+  brasilia: { lat: -15.79, lng: -47.88 },
+  salvador: { lat: -12.88, lng: -38.32 },
+  recife: { lat: -8.05, lng: -34.9 },
+  fortaleza: { lat: -3.72, lng: -38.53 },
+  "belo horizonte": { lat: -19.92, lng: -43.94 },
+  curitiba: { lat: -25.43, lng: -49.27 },
+  "porto alegre": { lat: -30.03, lng: -51.23 },
+  florianopolis: { lat: -27.59, lng: -48.55 },
+  "foz do iguacu": { lat: -25.55, lng: -54.59 },
+  manaus: { lat: -3.12, lng: -60.02 },
+  paraty: { lat: -23.22, lng: -44.71 },
+  // South America
+  "buenos aires": { lat: -34.6, lng: -58.38 },
+  mendoza: { lat: -32.89, lng: -68.83 },
+  santiago: { lat: -33.45, lng: -70.67 },
+  valparaiso: { lat: -33.05, lng: -71.62 },
+  montevideo: { lat: -34.9, lng: -56.16 },
+  colonia: { lat: -34.46, lng: -57.84 },
+  lima: { lat: -12.02, lng: -77.11 },
+  cusco: { lat: -13.52, lng: -71.97 },
+  arequipa: { lat: -16.4, lng: -71.53 },
+  iquitos: { lat: -3.74, lng: -73.25 },
+  cartagena: { lat: 10.39, lng: -75.51 },
+  bogota: { lat: 4.71, lng: -74.07 },
+  quito: { lat: -0.18, lng: -78.47 },
+  "la paz": { lat: -16.5, lng: -68.15 },
+  asuncion: { lat: -25.26, lng: -57.58 },
+  // North America
+  "mexico city": { lat: 19.44, lng: -99.13 },
+  cancun: { lat: 21.16, lng: -86.85 },
+  monterrey: { lat: 25.68, lng: -100.32 },
+  montreal: { lat: 45.47, lng: -73.75 },
+  "quebec city": { lat: 46.81, lng: -71.21 },
+  toronto: { lat: 43.65, lng: -79.38 },
+  vancouver: { lat: 49.28, lng: -123.12 },
+  "new york": { lat: 40.71, lng: -74.01 },
+  "new york city": { lat: 40.71, lng: -74.01 },
+  "los angeles": { lat: 34.05, lng: -118.24 },
+  miami: { lat: 25.76, lng: -80.19 },
+  chicago: { lat: 41.88, lng: -87.63 },
+  "san francisco": { lat: 37.77, lng: -122.42 },
+  havana: { lat: 23.13, lng: -82.38 },
+  "santo domingo": { lat: 18.49, lng: -69.87 },
+  // Europe
+  london: { lat: 51.51, lng: -0.13 },
+  paris: { lat: 48.86, lng: 2.35 },
+  amsterdam: { lat: 52.37, lng: 4.9 },
+  berlin: { lat: 52.52, lng: 13.4 },
+  frankfurt: { lat: 50.11, lng: 8.68 },
+  munich: { lat: 48.14, lng: 11.58 },
+  rome: { lat: 41.9, lng: 12.5 },
+  milan: { lat: 45.46, lng: 9.19 },
+  madrid: { lat: 40.42, lng: -3.7 },
+  barcelona: { lat: 41.39, lng: 2.17 },
+  lisbon: { lat: 38.72, lng: -9.14 },
+  porto: { lat: 41.15, lng: -8.62 },
+  athens: { lat: 37.98, lng: 23.73 },
+  istanbul: { lat: 41.0, lng: 28.98 },
+  vienna: { lat: 48.21, lng: 16.37 },
+  zurich: { lat: 47.37, lng: 8.55 },
+  dublin: { lat: 53.35, lng: -6.26 },
+  moscow: { lat: 55.76, lng: 37.62 },
+  warsaw: { lat: 52.23, lng: 21.01 },
+  // Middle East / Asia
+  dubai: { lat: 25.25, lng: 55.36 },
+  doha: { lat: 25.29, lng: 51.53 },
+  "tel aviv": { lat: 32.09, lng: 34.78 },
+  amman: { lat: 31.95, lng: 35.91 },
+  tbilisi: { lat: 41.72, lng: 44.79 },
+  tokyo: { lat: 35.68, lng: 139.77 },
+  osaka: { lat: 34.69, lng: 135.5 },
+  seoul: { lat: 37.56, lng: 126.99 },
+  beijing: { lat: 39.9, lng: 116.4 },
+  shanghai: { lat: 31.23, lng: 121.47 },
+  "hong kong": { lat: 22.32, lng: 114.17 },
+  singapore: { lat: 1.35, lng: 103.82 },
+  bangkok: { lat: 13.76, lng: 100.5 },
+  "kuala lumpur": { lat: 3.14, lng: 101.69 },
+  jakarta: { lat: -6.21, lng: 106.85 },
+  manila: { lat: 14.6, lng: 120.98 },
+  delhi: { lat: 28.61, lng: 77.21 },
+  mumbai: { lat: 19.08, lng: 72.88 },
+  // Africa / Oceania
+  "cape town": { lat: -33.97, lng: 18.6 },
+  johannesburg: { lat: -26.2, lng: 28.05 },
+  nairobi: { lat: -1.29, lng: 36.82 },
+  cairo: { lat: 30.04, lng: 31.24 },
+  casablanca: { lat: 33.59, lng: -7.61 },
+  marrakech: { lat: 31.63, lng: -8.0 },
+  "dar es salaam": { lat: -6.82, lng: 39.27 },
+  auckland: { lat: -36.85, lng: 174.76 },
+  wellington: { lat: -41.29, lng: 174.78 },
+  queenstown: { lat: -45.03, lng: 168.66 },
+  sydney: { lat: -33.87, lng: 151.21 },
+  melbourne: { lat: -37.81, lng: 144.96 },
+  perth: { lat: -31.95, lng: 115.86 },
+  denpasar: { lat: -8.65, lng: 115.22 },
+  reykjavik: { lat: 64.15, lng: -21.94 },
+  calgary: { lat: 51.12, lng: -114.0 },
+  edmonton: { lat: 53.55, lng: -113.49 }
+};
+
+const COUNTRY_CENTROIDS = {
+  brazil: { lat: -14.24, lng: -51.93 },
+  argentina: { lat: -38.42, lng: -63.62 },
+  chile: { lat: -35.68, lng: -71.54 },
+  uruguay: { lat: -32.52, lng: -55.77 },
+  peru: { lat: -9.19, lng: -75.02 },
+  colombia: { lat: 4.57, lng: -74.3 },
+  ecuador: { lat: -1.83, lng: -78.18 },
+  bolivia: { lat: -16.29, lng: -63.59 },
+  paraguay: { lat: -23.44, lng: -58.44 },
+  mexico: { lat: 23.63, lng: -102.55 },
+  canada: { lat: 56.13, lng: -106.35 },
+  "united states": { lat: 39.83, lng: -98.58 },
+  "united states of america": { lat: 39.83, lng: -98.58 },
+  usa: { lat: 39.83, lng: -98.58 },
+  "united kingdom": { lat: 55.38, lng: -3.44 },
+  ireland: { lat: 53.41, lng: -8.24 },
+  france: { lat: 46.23, lng: 2.21 },
+  germany: { lat: 51.17, lng: 10.45 },
+  spain: { lat: 40.46, lng: -3.75 },
+  portugal: { lat: 39.4, lng: -8.22 },
+  italy: { lat: 41.87, lng: 12.57 },
+  netherlands: { lat: 52.13, lng: 5.29 },
+  greece: { lat: 39.07, lng: 21.82 },
+  turkey: { lat: 38.96, lng: 35.24 },
+  georgia: { lat: 42.32, lng: 43.36 },
+  japan: { lat: 36.2, lng: 138.25 },
+  "south korea": { lat: 35.91, lng: 127.77 },
+  china: { lat: 35.0, lng: 104.2 },
+  india: { lat: 22.59, lng: 79.96 },
+  thailand: { lat: 15.87, lng: 100.99 },
+  indonesia: { lat: -2.49, lng: 117.89 },
+  australia: { lat: -25.27, lng: 133.78 },
+  "new zealand": { lat: -41.0, lng: 174.0 },
+  "south africa": { lat: -30.56, lng: 22.94 },
+  morocco: { lat: 31.79, lng: -7.09 },
+  egypt: { lat: 26.82, lng: 30.8 },
+  tanzania: { lat: -6.37, lng: 34.89 },
+  iceland: { lat: 64.96, lng: -19.02 },
+  jordan: { lat: 30.59, lng: 36.24 },
+  "united arab emirates": { lat: 23.42, lng: 53.85 },
+  qatar: { lat: 25.35, lng: 51.18 },
+  israel: { lat: 31.05, lng: 34.85 }
+};
+
+export function getCityCoords(cityName, countryName) {
+  const key = norm(cityName);
+  if (key && CITIES[key]) return CITIES[key];
+  if (key) {
+    const stripped = key.replace(/\bcity\b/g, "").trim();
+    if (stripped && CITIES[stripped]) return CITIES[stripped];
+  }
+  const ck = norm(countryName);
+  if (ck && COUNTRY_CENTROIDS[ck]) return COUNTRY_CENTROIDS[ck];
+  return null;
+}
+
+export function getDestinationCoords(dest) {
+  if (dest && Number.isFinite(dest.gateway_lat) && Number.isFinite(dest.gateway_lng)) {
+    return { lat: dest.gateway_lat, lng: dest.gateway_lng };
+  }
+  return null;
+}

@@ -1,6 +1,9 @@
 // Deterministic, transparent scoring engine for TravelUp.
-// Total score = 100. Adjust the weights here to tune recommendations.
+// Base preference score = 100 across six approved categories (season 25,
+// interests 25, budget 15, trip length 15, climate 10, pace/activity 10).
+// A transparent travel-practicality adjustment then produces the final score.
 import { MONTHS, BUDGET_ORDER, PACE_ORDER, ACTIVITY_ORDER, CLIMATE_ORDER } from "@/lib/options";
+import { assessPracticality } from "@/lib/practicality";
 
 const VISITED_PENALTY = 12; // lower priority, not exclusion
 
@@ -145,11 +148,43 @@ export function isExcluded(dest, prefs) {
   return false;
 }
 
+// Base preference score + transparent practicality adjustment → final score.
+export function scoreWithPracticality(dest, prefs) {
+  const result = scoreDestination(dest, prefs);
+  const practicality = assessPracticality(dest, prefs);
+  const base = result.score;
+
+  let cap = 100;
+  if (practicality.level === "Stretch") cap = 69;
+  else if (practicality.level === "Poor") cap = result.breakdown.length === 0 ? 29 : 39;
+
+  const finalScore = Math.max(0, Math.min(100, Math.min(base, cap)));
+  const practicalityAdjustment = finalScore - base;
+
+  const matchLabel =
+    finalScore >= 70
+      ? "Strong match"
+      : finalScore >= 50
+      ? "Fair match"
+      : finalScore >= 30
+      ? "Weak match"
+      : "Poor practical match";
+
+  return {
+    ...result,
+    practicality,
+    baseScore: base,
+    finalScore,
+    practicalityAdjustment,
+    matchLabel
+  };
+}
+
 export function rankDestinations(destinations, prefs) {
   return destinations
     .filter((d) => !isExcluded(d, prefs))
-    .map((d) => ({ dest: d, result: scoreDestination(d, prefs) }))
-    .sort((a, b) => b.result.score - a.result.score);
+    .map((d) => ({ dest: d, result: scoreWithPracticality(d, prefs) }))
+    .sort((a, b) => b.result.finalScore - a.result.finalScore);
 }
 
 export function buildReasons(dest, prefs, result) {
@@ -189,4 +224,36 @@ export function buildReasons(dest, prefs, result) {
   }
   while (reasons.length < 3) reasons.push("A memorable trip awaits");
   return reasons.slice(0, 3);
+}
+
+// Relevant revision suggestions when results are weak. Only suggests inputs
+// that actually lost points and aren't already flexible.
+export function buildSuggestions(ranked, prefs) {
+  const top = ranked.slice(0, 3);
+  if (!top.length || !top.some((r) => r.result.finalScore < 50)) return [];
+
+  const anyPoor = top.some((r) => r.result.practicality.level === "Poor");
+  const anyStretch = top.some((r) => r.result.practicality.level === "Stretch");
+  const anyLen0 = top.some((r) => r.result.breakdown.length === 0);
+  const anyBudget0 = top.some((r) => r.result.breakdown.budget === 0);
+  const anySeason0 = top.some((r) => r.result.breakdown.season === 0);
+  const anyClimate0 = top.some((r) => r.result.breakdown.climate === 0);
+  const anyPace0 = top.some((r) => r.result.breakdown.pace === 0);
+
+  const out = [];
+  if ((anyPoor || anyLen0) && Number(prefs.travelDays) < 7)
+    out.push({ label: "Increase your trip to at least 7 days.", step: 1 });
+  if (prefs.allowDomestic === false)
+    out.push({ label: "Allow domestic destinations.", step: 1 });
+  if (anyBudget0 && prefs.budget !== "Top-end")
+    out.push({ label: "Increase your budget category.", step: 2 });
+  if (anySeason0 && prefs.travelMonth && prefs.travelMonth !== "flexible")
+    out.push({ label: "Choose a flexible travel month.", step: 1 });
+  if (anyPoor || anyStretch)
+    out.push({ label: "Consider a closer region.", step: 0 });
+  if (anyClimate0 && prefs.climate && prefs.climate !== "No preference")
+    out.push({ label: "Select 'No preference' for climate.", step: 4 });
+  if (anyPace0)
+    out.push({ label: "Revise your pace or activity preference.", step: 4 });
+  return out.slice(0, 3);
 }

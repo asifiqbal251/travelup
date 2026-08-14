@@ -46,7 +46,12 @@ const blank = {
 
 export default function Questionnaire() {
   const navigate = useNavigate();
-  const [step, setStep] = useState(0);
+  const [step, setStep] = useState(() => {
+    // Deep-link from Results revision suggestions without clearing answers.
+    if (!getPrefs()) return 0;
+    const s = Number(new URLSearchParams(window.location.search).get("step"));
+    return Number.isFinite(s) && s >= 0 && s < STEPS.length ? Math.floor(s) : 0;
+  });
   const [form, setForm] = useState(() => {
     const p = getPrefs();
     if (!p) return { ...blank };

@@ -14,8 +14,7 @@ const HALAL_RULES = [
   [/\bchorizo\b/gi, "spiced chicken"],
   [/\bprosciutto\b/gi, "grilled chicken"],
   [/\bpata negra\b/gi, "cured turkey"],
-  [/\bsausage\b/gi, "chicken sausage"],
-  [/\bsai oua\b/gi, "chicken sausage"],
+  [/\bsai oua\b/gi, "grilled chicken"],
   [/\blardons\b/gi, "chicken bits"],
   [/\bfrancesinha\b/gi, "grilled chicken sandwich"],
   [/\bfrancesinho\b/gi, "grilled chicken sandwich"],
@@ -41,7 +40,10 @@ const HALAL_RULES = [
   [/\bvodka\b/gi, "sparkling water"],
   [/\bmead\b/gi, "honey drink"],
   [/\bcocktail\b/gi, "mocktail"],
-  [/\bwine\b/gi, "grape juice"]
+  [/\bcaipirinha\b/gi, "lime soda"],
+  [/\bcachaca\b/gi, "lime soda"],
+  [/\bwine\b/gi, "grape juice"],
+  [/\bTry a northern Thai specialty\b/gi, "Try a halal-friendly northern Thai specialty"]
 ];
 
 const VEGETARIAN_RULES = [
@@ -59,10 +61,11 @@ const VEGETARIAN_RULES = [
   [/\bturkey\b/gi, "grilled vegetables"],
   [/\bduck\b/gi, "vegetable stir-fry"],
   [/\bgoat\b/gi, "chickpea stew"],
+  [/\bpork sausage\b/gi, "vegetable sausage"],
   [/\bpork\b/gi, "grilled vegetables"],
   [/\bbacon\b/gi, "smoked tofu"],
   [/\bham\b/gi, "smoked tofu"],
-  [/\bsai oua\b/gi, "vegetable sausage"],
+  [/\bsai oua\b/gi, "vegetable patty"],
   [/\bsausage\b/gi, "vegetable sausage"],
   [/\bchorizo\b/gi, "spiced vegetables"],
   [/\bprosciutto\b/gi, "grilled vegetables"],
@@ -108,7 +111,7 @@ const VEGAN_EXTRA_RULES = [
   [/\bcheese\b/gi, "cashew spread"],
   [/\bcheesy\b/gi, "creamy"],
   [/\bdairy\b/gi, "plant-based alternative"],
-  [/\begg coffee\b/gi, "oat milk coffee"],
+  [/\begg coffee\b/gi, "black coffee"],
   [/\beggs\b/gi, "tofu scramble"],
   [/\begg\b/gi, "tofu scramble"],
   [/\bmilk\b/gi, "oat milk"],
@@ -131,8 +134,8 @@ const GLUTEN_FREE_RULES = [
   [/\bdumpling\b/gi, "rice dumpling"],
   [/\bcouscous\b/gi, "rice"],
   [/\bbulgar\b/gi, "rice"],
-  [/\bpasta\b/gi, "rice noodles"],
   [/\bnoodles\b/gi, "rice noodles"],
+  [/\bpasta\b/gi, "rice noodles"],
   [/\bpita\b/gi, "rice pita"],
   [/\bpastry\b/gi, "gluten-free pastry"],
   [/\bcrust\b/gi, "gluten-free crust"],
@@ -143,6 +146,7 @@ const GLUTEN_FREE_RULES = [
   [/\bpretzel\b/gi, "gluten-free pretzel"],
   [/\bbiscuit\b/gi, "gluten-free biscuit"],
   [/\bbread\b/gi, "gluten-free bread"],
+  [/\bpies\b/gi, "gluten-free pies"],
   [/\bpie\b/gi, "gluten-free pie"]
 ];
 
