@@ -228,7 +228,7 @@ function DestinationCard({ dest, result, prefs, onSelect }) {
               </div>
               <div className="flex justify-between text-xs">
                 <span>Travel-practicality penalty</span>
-                <span className="font-medium text-[#FF6B5B]">-{result.travelPenalty}</span>
+                <span className="font-medium text-[#FF6B5B]">{result.travelPenalty > 0 ? `-${result.travelPenalty}` : "0"}</span>
               </div>
               <div className="flex justify-between text-sm font-semibold pt-1">
                 <span>Final match score</span>
