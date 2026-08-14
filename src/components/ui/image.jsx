@@ -126,6 +126,7 @@ const Image = React.forwardRef(
       focalPointY,
       quality = 90,
       onError,
+      fallbackSrc,
       ...props
     },
     ref
@@ -156,7 +157,7 @@ const Image = React.forwardRef(
       // click-to-edit toolbar keys its "Replace Image" action off the DOM
       // tag being `img`, so a placeholder div would be unrecoverable in the
       // editor. FALLBACK_IMAGE_URL doubles as the "no image chosen" graphic.
-      return <img ref={ref} src={FALLBACK_IMAGE_URL} {...imageProps} data-empty-image />
+      return <img ref={ref} src={fallbackSrc || FALLBACK_IMAGE_URL} {...imageProps} data-empty-image />
     }
 
     // A failed transform retries the underlying original as a plain image.
@@ -165,7 +166,7 @@ const Image = React.forwardRef(
 
     if (!parsed) {
       const isErrorMode = mode === IMAGE_LOAD_MODE.FALLBACK
-      const imageSrc = isErrorMode ? FALLBACK_IMAGE_URL : getOriginalImageUrl(src, parsedSource)
+      const imageSrc = isErrorMode ? (fallbackSrc || FALLBACK_IMAGE_URL) : getOriginalImageUrl(src, parsedSource)
       return (
         <img ref={ref} src={imageSrc} {...imageProps} data-error-image={isErrorMode || undefined} />
       )

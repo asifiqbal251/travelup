@@ -70,7 +70,7 @@ export function assessPracticality(dest, prefs) {
   }
 
   const threshold = practicalThreshold(prefs && prefs.travelDays);
-  const stretchUpper = Math.round(threshold * 1.8);
+  const stretchUpper = threshold * 1.5;
 
   let level;
   if (oneWayHours <= threshold) level = "Practical";

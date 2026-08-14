@@ -78,7 +78,7 @@ export default function Results() {
       {suggestions.length > 0 && (
         <div className="bg-[#FF6B5B]/10 border border-[#FF6B5B]/30 rounded-xl p-4 mb-6">
           <p className="text-sm font-medium text-[#0B1F3A]">
-            These are the closest available options, but some are not strong matches for your current preferences.
+            These are weaker practical matches for your current preferences.
           </p>
           <div className="mt-3 flex flex-wrap gap-2">
             {suggestions.map((s, i) => (
@@ -136,7 +136,6 @@ function DestinationCard({ dest, result, prefs, onSelect }) {
       ? "bg-[#E8A33D] text-white"
       : "bg-[#FF6B5B] text-white";
   const prac = result.practicality;
-  const pracLabel = prac.level === "Practical" ? "Practical" : prac.level === "Stretch" ? "Stretch" : "Poor practical fit";
   const budgetLabel = (dest.budget_categories || []).join(" – ") || "Varies";
   const climateLabel = (dest.climate_tags || []).join(", ") || "Varies";
 
@@ -222,8 +221,8 @@ function DestinationCard({ dest, result, prefs, onSelect }) {
                 <span className="font-medium">{result.baseScore}</span>
               </div>
               <div className="flex justify-between text-xs">
-                <span>Travel practicality ({pracLabel.toLowerCase()})</span>
-                <span className="font-medium text-[#FF6B5B]">{result.practicalityAdjustment > 0 ? "+" : ""}{result.practicalityAdjustment}</span>
+                <span>Travel-practicality penalty</span>
+                <span className="font-medium text-[#FF6B5B]">-{result.travelPenalty}</span>
               </div>
               <div className="flex justify-between text-sm font-semibold pt-1">
                 <span>Final match score</span>

@@ -148,17 +148,19 @@ export function isExcluded(dest, prefs) {
   return false;
 }
 
-// Base preference score + transparent practicality adjustment → final score.
+// Base preference score + graduated travel-practicality penalty → final score.
+// No hard caps; the practicality adjustment is proportional to how far the
+// estimated one-way door-to-door travel time exceeds the trip-length threshold.
 export function scoreWithPracticality(dest, prefs) {
   const result = scoreDestination(dest, prefs);
   const practicality = assessPracticality(dest, prefs);
   const base = result.score;
 
-  let cap = 100;
-  if (practicality.level === "Stretch") cap = 69;
-  else if (practicality.level === "Poor") cap = result.breakdown.length === 0 ? 29 : 39;
-
-  const finalScore = Math.max(0, Math.min(100, Math.min(base, cap)));
+  const T = practicality.threshold || 1;
+  const H = practicality.oneWayHours;
+  const overrunRatio = Math.max(0, H / T - 1);
+  const travelPenalty = Math.round(Math.min(50, overrunRatio * 25));
+  const finalScore = Math.max(0, Math.min(100, Math.round(base - travelPenalty)));
   const practicalityAdjustment = finalScore - base;
 
   const matchLabel =
@@ -174,6 +176,7 @@ export function scoreWithPracticality(dest, prefs) {
     ...result,
     practicality,
     baseScore: base,
+    travelPenalty,
     finalScore,
     practicalityAdjustment,
     matchLabel
@@ -184,7 +187,18 @@ export function rankDestinations(destinations, prefs) {
   return destinations
     .filter((d) => !isExcluded(d, prefs))
     .map((d) => ({ dest: d, result: scoreWithPracticality(d, prefs) }))
-    .sort((a, b) => b.result.finalScore - a.result.finalScore);
+    .sort((a, b) => {
+      if (b.result.finalScore !== a.result.finalScore)
+        return b.result.finalScore - a.result.finalScore;
+      const ah = a.result.practicality.oneWayHours;
+      const bh = b.result.practicality.oneWayHours;
+      if (ah !== bh) return ah - bh;
+      if (b.result.breakdown.length !== a.result.breakdown.length)
+        return b.result.breakdown.length - a.result.breakdown.length;
+      if (b.result.breakdown.interest !== a.result.breakdown.interest)
+        return b.result.breakdown.interest - a.result.breakdown.interest;
+      return String(a.dest.id || "").localeCompare(String(b.dest.id || ""));
+    });
 }
 
 export function buildReasons(dest, prefs, result) {
@@ -239,14 +253,17 @@ export function buildSuggestions(ranked, prefs) {
   const anySeason0 = top.some((r) => r.result.breakdown.season === 0);
   const anyClimate0 = top.some((r) => r.result.breakdown.climate === 0);
   const anyPace0 = top.some((r) => r.result.breakdown.pace === 0);
+  const anyInterestLow = top.some((r) => r.result.breakdown.interest < 25);
 
   const out = [];
   if ((anyPoor || anyLen0) && Number(prefs.travelDays) < 7)
     out.push({ label: "Increase your trip to at least 7 days.", step: 1 });
+  if (anyBudget0 && prefs.budget !== "Premium")
+    out.push({ label: "Increase your budget category.", step: 2 });
+  if (anyInterestLow && (prefs.interests || []).length < 3)
+    out.push({ label: "Select more interests that appeal to you.", step: 3 });
   if (prefs.allowDomestic === false)
     out.push({ label: "Allow domestic destinations.", step: 1 });
-  if (anyBudget0 && prefs.budget !== "Top-end")
-    out.push({ label: "Increase your budget category.", step: 2 });
   if (anySeason0 && prefs.travelMonth && prefs.travelMonth !== "flexible")
     out.push({ label: "Choose a flexible travel month.", step: 1 });
   if (anyPoor || anyStretch)
