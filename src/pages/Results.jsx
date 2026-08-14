@@ -6,7 +6,8 @@ import { base44 } from "@/api/base44Client";
 import { getPrefs, setSelectedDestinationId } from "@/lib/storage";
 import { TRAVEL_FALLBACK_IMAGE } from "@/lib/fallbackImage";
 import { rankDestinations, buildReasons, buildSuggestions } from "@/lib/scoring";
-import { ArrowLeft, ArrowRight, Info, MapPin, Clock, Wallet, Plane } from "lucide-react";
+import TravelFit from "@/components/TravelFit";
+import { ArrowLeft, ArrowRight, Info, MapPin, Clock, Wallet } from "lucide-react";
 
 export default function Results() {
   const navigate = useNavigate();
@@ -159,15 +160,7 @@ function DestinationCard({ dest, result, prefs, onSelect }) {
       </div>
 
       <div className="p-5">
-        <div className="bg-[#FBFAF7] border border-[#E6E2D8] rounded-lg p-3 mb-4">
-          <div className="flex items-start gap-2 text-sm">
-            <Plane className="w-4 h-4 text-[#2EC4B6] flex-shrink-0 mt-0.5" />
-            <span><span className="font-medium text-[#0B1F3A]">Likely travel: </span>{prac.travelMode}</span>
-          </div>
-          <div className="text-sm text-[#0B1F3A]/70 mt-1.5">Estimated travel: Approximately {prac.oneWayHours} hours each way</div>
-          <div className="text-sm text-[#0B1F3A]/70 mt-0.5">Usable destination time: Approximately {prac.usableDestinationDays} of {prefs.travelDays} days</div>
-          <p className="text-sm text-[#0B1F3A]/80 mt-2">{prac.message}</p>
-        </div>
+        <TravelFit prac={prac} prefs={prefs} />
 
         <ul className="space-y-1.5 mb-4">
           {reasons.map((r, i) => (

@@ -13,6 +13,7 @@ import {
   getSelectedDestinationId, getPrefs, getPackingState, setPackingState
 } from "@/lib/storage";
 import { generateItinerary } from "@/lib/itinerary";
+import DayCard from "@/components/DayCard";
 import { generatePackingList } from "@/lib/packing";
 import { TRAVEL_FALLBACK_IMAGE } from "@/lib/fallbackImage";
 import { ArrowLeft, Check, Plus, Trash2, RotateCcw, Info } from "lucide-react";
@@ -85,51 +86,30 @@ export default function TripDetail() {
 }
 
 function ItineraryView({ itinerary }) {
+  const [openDay, setOpenDay] = useState(1);
   if (!itinerary.length) {
     return <p className="text-[#0B1F3A]/60">No itinerary available for this combination.</p>;
   }
   const intensityColor = {
     Light: "bg-[#2EC4B6]/15 text-[#0E7A6E]",
     Moderate: "bg-[#0B1F3A]/10 text-[#0B1F3A]",
-    High: "bg-[#FF6B5B]/15 text-[#C04A3D]"
+    High: "bg-[#FF6B5B]/15 text-[#C04A3D]",
+    "Highly active": "bg-[#FF6B5B]/15 text-[#C04A3D]"
   };
   return (
     <div className="space-y-4">
       <p className="text-sm text-[#0B1F3A]/60">
-        A suggested {itinerary.length}-day plan based on your interests, pace and activity level. Use this as a starting point.
+        A suggested {itinerary.length}-day plan including outbound and return travel. Indicative only — verify opening hours and tickets before you go.
       </p>
       {itinerary.map((d) => (
-        <div key={d.day} className="bg-white rounded-2xl border border-[#E6E2D8] shadow-sm p-5">
-          <div className="flex items-start justify-between gap-3 mb-3">
-            <div>
-              <div className="text-xs font-semibold text-[#2EC4B6] uppercase tracking-wide">Day {d.day}</div>
-              <h3 className="font-semibold">{d.title}</h3>
-            </div>
-            <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${intensityColor[d.intensity] || ""}`}>
-              {d.intensity} intensity
-            </span>
-          </div>
-          <div className="space-y-2 text-sm">
-            <Plan time="Morning" text={d.morning} />
-            <Plan time="Afternoon" text={d.afternoon} />
-            <Plan time="Evening" text={d.evening} />
-          </div>
-          {d.food_note && (
-            <p className="mt-3 text-sm text-[#0B1F3A]/70 bg-[#FBFAF7] rounded-lg p-3 border border-[#E6E2D8]">
-              <span className="font-medium">Local bite: </span>{d.food_note}
-            </p>
-          )}
-        </div>
+        <DayCard
+          key={d.day}
+          day={d}
+          isOpen={openDay === d.day}
+          badge={intensityColor[d.intensity] || ""}
+          onToggle={() => setOpenDay((cur) => (cur === d.day ? null : d.day))}
+        />
       ))}
-    </div>
-  );
-}
-
-function Plan({ time, text }) {
-  return (
-    <div className="flex gap-3">
-      <span className="text-xs font-medium text-[#0B1F3A]/45 w-16 flex-shrink-0 pt-0.5">{time}</span>
-      <span className="text-[#0B1F3A]/80">{text}</span>
     </div>
   );
 }
