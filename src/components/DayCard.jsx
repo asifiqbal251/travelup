@@ -67,9 +67,18 @@ export default function DayCard({ day, isOpen, badge, onToggle }) {
               return (
                 <li key={i} className="flex gap-3">
                   <div className="w-24 flex-shrink-0">
-                    <div className="text-xs font-medium text-[#0B1F3A]">{e.time}</div>
-                    <div className="text-[10px] text-[#0B1F3A]/50">{e.duration}</div>
-                    <div className="text-[10px] font-semibold text-[#2EC4B6] uppercase mt-0.5">{e.slot}</div>
+                    {e.time ? (
+                      <>
+                        <div className="text-xs font-medium text-[#0B1F3A]">{e.time}</div>
+                        <div className="text-[10px] text-[#0B1F3A]/50">{e.duration}</div>
+                        <div className="text-[10px] font-semibold text-[#2EC4B6] uppercase mt-0.5">{e.slot}</div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="text-xs font-semibold text-[#0B1F3A] leading-tight">{e.slot}</div>
+                        {e.duration && <div className="text-[10px] text-[#0B1F3A]/50 mt-0.5">{e.duration}</div>}
+                      </>
+                    )}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="text-sm font-medium text-[#0B1F3A]">{e.name}</div>
@@ -79,6 +88,9 @@ export default function DayCard({ day, isOpen, badge, onToggle }) {
               );
             })}
           </ol>
+          {day.journey && (
+            <p className="text-xs text-[#0B1F3A]/60 mt-3 italic">{day.journey}</p>
+          )}
           <div className="mt-4 space-y-1.5">
             <Section label="Getting around" value={day.gettingAround} />
             <Section label="Plan ahead" value={day.planAhead} />

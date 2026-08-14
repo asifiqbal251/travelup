@@ -23,8 +23,8 @@ function normalizeMode(mode) {
 export default function TravelFit({ prac, prefs }) {
   const badge = BADGE[prac.level] || BADGE.Practical;
   const mode = normalizeMode(prac.travelMode);
-  const eachWay = `~${prac.oneWayHours} hr`;
-  const timeThere = `~${prac.usableDestinationDays} days`;
+  const eachWay = `About ${prac.oneWayHours} hour${prac.oneWayHours === 1 ? "" : "s"} each way`;
+  const timeThere = `About ${prac.usableDestinationDays} day${prac.usableDestinationDays === 1 ? "" : "s"}`;
 
   return (
     <section
@@ -43,15 +43,15 @@ export default function TravelFit({ prac, prefs }) {
       </div>
       <dl className="grid grid-cols-2 sm:grid-cols-3 gap-2">
         <div className="col-span-2 sm:col-span-1 bg-white rounded-md border border-[#E6E2D8] px-3 py-2 min-w-0">
-          <dt className="text-[10px] uppercase tracking-wide text-[#0B1F3A]/50">Getting there</dt>
+          <dt className="text-[10px] uppercase tracking-wide text-[#0B1F3A]/50">How you'll travel</dt>
           <dd className="text-sm font-medium text-[#0B1F3A] mt-0.5 break-words">{mode}</dd>
         </div>
         <div className="bg-white rounded-md border border-[#E6E2D8] px-3 py-2">
-          <dt className="text-[10px] uppercase tracking-wide text-[#0B1F3A]/50">Each way</dt>
+          <dt className="text-[10px] uppercase tracking-wide text-[#0B1F3A]/50">Travel time</dt>
           <dd className="text-sm font-medium text-[#0B1F3A] mt-0.5">{eachWay}</dd>
         </div>
         <div className="bg-white rounded-md border border-[#E6E2D8] px-3 py-2">
-          <dt className="text-[10px] uppercase tracking-wide text-[#0B1F3A]/50">Time there</dt>
+          <dt className="text-[10px] uppercase tracking-wide text-[#0B1F3A]/50">Time at destination</dt>
           <dd className="text-sm font-medium text-[#0B1F3A] mt-0.5">{timeThere}</dd>
         </div>
       </dl>
