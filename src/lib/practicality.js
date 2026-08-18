@@ -34,7 +34,20 @@ function flightHours(distanceKm) {
   if (distanceKm < 5500) return 8.5;
   if (distanceKm < 8000) return 11;
   if (distanceKm < 11000) return 14;
-  return 17;
+  if (distanceKm < 14000) return 17;
+  return 20;
+}
+
+// Extra connection/transfer burden for routes unlikely to be nonstop.
+// Deterministic and scales with distance: long intercontinental routes
+// typically need one or more connections, so they carry more transfer time.
+// This is added to any destination-curated connection time.
+function connectionBurden(distanceKm) {
+  if (distanceKm == null) return 0;
+  if (distanceKm < 4000) return 0;
+  if (distanceKm < 8000) return 2;
+  if (distanceKm < 12000) return 3;
+  return 5;
 }
 
 const DOMESTIC_OVERHEAD = 1.5; // check-in, security, station/airport transfer
@@ -46,14 +59,17 @@ export function assessPracticality(dest, prefs) {
     prefs && prefs.departureCity,
     prefs && prefs.residenceCountry
   );
-  const internalAccess = Number((dest && dest.internal_access_penalty) || 0);
-  const connectionHours = Number((dest && dest.connection_hours) || 0);
   const isDomestic =
     !!prefs &&
     !!prefs.residenceCountry &&
     !!dest &&
     String(prefs.residenceCountry).toLowerCase().trim() ===
       String(dest.country).toLowerCase().trim();
+  // connection_hours and internal_access_penalty model the burden of reaching
+  // the destination from an international gateway. A domestic traveller reaches
+  // the destination directly, so these do not apply.
+  const internalAccess = isDomestic ? 0 : Number((dest && dest.internal_access_penalty) || 0);
+  const connectionHours = isDomestic ? 0 : Number((dest && dest.connection_hours) || 0);
 
   let distanceKm = null;
   let baseHours;
@@ -63,13 +79,15 @@ export function assessPracticality(dest, prefs) {
     distanceKm = haversineKm(origin, destCoords);
     baseHours = flightHours(distanceKm);
   } else {
-    // Transparent country-level fallback when a city is not recognized.
+    // Origin unrecognized: be conservative. Treat as an intercontinental
+    // journey so a short trip is not falsely presented as practical.
     known = false;
-    baseHours = 8;
+    baseHours = 16;
   }
 
   const overhead = isDomestic ? DOMESTIC_OVERHEAD : INTERNATIONAL_OVERHEAD;
-  const oneWayHours = baseHours + overhead + connectionHours + internalAccess;
+  const routeConnection = distanceKm != null ? connectionBurden(distanceKm) : 4;
+  const oneWayHours = baseHours + overhead + connectionHours + routeConnection + internalAccess;
   const roundTripHours = oneWayHours * 2;
 
   const tripDays = Number((prefs && prefs.travelDays) || 0);
@@ -99,7 +117,18 @@ export function assessPracticality(dest, prefs) {
     penalty = 10 + ((travelShare - 0.3) / 0.15) * 20;
   else penalty = Math.min(50, 30 + ((travelShare - 0.45) / 0.25) * 20);
 
-  const usableRaw = tripHours > 0 ? tripDays - roundTripHours / 24 : 0;
+  // One source of truth for "time at destination": derive it from the SAME
+  // travel-day allocation the itinerary uses (short = none, medium = 2,
+  // long = 4 dedicated travel days), so the Travel Fit value agrees with the
+  // generated itinerary rather than from a raw hours/24 subtraction.
+  // Fold (short) when the journey is same-day arrivable (depart morning,
+  // arrive evening); medium = one dedicated travel day each way; long = the
+  // journey spans two calendar days each way (preserved long-haul handling).
+  const tier = oneWayHours <= 13 ? "short" : oneWayHours <= 16 ? "medium" : "long";
+  let usableRaw;
+  if (tier === "short") usableRaw = tripDays;
+  else if (tier === "medium") usableRaw = tripDays - 2;
+  else usableRaw = tripDays - 4;
   const usableDestinationDays = Math.max(0, Math.round(usableRaw * 2) / 2);
 
   let travelMode =
@@ -112,6 +141,7 @@ export function assessPracticality(dest, prefs) {
 
   return {
     level,
+    tier,
     message,
     oneWayHours: Math.round(oneWayHours * 10) / 10,
     roundTripHours: Math.round(roundTripHours * 10) / 10,

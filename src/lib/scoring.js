@@ -179,9 +179,9 @@ export function isExcluded(dest, prefs) {
 }
 
 // Base preference score + continuous travel-practicality penalty → final score.
-export function scoreWithPracticality(dest, prefs) {
+export function scoreWithPracticality(dest, prefs, prac) {
   const result = scoreDestination(dest, prefs);
-  const practicality = assessPracticality(dest, prefs);
+  const practicality = prac || assessPracticality(dest, prefs);
 
   const baseFull = result.score; // full precision
   const penaltyFull = practicality.travelPenalty; // full precision
@@ -211,10 +211,30 @@ export function scoreWithPracticality(dest, prefs) {
   };
 }
 
+export function minUsableDays(tripDays) {
+  if (tripDays <= 4) return 1.5;
+  if (tripDays <= 7) return 2;
+  if (tripDays <= 10) return 2.5;
+  return 3;
+}
+
+// Practicality ELIGIBILITY GATE, applied BEFORE normal Travel Fit scoring and
+// ranking. A destination impractical for the selected trip duration does not
+// enter the preference ranking at all — high preference scores can no longer
+// override an unreasonable journey. The threshold scales with trip length so
+// long-haul destinations remain eligible for longer vacations.
+export function isPractical(prac, tripDays) {
+  if (!prac) return false;
+  return prac.usableDestinationDays >= minUsableDays(tripDays);
+}
+
 export function rankDestinations(destinations, prefs) {
+  const tripDays = Number((prefs && prefs.travelDays) || 0);
   return destinations
     .filter((d) => !isExcluded(d, prefs))
-    .map((d) => ({ dest: d, result: scoreWithPracticality(d, prefs) }))
+    .map((d) => ({ dest: d, practicality: assessPracticality(d, prefs) }))
+    .filter((r) => isPractical(r.practicality, tripDays))
+    .map((r) => ({ dest: r.dest, result: scoreWithPracticality(r.dest, prefs, r.practicality) }))
     .sort((a, b) => {
       if (b.result.finalRaw !== a.result.finalRaw)
         return b.result.finalRaw - a.result.finalRaw;

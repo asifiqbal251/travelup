@@ -280,7 +280,7 @@ export function generateItinerary(dest, prefs) {
 
   const prac = assessPracticality(dest, prefs);
   const oneWay = prac.oneWayHours;
-  const tier = oneWay <= 8 ? "short" : oneWay <= 16 ? "medium" : "long";
+  const tier = prac.tier;
   const origin = (prefs.departureCity || "home").trim();
   const dShort = destShort(dest);
   const hasConnection = Number(dest.connection_hours || 0) > 0;

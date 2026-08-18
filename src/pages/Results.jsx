@@ -96,9 +96,21 @@ export default function Results() {
         </div>
       )}
 
+      {ranked.length > 0 && ranked.length < 3 && (
+        <div className="bg-[#E8A33D]/10 border border-[#E8A33D]/40 rounded-xl p-4 mb-6">
+          <p className="text-sm font-medium text-[#0B1F3A]">
+            We found only {ranked.length} practical match{ranked.length === 1 ? "" : "es"} for a {prefs.travelDays}-day trip from your location.
+          </p>
+          <p className="text-sm text-[#0B1F3A]/70 mt-1">
+            The current destination catalogue has limited practical options for this trip length. Try a longer trip, broader preferences, or nearby and domestic destinations.
+          </p>
+        </div>
+      )}
+
       {top.length === 0 ? (
         <div className="text-center py-16 text-[#0B1F3A]/60">
-          <p>No destinations matched your exclusions. Try revising your answers.</p>
+          <p>No practical destinations were found for a {prefs.travelDays}-day trip from your location in the current catalogue.</p>
+          <p className="mt-1">Try a longer trip, broader preferences, or nearby and domestic destinations.</p>
           <Button onClick={() => navigate("/questionnaire")} className="mt-4 bg-[#0B1F3A] min-h-11">Revise answers</Button>
         </div>
       ) : (
