@@ -1,12 +1,12 @@
 // Deterministic, travel-aware itinerary generation from curated destination
 // day templates. The selected trip length is the complete vacation (home to
 // home), so outbound and return travel are placed WITHIN the requested number
-// of days — never on top of it. Travel allocation uses the existing one-way
-// estimate:
-//   <=8h each way:  travel folded into the first and last template days
-//   >8–16h each way: a dedicated outbound day (with same-day arrival) + a dedicated return day
-//   >16h each way:  outbound spans Day 1 (transit) + Day 2 (arrival/recovery);
-//                   return begins on the penultimate day and concludes on the final day
+// of days — never on top of it. Travel allocation uses the one-way estimate across four tiers:
+//   under 5h each way: travel folded into the first and last template days (full days)
+//   5–8h each way:     travel folded, but the arrival/departure days keep only a light option
+//   8–15h each way:    a dedicated outbound day (with same-day arrival) + a dedicated return day
+//   >15h each way:     outbound spans Day 1 (transit) + Day 2 (arrival/recovery);
+//                      return begins on the penultimate day and concludes on the final day
 // Travel entries use SEQUENCE-based sections (no invented clock times); the
 // estimated total journey duration is shown separately. Destination days use
 // a 5-entry timeline built ONLY from that day's own morning/afternoon/
@@ -94,6 +94,14 @@ function buildTemplateDay(t, dest, shift, opts) {
     timeline.push(act("Lunch", "12:30–14:00", "~1.5 hr", "Local bite", "food_note"));
     timeline.push(seq("Return begins", "Final activity, then depart", "A partial local activity before heading to the airport or station."));
     timeline.push(seq("Departure", "Check-in and depart", "Begin the return journey; travel continues overnight."));
+  } else if (o.partialOutbound) {
+    timeline.push(seq("Departure", `Depart ${o.origin}`, "Check in and travel to your destination; confirm your transport."));
+    timeline.push(seq("Arrival", `Arrive in ${o.dShort}`, "Clear arrivals and transfer to your stay."));
+    timeline.push(act("Evening", "18:30–21:00", "~1.5 hr", "Settle in and a casual dinner nearby", "evening"));
+  } else if (o.partialReturn) {
+    timeline.push(act("Morning", "08:00–10:30", "~2 hr", "Casual breakfast or a brief walk near your stay", "morning"));
+    timeline.push(seq("Return begins", "Head to airport or station", "Allow time for transfer and check-in; confirm your departure time."));
+    timeline.push(seq("Arrive home", `Return to ${o.origin}`, `Travel home to ${o.origin}.`));
   } else {
     timeline.push(act("Morning", "08:00–11:00", "~3 hr", shortName(t.morning) || "Morning activity", "morning"));
     timeline.push(seq("Late morning", "Mid-morning break", "A short break or local transit between stops."));
@@ -102,7 +110,7 @@ function buildTemplateDay(t, dest, shift, opts) {
     timeline.push(act("Evening", "18:30–21:30", "~3 hr", shortName(t.evening) || "Evening", "evening"));
   }
 
-  const journey = (o.outbound || o.returnFold || o.returnFoldLong)
+  const journey = (o.outbound || o.returnFold || o.returnFoldLong || o.partialOutbound || o.partialReturn)
     ? `Estimated total journey: about ${o.oneWay} hours each way.`
     : null;
 
@@ -330,16 +338,22 @@ export function generateItinerary(dest, prefs) {
   };
 
   const days = [];
-  if (tier === "short") {
+  if (tier === "fold" || tier === "partialFold") {
     const first = selected[0];
     const last = selected.length > 1 ? selected[selected.length - 1] : null;
     const middle = selected.length > 2 ? selected.slice(1, selected.length - 1) : [];
-    if (first) days.push(buildTemplateDay(first, dest, shift, { outbound: true, origin, dShort, oneWay }));
+    const outOpt = tier === "partialFold"
+      ? { partialOutbound: true, origin, dShort, oneWay }
+      : { outbound: true, origin, dShort, oneWay };
+    const retOpt = tier === "partialFold"
+      ? { partialReturn: true, origin, dShort, oneWay }
+      : { returnFold: true, origin, dShort, oneWay };
+    if (first) days.push(buildTemplateDay(first, dest, shift, outOpt));
     insertRecovery(middle).forEach((t) => {
       if (t) days.push(buildTemplateDay(t, dest, shift, {}));
       else days.push(buildRecoveryDay(dest, pace, false));
     });
-    if (last) days.push(buildTemplateDay(last, dest, shift, { returnFold: true, origin, dShort, oneWay }));
+    if (last) days.push(buildTemplateDay(last, dest, shift, retOpt));
     else days.push(buildTravelDay("return", { dest, origin, dShort, oneWay, long: false, hasConnection }));
   } else if (tier === "medium") {
     days.push(buildTravelDay("outbound", { dest, origin, dShort, oneWay, long: false, hasConnection }));

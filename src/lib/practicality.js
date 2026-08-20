@@ -23,19 +23,13 @@ export function haversineKm(a, b) {
   return 2 * EARTH_R * Math.asin(Math.min(1, Math.sqrt(h)));
 }
 
-// Approximate one-way flight time by distance band (hours). Planning bands,
-// not claims about live schedules; no direct flights are implied.
+// Smooth one-way flight-time estimate: ~800 km/h average cruise plus a fixed
+// 45-minute allowance for takeoff, climb, descent and landing. Stays within
+// roughly 1 hour of real nonstop times across short to long routes; planning
+// estimate only, no claim about live schedules or direct flights.
 function flightHours(distanceKm) {
   if (distanceKm == null) return null;
-  if (distanceKm < 400) return 2.5;
-  if (distanceKm < 900) return 3.5;
-  if (distanceKm < 1800) return 4.5;
-  if (distanceKm < 3500) return 6;
-  if (distanceKm < 5500) return 8.5;
-  if (distanceKm < 8000) return 11;
-  if (distanceKm < 11000) return 14;
-  if (distanceKm < 14000) return 17;
-  return 20;
+  return distanceKm / 800 + 0.75;
 }
 
 // Extra connection/transfer burden for routes unlikely to be nonstop.
@@ -118,15 +112,20 @@ export function assessPracticality(dest, prefs) {
   else penalty = Math.min(50, 30 + ((travelShare - 0.45) / 0.25) * 20);
 
   // One source of truth for "time at destination": derive it from the SAME
-  // travel-day allocation the itinerary uses (short = none, medium = 2,
-  // long = 4 dedicated travel days), so the Travel Fit value agrees with the
-  // generated itinerary rather than from a raw hours/24 subtraction.
-  // Fold (short) when the journey is same-day arrivable (depart morning,
-  // arrive evening); medium = one dedicated travel day each way; long = the
-  // journey spans two calendar days each way (preserved long-haul handling).
-  const tier = oneWayHours <= 13 ? "short" : oneWayHours <= 16 ? "medium" : "long";
+  // travel-day allocation the itinerary uses, so the Travel Fit value agrees
+  // with the generated itinerary rather than from a raw hours/24 subtraction.
+  //   fold        under 5h:    no day lost (travel folded into day 1/N)
+  //   partialFold 5–8h:       half a day lost each way (1 day total)
+  //   medium      8–15h:      one full day lost each way (2 days total)
+  //   long        >15h:        two full days lost each way (4 days total)
+  const tier =
+    oneWayHours <= 5 ? "fold" :
+    oneWayHours <= 8 ? "partialFold" :
+    oneWayHours <= 15 ? "medium" :
+    "long";
   let usableRaw;
-  if (tier === "short") usableRaw = tripDays;
+  if (tier === "fold") usableRaw = tripDays;
+  else if (tier === "partialFold") usableRaw = tripDays - 1;
   else if (tier === "medium") usableRaw = tripDays - 2;
   else usableRaw = tripDays - 4;
   const usableDestinationDays = Math.max(0, Math.round(usableRaw * 2) / 2);
