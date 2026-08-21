@@ -1,10 +1,13 @@
 // Deterministic, destination-specific travel-practicality assessment.
 // One-way door-to-door time = flight-time band + airport/immigration overhead +
 // expected connection time + curated internal-access (onward ground) time.
+// Regional-route overrides (driving, ferry, train, shuttle) replace the flight
+// estimate with a complete curated journey time for nearby destinations.
 // Practicality is based on the share of the total trip consumed by round-trip
 // travel. No live geocoding, flight, schedule or mapping APIs.
 
 import { getCityCoords, getDestinationCoords } from "@/lib/coordinates";
+import { getRegionalRoute } from "@/lib/regionalRoutes";
 
 const EARTH_R = 6371;
 function toRad(d) {
@@ -47,7 +50,71 @@ function connectionBurden(distanceKm) {
 const DOMESTIC_OVERHEAD = 1.5; // check-in, security, station/airport transfer
 const INTERNATIONAL_OVERHEAD = 2.5; // adds immigration/customs
 
+function levelAndMessage(travelShare) {
+  if (travelShare <= 0.2) return { level: "Practical", message: "Practical for your selected trip length." };
+  if (travelShare <= 0.3) return { level: "Manageable", message: "Manageable for your trip length, but allow time for travel." };
+  if (travelShare <= 0.45) return { level: "Stretch", message: "Travel may consume a significant share of this trip." };
+  return { level: "Poor practical fit", message: "A large share of this trip would be spent travelling." };
+}
+
+function penaltyFor(travelShare) {
+  if (travelShare <= 0.2) return 0;
+  if (travelShare <= 0.3) return ((travelShare - 0.2) / 0.1) * 10;
+  if (travelShare <= 0.45) return 10 + ((travelShare - 0.3) / 0.15) * 20;
+  return Math.min(50, 30 + ((travelShare - 0.45) / 0.25) * 20);
+}
+
+// Override path: the curated one-way time already includes the full transport
+// burden, so no flight overhead, connection hours or internal-access hours are
+// added. Destination time is derived consistently from the round-trip travel.
+function assessOverride(dest, prefs, override) {
+  const oneWayHours = override.oneWayHours;
+  const roundTripHours = oneWayHours * 2;
+  const tripDays = Number((prefs && prefs.travelDays) || 0);
+  const tripHours = tripDays * 24;
+  const travelShare = tripHours > 0 ? roundTripHours / tripHours : 0;
+  const { level, message } = levelAndMessage(travelShare);
+  const penalty = penaltyFor(travelShare);
+
+  // Destination time = total days − (round-trip hours ÷ 24), rounded to the
+  // nearest half day, never more than the total trip duration.
+  const usableRaw = tripDays - roundTripHours / 24;
+  const usableDestinationDays = Math.max(0, Math.min(tripDays, Math.round(usableRaw * 2) / 2));
+
+  const isDomestic =
+    !!prefs && !!prefs.residenceCountry && !!dest &&
+    String(prefs.residenceCountry).toLowerCase().trim() ===
+      String(dest.country).toLowerCase().trim();
+
+  const tier =
+    oneWayHours <= 5 ? "fold" :
+    oneWayHours <= 8 ? "partialFold" :
+    oneWayHours <= 15 ? "medium" :
+    "long";
+
+  return {
+    level,
+    tier,
+    message,
+    oneWayHours: Math.round(oneWayHours * 10) / 10,
+    roundTripHours: Math.round(roundTripHours * 10) / 10,
+    travelShare,
+    travelPenalty: penalty,
+    usableDestinationDays,
+    travelMode: override.mode,
+    distanceKm: null,
+    known: true,
+    isDomestic,
+    isOverride: true
+  };
+}
+
 export function assessPracticality(dest, prefs) {
+  const override = getRegionalRoute(prefs, dest);
+  if (override) {
+    return assessOverride(dest, prefs, override);
+  }
+
   const destCoords = getDestinationCoords(dest);
   const origin = getCityCoords(
     prefs && prefs.departureCity,
@@ -87,29 +154,8 @@ export function assessPracticality(dest, prefs) {
   const tripDays = Number((prefs && prefs.travelDays) || 0);
   const tripHours = tripDays * 24;
   const travelShare = tripHours > 0 ? roundTripHours / tripHours : 0;
-
-  let level;
-  let message;
-  if (travelShare <= 0.2) {
-    level = "Practical";
-    message = "Practical for your selected trip length.";
-  } else if (travelShare <= 0.3) {
-    level = "Manageable";
-    message = "Manageable for your trip length, but allow time for travel.";
-  } else if (travelShare <= 0.45) {
-    level = "Stretch";
-    message = "Travel may consume a significant share of this trip.";
-  } else {
-    level = "Poor practical fit";
-    message = "A large share of this trip would be spent travelling.";
-  }
-
-  let penalty;
-  if (travelShare <= 0.2) penalty = 0;
-  else if (travelShare <= 0.3) penalty = ((travelShare - 0.2) / 0.1) * 10;
-  else if (travelShare <= 0.45)
-    penalty = 10 + ((travelShare - 0.3) / 0.15) * 20;
-  else penalty = Math.min(50, 30 + ((travelShare - 0.45) / 0.25) * 20);
+  const { level, message } = levelAndMessage(travelShare);
+  const penalty = penaltyFor(travelShare);
 
   // One source of truth for "time at destination": derive it from the SAME
   // travel-day allocation the itinerary uses, so the Travel Fit value agrees
@@ -150,6 +196,7 @@ export function assessPracticality(dest, prefs) {
     travelMode,
     distanceKm: distanceKm ? Math.round(distanceKm) : null,
     known,
-    isDomestic
+    isDomestic,
+    isOverride: false
   };
 }

@@ -22,7 +22,7 @@ function normalizeMode(mode) {
 
 export default function TravelFit({ prac, prefs }) {
   const badge = BADGE[prac.level] || BADGE.Practical;
-  const mode = normalizeMode(prac.travelMode);
+  const mode = prac.isOverride ? prac.travelMode : normalizeMode(prac.travelMode);
   const eachWay = `About ${prac.oneWayHours} hour${prac.oneWayHours === 1 ? "" : "s"} each way`;
   const timeThere = `About ${prac.usableDestinationDays} day${prac.usableDestinationDays === 1 ? "" : "s"}`;
 

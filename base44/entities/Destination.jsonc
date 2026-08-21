@@ -147,6 +147,14 @@
           },
           "flexible": {
             "type": "boolean"
+          },
+          "label": {
+            "type": "string",
+            "description": "Optional concise activity label shown instead of an auto-truncated title"
+          },
+          "optional_swap": {
+            "type": "string",
+            "description": "Optional per-template swap suggestion shown in the Optional swap section"
           }
         }
       }
