@@ -257,6 +257,22 @@ export function rankDestinations(destinations, prefs) {
     });
 }
 
+// Count destinations excluded from ranking specifically by the practicality
+// eligibility gate (isPractical), AFTER the traveller's own exclusions and
+// travel-scope filtering. Destinations dropped by the exclusion list, country
+// scope, or visited-country handling are NOT counted here — only those the
+// traveller would otherwise have seen but for the trip-length/travel-time limit.
+export function practicalityExcludedCount(destinations, prefs) {
+  const tripDays = Number((prefs && prefs.travelDays) || 0);
+  let count = 0;
+  destinations.forEach((d) => {
+    if (isExcluded(d, prefs)) return;
+    const prac = assessPracticality(d, prefs);
+    if (!isPractical(prac, tripDays)) count += 1;
+  });
+  return count;
+}
+
 export function buildReasons(dest, prefs, result) {
   const reasons = [];
   const monthName =

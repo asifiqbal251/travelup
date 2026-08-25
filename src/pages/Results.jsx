@@ -5,7 +5,7 @@ import { Image } from "@/components/ui/image";
 import { base44 } from "@/api/base44Client";
 import { getPrefs, setSelectedDestinationId } from "@/lib/storage";
 import { TRAVEL_FALLBACK_IMAGE } from "@/lib/fallbackImage";
-import { rankDestinations, buildReasons, buildSuggestions } from "@/lib/scoring";
+import { rankDestinations, buildReasons, buildSuggestions, practicalityExcludedCount } from "@/lib/scoring";
 import TravelFit from "@/components/TravelFit";
 import { ArrowLeft, ArrowRight, Info, MapPin, Clock, Wallet } from "lucide-react";
 
@@ -13,6 +13,7 @@ export default function Results() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [ranked, setRanked] = useState([]);
+  const [allDestinations, setAllDestinations] = useState([]);
   const [prefs, setPrefsState] = useState(null);
   const [error, setError] = useState("");
 
@@ -25,6 +26,7 @@ export default function Results() {
     setPrefsState(p);
     base44.entities.Destination.list()
       .then((dests) => {
+        setAllDestinations(dests);
         const r = rankDestinations(dests, p);
         setRanked(r);
         setLoading(false);
@@ -53,6 +55,9 @@ export default function Results() {
 
   const top = ranked.slice(0, 3);
   const suggestions = buildSuggestions(ranked, prefs);
+  const practicalityExcluded = practicalityExcludedCount(allDestinations, prefs);
+  const hasTripLengthHint = suggestions.some((s) => /increase your trip|longer|7 days/i.test(s.label));
+  const showPracticalityNote = practicalityExcluded > 0 && !hasTripLengthHint;
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-8">
@@ -76,6 +81,15 @@ export default function Results() {
           government sources for your citizenship.
         </p>
       </div>
+
+      {showPracticalityNote && (
+        <div className="bg-[#2EC4B6]/10 border border-[#2EC4B6]/30 rounded-xl p-4 mb-6">
+          <p className="text-sm text-[#0B1F3A]/80">
+            Some longer-distance destinations weren't included because this trip length doesn't leave
+            enough time to make the travel worthwhile — a longer trip would open up more options.
+          </p>
+        </div>
+      )}
 
       {suggestions.length > 0 && (
         <div className="bg-[#FF6B5B]/10 border border-[#FF6B5B]/30 rounded-xl p-4 mb-6">
