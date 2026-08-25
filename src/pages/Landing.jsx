@@ -47,7 +47,7 @@ export default function Landing() {
         <div className="grid sm:grid-cols-3 gap-6">
           {[
             { icon: Compass, title: "Answer a short questionnaire", text: "Tell us your month, budget, interests, pace and more in a quick guided flow." },
-            { icon: MapPinned, title: "Get three matched destinations", text: "We score 18 curated trips out of 100 and show exactly why each one fits you." },
+            { icon: MapPinned, title: "Get three matched destinations", text: "We score 54 curated trips out of 100 and show exactly why each one fits you." },
             { icon: ClipboardList, title: "Receive a plan & packing list", text: "Pick a destination to get a day-by-day itinerary and a checkable packing checklist." }
           ].map((s) => (
             <div key={s.title} className="bg-white rounded-2xl p-6 border border-[#E6E2D8] shadow-sm">

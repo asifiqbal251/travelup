@@ -118,24 +118,42 @@ const seq = (slot, name, note, duration) => ({
 
 // Template selection: short trips prioritise signature days by interest match;
 // longer trips keep route order.
+// Template selection: signature/flagship days are always included first (up to
+// the day budget), then the remaining budget is filled by tag-overlap scoring
+// (short trips) or route order (longer trips). If a destination's signature-day
+// count already meets or exceeds the day budget, the signature days themselves
+// are score-ranked so a tight budget never crashes or yields zero days.
 function selectTemplates(activityTemplates, templateBudget, dest, prefs) {
   if (templateBudget <= 0) return [];
   const prim = dest.primary_interests || [];
   const userI = prefs.interests || [];
-  if (templateBudget <= 4) {
-    const scored = activityTemplates
-      .map((t, idx) => {
-        let s = 0;
-        (t.interests || []).forEach((i) => {
-          if (prim.includes(i)) s += 2;
-          if (userI.includes(i)) s += 1;
-        });
-        return { t, idx, s };
-      })
-      .sort((a, b) => b.s - a.s || a.idx - b.idx);
-    return scored.slice(0, templateBudget).map((x) => x.t);
+
+  const scoreOf = (t) => {
+    let s = 0;
+    (t.interests || []).forEach((i) => {
+      if (prim.includes(i)) s += 2;
+      if (userI.includes(i)) s += 1;
+    });
+    return s;
+  };
+  const ranked = (arr) =>
+    arr
+      .map((t, idx) => ({ t, idx, s: scoreOf(t) }))
+      .sort((a, b) => b.s - a.s || a.idx - b.idx)
+      .map((x) => x.t);
+
+  const signature = activityTemplates.filter((t) => t.signature);
+  const others = activityTemplates.filter((t) => !t.signature);
+
+  if (signature.length >= templateBudget) {
+    return ranked(signature).slice(0, templateBudget);
   }
-  return activityTemplates.slice(0, templateBudget);
+
+  const remaining = templateBudget - signature.length;
+  const fill = templateBudget <= 4 ? ranked(others).slice(0, remaining) : others.slice(0, remaining);
+
+  const chosen = new Set([...signature, ...fill]);
+  return activityTemplates.filter((t) => chosen.has(t));
 }
 
 function buildTemplateDay(t, dest, shift, opts) {

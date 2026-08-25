@@ -155,6 +155,11 @@
           "optional_swap": {
             "type": "string",
             "description": "Optional per-template swap suggestion shown in the Optional swap section"
+          },
+          "signature": {
+            "type": "boolean",
+            "default": false,
+            "description": "Flag this day template as a signature/flagship experience; signature days are always included in the itinerary before tag-overlap scoring fills the remaining budget"
           }
         }
       }

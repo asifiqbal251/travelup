@@ -62,7 +62,8 @@ const OVERRIDES = [
   { country: "United Kingdom", origin: "london", dest: "bath", mode: "Direct train + local transfer", oneWayHours: 2 },
   { country: "United Kingdom", origin: "london", dest: "lake district", mode: "Train + onward local transfer", oneWayHours: 4 },
   { country: "United Kingdom", origin: "london", dest: "brussels and bruges", mode: "Eurostar + onward Belgian train", oneWayHours: 3.5 },
-  { country: "United Kingdom", origin: "london", dest: "isle of skye", mode: "Flight to Inverness + road transfer", oneWayHours: 8 }
+  { country: "United Kingdom", origin: "london", dest: "isle of skye", mode: "Flight to Inverness + road transfer", oneWayHours: 8 },
+  { country: "United Kingdom", origin: "london", dest: "dublin", mode: "Short flight", oneWayHours: 2 }
 ];
 
 // Returns { mode, oneWayHours } when an override matches, otherwise null.

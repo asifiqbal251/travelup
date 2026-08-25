@@ -13,7 +13,7 @@ export default function About() {
 
       <div className="grid sm:grid-cols-2 gap-4 mb-8">
         {[
-          { icon: Globe, title: "Curated, not random", text: "18 diverse destinations scored transparently out of 100 against your answers." },
+          { icon: Globe, title: "Curated, not random", text: "54 diverse destinations scored transparently out of 100 against your answers." },
           { icon: Lock, title: "Private by design", text: "Your questionnaire answers stay in your browser — nothing is sent to a server or an account." },
           { icon: Heart, title: "No sign-up", text: "No login, no bookings, no payments. Just a plan you can revise anytime." },
           { icon: ShieldCheck, title: "Indicative only", text: "All figures are estimates — please verify official requirements before you travel." }
