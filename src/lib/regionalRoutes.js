@@ -26,7 +26,10 @@ const ORIGIN_ALIASES = {
   "los angeles": "los angeles",
   la: "los angeles",
   "san francisco": "san francisco",
-  sf: "san francisco"
+  sf: "san francisco",
+  london: "london",
+  "london uk": "london",
+  "london england": "london"
 };
 
 function originKey(raw) {
@@ -52,7 +55,14 @@ const OVERRIDES = [
   { country: "United States", origin: "los angeles", dest: "san diego", mode: "Drive or train", oneWayHours: 2.5 },
   { country: "United States", origin: "los angeles", dest: "las vegas", mode: "Flight or drive", oneWayHours: 4.5 },
   { country: "United States", origin: "san francisco", dest: "napa and sonoma", mode: "Drive", oneWayHours: 1.5 },
-  { country: "United States", origin: "san francisco", dest: "yosemite national park", mode: "Drive", oneWayHours: 4.5 }
+  { country: "United States", origin: "san francisco", dest: "yosemite national park", mode: "Drive", oneWayHours: 4.5 },
+  { country: "United Kingdom", origin: "london", dest: "paris", mode: "Direct Eurostar train", oneWayHours: 3 },
+  { country: "United Kingdom", origin: "london", dest: "edinburgh", mode: "Direct train", oneWayHours: 4.5 },
+  { country: "United Kingdom", origin: "london", dest: "amsterdam", mode: "Direct Eurostar train", oneWayHours: 5 },
+  { country: "United Kingdom", origin: "london", dest: "bath", mode: "Direct train + local transfer", oneWayHours: 2 },
+  { country: "United Kingdom", origin: "london", dest: "lake district", mode: "Train + onward local transfer", oneWayHours: 4 },
+  { country: "United Kingdom", origin: "london", dest: "brussels and bruges", mode: "Eurostar + onward Belgian train", oneWayHours: 3.5 },
+  { country: "United Kingdom", origin: "london", dest: "isle of skye", mode: "Flight to Inverness + road transfer", oneWayHours: 8 }
 ];
 
 // Returns { mode, oneWayHours } when an override matches, otherwise null.
@@ -77,7 +87,17 @@ const LOCAL_TRANSPORT = {
   "San Diego": "Public transit, rideshare or car depending on the area.",
   "Las Vegas": "Walking, monorail, taxi or rideshare.",
   "Napa and Sonoma": "Guided tour, designated driver or car when no tasting is involved.",
-  "Yosemite National Park": "Park shuttle when operating, car and walking trails."
+  "Yosemite National Park": "Park shuttle when operating, car and walking trails.",
+  "Paris": "Walking and the metro; taxis for longer hops.",
+  "Edinburgh": "Walking and Lothian buses; taxis for longer hops.",
+  "Amsterdam": "Walking, trams and bikes; taxis for longer hops.",
+  "Bath": "Walking; local buses and taxis for longer hops.",
+  "Lake District": "Local buses and a car give the most flexibility; taxis with prior booking.",
+  "Dublin": "Walking, Dublin Bus, Luas tram and taxis.",
+  "Brussels & Bruges": "Walking and local trains between Brussels and Bruges; trams within each city.",
+  "Isle of Skye": "A car is strongly recommended; local buses are very limited.",
+  "Beijing": "Metro, taxis and ride-hailing apps.",
+  "Shanghai": "Metro, taxis and ride-hailing apps."
 };
 
 export function getLocalTransport(destName) {
