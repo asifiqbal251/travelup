@@ -365,16 +365,23 @@ function buildOverrideArrivalFoldDay(t, dest, shift, o) {
 //     journey — the day uses a return-specific title and tags so the heading
 //     matches the body.
 function buildOverrideReturnFoldDay(t, dest, shift, o) {
-  const intensity = applyPaceShift(t.intensity || "Moderate", shift);
   const location = dest.name;
   const timeline = [];
   let title;
   let highlights;
+  let intensity;
   if (o.profile === "light") {
+    // Light profile keeps a real morning activity, so the template's intensity
+    // (pace-adjusted) is still meaningful.
+    intensity = applyPaceShift(t.intensity || "Moderate", shift);
     timeline.push(act("Morning", "08:00–11:00", t.morning || "Morning activity"));
     title = t.title;
     highlights = highlightLabels(t);
   } else {
+    // Evening profile is breakfast + travel home only — no scheduled activity,
+    // so the inherited template intensity (e.g. "High") is misleading. Reset
+    // to Light so the badge matches the day's actual content.
+    intensity = "Light";
     timeline.push(seq("Morning", "Breakfast or a short walk", "A relaxed start before heading home."));
     title = `Return: ${dest.name} → ${o.origin}`;
     highlights = ["Breakfast", "Return", "Arrive home"];

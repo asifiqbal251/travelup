@@ -96,13 +96,10 @@ export default function Results() {
         </div>
       )}
 
-      {ranked.length > 0 && ranked.length < 3 && (
-        <div className="bg-[#E8A33D]/10 border border-[#E8A33D]/40 rounded-xl p-4 mb-6">
+      {ranked.length > 0 && ranked.length < 3 && suggestions.length === 0 && (
+        <div className="bg-[#2EC4B6]/10 border border-[#2EC4B6]/40 rounded-xl p-4 mb-6">
           <p className="text-sm font-medium text-[#0B1F3A]">
-            We found only {ranked.length} practical match{ranked.length === 1 ? "" : "es"} for a {prefs.travelDays}-day trip from your location.
-          </p>
-          <p className="text-sm text-[#0B1F3A]/70 mt-1">
-            The current destination catalogue has limited practical options for this trip length. Try a longer trip, broader preferences, or nearby and domestic destinations.
+            We found {ranked.length} practical match{ranked.length === 1 ? "" : "es"} that fit your preferences well — there simply aren't more destinations in the catalogue that meet these specific constraints.
           </p>
         </div>
       )}

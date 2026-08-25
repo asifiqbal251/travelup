@@ -306,12 +306,11 @@ export function buildReasons(dest, prefs, result) {
 export function buildSuggestions(ranked, prefs) {
   const top = ranked.slice(0, 3);
   if (!top.length) return [];
-  // Fire when any top-3 score is below 50 OR when fewer than 3 destinations
-  // qualified at all — in the latter case the user otherwise only sees a
-  // generic message instead of tailored, actionable suggestions.
-  const fewResults = ranked.length < 3;
+  // Fire only when at least one shown result is genuinely weak (below 50).
+  // When fewer than 3 destinations qualify but they all score well, Results
+  // shows a "fit well" message instead — there is nothing to suggest changing.
   const lowScore = top.some((r) => r.result.finalScore < 50);
-  if (!fewResults && !lowScore) return [];
+  if (!lowScore) return [];
 
   const anyPoor = top.some((r) => r.result.practicality.level === "Poor practical fit");
   const anyStretch = top.some((r) => r.result.practicality.level === "Stretch");
