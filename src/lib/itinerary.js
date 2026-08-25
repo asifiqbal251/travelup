@@ -14,11 +14,14 @@
 //   2. Existing flight-distance estimate — unchanged for non-overridden
 //      routes, including international connection_hours and internal-access.
 //
-// Travel entries use SEQUENCE-based sections (no invented clock times); the
-// estimated total journey duration is shown separately. Destination days use
-// a 5-entry timeline built ONLY from that day's own content. Highlights (day
-// tags) come only from the day's own interests. "Free time" appears only on
-// flexible templates or days with a real free-time period.
+// Timeline activity titles render the FULL authored text (no truncation); long
+// titles wrap onto a second line rather than being clipped. Travel entries
+// use sequence-based sections (no invented clock times); the estimated total
+// journey duration is shown separately. The return-home day is always the
+// LAST day of the itinerary — no day is ever generated after the traveller
+// arrives home. Highlights (day tags) come only from the day's own interests
+// (or return-specific tags on a return day). Dietary filtering is applied to
+// the timeline text by diet.js.
 import { ACTIVITY_ORDER } from "@/lib/options";
 import { applyDietToItinerary } from "@/lib/diet";
 import { assessPracticality } from "@/lib/practicality";
@@ -30,23 +33,6 @@ function applyPaceShift(intensity, shift) {
   const i = INT_ORDER.indexOf(intensity);
   if (i < 0 || shift === 0) return intensity;
   return INT_ORDER[Math.max(0, Math.min(INT_ORDER.length - 1, i + shift))];
-}
-
-function shortName(text) {
-  if (!text) return "";
-  let s = String(text).replace(/\.\s*$/, "").trim();
-  let clause = s.split(/[.,;]/)[0].trim();
-  let words = clause.split(/\s+/);
-  let truncated = false;
-  if (words.length > 6) {
-    words = words.slice(0, 6);
-    truncated = true;
-  }
-  const stop = new Set(["to", "for", "at", "in", "on", "the", "a", "an", "and", "of", "with", "along", "via", "before", "after", "or", "by"]);
-  while (words.length > 1 && stop.has(words[words.length - 1].toLowerCase())) words.pop();
-  let label = words.join(" ");
-  if (truncated && words.length) label += "…";
-  return label;
 }
 
 function destShort(dest) {
@@ -80,8 +66,6 @@ function gettingAroundText(mode) {
   return "Taxis, rideshares and local transit.";
 }
 
-// Local-transport guidance: use the curated description for the eight new
-// short-trip destinations; otherwise derive a neutral line from travel_mode.
 function gettingAround(dest) {
   return getLocalTransport(dest.name) || gettingAroundText(dest.travel_mode);
 }
@@ -111,12 +95,16 @@ function durationFromRange(range) {
   return `~${r} hr`;
 }
 
-const act = (slot, time, _ignored, name, source, note) => ({
+// Timed activity entry. `name` is the FULL activity text (renders verbatim,
+// wrapping if long); `note` is an optional separate description (e.g. a meal
+// note). No source indirection — the text lives on the entry itself so dietary
+// filtering can transform it directly.
+const act = (slot, time, name, note) => ({
   slot,
   time,
   duration: durationFromRange(time),
   name,
-  source,
+  source: null,
   note: note || null
 });
 const seq = (slot, name, note, duration) => ({
@@ -127,13 +115,6 @@ const seq = (slot, name, note, duration) => ({
   source: null,
   note
 });
-
-// Activity label: prefer an authored concise `label`, else a word-boundary
-// truncation of the source sentence (never mid-word). Used for the morning
-// slot; afternoon/evening use shortName directly.
-function morningName(t) {
-  return t.label || shortName(t.morning) || "Morning activity";
-}
 
 // Template selection: short trips prioritise signature days by interest match;
 // longer trips keep route order.
@@ -168,34 +149,34 @@ function buildTemplateDay(t, dest, shift, opts) {
   if (o.outbound) {
     timeline.push(seq("Departure", `Depart ${o.origin}`, "Check in and travel to your destination; confirm your transport."));
     timeline.push(seq("Arrival", `Arrive in ${o.dShort}`, "Clear arrivals and transfer to your stay."));
-    timeline.push(act("Lunch", "12:30–14:00", "", "Local bite", "food_note"));
-    timeline.push(act("Afternoon", "15:00–18:00", "", shortName(t.morning) || "First outing", "morning"));
-    timeline.push(act("Evening", "18:30–21:00", "", shortName(t.evening) || "Settle in", "evening"));
+    timeline.push(act("Lunch", "12:30–14:00", "Local bite", foodNote));
+    timeline.push(act("Afternoon", "15:00–18:00", t.morning || "First outing"));
+    timeline.push(act("Evening", "18:30–21:00", t.evening || "Settle in"));
   } else if (o.returnFold) {
-    timeline.push(act("Morning", "08:00–11:00", "", morningName(t), "morning"));
-    timeline.push(act("Late morning", "11:00–12:30", "", shortName(t.afternoon) || "Sightseeing", "afternoon"));
-    timeline.push(act("Lunch", "12:30–14:00", "", "Local bite", "food_note"));
+    timeline.push(act("Morning", "08:00–11:00", t.morning || "Morning activity"));
+    timeline.push(act("Late morning", "11:00–12:30", t.afternoon || "Sightseeing"));
+    timeline.push(act("Lunch", "12:30–14:00", "Local bite", foodNote));
     timeline.push(seq("Return begins", "Head to airport or station", "Allow time for transfer and check-in; confirm your departure time."));
     timeline.push(seq("Arrive home", `Return to ${o.origin}`, `Travel home to ${o.origin}.`));
   } else if (o.returnFoldLong) {
-    timeline.push(act("Morning", "08:00–11:00", "", morningName(t), "morning"));
-    timeline.push(act("Lunch", "12:30–14:00", "", "Local bite", "food_note"));
+    timeline.push(act("Morning", "08:00–11:00", t.morning || "Morning activity"));
+    timeline.push(act("Lunch", "12:30–14:00", "Local bite", foodNote));
     timeline.push(seq("Return begins", "Final activity, then depart", "A partial local activity before heading to the airport or station."));
     timeline.push(seq("Departure", "Check-in and depart", "Begin the return journey; travel continues overnight."));
   } else if (o.partialOutbound) {
     timeline.push(seq("Departure", `Depart ${o.origin}`, "Check in and travel to your destination; confirm your transport."));
     timeline.push(seq("Arrival", `Arrive in ${o.dShort}`, "Clear arrivals and transfer to your stay."));
-    timeline.push(act("Evening", "18:30–21:00", "", shortName(t.evening) || "Settle in", "evening"));
+    timeline.push(act("Evening", "18:30–21:00", t.evening || "Settle in"));
   } else if (o.partialReturn) {
-    timeline.push(act("Morning", "08:00–10:30", "", morningName(t), "morning"));
+    timeline.push(act("Morning", "08:00–10:30", t.morning || "Morning activity"));
     timeline.push(seq("Return begins", "Head to airport or station", "Allow time for transfer and check-in; confirm your departure time."));
     timeline.push(seq("Arrive home", `Return to ${o.origin}`, `Travel home to ${o.origin}.`));
   } else {
-    timeline.push(act("Morning", "08:00–11:00", "", morningName(t), "morning"));
+    timeline.push(act("Morning", "08:00–11:00", t.morning || "Morning activity"));
     timeline.push(seq("Late morning", "Mid-morning break", "A short break or local transit between stops."));
-    timeline.push(act("Lunch", "12:30–14:00", "", "Local bite", "food_note"));
-    timeline.push(act("Afternoon", "14:00–18:00", "", shortName(t.afternoon) || "Afternoon activity", "afternoon"));
-    timeline.push(act("Evening", "18:30–21:30", "", shortName(t.evening) || "Evening", "evening"));
+    timeline.push(act("Lunch", "12:30–14:00", "Local bite", foodNote));
+    timeline.push(act("Afternoon", "14:00–18:00", t.afternoon || "Afternoon activity"));
+    timeline.push(act("Evening", "18:30–21:30", t.evening || "Evening"));
   }
 
   const isReturnDay = o.returnFold || o.returnFoldLong || o.partialReturn;
@@ -208,10 +189,6 @@ function buildTemplateDay(t, dest, shift, opts) {
     isTravel: false,
     flexible: !!t.flexible,
     highlights,
-    morning: t.morning || "",
-    afternoon: t.afternoon || "",
-    evening: t.evening || "",
-    food_note: foodNote,
     timeline,
     journey: hasJourney ? `Estimated total journey: about ${o.oneWay} hours each way.` : null,
     gettingAround: gettingAround(dest),
@@ -246,10 +223,6 @@ function buildTravelDay(kind, o) {
       isTravel: true,
       flexible: false,
       highlights: ["Departure", "In transit", isLong ? "Continue transit" : "Arrival"],
-      morning: `Depart ${origin} for ${dest.name}.`,
-      afternoon: `Travel to ${dest.name}; about ${oneWay} hours each way.`,
-      evening: isLong ? "Continue the long journey." : `Arrive in ${dShort} and settle in.`,
-      food_note: "Pick up something light for the journey.",
       timeline,
       journey,
       gettingAround: gettingAround(dest),
@@ -266,10 +239,6 @@ function buildTravelDay(kind, o) {
       isTravel: true,
       flexible: false,
       highlights: ["Arrival", "Transfer", "Recovery"],
-      morning: "Arrive and clear entry formalities.",
-      afternoon: "Transfer to your accommodation.",
-      evening: "Rest and recover from the long journey.",
-      food_note: "A simple, comforting local meal.",
       timeline: [
         seq("Arrival", "Arrival and entry formalities", "Clear immigration and customs after the long haul."),
         seq("Transfer", "Transfer to accommodation", "Head to your stay and freshen up."),
@@ -290,10 +259,6 @@ function buildTravelDay(kind, o) {
       isTravel: true,
       flexible: false,
       highlights: ["Check-out", "Return begins", "In transit"],
-      morning: "Check out and head to the airport or station.",
-      afternoon: "Check in and begin the return journey.",
-      evening: "Travel home; the journey continues overnight.",
-      food_note: "A meal or snack before departure.",
       timeline: [
         seq("Check-out", "Check out and depart", "Leave your accommodation in good time."),
         seq("Return begins", "Head to airport or station", "Allow time for transfer and check-in."),
@@ -327,10 +292,6 @@ function buildTravelDay(kind, o) {
     isTravel: true,
     flexible: false,
     highlights: ["Return", "In transit", "Arrive home"],
-    morning: "Begin the final leg home.",
-    afternoon: "Travel home.",
-    evening: `Arrive home in ${origin}.`,
-    food_note: "A final local coffee before you leave.",
     timeline,
     journey,
     gettingAround: "Allow extra time for the transfer and check-in.",
@@ -340,6 +301,8 @@ function buildTravelDay(kind, o) {
   };
 }
 
+// Flexible / recovery day. Each time slot has its OWN distinct description
+// (no two slots share the same text).
 function buildRecoveryDay(dest, pace, optional) {
   return {
     title: optional ? "Optional rest day" : "Flexible day",
@@ -348,16 +311,12 @@ function buildRecoveryDay(dest, pace, optional) {
     isTravel: false,
     flexible: true,
     highlights: ["Slow start", "Café and laundry", "Easy stroll"],
-    morning: "Sleep in or enjoy a relaxed breakfast.",
-    afternoon: "Catch up on laundry and postcards.",
-    evening: "Rest, or revisit a favourite spot.",
-    food_note: "An unhurried lunch at a spot you missed.",
     timeline: [
-      act("Morning", "09:00–11:00", "", "Slow start", "morning"),
+      act("Morning", "09:00–11:00", "Slow start", "Sleep in or enjoy a relaxed breakfast."),
       seq("Late morning", "Café and laundry", "Catch up on laundry and postcards."),
-      act("Lunch", "12:30–14:00", "", "Local bite", "food_note"),
-      act("Afternoon", "14:00–17:00", "", "Easy stroll", "afternoon"),
-      act("Evening", "18:30–21:00", "", "Optional night out", "evening")
+      act("Lunch", "12:30–14:00", "Local bite", "An unhurried lunch at a spot you missed."),
+      act("Afternoon", "14:00–17:00", "Easy stroll", "A gentle walk to stretch your legs."),
+      act("Evening", "18:30–21:00", "Optional night out", "Rest, or revisit a favourite spot.")
     ],
     journey: null,
     gettingAround: gettingAround(dest),
@@ -378,10 +337,10 @@ function buildOverrideArrivalFoldDay(t, dest, shift, o) {
   o.wording.outbound.forEach(([slot, name, note]) => timeline.push(seq(slot, name, note)));
   timeline.push(seq("Arrival", "Arrive and check in", "Reach your destination and settle into your stay."));
   if (o.profile === "light") {
-    timeline.push(act("Afternoon", "14:00–17:00", "", shortName(t.afternoon) || "First outing", "afternoon"));
-    timeline.push(act("Evening", "18:30–20:30", "", "Dinner and rest", null, "A relaxed dinner near your stay after the day's travel."));
+    timeline.push(act("Afternoon", "14:00–17:00", t.afternoon || "First outing"));
+    timeline.push(act("Evening", "18:30–20:30", "Dinner and rest", "A relaxed dinner near your stay after the day's travel."));
   } else {
-    timeline.push(act("Evening", "18:30–21:00", "", shortName(t.evening) || "Evening", "evening"));
+    timeline.push(act("Evening", "18:30–21:00", t.evening || "Evening"));
   }
   return {
     title: t.title,
@@ -390,10 +349,6 @@ function buildOverrideArrivalFoldDay(t, dest, shift, o) {
     isTravel: false,
     flexible: !!t.flexible,
     highlights: highlightLabels(t),
-    morning: "",
-    afternoon: t.afternoon || "",
-    evening: t.evening || "",
-    food_note: "",
     timeline,
     journey: `Estimated total journey: about ${o.oneWay} hours each way.`,
     gettingAround: gettingAround(dest),
@@ -403,30 +358,36 @@ function buildOverrideArrivalFoldDay(t, dest, shift, o) {
   };
 }
 
-// Folded return: travel folded into the last template day (<=3h: one concise
-// morning activity; 3–6h: breakfast or a short walk) then the return journey.
+// Folded return: travel folded into the last template day.
+//   <=3h (light): a real morning activity, then the return journey — the
+//     activity title is kept because the morning activity is genuine.
+//   3–6h (evening): no scheduled activity, just breakfast and the return
+//     journey — the day uses a return-specific title and tags so the heading
+//     matches the body.
 function buildOverrideReturnFoldDay(t, dest, shift, o) {
   const intensity = applyPaceShift(t.intensity || "Moderate", shift);
   const location = dest.name;
   const timeline = [];
+  let title;
+  let highlights;
   if (o.profile === "light") {
-    timeline.push(act("Morning", "08:00–11:00", "", morningName(t), "morning"));
+    timeline.push(act("Morning", "08:00–11:00", t.morning || "Morning activity"));
+    title = t.title;
+    highlights = highlightLabels(t);
   } else {
     timeline.push(seq("Morning", "Breakfast or a short walk", "A relaxed start before heading home."));
+    title = `Return: ${dest.name} → ${o.origin}`;
+    highlights = ["Breakfast", "Return", "Arrive home"];
   }
   o.wording.return.forEach(([slot, name, note]) => timeline.push(seq(slot, name, note)));
   timeline.push(seq("Arrive home", "Arrive home", `Travel home to ${o.origin}.`));
   return {
-    title: t.title,
+    title,
     location,
     intensity,
     isTravel: false,
-    flexible: !!t.flexible,
-    highlights: highlightLabels(t),
-    morning: t.morning || "",
-    afternoon: "",
-    evening: "",
-    food_note: "",
+    flexible: o.profile === "light" ? !!t.flexible : false,
+    highlights,
     timeline,
     journey: `Estimated total journey: about ${o.oneWay} hours each way.`,
     gettingAround: gettingAround(dest),
@@ -451,10 +412,6 @@ function buildOverrideDedicatedArrivalDay(dest, o) {
     isTravel: true,
     flexible: false,
     highlights: ["Departure", "Arrival", "Dinner and rest"],
-    morning: `Depart ${o.origin} for ${dest.name}.`,
-    afternoon: `Travel to ${dest.name}; about ${o.oneWay} hours each way.`,
-    evening: "Arrive, check in and rest.",
-    food_note: "A simple dinner near your stay.",
     timeline,
     journey: `Estimated total journey: about ${o.oneWay} hours each way.`,
     gettingAround: gettingAround(dest),
@@ -477,10 +434,6 @@ function buildOverrideDedicatedReturnDay(dest, o) {
     isTravel: true,
     flexible: false,
     highlights: ["Check-out", "Return", "Arrive home"],
-    morning: "Check out and begin the return journey.",
-    afternoon: `Travel home; about ${o.oneWay} hours each way.`,
-    evening: `Arrive home in ${o.origin}.`,
-    food_note: "A snack before you leave.",
     timeline,
     journey: `Estimated total journey: about ${o.oneWay} hours each way.`,
     gettingAround: gettingAround(dest),
@@ -488,6 +441,21 @@ function buildOverrideDedicatedReturnDay(dest, o) {
     optionalSwap: null,
     overnight: "Home"
   };
+}
+
+// Build the middle block of an itinerary: real template days plus an optional
+// pace-driven recovery day, then filler recovery days so the block reaches
+// `targetMiddle`. The block is never longer than `targetMiddle`, and filler is
+// always inserted in the MIDDLE (never after the return day).
+function buildMiddleBlock(middleTemplates, targetMiddle, buildDay, buildFiller, paceWantsRecovery) {
+  let days = middleTemplates.map(buildDay);
+  if (paceWantsRecovery && days.length >= 1 && days.length < targetMiddle) {
+    const at = Math.floor(days.length / 2);
+    days = days.slice(0, at).concat([buildFiller()], days.slice(at));
+  }
+  if (days.length > targetMiddle) days = days.slice(0, targetMiddle);
+  while (days.length < targetMiddle) days.push(buildFiller());
+  return days;
 }
 
 function buildOverrideItinerary(dest, prefs, prac, totalDays, templates) {
@@ -525,40 +493,38 @@ function buildOverrideItinerary(dest, prefs, prac, totalDays, templates) {
   const unused = activityTemplates.filter((t) => !selected.includes(t));
   const unusedSwap = unused.length ? `Swap for “${unused[0].title}” if it suits your pace.` : null;
 
-  const insertRecovery = (arr) => {
-    if (!paceWantsRecovery || arr.length < 1) return arr;
-    const at = Math.floor(arr.length / 2);
-    return arr.slice(0, at).concat([null], arr.slice(at));
-  };
+  const arrivalOpts = { profile, oneWay, mode, wording, origin, dShort, unusedSwap };
+  const returnOpts = { profile, oneWay, mode, wording, origin, dShort };
+  const dedicatedArrivalOpts = { oneWay, mode, wording, origin, dShort };
+  const dedicatedReturnOpts = { oneWay, mode, wording, origin, dShort };
+  const filler = () => buildRecoveryDay(dest, pace, false);
+  const templateDay = (t) => buildTemplateDay(t, dest, shift, { unusedSwap });
 
   const days = [];
   if (folded) {
     const first = selected[0];
     const last = selected.length > 1 ? selected[selected.length - 1] : null;
-    const middle = selected.length > 2 ? selected.slice(1, selected.length - 1) : [];
-    if (first) {
-      days.push(buildOverrideArrivalFoldDay(first, dest, shift, { profile, oneWay, mode, wording, origin, dShort, unusedSwap }));
-    }
-    insertRecovery(middle).forEach((t) => {
-      if (t) days.push(buildTemplateDay(t, dest, shift, { unusedSwap }));
-      else days.push(buildRecoveryDay(dest, pace, false));
-    });
-    if (last) {
-      days.push(buildOverrideReturnFoldDay(last, dest, shift, { profile, oneWay, mode, wording, origin, dShort }));
-    } else {
-      days.push(buildOverrideDedicatedReturnDay(dest, { oneWay, mode, wording, origin, dShort }));
-    }
+    const middleTemplates = selected.length > 2 ? selected.slice(1, selected.length - 1) : [];
+    const arrivalDay = first
+      ? buildOverrideArrivalFoldDay(first, dest, shift, arrivalOpts)
+      : buildOverrideDedicatedArrivalDay(dest, dedicatedArrivalOpts);
+    const returnDay = last
+      ? buildOverrideReturnFoldDay(last, dest, shift, returnOpts)
+      : buildOverrideDedicatedReturnDay(dest, dedicatedReturnOpts);
+    const targetMiddle = Math.max(0, totalDays - 2);
+    const middleDays = buildMiddleBlock(middleTemplates, targetMiddle, templateDay, filler, paceWantsRecovery);
+    days.push(arrivalDay, ...middleDays, returnDay);
   } else {
     // dedicated (6–8h)
-    days.push(buildOverrideDedicatedArrivalDay(dest, { oneWay, mode, wording, origin, dShort }));
-    insertRecovery(selected).forEach((t) => {
-      if (t) days.push(buildTemplateDay(t, dest, shift, { unusedSwap }));
-      else days.push(buildRecoveryDay(dest, pace, false));
-    });
-    days.push(buildOverrideDedicatedReturnDay(dest, { oneWay, mode, wording, origin, dShort }));
+    const targetMiddle = Math.max(0, totalDays - 2);
+    const middleDays = buildMiddleBlock(selected, targetMiddle, templateDay, filler, paceWantsRecovery);
+    days.push(
+      buildOverrideDedicatedArrivalDay(dest, dedicatedArrivalOpts),
+      ...middleDays,
+      buildOverrideDedicatedReturnDay(dest, dedicatedReturnOpts)
+    );
   }
 
-  while (days.length < totalDays) days.push(buildRecoveryDay(dest, pace, fastPace));
   const seqDays = days.slice(0, totalDays).map((d, i) => ({ ...d, day: i + 1 }));
   return applyDietToItinerary(seqDays, prefs.dietary);
 }
@@ -607,49 +573,49 @@ export function generateItinerary(dest, prefs) {
   const unused = activityTemplates.filter((t) => !selected.includes(t));
   const unusedSwap = unused.length ? `Swap for “${unused[0].title}” if it suits your pace.` : null;
 
-  const insertRecovery = (arr) => {
-    if (!paceWantsRecovery || arr.length < 1) return arr;
-    const at = Math.floor(arr.length / 2);
-    return arr.slice(0, at).concat([null], arr.slice(at));
-  };
+  const filler = () => buildRecoveryDay(dest, pace, fastPace);
+  const templateDay = (t) => buildTemplateDay(t, dest, shift, { unusedSwap });
 
   const days = [];
   if (tier === "fold" || tier === "partialFold") {
     const first = selected[0];
     const last = selected.length > 1 ? selected[selected.length - 1] : null;
-    const middle = selected.length > 2 ? selected.slice(1, selected.length - 1) : [];
+    const middleTemplates = selected.length > 2 ? selected.slice(1, selected.length - 1) : [];
     const outOpt = tier === "partialFold"
       ? { partialOutbound: true, origin, dShort, oneWay, unusedSwap }
       : { outbound: true, origin, dShort, oneWay, unusedSwap };
     const retOpt = tier === "partialFold"
       ? { partialReturn: true, origin, dShort, oneWay, unusedSwap }
       : { returnFold: true, origin, dShort, oneWay, unusedSwap };
-    if (first) days.push(buildTemplateDay(first, dest, shift, outOpt));
-    insertRecovery(middle).forEach((t) => {
-      if (t) days.push(buildTemplateDay(t, dest, shift, { unusedSwap }));
-      else days.push(buildRecoveryDay(dest, pace, false));
-    });
-    if (last) days.push(buildTemplateDay(last, dest, shift, retOpt));
-    else days.push(buildTravelDay("return", { dest, origin, dShort, oneWay, long: false, hasConnection }));
+    const arrivalDay = first
+      ? buildTemplateDay(first, dest, shift, outOpt)
+      : buildTravelDay("outbound", { dest, origin, dShort, oneWay, long: false, hasConnection });
+    const returnDay = last
+      ? buildTemplateDay(last, dest, shift, retOpt)
+      : buildTravelDay("return", { dest, origin, dShort, oneWay, long: false, hasConnection });
+    const targetMiddle = Math.max(0, totalDays - 2);
+    const middleDays = buildMiddleBlock(middleTemplates, targetMiddle, templateDay, filler, paceWantsRecovery);
+    days.push(arrivalDay, ...middleDays, returnDay);
   } else if (tier === "medium") {
-    days.push(buildTravelDay("outbound", { dest, origin, dShort, oneWay, long: false, hasConnection }));
-    insertRecovery(selected).forEach((t) => {
-      if (t) days.push(buildTemplateDay(t, dest, shift, { unusedSwap }));
-      else days.push(buildRecoveryDay(dest, pace, false));
-    });
-    days.push(buildTravelDay("return", { dest, origin, dShort, oneWay, long: false, hasConnection }));
+    const targetMiddle = Math.max(0, totalDays - 2);
+    const middleDays = buildMiddleBlock(selected, targetMiddle, templateDay, filler, paceWantsRecovery);
+    days.push(
+      buildTravelDay("outbound", { dest, origin, dShort, oneWay, long: false, hasConnection }),
+      ...middleDays,
+      buildTravelDay("return", { dest, origin, dShort, oneWay, long: false, hasConnection })
+    );
   } else {
-    days.push(buildTravelDay("outbound", { dest, origin, dShort, oneWay, long: true, hasConnection }));
-    days.push(buildTravelDay("arrival", { dest, origin, dShort, oneWay, long: true, hasConnection }));
-    insertRecovery(selected).forEach((t) => {
-      if (t) days.push(buildTemplateDay(t, dest, shift, { unusedSwap }));
-      else days.push(buildRecoveryDay(dest, pace, false));
-    });
-    days.push(buildTravelDay("returnBegins", { dest, origin, dShort, oneWay, long: true, hasConnection }));
-    days.push(buildTravelDay("return", { dest, origin, dShort, oneWay, long: true, hasConnection }));
+    const targetMiddle = Math.max(0, totalDays - 4);
+    const middleDays = buildMiddleBlock(selected, targetMiddle, templateDay, filler, paceWantsRecovery);
+    days.push(
+      buildTravelDay("outbound", { dest, origin, dShort, oneWay, long: true, hasConnection }),
+      buildTravelDay("arrival", { dest, origin, dShort, oneWay, long: true, hasConnection }),
+      ...middleDays,
+      buildTravelDay("returnBegins", { dest, origin, dShort, oneWay, long: true, hasConnection }),
+      buildTravelDay("return", { dest, origin, dShort, oneWay, long: true, hasConnection })
+    );
   }
 
-  while (days.length < totalDays) days.push(buildRecoveryDay(dest, pace, fastPace));
   const seqDays = days.slice(0, totalDays).map((d, i) => ({ ...d, day: i + 1 }));
   return applyDietToItinerary(seqDays, prefs.dietary);
 }

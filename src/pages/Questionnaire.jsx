@@ -29,7 +29,7 @@ const blank = {
   residenceCountry: "",
   departureCity: "",
   citizenship: "",
-  allowDomestic: true,
+  travelScope: "both",
   travelMonth: "",
   travelDays: 7,
   travellerType: "",
@@ -58,6 +58,8 @@ export default function Questionnaire() {
     return {
       ...blank,
       ...p,
+      // Migrate the legacy boolean allowDomestic to the 3-way travelScope.
+      travelScope: p.travelScope || (p.allowDomestic === false ? "international" : "both"),
       visitedCountries: Array.isArray(p.visitedCountries)
         ? p.visitedCountries.join(", ")
         : p.visitedCountries || "",
@@ -194,9 +196,13 @@ export default function Questionnaire() {
               {errors.travelDays && <ErrorText>{errors.travelDays}</ErrorText>}
             </div>
             <RadioCards label="May we recommend destinations inside your country of residence?"
-              value={form.allowDomestic ? "yes" : "no"}
-              onChange={(v) => set("allowDomestic", v === "yes")}
-              options={[{ value: "yes", label: "Yes, include domestic trips" }, { value: "no", label: "No, only international" }]} />
+              value={form.travelScope}
+              onChange={(v) => set("travelScope", v)}
+              options={[
+                { value: "both", label: "Both domestic and international" },
+                { value: "international", label: "International only" },
+                { value: "domestic", label: "Domestic only" }
+              ]} />
           </Step>
         )}
 
@@ -283,7 +289,11 @@ export default function Questionnaire() {
                 value={`${form.residenceCountry || "—"} · ${form.departureCity || "—"} · ${form.citizenship || "—"}`} />
               <ReviewRow label="When" value={form.travelMonth === "flexible" || !form.travelMonth ? "Flexible" : MONTHS[Number(form.travelMonth) - 1]} />
               <ReviewRow label="Total trip" value={`${form.travelDays} days, including travel time`} />
-              <ReviewRow label="Domestic" value={form.allowDomestic ? "Included" : "International only"} />
+              <ReviewRow label="Domestic" value={
+                form.travelScope === "international" ? "International only"
+                  : form.travelScope === "domestic" ? "Domestic only"
+                  : "Both"
+              } />
               <ReviewRow label="Traveller & budget" value={`${form.travellerType || "—"} · ${form.budget || "—"}`} />
               <ReviewRow label="Interests" value={form.interests.join(", ") || "—"} />
               <ReviewRow label="Climate / pace / activity" value={`${form.climate || "—"} · ${form.pace || "—"} · ${form.activity || "—"}`} />

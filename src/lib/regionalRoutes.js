@@ -4,7 +4,10 @@
 // the practical transport burden) replaces the straight-line flight estimate.
 // No live schedules; planning estimates only.
 
-function norm(s) {
+// Accent- and punctuation-insensitive normalization, shared with scoring.js
+// so user-typed exclusion terms match destination names containing diacritics
+// (e.g. "Montreal" matches "Montréal").
+export function norm(s) {
   if (!s) return "";
   return String(s)
     .normalize("NFD")

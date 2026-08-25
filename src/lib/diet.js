@@ -1,6 +1,6 @@
 // Deterministic, local dietary filtering for itinerary food/drink text.
 // Rule-based string substitution per selected diet — no AI, no external APIs.
-// Applies to every day's morning/afternoon/evening/food_note.
+// Applies to every day's timeline entry (name and note).
 
 const HALAL_RULES = [
   [/\bbifana pork sandwich\b/gi, "grilled chicken sandwich"],
@@ -172,14 +172,18 @@ function applyDiet(text, dietary) {
   return out;
 }
 
+// Applies to every timeline entry's name and note — the text the traveller
+// actually sees. (Day objects no longer carry separate morning/afternoon/
+// evening/food_note fields; the timeline holds all displayed text.)
 export function applyDietToItinerary(itinerary, dietary) {
   if (!itinerary || !itinerary.length) return itinerary;
   if (!RULES[dietary]) return itinerary;
   return itinerary.map((d) => ({
     ...d,
-    morning: applyDiet(d.morning, dietary),
-    afternoon: applyDiet(d.afternoon, dietary),
-    evening: applyDiet(d.evening, dietary),
-    food_note: applyDiet(d.food_note, dietary)
+    timeline: (d.timeline || []).map((e) => ({
+      ...e,
+      name: applyDiet(e.name, dietary),
+      note: applyDiet(e.note, dietary)
+    }))
   }));
 }

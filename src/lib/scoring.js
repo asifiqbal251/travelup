@@ -5,6 +5,16 @@
 // then produces the final score. No artificial score caps.
 import { MONTHS, BUDGET_ORDER, PACE_ORDER, ACTIVITY_ORDER, CLIMATE_ORDER } from "@/lib/options";
 import { assessPracticality } from "@/lib/practicality";
+import { norm } from "@/lib/regionalRoutes";
+
+// Resolve the travel-scope preference, supporting the new `travelScope` string
+// ("both" | "international" | "domestic") and the legacy boolean `allowDomestic`
+// for returning users whose saved prefs predate the change.
+export function travelScope(prefs) {
+  if (prefs && prefs.travelScope) return prefs.travelScope;
+  if (prefs && prefs.allowDomestic === false) return "international";
+  return "both";
+}
 
 const VISITED_PENALTY = 12; // lower priority, not exclusion
 
@@ -155,26 +165,24 @@ export function scoreDestination(dest, prefs) {
 }
 
 export function isExcluded(dest, prefs) {
+  // Accent-insensitive matching: "Montreal, Quebec City" excludes
+  // "Montréal and Québec City" because both sides are normalized before the
+  // substring comparison.
   const excl = (prefs.excludedDestinations || [])
-    .map((s) => s.toLowerCase().trim())
+    .map((s) => norm(s))
     .filter(Boolean);
   if (
     excl.some(
-      (e) =>
-        (dest.country || "").toLowerCase().includes(e) ||
-        (dest.name || "").toLowerCase().includes(e)
+      (e) => norm(dest.country || "").includes(e) || norm(dest.name || "").includes(e)
     )
   ) {
     return true;
   }
-  if (prefs.allowDomestic === false) {
-    if (
-      (prefs.residenceCountry || "").toLowerCase().trim() ===
-      (dest.country || "").toLowerCase().trim()
-    ) {
-      return true;
-    }
-  }
+  const scope = travelScope(prefs);
+  const sameCountry =
+    norm(prefs.residenceCountry || "") === norm(dest.country || "");
+  if (scope === "international" && sameCountry) return true;
+  if (scope === "domestic" && !sameCountry) return true;
   return false;
 }
 
@@ -297,7 +305,13 @@ export function buildReasons(dest, prefs, result) {
 // that actually lost points and aren't already flexible.
 export function buildSuggestions(ranked, prefs) {
   const top = ranked.slice(0, 3);
-  if (!top.length || !top.some((r) => r.result.finalScore < 50)) return [];
+  if (!top.length) return [];
+  // Fire when any top-3 score is below 50 OR when fewer than 3 destinations
+  // qualified at all — in the latter case the user otherwise only sees a
+  // generic message instead of tailored, actionable suggestions.
+  const fewResults = ranked.length < 3;
+  const lowScore = top.some((r) => r.result.finalScore < 50);
+  if (!fewResults && !lowScore) return [];
 
   const anyPoor = top.some((r) => r.result.practicality.level === "Poor practical fit");
   const anyStretch = top.some((r) => r.result.practicality.level === "Stretch");
@@ -315,7 +329,7 @@ export function buildSuggestions(ranked, prefs) {
     out.push({ label: "Increase your budget category.", step: 2 });
   if (anyInterestLow && (prefs.interests || []).length < 3)
     out.push({ label: "Select more interests that appeal to you.", step: 3 });
-  if (prefs.allowDomestic === false)
+  if (travelScope(prefs) === "international")
     out.push({ label: "Allow domestic destinations.", step: 1 });
   if (anySeason0 && prefs.travelMonth && prefs.travelMonth !== "flexible")
     out.push({ label: "Choose a flexible travel month.", step: 1 });
