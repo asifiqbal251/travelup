@@ -13,6 +13,8 @@ import Questionnaire from '@/pages/Questionnaire';
 import Results from '@/pages/Results';
 import TripDetail from '@/pages/TripDetail';
 import About from '@/pages/About';
+import SavedTrips from '@/pages/SavedTrips';
+import SavedTripDetail from '@/pages/SavedTripDetail';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -46,6 +48,8 @@ const AuthenticatedApp = () => {
         <Route path="/results" element={<Results />} />
         <Route path="/trip" element={<TripDetail />} />
         <Route path="/about" element={<About />} />
+        <Route path="/saved-trips" element={<SavedTrips />} />
+        <Route path="/saved-trips/:savedTripId" element={<SavedTripDetail />} />
         <Route path="*" element={<PageNotFound />} />
       </Route>
     </Routes>
