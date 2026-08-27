@@ -22,7 +22,7 @@ export default function WherenovaLogo({
         alt=""
         aria-hidden="true"
         draggable="false"
-        className={`h-auto ${widthClass} object-contain`}
+        className={`h-auto ${widthClass} object-contain wn-logo-contrast`}
       />
       {withWordmark && (
         <span
