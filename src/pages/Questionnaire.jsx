@@ -4,19 +4,20 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
+import SnapSlider from "@/components/SnapSlider";
 import {
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem
 } from "@/components/ui/select";
 import {
-  ArrowLeft, ArrowRight, Check,
+  ArrowLeft, ArrowRight, Check, Compass,
   User, Heart, Users, Baby, Wallet, Banknote, Gem, Crown,
-  Sun, CloudSun, Cloud, Snowflake, Compass, Coffee, Scale, Zap,
+  Sun, CloudSun, Cloud, Snowflake, Coffee, Scale, Zap,
   Feather, Footprints, Bike, Mountain, Trees, Landmark, UtensilsCrossed,
   Waves, Bird, Building2, Armchair, Camera
 } from "lucide-react";
 import {
-  MONTHS, INTERESTS, CLIMATES, PACES, ACTIVITIES, DIETARY,
-  TRAVELLER_TYPES, BUDGETS, COUNTRIES
+  MONTHS, INTERESTS, DIETARY, TRAVELLER_TYPES, COUNTRIES,
+  BUDGET_ORDER, PACE_ORDER, ACTIVITY_ORDER, CLIMATE_ORDER
 } from "@/lib/options";
 import { setPrefs, getPrefs, setSelectedDestinationId } from "@/lib/storage";
 
@@ -40,6 +41,13 @@ const INTEREST_ICONS = {
   "Beaches": Waves, "Hiking": Mountain, "Wildlife": Bird, "Adventure": Compass,
   "Cities": Building2, "Relaxation": Armchair, "Photography": Camera
 };
+
+// Ordered scales used by the scoring engine — the slider stores these exact
+// string values; no new backend vocabulary is introduced.
+const BUDGET_POINTS = BUDGET_ORDER.map((b) => ({ value: b, label: b, icon: BUDGET_ICONS[b] }));
+const PACE_POINTS = PACE_ORDER.map((p) => ({ value: p, label: p, icon: PACE_ICONS[p] }));
+const ACTIVITY_POINTS = ACTIVITY_ORDER.map((a) => ({ value: a, label: a, icon: ACTIVITY_ICONS[a] }));
+const CLIMATE_POINTS = CLIMATE_ORDER.map((c) => ({ value: c, label: c, icon: CLIMATE_ICONS[c] }));
 
 const blank = {
   residenceCountry: "",
@@ -162,21 +170,23 @@ export default function Questionnaire() {
   const progress = ((step + 1) / STEPS.length) * 100;
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-8 pb-24 sm:pb-10">
-      {/* Progress header */}
+    <div className="max-w-3xl mx-auto px-4 py-8 pb-24 sm:pb-12">
+      {/* Subtle progress: "3 / 7" + thin teal bar */}
       <div className="mb-8">
         <div className="flex items-baseline justify-between gap-3 mb-2">
-          <span className="font-display text-2xl font-bold text-ink">{STEPS[step]}</span>
-          <span className="text-sm text-muted-foreground">Step {step + 1} of {STEPS.length}</span>
+          <span className="text-sm font-semibold text-ink">
+            {step + 1} <span className="text-muted-foreground font-normal">/ {STEPS.length}</span>
+          </span>
+          <span className="text-xs text-muted-foreground">{STEPS[step]}</span>
         </div>
-        <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
-          <div className="h-full bg-ink rounded-full motion-safe:transition-[width] motion-safe:duration-300" style={{ width: `${progress}%` }} />
+        <div className="h-1 w-full rounded-full bg-muted overflow-hidden">
+          <div className="h-full bg-teal motion-safe:transition-[width] motion-safe:duration-300" style={{ width: `${progress}%` }} />
         </div>
       </div>
 
-      <div className="space-y-7">
+      <div key={step} className="step-enter space-y-7">
         {step === 0 && (
-          <Step title="Your travel basics" subtitle="So we can tailor your travel recommendations.">
+          <Step question="Where are you starting from?" hint="So we can tailor your matches.">
             <SelectField label="Country of residence" value={form.residenceCountry}
               onChange={(v) => set("residenceCountry", v)} error={errors.residenceCountry}
               placeholder="Select country">
@@ -194,7 +204,7 @@ export default function Questionnaire() {
         )}
 
         {step === 1 && (
-          <Step title="When and for how long" subtitle="Month helps us match the right season.">
+          <Step question="When works for you?" hint="Month helps us match the right season.">
             <SelectField label="Preferred travel month" value={form.travelMonth}
               onChange={(v) => set("travelMonth", v)} error={errors.travelMonth}
               placeholder="Choose a month or flexible">
@@ -206,7 +216,7 @@ export default function Questionnaire() {
                 <Label>Total trip length</Label>
                 <span className="font-display font-bold text-ink text-lg">{form.travelDays} days</span>
               </div>
-              <p className="text-xs text-muted-foreground mt-1">Include all travel time—from leaving home until returning—including flights, driving, trains, buses, ferries and transfers.</p>
+              <p className="text-xs text-muted-foreground mt-1">Include all travel time — flights, driving, trains, ferries and transfers.</p>
               <div className="mt-3">
                 <Slider value={[form.travelDays]} min={3} max={14} step={1}
                   onValueChange={(v) => set("travelDays", v[0])} aria-label="Total trip length in days" />
@@ -216,7 +226,7 @@ export default function Questionnaire() {
               </div>
               {errors.travelDays && <ErrorText>{errors.travelDays}</ErrorText>}
             </div>
-            <Segmented label="May we recommend destinations inside your country of residence?"
+            <Segmented label="Include destinations inside your country of residence?"
               value={form.travelScope}
               onChange={(v) => set("travelScope", v)}
               options={[
@@ -228,39 +238,35 @@ export default function Questionnaire() {
         )}
 
         {step === 2 && (
-          <Step title="Your trip style" subtitle="Who you travel with and what you can spend.">
+          <Step question="Who's going, and what's your budget?" hint="Budget per person, excluding international flights.">
             <TileGroup label="Travelling as" value={form.travellerType}
               onChange={(v) => set("travellerType", v)} error={errors.travellerType}
               icons={TRAVELLER_ICONS}
               options={TRAVELLER_TYPES.map((t) => ({ value: t, label: t }))} />
-            <TileGroup label="Budget per person (excluding international flights)" value={form.budget}
+            <PrefSlider label="Budget" value={form.budget}
               onChange={(v) => set("budget", v)} error={errors.budget}
-              icons={BUDGET_ICONS}
-              options={BUDGETS.map((b, i) => ({
-                value: b, label: b,
-                desc: ["Lower-cost", "Mid-range", "Higher comfort", "Top-end"][i]
-              }))} />
+              points={BUDGET_POINTS} ariaLabel="Budget level" />
           </Step>
         )}
 
         {step === 3 && (
-          <Step title="What do you love?" subtitle="Select all that appeal to you.">
+          <Step question="What do you love?" hint="Select all that appeal.">
             <div role="group" aria-label="Interests">
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
                 {INTERESTS.map((i) => {
                   const on = form.interests.includes(i);
                   const IIcon = INTEREST_ICONS[i];
                   return (
                     <button key={i} type="button" aria-pressed={on}
                       onClick={() => toggleInterest(i)}
-                      className={`group min-h-16 px-4 py-4 rounded-2xl text-left flex flex-col gap-2 motion-safe:transition motion-safe:duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink ${
+                      className={`min-h-14 px-3 py-3 rounded-xl text-left flex items-center gap-2.5 motion-safe:transition motion-safe:duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink ${
                         on ? "bg-ink ring-1 ring-ink text-on-dark" : "bg-card hover:bg-muted ring-1 ring-border text-ink"
                       }`}>
-                      <span className={`w-9 h-9 rounded-xl flex items-center justify-center ${on ? "bg-on-dark/15 text-on-dark" : "bg-muted text-muted-foreground"}`}>
-                        {IIcon && <IIcon className="w-5 h-5" />}
+                      <span className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${on ? "bg-on-dark/15 text-on-dark" : "bg-muted text-muted-foreground"}`}>
+                        {IIcon && <IIcon className="w-4 h-4" />}
                       </span>
-                      <span className="text-sm font-medium">{i}</span>
-                      {on && <Check className="w-4 h-4 text-on-dark self-end" />}
+                      <span className="text-sm font-medium flex-1">{i}</span>
+                      {on && <Check className="w-4 h-4 text-on-dark shrink-0" aria-hidden="true" />}
                     </button>
                   );
                 })}
@@ -271,24 +277,19 @@ export default function Questionnaire() {
         )}
 
         {step === 4 && (
-          <Step title="Your preferences" subtitle="Climate, pace and how active you want to be.">
-            <TileGroup label="Preferred climate" value={form.climate}
-              onChange={(v) => set("climate", v)} error={errors.climate}
-              icons={CLIMATE_ICONS}
-              options={CLIMATES.map((c) => ({ value: c, label: c }))} />
-            <TileGroup label="Preferred pace" value={form.pace}
+          <Step question="What feels right?" hint="Weather, pace and how active you want to be.">
+            <ClimateField value={form.climate} onChange={(v) => set("climate", v)} error={errors.climate} />
+            <PrefSlider label="Pace" value={form.pace}
               onChange={(v) => set("pace", v)} error={errors.pace}
-              icons={PACE_ICONS}
-              options={PACES.map((p) => ({ value: p, label: p }))} />
-            <TileGroup label="Preferred physical activity" value={form.activity}
+              points={PACE_POINTS} ariaLabel="Preferred pace" />
+            <PrefSlider label="Activity" value={form.activity}
               onChange={(v) => set("activity", v)} error={errors.activity}
-              icons={ACTIVITY_ICONS}
-              options={ACTIVITIES.map((a) => ({ value: a, label: a }))} />
+              points={ACTIVITY_POINTS} ariaLabel="Activity level" />
           </Step>
         )}
 
         {step === 5 && (
-          <Step title="A few more details" subtitle="Optional fields help us refine your matches.">
+          <Step question="Anything else?" hint="Optional, but it helps us refine your matches.">
             <SelectField label="Dietary considerations" value={form.dietary}
               onChange={(v) => set("dietary", v)} error={errors.dietary}
               placeholder="Select an option">
@@ -308,7 +309,7 @@ export default function Questionnaire() {
         )}
 
         {step === 6 && (
-          <Step title="Review your answers" subtitle="Make any changes before we find your matches.">
+          <Step question="Ready to see your matches?" hint="Check your answers below.">
             <dl className="divide-y divide-border">
               <ReviewRow label="Residence / departure / citizenship"
                 value={`${form.residenceCountry || "—"} · ${form.departureCity || "—"} · ${form.citizenship || "—"}`} />
@@ -341,11 +342,11 @@ export default function Questionnaire() {
           {step < STEPS.length - 1 ? (
             <Button onClick={next}
               className="bg-ink hover:bg-ink/90 text-on-dark min-h-11 w-full sm:w-auto">
-              Next <ArrowRight className="w-4 h-4 ml-2 flex-shrink-0" />
+              Continue <ArrowRight className="w-4 h-4 ml-2 flex-shrink-0" />
             </Button>
           ) : (
             <Button onClick={submit} disabled={submitting}
-              className="bg-coral hover:bg-coral/90 text-ink min-h-11 w-full sm:w-auto max-w-full whitespace-normal break-words text-center">
+              className="bg-ink hover:bg-ink/90 text-on-dark shadow-lg min-h-12 w-full sm:w-auto px-8 text-base">
               {submitting ? "Finding recommendations…" : "See my recommendations"}
               {!submitting && <ArrowRight className="w-4 h-4 ml-2 flex-shrink-0" />}
             </Button>
@@ -358,12 +359,12 @@ export default function Questionnaire() {
 
 /* ---------- small building blocks ---------- */
 
-function Step({ title, subtitle, children }) {
+function Step({ question, hint, children }) {
   return (
     <div>
-      <h1 className="font-display text-xl font-bold text-ink">{title}</h1>
-      {subtitle && <p className="text-sm text-muted-foreground mt-1 mb-5">{subtitle}</p>}
-      <div className="space-y-6">{children}</div>
+      <h1 className="font-display text-2xl sm:text-3xl font-bold text-ink leading-tight">{question}</h1>
+      {hint && <p className="text-sm text-muted-foreground mt-1.5">{hint}</p>}
+      <div className="mt-6 space-y-6">{children}</div>
     </div>
   );
 }
@@ -401,7 +402,8 @@ function SelectField({ label, value, onChange, error, placeholder, children }) {
   );
 }
 
-// Icon-supported selection tiles for mutually exclusive choices.
+// Icon-supported selection tiles for mutually exclusive categorical choices
+// (traveller type). Ordered preferences use SnapSlider / PrefSlider instead.
 function TileGroup({ label, value, onChange, options, error, icons }) {
   return (
     <div>
@@ -413,7 +415,7 @@ function TileGroup({ label, value, onChange, options, error, icons }) {
           return (
             <button key={o.value} type="button" role="radio" aria-checked={on}
               onClick={() => onChange(o.value)}
-              className={`min-h-16 px-3 py-3 rounded-2xl text-left flex flex-col items-start gap-2 motion-safe:transition motion-safe:duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink ${
+              className={`min-h-14 px-3 py-3 rounded-2xl text-left flex flex-col items-start gap-2 motion-safe:transition motion-safe:duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink ${
                 on ? "bg-ink ring-1 ring-ink text-on-dark" : "bg-card hover:bg-muted ring-1 ring-border text-ink"
               }`}>
               <span className={`w-9 h-9 rounded-xl flex items-center justify-center ${on ? "bg-on-dark/15 text-on-dark" : "bg-muted text-muted-foreground"}`}>
@@ -421,7 +423,6 @@ function TileGroup({ label, value, onChange, options, error, icons }) {
               </span>
               <span className="flex-1">
                 <span className={`block text-sm font-medium ${on ? "text-on-dark" : "text-ink/90"}`}>{o.label}</span>
-                {o.desc && <span className={`block text-xs mt-0.5 ${on ? "text-on-dark/70" : "text-muted-foreground"}`}>{o.desc}</span>}
               </span>
             </button>
           );
@@ -452,6 +453,59 @@ function Segmented({ label, value, onChange, options }) {
           );
         })}
       </div>
+    </div>
+  );
+}
+
+// Live-value snap slider field for ordered preferences (budget, pace, activity).
+function PrefSlider({ label, value, onChange, error, points, ariaLabel }) {
+  const index = points.findIndex((p) => p.value === value);
+  const current = index >= 0 ? points[index] : null;
+  return (
+    <div>
+      <span className="text-sm font-medium text-ink">{label}</span>
+      <div className="mt-1 flex items-center gap-2 min-h-9">
+        <span className={`font-display text-2xl font-bold ${current ? "text-ink" : "text-muted-foreground"}`}>
+          {current ? current.label : "—"}
+        </span>
+        {current?.icon && <current.icon className="w-5 h-5 text-teal" aria-hidden="true" />}
+      </div>
+      <div className="mt-2">
+        <SnapSlider points={points} value={value} onChange={onChange} ariaLabel={ariaLabel || label} />
+      </div>
+      {error && <ErrorText>{error}</ErrorText>}
+    </div>
+  );
+}
+
+// Climate uses the 4-point ordered slider plus a separate "No preference"
+// toggle, preserving the full controlled vocabulary expected by the engine.
+function ClimateField({ value, onChange, error }) {
+  const isNoPref = value === "No preference";
+  const ActiveIcon = !isNoPref && value ? CLIMATE_ICONS[value] : null;
+  return (
+    <div>
+      <span className="text-sm font-medium text-ink">Weather</span>
+      <div className="mt-1 flex items-center gap-2 min-h-9">
+        <span className={`font-display text-2xl font-bold ${value && !isNoPref ? "text-ink" : "text-muted-foreground"}`}>
+          {isNoPref ? "No preference" : (value || "—")}
+        </span>
+        {ActiveIcon && <ActiveIcon className="w-5 h-5 text-teal" aria-hidden="true" />}
+      </div>
+      <div className="mt-2">
+        <SnapSlider points={CLIMATE_POINTS} value={isNoPref ? "" : value} onChange={onChange}
+          ariaLabel="Preferred weather" dimmed={isNoPref} />
+      </div>
+      <div className="mt-2">
+        <button type="button" aria-pressed={isNoPref}
+          onClick={() => onChange(isNoPref ? "" : "No preference")}
+          className={`inline-flex items-center gap-1.5 min-h-9 px-3 rounded-full text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink ${
+            isNoPref ? "bg-ink text-on-dark" : "bg-muted text-muted-foreground hover:text-ink ring-1 ring-border"
+          }`}>
+          <Compass className="w-4 h-4" aria-hidden="true" /> No preference
+        </button>
+      </div>
+      {error && <ErrorText>{error}</ErrorText>}
     </div>
   );
 }
