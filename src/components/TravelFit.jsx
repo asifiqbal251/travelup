@@ -1,14 +1,14 @@
 import React from "react";
 
-// Compact, structured travel-fit summary for result cards.
-// Replaces the previous paragraph block. No "Likely/Estimated/Approximately"
-// wording; durations use the "~" shorthand. Badge relabels the practicality
-// level. Does not change any underlying calculation.
+// One clean responsive Travel Fit summary strip with the locked labels.
+// Replaces the previous three-box statistic layout. Only teal/coral/red are
+// used for the level badge (no gold). Used by both Results and TripView so the
+// active and saved trip pages present the same summary.
 const BADGE = {
-  Practical: { label: "Good fit", cls: "bg-[#2EC4B6] text-white" },
-  Manageable: { label: "Manageable", cls: "bg-[#0B1F3A] text-white" },
-  Stretch: { label: "Travel-heavy", cls: "bg-[#E8A33D] text-white" },
-  "Poor practical fit": { label: "Poor fit", cls: "bg-[#FF6B5B] text-white" }
+  Practical: { label: "Good fit", cls: "bg-teal text-cinema" },
+  Manageable: { label: "Manageable", cls: "bg-ink text-on-dark" },
+  Stretch: { label: "Travel-heavy", cls: "bg-coral text-white" },
+  "Poor practical fit": { label: "Poor fit", cls: "bg-destructive text-destructive-foreground" }
 };
 
 function normalizeMode(mode) {
@@ -21,18 +21,16 @@ function normalizeMode(mode) {
 }
 
 export default function TravelFit({ prac, prefs }) {
+  if (!prac) return null;
   const badge = BADGE[prac.level] || BADGE.Practical;
   const mode = prac.isOverride ? prac.travelMode : normalizeMode(prac.travelMode);
   const eachWay = `About ${prac.oneWayHours} hour${prac.oneWayHours === 1 ? "" : "s"} each way`;
   const timeThere = `About ${prac.usableDestinationDays} day${prac.usableDestinationDays === 1 ? "" : "s"}`;
 
   return (
-    <section
-      aria-label="Travel fit"
-      className="bg-[#FBFAF7] border border-[#E6E2D8] rounded-lg p-3 mb-4"
-    >
+    <section aria-label="Travel fit" className="rounded-2xl bg-card p-4 mb-5">
       <div className="flex items-center justify-between mb-3">
-        <h3 className="text-sm font-semibold text-[#0B1F3A]">Travel fit</h3>
+        <h3 className="font-display text-sm font-bold text-ink">Travel fit</h3>
         <span
           className={`text-xs font-semibold px-2.5 py-1 rounded-full ${badge.cls}`}
           role="status"
@@ -41,18 +39,18 @@ export default function TravelFit({ prac, prefs }) {
           {badge.label}
         </span>
       </div>
-      <dl className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-        <div className="col-span-2 sm:col-span-1 bg-white rounded-md border border-[#E6E2D8] px-3 py-2 min-w-0">
-          <dt className="text-[10px] uppercase tracking-wide text-[#0B1F3A]/50">How you'll travel</dt>
-          <dd className="text-sm font-medium text-[#0B1F3A] mt-0.5 break-words">{mode}</dd>
+      <dl className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-6 sm:divide-x sm:divide-border">
+        <div className="min-w-0 sm:pr-4">
+          <dt className="text-[11px] uppercase tracking-wide text-muted-foreground">How you'll travel</dt>
+          <dd className="text-sm font-medium text-ink mt-1 break-words">{mode}</dd>
         </div>
-        <div className="bg-white rounded-md border border-[#E6E2D8] px-3 py-2">
-          <dt className="text-[10px] uppercase tracking-wide text-[#0B1F3A]/50">Travel time</dt>
-          <dd className="text-sm font-medium text-[#0B1F3A] mt-0.5">{eachWay}</dd>
+        <div className="sm:px-4">
+          <dt className="text-[11px] uppercase tracking-wide text-muted-foreground">Travel time</dt>
+          <dd className="text-sm font-medium text-ink mt-1">{eachWay}</dd>
         </div>
-        <div className="bg-white rounded-md border border-[#E6E2D8] px-3 py-2">
-          <dt className="text-[10px] uppercase tracking-wide text-[#0B1F3A]/50">Time at destination</dt>
-          <dd className="text-sm font-medium text-[#0B1F3A] mt-0.5">{timeThere}</dd>
+        <div className="sm:pl-4">
+          <dt className="text-[11px] uppercase tracking-wide text-muted-foreground">Time at destination</dt>
+          <dd className="text-sm font-medium text-ink mt-1">{timeThere}</dd>
         </div>
       </dl>
     </section>

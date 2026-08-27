@@ -11,22 +11,23 @@ import {
   AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogFooter,
   AlertDialogTitle, AlertDialogDescription, AlertDialogAction, AlertDialogCancel
 } from "@/components/ui/alert-dialog";
+import TravelFit from "@/components/TravelFit";
 import DayCard from "@/components/DayCard";
 import { TRAVEL_FALLBACK_IMAGE } from "@/lib/fallbackImage";
 import { Check, Plus, Trash2, RotateCcw, Info } from "lucide-react";
 
 const INTENSITY_COLOR = {
-  Light: "bg-[#2EC4B6]/15 text-[#0E7A6E]",
-  Moderate: "bg-[#0B1F3A]/10 text-[#0B1F3A]",
-  High: "bg-[#FF6B5B]/15 text-[#C04A3D]",
-  "Highly active": "bg-[#FF6B5B]/15 text-[#C04A3D]"
+  Light: "bg-teal/15 text-teal",
+  Moderate: "bg-ink/10 text-ink",
+  High: "bg-coral/15 text-coral",
+  "Highly active": "bg-coral/15 text-coral"
 };
 
-// Shared destination header banner (image + name + region). `display` is the
-// normalized destination display object (see normalizeDestinationDisplay).
+// Larger editorial destination hero: natural image brightness, localized
+// contrast gradient, strong destination typography.
 export function TripHeader({ display }) {
   return (
-    <div className="relative h-52 sm:h-64 rounded-2xl overflow-hidden mb-6">
+    <div className="relative h-60 sm:h-72 rounded-3xl overflow-hidden mb-6">
       <Image
         src={display.imageUrl}
         alt={`${display.name}, ${display.country}`}
@@ -34,40 +35,48 @@ export function TripHeader({ display }) {
         fallbackSrc={TRAVEL_FALLBACK_IMAGE}
         className="w-full h-full"
       />
-      <div className="absolute inset-0 bg-gradient-to-t from-[#0B1F3A]/85 to-transparent" />
-      <div className="absolute bottom-0 p-5 text-white">
-        <h1 className="text-2xl font-semibold">{display.name}</h1>
-        <p className="text-white/80">{display.country} · {display.region}</p>
+      <div
+        className="absolute inset-0"
+        style={{
+          background:
+            "linear-gradient(to top, rgba(7,24,39,0.9) 0%, rgba(7,24,39,0.35) 45%, rgba(7,24,39,0) 100%)"
+        }}
+      />
+      <div className="absolute bottom-0 p-6 text-on-dark">
+        <h1 className="font-display text-3xl sm:text-4xl font-bold">{display.name}</h1>
+        <p className="text-on-dark/85">{display.country} · {display.region}</p>
       </div>
     </div>
   );
 }
 
 // Shared Itinerary / Packing / Overview tabs. Both the live Trip Detail page and
-// the Saved Trip detail page render through this component so presentation
-// stays identical. `packingHandlers` = { onToggle, onAdd, onRemove, onReset };
-// each page wires these to its own backing store.
+// the Saved Trip detail page render through this component. `travelFit` is
+// optional and, when present, renders the Travel Fit summary strip.
 export default function TripView({
-  display, itinerary, packingGroups, packingState, packingHandlers
+  display, itinerary, packingGroups, packingState, packingHandlers, travelFit
 }) {
   return (
     <Tabs defaultValue="itinerary" className="w-full">
-      <TabsList className="grid grid-cols-3 w-full mb-6">
-        <TabsTrigger value="itinerary">Itinerary</TabsTrigger>
-        <TabsTrigger value="packing">Packing</TabsTrigger>
-        <TabsTrigger value="overview">Overview</TabsTrigger>
-      </TabsList>
-      <TabsContent value="itinerary">
+      {travelFit && <div className="mb-6"><TravelFit prac={travelFit} /></div>}
+      <div className="sticky top-16 z-20 -mx-4 px-4 py-2 bg-workflow/95 backdrop-blur">
+        <TabsList className="grid grid-cols-3 w-full max-w-md mx-auto">
+          <TabsTrigger value="itinerary">Itinerary</TabsTrigger>
+          <TabsTrigger value="packing">Packing</TabsTrigger>
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+        </TabsList>
+      </div>
+      <TabsContent value="itinerary" className="mt-6">
         <ItineraryView itinerary={itinerary} />
       </TabsContent>
-      <TabsContent value="packing">
+      <TabsContent value="packing" className="mt-6">
         <PackingView
           groups={packingGroups}
           state={packingState}
           handlers={packingHandlers}
         />
       </TabsContent>
-      <TabsContent value="overview">
+      <TabsContent value="overview" className="mt-6">
         <OverviewView display={display} />
       </TabsContent>
     </Tabs>
@@ -77,11 +86,11 @@ export default function TripView({
 function ItineraryView({ itinerary }) {
   const [openDay, setOpenDay] = useState(1);
   if (!itinerary || !itinerary.length) {
-    return <p className="text-[#0B1F3A]/60">No itinerary available for this combination.</p>;
+    return <p className="text-muted-foreground">No itinerary available for this combination.</p>;
   }
   return (
     <div className="space-y-4">
-      <p className="text-sm text-[#0B1F3A]/60">
+      <p className="text-sm text-muted-foreground">
         A suggested {itinerary.length}-day plan including outbound and return travel. Indicative
         only — verify opening hours and tickets before you go.
       </p>
@@ -122,26 +131,26 @@ function PackingView({ groups, state, handlers }) {
   return (
     <div>
       <div className="flex items-center justify-between mb-4 gap-3">
-        <div className="text-sm text-[#0B1F3A]/70">
-          <span className="font-semibold text-[#0B1F3A]">{done}</span> / {totalItems} packed · {progress}%
+        <div className="text-sm text-muted-foreground">
+          <span className="font-semibold text-ink">{done}</span> / {totalItems} packed · {progress}%
         </div>
         <Button variant="outline" size="sm" onClick={() => setResetOpen(true)} className="min-h-9">
           <RotateCcw className="w-4 h-4 mr-2" /> Reset
         </Button>
       </div>
 
-      <div className="bg-white rounded-xl border border-[#E6E2D8] p-4 mb-5">
+      <div className="mb-6">
         <Label>Add a custom item</Label>
         <div className="flex flex-col sm:flex-row gap-2 mt-2">
           <Input
             value={newItem}
             onChange={(e) => setNewItem(e.target.value)}
             placeholder="e.g. Travel pillow"
-            className="min-h-11 flex-1"
+            className="min-h-11 flex-1 bg-card"
             onKeyDown={(e) => e.key === "Enter" && addCustom()}
           />
           <Select value={newCat} onValueChange={setNewCat}>
-            <SelectTrigger className="min-h-11 sm:w-48" aria-label="Category">
+            <SelectTrigger className="min-h-11 sm:w-48 bg-card" aria-label="Category">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -150,19 +159,19 @@ function PackingView({ groups, state, handlers }) {
               ))}
             </SelectContent>
           </Select>
-          <Button onClick={addCustom} className="bg-[#0B1F3A] hover:bg-[#0B1F3A]/90 min-h-11">
+          <Button onClick={addCustom} className="bg-ink hover:bg-ink/90 text-on-dark min-h-11">
             <Plus className="w-4 h-4 mr-1" /> Add
           </Button>
         </div>
       </div>
 
-      <div className="space-y-5">
+      <div className="space-y-6">
         {(groups || []).map((group) => {
           const customInCat = customItems.filter((c) => c.category === group.category);
           return (
             <div key={group.category}>
-              <h3 className="text-sm font-semibold text-[#0B1F3A] mb-2">{group.category}</h3>
-              <ul className="bg-white rounded-xl border border-[#E6E2D8] divide-y divide-[#E6E2D8] overflow-hidden">
+              <h3 className="font-display text-sm font-bold text-ink mb-3">{group.category}</h3>
+              <ul className="divide-y divide-border">
                 {group.items.map((item) => (
                   <PackingRow
                     key={item.id}
@@ -209,26 +218,26 @@ function PackingView({ groups, state, handlers }) {
 
 function PackingRow({ id, label, checked, onToggle, custom, onRemove }) {
   return (
-    <li className="flex items-center gap-3 px-4 py-3 min-h-11">
+    <li className="flex items-center gap-3 py-3 min-h-11">
       <button
         onClick={() => onToggle(id)}
         role="checkbox"
         aria-checked={checked}
         aria-label={label}
-        className={`w-6 h-6 rounded-md border flex items-center justify-center flex-shrink-0 transition ${
-          checked ? "bg-[#2EC4B6] border-[#2EC4B6]" : "border-[#C9C3B6] hover:border-[#2EC4B6]"
+        className={`w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal ${
+          checked ? "bg-teal text-cinema" : "ring-1 ring-border bg-card hover:ring-teal"
         }`}
       >
-        {checked && <Check className="w-4 h-4 text-white" />}
+        {checked && <Check className="w-4 h-4" />}
       </button>
-      <span className={`text-sm flex-1 ${checked ? "line-through text-[#0B1F3A]/40" : "text-[#0B1F3A]"}`}>
+      <span className={`text-sm flex-1 ${checked ? "line-through text-muted-foreground" : "text-ink"}`}>
         {label}
       </span>
       {custom && (
         <button
           onClick={() => onRemove(id)}
           aria-label={`Remove ${label}`}
-          className="text-[#0B1F3A]/40 hover:text-[#FF6B5B] p-1 min-h-9 min-w-9"
+          className="text-muted-foreground hover:text-destructive p-1 min-h-9 min-w-9"
         >
           <Trash2 className="w-4 h-4" />
         </button>
@@ -239,43 +248,38 @@ function PackingRow({ id, label, checked, onToggle, custom, onRemove }) {
 
 function OverviewView({ display }) {
   return (
-    <div className="space-y-5">
-      <p className="text-[#0B1F3A]/80">{display.intro}</p>
+    <div className="space-y-6">
+      <p className="text-ink/80 leading-relaxed">{display.intro}</p>
 
-      <Section title="Top experiences">
-        <ul className="list-disc list-inside space-y-1 text-sm text-[#0B1F3A]/80">
-          {(display.topExperiences || []).map((e, i) => <li key={i}>{e}</li>)}
+      <div>
+        <h3 className="font-display font-bold text-ink mb-3">Top experiences</h3>
+        <ul className="space-y-2 text-sm text-ink/80">
+          {(display.topExperiences || []).map((e, i) => (
+            <li key={i} className="flex gap-2"><span className="text-teal">•</span>{e}</li>
+          ))}
         </ul>
-      </Section>
+      </div>
 
-      <Section title="Good to know">
-        <ul className="space-y-2 text-sm text-[#0B1F3A]/80">
-          <li><span className="font-medium">Best months: </span>{display.bestForSummary}</li>
-          <li><span className="font-medium">Suggested length: </span>{display.minDays}–{display.maxDays} days</li>
-          <li><span className="font-medium">Budget: </span>{(display.budgetCategories || []).join(" – ")}</li>
-          <li><span className="font-medium">Climate: </span>{(display.climateTags || []).join(", ")}</li>
-          <li><span className="font-medium">Suited to: </span>{(display.travellerTypes || []).join(", ")}</li>
-          <li><span className="font-medium">Dietary notes: </span>{display.dietaryNotes}</li>
-        </ul>
-      </Section>
+      <div>
+        <h3 className="font-display font-bold text-ink mb-3">Good to know</h3>
+        <dl className="space-y-2 text-sm">
+          <div className="flex justify-between gap-4 py-2 border-b border-border"><dt className="text-muted-foreground">Best months</dt><dd className="text-ink text-right">{display.bestForSummary}</dd></div>
+          <div className="flex justify-between gap-4 py-2 border-b border-border"><dt className="text-muted-foreground">Suggested length</dt><dd className="text-ink">{display.minDays}–{display.maxDays} days</dd></div>
+          <div className="flex justify-between gap-4 py-2 border-b border-border"><dt className="text-muted-foreground">Budget</dt><dd className="text-ink text-right">{(display.budgetCategories || []).join(" – ")}</dd></div>
+          <div className="flex justify-between gap-4 py-2 border-b border-border"><dt className="text-muted-foreground">Climate</dt><dd className="text-ink text-right">{(display.climateTags || []).join(", ")}</dd></div>
+          <div className="flex justify-between gap-4 py-2 border-b border-border"><dt className="text-muted-foreground">Suited to</dt><dd className="text-ink text-right">{(display.travellerTypes || []).join(", ")}</dd></div>
+          <div className="flex justify-between gap-4 py-2"><dt className="text-muted-foreground">Dietary notes</dt><dd className="text-ink text-right">{display.dietaryNotes}</dd></div>
+        </dl>
+      </div>
 
-      <div className="bg-[#0B1F3A]/5 border border-[#2EC4B6]/30 rounded-xl p-4 flex gap-3">
-        <Info className="w-5 h-5 text-[#0B1F3A] flex-shrink-0 mt-0.5" />
-        <p className="text-sm text-[#0B1F3A]/75">
+      <div className="rounded-2xl bg-teal/8 ring-1 ring-teal/25 p-4 flex gap-3">
+        <Info className="w-5 h-5 text-teal flex-shrink-0 mt-0.5" />
+        <p className="text-sm text-ink/75">
           Visa &amp; entry: This is general guidance only. Always confirm visa requirements, entry
           conditions, safety and travel advisories through official government sources for your
           citizenship before booking.
         </p>
       </div>
-    </div>
-  );
-}
-
-function Section({ title, children }) {
-  return (
-    <div className="bg-white rounded-xl border border-[#E6E2D8] p-5">
-      <h3 className="font-semibold mb-3">{title}</h3>
-      {children}
     </div>
   );
 }

@@ -7,7 +7,7 @@ import { getPrefs, setSelectedDestinationId } from "@/lib/storage";
 import { TRAVEL_FALLBACK_IMAGE } from "@/lib/fallbackImage";
 import { rankDestinations, buildReasons, buildSuggestions, practicalityExcludedCount } from "@/lib/scoring";
 import TravelFit from "@/components/TravelFit";
-import { ArrowLeft, ArrowRight, Info, MapPin, Clock, Wallet } from "lucide-react";
+import { ArrowLeft, ArrowRight, Info, ChevronDown, MapPin } from "lucide-react";
 
 export default function Results() {
   const navigate = useNavigate();
@@ -31,7 +31,7 @@ export default function Results() {
         setRanked(r);
         setLoading(false);
       })
-      .catch((e) => {
+      .catch(() => {
         setError("We couldn't load the destination list. Please try again.");
         setLoading(false);
       });
@@ -44,14 +44,14 @@ export default function Results() {
 
   if (loading) {
     return (
-      <div className="max-w-2xl mx-auto px-4 py-20 text-center text-[#0B1F3A]/60">
-        <div className="w-8 h-8 mx-auto border-4 border-[#E6E2D8] border-t-[#2EC4B6] rounded-full animate-spin mb-4" />
+      <div className="max-w-2xl mx-auto px-4 py-20 text-center text-muted-foreground">
+        <div className="w-8 h-8 mx-auto border-4 border-muted border-t-teal rounded-full animate-spin mb-4" />
         Finding your best matches…
       </div>
     );
   }
 
-  if (error) return <div className="max-w-2xl mx-auto px-4 py-20 text-center text-[#FF6B5B]">{error}</div>;
+  if (error) return <div className="max-w-2xl mx-auto px-4 py-20 text-center text-destructive">{error}</div>;
 
   const top = ranked.slice(0, 3);
   const suggestions = buildSuggestions(ranked, prefs);
@@ -60,11 +60,11 @@ export default function Results() {
   const showPracticalityNote = practicalityExcluded > 0 && !hasTripLengthHint;
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-8">
+    <div className="max-w-5xl mx-auto px-4 py-8">
       <div className="mb-6 flex items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold">Your top {top.length} matches</h1>
-          <p className="text-sm text-[#0B1F3A]/60 mt-1">
+          <h1 className="font-display text-3xl font-bold text-ink">Your top {top.length} matches</h1>
+          <p className="text-sm text-muted-foreground mt-1">
             Final scores combine your preference fit with travel practicality for your trip length. Estimates only.
           </p>
         </div>
@@ -73,18 +73,23 @@ export default function Results() {
         </Button>
       </div>
 
-      <div className="bg-[#0B1F3A]/5 border border-[#2EC4B6]/30 rounded-xl p-4 mb-6 flex gap-3">
-        <Info className="w-5 h-5 text-[#0B1F3A] flex-shrink-0 mt-0.5" />
-        <p className="text-sm text-[#0B1F3A]/75">
+      {/* Methodology disclosure (collapsible) */}
+      <details className="mb-6 rounded-2xl bg-card p-4 group">
+        <summary className="cursor-pointer text-sm font-medium text-ink list-none flex items-center gap-2 [&::-webkit-details-marker]:hidden">
+          <Info className="w-4 h-4 text-teal" />
+          How matches are calculated
+          <ChevronDown className="w-4 h-4 ml-auto text-muted-foreground motion-safe:transition-transform motion-safe:duration-200 group-open:rotate-180" />
+        </summary>
+        <p className="text-sm text-muted-foreground mt-3 leading-relaxed">
           Scores are estimates based on your preferences and curated destination data, not live
           availability or flight schedules. Always verify visa and entry requirements through official
           government sources for your citizenship.
         </p>
-      </div>
+      </details>
 
       {showPracticalityNote && (
-        <div className="bg-[#2EC4B6]/10 border border-[#2EC4B6]/30 rounded-xl p-4 mb-6">
-          <p className="text-sm text-[#0B1F3A]/80">
+        <div className="rounded-2xl bg-teal/10 ring-1 ring-teal/30 p-4 mb-6">
+          <p className="text-sm text-ink/80">
             Some longer-distance destinations weren't included because this trip length doesn't leave
             enough time to make the travel worthwhile — a longer trip would open up more options.
           </p>
@@ -92,8 +97,8 @@ export default function Results() {
       )}
 
       {suggestions.length > 0 && (
-        <div className="bg-[#FF6B5B]/10 border border-[#FF6B5B]/30 rounded-xl p-4 mb-6">
-          <p className="text-sm font-medium text-[#0B1F3A]">
+        <div className="rounded-2xl bg-coral/10 ring-1 ring-coral/30 p-4 mb-6">
+          <p className="text-sm font-medium text-ink">
             These are weaker practical matches for your current preferences.
           </p>
           <div className="mt-3 flex flex-wrap gap-2">
@@ -101,7 +106,7 @@ export default function Results() {
               <Link
                 key={i}
                 to={`/questionnaire?step=${s.step}`}
-                className="inline-flex items-center gap-1.5 text-sm font-medium bg-white border border-[#E6E2D8] hover:border-[#2EC4B6] rounded-lg px-3 py-2 min-h-9"
+                className="inline-flex items-center gap-1.5 text-sm font-medium bg-card ring-1 ring-border hover:ring-teal rounded-lg px-3 py-2 min-h-9"
               >
                 {s.label} <ArrowRight className="w-3.5 h-3.5" />
               </Link>
@@ -111,31 +116,38 @@ export default function Results() {
       )}
 
       {ranked.length > 0 && ranked.length < 3 && suggestions.length === 0 && (
-        <div className="bg-[#2EC4B6]/10 border border-[#2EC4B6]/40 rounded-xl p-4 mb-6">
-          <p className="text-sm font-medium text-[#0B1F3A]">
+        <div className="rounded-2xl bg-teal/10 ring-1 ring-teal/40 p-4 mb-6">
+          <p className="text-sm font-medium text-ink">
             We found {ranked.length} practical match{ranked.length === 1 ? "" : "es"} that fit your preferences well — there simply aren't more destinations in the catalogue that meet these specific constraints.
           </p>
         </div>
       )}
 
       {top.length === 0 ? (
-        <div className="text-center py-16 text-[#0B1F3A]/60">
+        <div className="text-center py-16 text-muted-foreground">
           <p>No practical destinations were found for a {prefs.travelDays}-day trip from your location in the current catalogue.</p>
           <p className="mt-1">Try a longer trip, broader preferences, or nearby and domestic destinations.</p>
-          <Button onClick={() => navigate("/questionnaire")} className="mt-4 bg-[#0B1F3A] min-h-11">Revise answers</Button>
+          <Button onClick={() => navigate("/questionnaire")} className="mt-4 bg-ink min-h-11">Revise answers</Button>
         </div>
       ) : (
-        <div className="space-y-5">
-          {top.map(({ dest, result }) => (
-            <DestinationCard key={dest.id} dest={dest} result={result} prefs={prefs} onSelect={selectDest} />
-          ))}
+        <div className="space-y-6">
+          {top[0] && (
+            <DestinationCard rank={1} dest={top[0].dest} result={top[0].result} prefs={prefs} onSelect={selectDest} />
+          )}
+          {top.length > 1 && (
+            <div className="grid sm:grid-cols-2 gap-6">
+              {top.slice(1).map(({ dest, result }) => (
+                <DestinationCard key={dest.id} rank={2} dest={dest} result={result} prefs={prefs} onSelect={selectDest} />
+              ))}
+            </div>
+          )}
         </div>
       )}
     </div>
   );
 }
 
-function DestinationCard({ dest, result, prefs, onSelect }) {
+function DestinationCard({ rank, dest, result, prefs, onSelect }) {
   const [open, setOpen] = useState(false);
   const reasons = buildReasons(dest, prefs, result);
   const b = result.breakdown;
@@ -153,100 +165,107 @@ function DestinationCard({ dest, result, prefs, onSelect }) {
 
   const finalScore = result.finalScore;
   const labelClass =
-    finalScore >= 70
-      ? "bg-[#2EC4B6] text-white"
-      : finalScore >= 50
-      ? "bg-[#0B1F3A] text-white"
-      : finalScore >= 30
-      ? "bg-[#E8A33D] text-white"
-      : "bg-[#FF6B5B] text-white";
+    finalScore >= 70 ? "bg-teal text-cinema"
+      : finalScore >= 50 ? "bg-ink text-on-dark"
+      : finalScore >= 30 ? "bg-coral text-white"
+      : "bg-destructive text-destructive-foreground";
   const prac = result.practicality;
   const budgetLabel = (dest.budget_categories || []).join(" – ") || "Varies";
   const climateLabel = (dest.climate_tags || []).join(", ") || "Varies";
 
+  const dominant = rank === 1;
+  const imgH = dominant ? "h-60 sm:h-80" : "h-44 sm:h-52";
+
   return (
-    <article className="bg-white rounded-2xl border border-[#E6E2D8] shadow-sm overflow-hidden">
-      <div className="relative h-48 sm:h-56">
-        <Image src={dest.image_url} alt={`${dest.name}, ${dest.country}`} fittingType="fill" fallbackSrc={TRAVEL_FALLBACK_IMAGE} className="w-full h-full" />
-        <div className="absolute top-3 right-3 bg-[#0B1F3A] text-white text-sm font-semibold px-3 py-1 rounded-full">
+    <article className={`group rounded-3xl bg-card overflow-hidden shadow-sm motion-safe:transition-transform motion-safe:duration-200 motion-safe:ease-out motion-safe:hover:-translate-y-1 ${dominant ? "ring-1 ring-border" : ""}`}>
+      <div className={`relative ${imgH}`}>
+        <Image src={dest.image_url} alt={`${dest.name}, ${dest.country}`} fittingType="fill" fallbackSrc={TRAVEL_FALLBACK_IMAGE} className="w-full h-full motion-safe:transition-transform motion-safe:duration-300 motion-safe:group-hover:scale-[1.03] motion-safe:group-focus-within:scale-[1.03]" />
+        <div className="absolute inset-0 bg-gradient-to-t from-cinema/90 via-cinema/30 to-transparent" />
+        <div className="glass absolute top-3 right-3 text-on-dark text-sm font-semibold px-3 py-1 rounded-full">
           {finalScore}/100
         </div>
         <div className={`absolute top-3 left-3 text-xs font-semibold px-2.5 py-1 rounded-full ${labelClass}`}>
           {result.matchLabel}
         </div>
-        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-[#0B1F3A]/85 to-transparent p-4">
-          <h2 className="text-white text-lg font-semibold flex items-center gap-2">
-            <MapPin className="w-4 h-4 text-[#2EC4B6]" /> {dest.name}
+        <div className="absolute bottom-0 left-0 right-0 p-5">
+          {dominant && (
+            <span className="inline-block text-[11px] font-semibold uppercase tracking-wide text-teal mb-1.5">
+              Best fit
+            </span>
+          )}
+          <h2 className={`font-display font-bold text-on-dark flex items-center gap-2 ${dominant ? "text-2xl sm:text-3xl" : "text-xl"}`}>
+            <MapPin className="w-4 h-4 text-teal" /> {dest.name}
           </h2>
-          <p className="text-white/80 text-sm">{dest.country} · {dest.region}</p>
+          <p className="text-on-dark/80 text-sm">{dest.country} · {dest.region}</p>
         </div>
       </div>
 
-      <div className="p-5">
+      <div className="p-5 sm:p-6">
         <TravelFit prac={prac} prefs={prefs} />
 
         <ul className="space-y-1.5 mb-4">
           {reasons.map((r, i) => (
-            <li key={i} className="text-sm text-[#0B1F3A]/80 flex gap-2">
-              <span className="text-[#2EC4B6]">•</span> {r}
+            <li key={i} className="text-sm text-ink/80 flex gap-2">
+              <span className="text-teal">•</span> {r}
             </li>
           ))}
           {result.visited && (
-            <li className="text-xs text-[#0B1F3A]/50">You've been before — ranked a little lower as a result.</li>
+            <li className="text-xs text-muted-foreground">You've been before — ranked a little lower as a result.</li>
           )}
         </ul>
 
-        <div className="grid grid-cols-3 gap-3 text-center mb-4">
-          <Meta icon={Clock} label="Trip length" value={`${dest.min_days}–${dest.max_days}d`} />
-          <Meta icon={Wallet} label="Budget" value={budgetLabel} />
-          <Meta icon={MapPin} label="Climate" value={climateLabel} />
+        <div className="flex flex-wrap gap-x-5 gap-y-1 text-sm text-muted-foreground mb-4">
+          <span><span className="font-medium text-ink">Trip length:</span> {dest.min_days}–{dest.max_days}d</span>
+          <span><span className="font-medium text-ink">Budget:</span> {budgetLabel}</span>
+          <span><span className="font-medium text-ink">Climate:</span> {climateLabel}</span>
         </div>
 
-        <div className="text-sm text-[#0B1F3A]/70 mb-4">
-          <span className="font-medium text-[#0B1F3A]">Main experiences: </span>
+        <div className="text-sm text-muted-foreground mb-1">
+          <span className="font-medium text-ink">Main experiences: </span>
           {(dest.top_experiences || []).slice(0, 4).join(" · ")}
         </div>
-        <div className="text-sm text-[#0B1F3A]/70 mb-4">
-          <span className="font-medium text-[#0B1F3A]">Suited to: </span>
+        <div className="text-sm text-muted-foreground mb-4">
+          <span className="font-medium text-ink">Suited to: </span>
           {(dest.traveller_types || []).join(", ")}
         </div>
 
         <button
           onClick={() => setOpen((o) => !o)}
-          className="text-sm font-medium text-[#0B1F3A] underline hover:no-underline"
+          className="inline-flex items-center gap-1.5 text-sm font-medium text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal rounded"
           aria-expanded={open}
         >
           {open ? "Hide score breakdown" : "See score breakdown"}
+          <ChevronDown className={`w-4 h-4 motion-safe:transition-transform motion-safe:duration-200 ${open ? "rotate-180" : ""}`} />
         </button>
         {open && (
-          <div className="mt-3 space-y-2">
+          <div className="mt-4 pt-4 border-t border-border space-y-2.5">
             {rows.map(([label, got, max]) => {
               const penalty = got < 0;
               return (
                 <div key={label}>
                   <div className="flex justify-between text-xs mb-1">
-                    <span>{label}</span>
-                    <span className={`font-medium ${penalty ? "text-[#FF6B5B]" : ""}`}>
+                    <span className="text-muted-foreground">{label}</span>
+                    <span className={`font-medium ${penalty ? "text-destructive" : "text-ink"}`}>
                       {penalty ? `${got}` : `${Math.round(got)}/${max}`}
                     </span>
                   </div>
-                  <div className="h-1.5 rounded-full bg-[#E6E2D8] overflow-hidden">
-                    <div className={penalty ? "h-full bg-[#FF6B5B]" : "h-full bg-[#2EC4B6]"}
+                  <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+                    <div className={penalty ? "h-full bg-destructive" : "h-full bg-teal"}
                       style={{ width: `${Math.max(0, (got / max) * 100)}%` }} />
                   </div>
                 </div>
               );
             })}
-            <div className="border-t border-[#E6E2D8] pt-3 mt-2 space-y-1.5">
+            <div className="border-t border-border pt-3 mt-2 space-y-1.5">
               <div className="flex justify-between text-xs">
-                <span>Base preference score</span>
-                <span className="font-medium">{result.baseScore}</span>
+                <span className="text-muted-foreground">Base preference score</span>
+                <span className="font-medium text-ink">{result.baseScore}</span>
               </div>
               <div className="flex justify-between text-xs">
-                <span>Travel-practicality penalty</span>
-                <span className="font-medium text-[#FF6B5B]">{result.travelPenalty > 0 ? `-${result.travelPenalty}` : "0"}</span>
+                <span className="text-muted-foreground">Travel-practicality penalty</span>
+                <span className="font-medium text-destructive">{result.travelPenalty > 0 ? `-${result.travelPenalty}` : "0"}</span>
               </div>
-              <div className="flex justify-between text-sm font-semibold pt-1">
+              <div className="flex justify-between text-sm font-semibold pt-1 text-ink">
                 <span>Final match score</span>
                 <span>{finalScore}/100</span>
               </div>
@@ -254,20 +273,10 @@ function DestinationCard({ dest, result, prefs, onSelect }) {
           </div>
         )}
 
-        <Button onClick={() => onSelect(dest.id)} className="w-full mt-5 bg-[#FF6B5B] hover:bg-[#FF6B5B]/90 text-white min-h-12">
-          View My Trip <ArrowRight className="w-4 h-4 ml-2" />
+        <Button onClick={() => onSelect(dest.id)} className="w-full mt-5 bg-coral hover:bg-coral/90 text-white min-h-12">
+          View my trip <ArrowRight className="w-4 h-4 ml-2" />
         </Button>
       </div>
     </article>
-  );
-}
-
-function Meta({ icon: Icon, label, value }) {
-  return (
-    <div className="bg-[#FBFAF7] rounded-lg py-2 px-1 border border-[#E6E2D8]">
-      <Icon className="w-4 h-4 mx-auto text-[#0B1F3A]/50 mb-1" />
-      <div className="text-[10px] text-[#0B1F3A]/50 uppercase tracking-wide">{label}</div>
-      <div className="text-xs font-semibold">{value}</div>
-    </div>
   );
 }

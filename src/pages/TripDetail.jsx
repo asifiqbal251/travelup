@@ -53,8 +53,8 @@ export default function TripDetail() {
 
   if (loading) {
     return (
-      <div className="max-w-2xl mx-auto px-4 py-20 text-center text-[#0B1F3A]/60">
-        <div className="w-8 h-8 mx-auto border-4 border-[#E6E2D8] border-t-[#2EC4B6] rounded-full animate-spin mb-4" />
+      <div className="max-w-2xl mx-auto px-4 py-20 text-center text-muted-foreground">
+        <div className="w-8 h-8 mx-auto border-4 border-muted border-t-teal rounded-full animate-spin mb-4" />
         Building your trip…
       </div>
     );
@@ -66,7 +66,6 @@ export default function TripDetail() {
   const travelFit = assessPracticality(dest, prefs);
   const fingerprint = tripFingerprint(prefs, dest.id);
 
-  // Packing handlers — active trip writes go to the trip-keyed store only.
   const persistPacking = (next) => {
     setPackingState(next);
     setActiveTripPacking(fingerprint, next);
@@ -104,7 +103,6 @@ export default function TripDetail() {
   };
 
   const doSave = () => {
-    // Duplicate check first, then the 30-trip limit (replacement stays possible at cap).
     const existing = findSavedTripByFingerprint(fingerprint);
     if (existing) {
       setDupOpen(true);
@@ -143,7 +141,7 @@ export default function TripDetail() {
         <Button
           onClick={doSave}
           variant={alreadySaved ? "outline" : "default"}
-          className="w-full sm:w-auto min-h-12"
+          className={`w-full sm:w-auto min-h-12 ${alreadySaved ? "" : "bg-coral hover:bg-coral/90 text-white"}`}
           aria-label={alreadySaved ? "Replace saved itinerary" : "Save itinerary"}
         >
           {alreadySaved
@@ -157,6 +155,7 @@ export default function TripDetail() {
         itinerary={itinerary}
         packingGroups={packingGroups}
         packingState={packingState}
+        travelFit={travelFit}
         packingHandlers={{
           onToggle: handleToggle,
           onAdd: handleAdd,

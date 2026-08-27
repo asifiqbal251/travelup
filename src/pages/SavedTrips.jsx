@@ -8,13 +8,13 @@ import {
 } from "@/components/ui/alert-dialog";
 import { getSavedTrips, deleteSavedTrip } from "@/lib/storage";
 import { TRAVEL_FALLBACK_IMAGE } from "@/lib/fallbackImage";
-import { ArrowRight, Trash2, Plane } from "lucide-react";
+import { Trash2, Plane, ArrowRight } from "lucide-react";
 
 const FIT_BADGE = {
-  Practical: { label: "Good fit", cls: "bg-[#2EC4B6] text-white" },
-  Manageable: { label: "Manageable", cls: "bg-[#0B1F3A] text-white" },
-  Stretch: { label: "Travel-heavy", cls: "bg-[#E8A33D] text-white" },
-  "Poor practical fit": { label: "Poor fit", cls: "bg-[#FF6B5B] text-white" }
+  Practical: { label: "Good fit", cls: "bg-teal text-cinema" },
+  Manageable: { label: "Manageable", cls: "bg-ink text-on-dark" },
+  Stretch: { label: "Travel-heavy", cls: "bg-coral text-white" },
+  "Poor practical fit": { label: "Poor fit", cls: "bg-destructive text-destructive-foreground" }
 };
 
 function formatDate(iso) {
@@ -66,79 +66,96 @@ export default function SavedTrips() {
   if (trips.length === 0) {
     return (
       <div className="max-w-2xl mx-auto px-4 py-16 text-center">
-        <Plane className="w-10 h-10 text-[#2EC4B6] mx-auto mb-4" />
-        <h1 className="text-2xl font-semibold mb-2">No saved trips yet</h1>
-        <p className="text-[#0B1F3A]/70 mb-6">
+        <Plane className="w-10 h-10 text-teal mx-auto mb-4" />
+        <h1 className="font-display text-2xl font-bold mb-2 text-ink">No saved trips yet</h1>
+        <p className="text-muted-foreground mb-6">
           You can save any itinerary from its trip page to view it again here later.
         </p>
-        <Button asChild className="bg-[#FF6B5B] hover:bg-[#FF6B5B]/90 text-white min-h-11">
-          <Link to="/questionnaire">Find My Trip</Link>
+        <Button asChild className="bg-coral hover:bg-coral/90 text-white min-h-11">
+          <Link to="/questionnaire">Find my trip</Link>
         </Button>
       </div>
     );
   }
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-8">
-      <h1 ref={headingRef} tabIndex={-1} className="text-2xl font-semibold mb-4 focus:outline-none">
-        Saved Trips
+    <div className="max-w-5xl mx-auto px-4 py-8">
+      <h1 ref={headingRef} tabIndex={-1} className="font-display text-3xl font-bold text-ink mb-4 focus:outline-none">
+        Saved trips
       </h1>
 
-      <div className="bg-[#0B1F3A]/5 border border-[#2EC4B6]/30 rounded-xl p-4 mb-6 flex gap-3">
-        <Plane className="w-5 h-5 text-[#0B1F3A] flex-shrink-0 mt-0.5" />
-        <p className="text-sm text-[#0B1F3A]/75">
+      <div className="flex items-start gap-3 mb-8 text-sm text-muted-foreground">
+        <Plane className="w-5 h-5 text-teal flex-shrink-0 mt-0.5" />
+        <p>
           Saved trips stay on this browser and device. They are not synced to an account.
         </p>
       </div>
 
-      <div className="space-y-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
         {trips.map((t) => {
           const fit = FIT_BADGE[(t.travelFit && t.travelFit.level) || "Practical"];
+          const checked = (t.packing && t.packing.checkedItemIds) || [];
+          const groups = (t.packing && t.packing.groups) || [];
+          const custom = (t.packing && t.packing.customItems) || [];
+          const total = groups.reduce((n, g) => n + (g.items || []).length, 0) + custom.length;
+          const progress = total ? Math.round((checked.length / total) * 100) : null;
+          const d = t.destination || {};
           return (
             <article
               key={t.id}
               ref={(el) => { cardRefs.current[t.id] = el; }}
               tabIndex={-1}
-              className="bg-white rounded-2xl border border-[#E6E2D8] shadow-sm overflow-hidden focus:outline-none focus:ring-2 focus:ring-[#2EC4B6]"
+              className="relative rounded-3xl overflow-hidden focus:outline-none focus-visible:ring-2 focus-visible:ring-teal motion-safe:transition-transform motion-safe:duration-200 motion-safe:hover:-translate-y-1 group"
             >
-              <div className="flex flex-col sm:flex-row">
-                <div className="relative h-40 sm:w-44 sm:h-auto flex-shrink-0">
+              <Link
+                to={`/saved-trips/${t.id}`}
+                aria-label={`Open saved trip to ${d.name || "destination"}`}
+                className="block"
+              >
+                <span className="relative block w-full aspect-[4/5] overflow-hidden bg-card">
                   <Image
-                    src={t.destination.imageUrl}
-                    alt={`${t.destination.name}, ${t.destination.country}`}
+                    src={d.imageUrl}
+                    alt=""
                     fittingType="fill"
                     fallbackSrc={TRAVEL_FALLBACK_IMAGE}
-                    className="w-full h-full"
+                    className="w-full h-full motion-safe:transition-transform motion-safe:duration-300 motion-safe:group-hover:scale-[1.04] motion-safe:group-focus-visible:scale-[1.04]"
                   />
-                </div>
-                <div className="p-4 flex-1 min-w-0">
-                  <h2 className="font-semibold text-lg">{t.destination.name}</h2>
-                  <p className="text-sm text-[#0B1F3A]/60">{t.destination.country} · {t.destination.region}</p>
-                  <p className="text-sm text-[#0B1F3A]/70 mt-1">
-                    From {t.preferences.departureCity || "home"} · {t.preferences.travelDays} days
-                  </p>
-                  <div className="flex flex-wrap items-center gap-2 mt-2">
-                    <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${fit.cls}`}>{fit.label}</span>
-                    <span className="text-xs text-[#0B1F3A]/60">Updated {formatDate(t.updatedAt)}</span>
-                  </div>
-                  <div className="flex flex-wrap gap-2 mt-4">
-                    <Button
-                      onClick={() => navigate(`/saved-trips/${t.id}`)}
-                      className="bg-[#0B1F3A] hover:bg-[#0B1F3A]/90 min-h-10"
-                    >
-                      Open trip <ArrowRight className="w-4 h-4 ml-1" />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      onClick={() => setDeleteId(t.id)}
-                      className="min-h-10"
-                      aria-label={`Delete saved trip to ${t.destination.name}`}
-                    >
-                      <Trash2 className="w-4 h-4 mr-1" /> Delete
-                    </Button>
-                  </div>
-                </div>
-              </div>
+                  <span
+                    className="absolute inset-x-0 bottom-0 h-2/3"
+                    style={{
+                      background:
+                        "linear-gradient(to top, rgba(7,24,39,0.92) 0%, rgba(7,24,39,0.5) 45%, rgba(7,24,39,0) 100%)"
+                    }}
+                  />
+                  <span className={`glass absolute top-3 left-3 text-[11px] font-semibold px-2.5 py-1 rounded-full ${fit.cls}`}>
+                    {fit.label}
+                  </span>
+                  <span className="absolute inset-x-0 bottom-0 p-5 text-on-dark">
+                    <span className="block font-display text-xl font-bold leading-tight">{d.name}</span>
+                    <span className="block text-sm text-on-dark/85 mt-1">
+                      From {(t.preferences && t.preferences.departureCity) || "home"} · {t.preferences && t.preferences.travelDays}-day trip
+                    </span>
+                    <span className="flex items-center gap-2 mt-2">
+                      <span className="text-xs text-on-dark/75">Updated {formatDate(t.updatedAt)}</span>
+                      <span className="ml-auto inline-flex items-center text-xs font-semibold text-teal">
+                        Open trip <ArrowRight className="w-3.5 h-3.5 ml-1" />
+                      </span>
+                    </span>
+                    {progress != null && (
+                      <span className="mt-3 block h-1 w-full overflow-hidden rounded-full bg-white/20" aria-label={`${progress}% packed`}>
+                        <span className="block h-full bg-teal" style={{ width: `${progress}%` }} />
+                      </span>
+                    )}
+                  </span>
+                </span>
+              </Link>
+              <button
+                onClick={() => setDeleteId(t.id)}
+                className="glass absolute top-3 right-3 h-9 w-9 grid place-items-center rounded-full text-on-dark hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal"
+                aria-label={`Delete saved trip to ${d.name}`}
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
             </article>
           );
         })}

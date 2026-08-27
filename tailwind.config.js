@@ -50,6 +50,15 @@ module.exports = {
   				'4': 'hsl(var(--chart-4))',
   				'5': 'hsl(var(--chart-5))'
   			},
+  			/* ---- Midnight Travel Luxe brand tokens ---- */
+  			cinema: 'hsl(var(--cinema))',
+  			'surface-dark': 'hsl(var(--surface-dark))',
+  			workflow: 'hsl(var(--workflow))',
+  			ink: 'hsl(var(--ink))',
+  			'on-dark': 'hsl(var(--on-dark))',
+  			'muted-dark': 'hsl(var(--muted-dark))',
+  			teal: 'hsl(var(--teal))',
+  			coral: 'hsl(var(--coral))',
   			sidebar: {
   				DEFAULT: 'hsl(var(--sidebar-background))',
   				foreground: 'hsl(var(--sidebar-foreground))',
@@ -69,20 +78,12 @@ module.exports = {
   		},
   		keyframes: {
   			'accordion-down': {
-  				from: {
-  					height: '0'
-  				},
-  				to: {
-  					height: 'var(--radix-accordion-content-height)'
-  				}
+  				from: { height: '0' },
+  				to: { height: 'var(--radix-accordion-content-height)' }
   			},
   			'accordion-up': {
-  				from: {
-  					height: 'var(--radix-accordion-content-height)'
-  				},
-  				to: {
-  					height: '0'
-  				}
+  				from: { height: 'var(--radix-accordion-content-height)' },
+  				to: { height: '0' }
   			}
   		},
   		animation: {

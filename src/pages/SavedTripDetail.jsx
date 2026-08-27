@@ -34,8 +34,8 @@ export default function SavedTripDetail() {
 
   if (loading) {
     return (
-      <div className="max-w-2xl mx-auto px-4 py-20 text-center text-[#0B1F3A]/60">
-        <div className="w-8 h-8 mx-auto border-4 border-[#E6E2D8] border-t-[#2EC4B6] rounded-full animate-spin mb-4" />
+      <div className="max-w-2xl mx-auto px-4 py-20 text-center text-muted-foreground">
+        <div className="w-8 h-8 mx-auto border-4 border-muted border-t-teal rounded-full animate-spin mb-4" />
         Opening saved trip…
       </div>
     );
@@ -44,12 +44,12 @@ export default function SavedTripDetail() {
   if (!trip) {
     return (
       <div className="max-w-2xl mx-auto px-4 py-16 text-center">
-        <Plane className="w-10 h-10 text-[#2EC4B6] mx-auto mb-4" />
-        <h1 className="text-2xl font-semibold mb-2">Saved trip not found</h1>
-        <p className="text-[#0B1F3A]/70 mb-6">
+        <Plane className="w-10 h-10 text-teal mx-auto mb-4" />
+        <h1 className="font-display text-2xl font-bold mb-2 text-ink">Saved trip not found</h1>
+        <p className="text-muted-foreground mb-6">
           This saved trip may have been deleted or is no longer available on this browser.
         </p>
-        <Button asChild className="bg-[#0B1F3A] hover:bg-[#0B1F3A]/90 min-h-11">
+        <Button asChild className="bg-ink hover:bg-ink/90 text-on-dark min-h-11">
           <Link to="/saved-trips">Back to saved trips</Link>
         </Button>
       </div>
@@ -114,7 +114,7 @@ export default function SavedTripDetail() {
         <Button
           variant="outline"
           onClick={() => setDeleteOpen(true)}
-          className="min-h-12"
+          className="min-h-11"
           aria-label={`Delete saved trip to ${trip.destination.name}`}
         >
           <Trash2 className="w-4 h-4 mr-2" /> Delete saved trip
@@ -126,6 +126,7 @@ export default function SavedTripDetail() {
         itinerary={trip.itinerary}
         packingGroups={packingGroups}
         packingState={packingState}
+        travelFit={trip.travelFit}
         packingHandlers={{
           onToggle: handleToggle,
           onAdd: handleAdd,

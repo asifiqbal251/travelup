@@ -4,89 +4,100 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 0 0% 3.9%;
+    /* ---- Midnight Travel Luxe brand palette ---- */
+    --cinema: 208 70% 9%;          /* #071827 cinematic background */
+    --surface-dark: 207 58% 15%;   /* #10283C elevated dark surface */
+    --workflow: 40 36% 95%;        /* #F7F4EE warm workflow background */
+    --ink: 208 64% 11%;            /* #0A1D2E primary dark text */
+    --on-dark: 43 33% 96%;         /* #F8F6F1 primary text on dark */
+    --muted-dark: 208 18% 71%;     /* #A9B7C3 muted text on dark */
+    --teal: 173 65% 54%;           /* #3DD6C3 Travel Fit teal */
+    --coral: 5 100% 67%;           /* #FF6658 action coral */
+
+    /* ---- Semantic shadcn tokens (light workflow surface) ---- */
+    --background: var(--workflow);
+    --foreground: var(--ink);
     --card: 0 0% 100%;
-    --card-foreground: 0 0% 3.9%;
+    --card-foreground: var(--ink);
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 3.9%;
-    --primary: 0 0% 9%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 0 0% 96.1%;
-    --secondary-foreground: 0 0% 9%;
-    --muted: 0 0% 96.1%;
-    --muted-foreground: 0 0% 45.1%;
-    --accent: 0 0% 96.1%;
-    --accent-foreground: 0 0% 9%;
-    --destructive: 0 84.2% 60.2%;
+    --popover-foreground: var(--ink);
+    --primary: var(--ink);
+    --primary-foreground: var(--on-dark);
+    --secondary: 40 24% 90%;
+    --secondary-foreground: var(--ink);
+    --muted: 40 20% 93%;
+    --muted-foreground: 208 10% 40%;
+    --accent: 173 45% 90%;
+    --accent-foreground: var(--ink);
+    --destructive: 4 62% 48%;
     --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 89.8%;
-    --input: 0 0% 89.8%;
-    --ring: 0 0% 3.9%;
-    --chart-1: 12 76% 61%;
-    --chart-2: 173 58% 39%;
-    --chart-3: 197 37% 24%;
+    --border: 40 18% 86%;
+    --input: 40 18% 86%;
+    --ring: var(--teal);
+    --chart-1: 173 65% 54%;
+    --chart-2: 208 64% 40%;
+    --chart-3: 5 100% 67%;
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
-    --radius: 0.5rem;
-    --font-heading: ui-sans-serif, system-ui, sans-serif;
-    --font-body: ui-sans-serif, system-ui, sans-serif;
-    --font-display: ui-sans-serif, system-ui, sans-serif;
-    --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
-  }
+    --radius: 0.75rem;
 
-  .dark {
-    --background: 0 0% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 0 0% 3.9%;
-    --card-foreground: 0 0% 98%;
-    --popover: 0 0% 3.9%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
-    --primary-foreground: 0 0% 9%;
-    --secondary: 0 0% 14.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 0 0% 14.9%;
-    --muted-foreground: 0 0% 63.9%;
-    --accent: 0 0% 14.9%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 14.9%;
-    --input: 0 0% 14.9%;
-    --ring: 0 0% 83.1%;
-    --chart-1: 220 70% 50%;
-    --chart-2: 160 60% 45%;
-    --chart-3: 30 80% 55%;
-    --chart-4: 280 65% 60%;
-    --chart-5: 340 75% 55%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --font-heading: "Manrope Variable", ui-sans-serif, system-ui, sans-serif;
+    --font-body: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
+    --font-display: "Manrope Variable", ui-sans-serif, system-ui, sans-serif;
+    --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+    /* ---- Motion tokens ---- */
+    --motion-fast: 200ms;
+    --motion-ease: cubic-bezier(0.4, 0, 0.2, 1);
+
+    --sidebar-background: var(--workflow);
+    --sidebar-foreground: 208 10% 26%;
+    --sidebar-primary: var(--ink);
+    --sidebar-primary-foreground: var(--on-dark);
+    --sidebar-accent: 40 20% 92%;
+    --sidebar-accent-foreground: var(--ink);
+    --sidebar-border: var(--border);
+    --sidebar-ring: var(--teal);
   }
 }
-
-
 
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
-
   body {
-    @apply bg-background text-foreground font-body;
+    @apply bg-background text-foreground font-body antialiased;
+  }
+}
+
+@layer components {
+  /* One reusable liquid-glass treatment. Use only where a surface floats over
+     imagery or moving content. The @supports block gives a solid high-contrast
+     fallback when backdrop-filter is unavailable. */
+  .glass {
+    background-color: rgba(16, 40, 60, 0.72);
+    -webkit-backdrop-filter: blur(14px) saturate(130%);
+    backdrop-filter: blur(14px) saturate(130%);
+    border: 1px solid rgba(248, 246, 241, 0.14);
+    box-shadow: 0 10px 30px -12px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(248, 246, 241, 0.10);
+  }
+  @supports not ((-webkit-backdrop-filter: blur(2px)) or (backdrop-filter: blur(2px))) {
+    .glass {
+      background-color: rgb(16, 40, 60);
+      -webkit-backdrop-filter: none;
+      backdrop-filter: none;
+    }
+  }
+}
+
+/* Global reduced-motion guard: collapses transitions/animations to near-instant
+   and disables smooth scrolling. Component-level motion-safe variants compose
+   with this. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
   }
 }

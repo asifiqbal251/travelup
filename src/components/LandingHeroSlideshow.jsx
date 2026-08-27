@@ -5,13 +5,19 @@ import { Image } from "@/components/ui/image";
 import { HERO_SLIDES } from "@/lib/heroSlides";
 import { Sparkles, ChevronLeft, ChevronRight, Pause, Play, MapPin } from "lucide-react";
 
-const AUTOPLAY_MS = 7000;
+const AUTOPLAY_MS = 5000;
 const FADE_MS = 800;
 
 const ctrl =
-  "h-11 w-11 rounded-full flex items-center justify-center text-white bg-white/15 hover:bg-white/25 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#0B1F3A]";
+  "h-11 w-11 rounded-full flex items-center justify-center text-on-dark glass hover:opacity-90 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal focus-visible:ring-offset-2 focus-visible:ring-offset-cinema";
 const dot =
-  "h-11 w-11 rounded-full flex items-center justify-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#0B1F3A] hover:bg-white/10";
+  "h-11 w-11 rounded-full flex items-center justify-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal focus-visible:ring-offset-2 focus-visible:ring-offset-cinema hover:bg-white/10";
+
+// One tuned multi-stop scrim: strong behind the left/bottom copy, transparent
+// toward the upper-right so the photograph stays vivid. Tested against the four
+// hero slides for WCAG-readable contrast on the copy side.
+const SCRIM =
+  "linear-gradient(100deg, rgba(7,24,39,0.88) 0%, rgba(7,24,39,0.62) 26%, rgba(7,24,39,0.20) 58%, rgba(7,24,39,0) 100%), linear-gradient(to top, rgba(7,24,39,0.52) 0%, rgba(7,24,39,0) 46%)";
 
 export default function LandingHeroSlideshow() {
   const count = HERO_SLIDES.length;
@@ -23,7 +29,6 @@ export default function LandingHeroSlideshow() {
   const [reducedMotion, setReducedMotion] = useState(false);
   const firstImgRef = useRef(null);
 
-  // Reduced-motion preference: disable autoplay + transition animation.
   useEffect(() => {
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
     setReducedMotion(mq.matches);
@@ -32,15 +37,12 @@ export default function LandingHeroSlideshow() {
     return () => mq.removeEventListener("change", onMq);
   }, []);
 
-  // Pause autoplay while the tab/document is hidden; resume cleanly on return.
   useEffect(() => {
     const onVis = () => setHidden(document.hidden);
     document.addEventListener("visibilitychange", onVis);
     return () => document.removeEventListener("visibilitychange", onVis);
   }, []);
 
-  // Give the eager first slide a high fetch priority via the DOM property
-  // (avoids passing an unknown JSX attribute for lint compatibility).
   useEffect(() => {
     if (firstImgRef.current) firstImgRef.current.fetchPriority = "high";
   }, []);
@@ -48,8 +50,7 @@ export default function LandingHeroSlideshow() {
   const shouldAutoplay =
     !reducedMotion && !paused && !hovered && !focusWithin && !hidden;
 
-  // One autoplay timer, with full cleanup. The interval is recreated only when
-  // shouldAutoplay flips, so timers never stack.
+  // One autoplay timer, recreated only when shouldAutoplay flips.
   useEffect(() => {
     if (!shouldAutoplay) return undefined;
     const id = setInterval(() => setIndex((i) => (i + 1) % count), AUTOPLAY_MS);
@@ -92,20 +93,19 @@ export default function LandingHeroSlideshow() {
             />
           </div>
         ))}
-        {/* Navy overlay: uniform base for contrast + left gradient for depth */}
-        <div className="absolute inset-0 bg-[#0B1F3A]/65" />
-        <div className="absolute inset-0 bg-gradient-to-r from-[#0B1F3A]/75 via-[#0B1F3A]/45 to-transparent" />
+        {/* Single multi-stop scrim (replaces the stacked 65% uniform + side gradient) */}
+        <div className="absolute inset-0" style={{ background: SCRIM }} />
       </div>
 
       {/* Static marketing copy (does not change with slides) */}
-      <div className="relative max-w-5xl mx-auto px-4 py-24 sm:py-32 text-white">
-        <p className="inline-flex items-center gap-2 text-[#2EC4B6] text-sm font-semibold mb-4 uppercase tracking-wide">
+      <div className="relative max-w-5xl mx-auto px-4 py-24 sm:py-32 text-on-dark">
+        <p className="inline-flex items-center gap-2 text-teal text-sm font-semibold mb-4 uppercase tracking-wide">
           <Sparkles className="w-4 h-4" /> Find your Travel Fit
         </p>
-        <h1 className="text-4xl sm:text-5xl font-bold tracking-tight leading-tight max-w-2xl">
+        <h1 className="font-display text-4xl sm:text-5xl font-bold tracking-tight leading-[1.05] max-w-2xl">
           Here&apos;s where we think you&apos;ll love going.
         </h1>
-        <p className="mt-5 text-lg text-white/90 max-w-xl">
+        <p className="mt-5 text-lg text-on-dark/90 max-w-xl">
           Tell us how you travel, and TravelUp will match you with destinations that fit your time,
           budget, interests and pace — then turn your choice into a practical itinerary you can save.
         </p>
@@ -114,7 +114,7 @@ export default function LandingHeroSlideshow() {
           <Button
             asChild
             size="lg"
-            className="bg-[#FF6B5B] hover:bg-[#FF6B5B]/90 text-white min-h-12 px-8 text-base"
+            className="bg-coral hover:bg-coral/90 text-white min-h-12 px-8 text-base"
           >
             <Link to="/questionnaire">Find my Travel Fit</Link>
           </Button>
@@ -122,19 +122,19 @@ export default function LandingHeroSlideshow() {
             asChild
             variant="outline"
             size="lg"
-            className="border-white/40 text-white hover:bg-white/10 hover:text-white hover:border-white min-h-12 px-8 text-base"
+            className="border-white/30 text-on-dark hover:bg-white/10 hover:text-on-dark hover:border-white/60 min-h-12 px-8 text-base"
           >
             <Link to="/saved-trips">View saved trips</Link>
           </Button>
         </div>
 
-        <p className="mt-4 text-xs text-white/75 max-w-md">
+        <p className="mt-4 text-xs text-on-dark/75 max-w-md">
           Your answers and saved trips stay on this browser — no account and no cross-device sync.
         </p>
 
         {/* Visible scene label (changes with slides; deliberately not a live region) */}
-        <p className="mt-6 inline-flex items-center gap-1.5 text-sm text-white/85">
-          <MapPin className="w-4 h-4 text-[#2EC4B6]" aria-hidden="true" /> {activeLabel}
+        <p className="mt-6 inline-flex items-center gap-1.5 text-sm text-on-dark/85">
+          <MapPin className="w-4 h-4 text-teal" aria-hidden="true" /> {activeLabel}
         </p>
 
         {/* Slideshow controls */}
@@ -175,7 +175,7 @@ export default function LandingHeroSlideshow() {
                   className={dot}
                 >
                   <span
-                    className={`rounded-full ${i === index ? "bg-white w-2.5 h-2.5" : "bg-white/50 w-2 h-2"}`}
+                    className={`rounded-full ${i === index ? "bg-on-dark w-2.5 h-2.5" : "bg-on-dark/50 w-2 h-2"}`}
                   />
                 </button>
               ))}

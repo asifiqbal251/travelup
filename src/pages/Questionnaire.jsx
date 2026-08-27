@@ -3,12 +3,17 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Progress } from "@/components/ui/progress";
 import { Slider } from "@/components/ui/slider";
 import {
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem
 } from "@/components/ui/select";
-import { ArrowLeft, ArrowRight, Check } from "lucide-react";
+import {
+  ArrowLeft, ArrowRight, Check,
+  User, Heart, Users, Baby, Wallet, Banknote, Gem, Crown,
+  Sun, CloudSun, Cloud, Snowflake, Compass, Coffee, Scale, Zap,
+  Feather, Footprints, Bike, Mountain, Trees, Landmark, UtensilsCrossed,
+  Waves, Bird, Building2, Armchair, Camera
+} from "lucide-react";
 import {
   MONTHS, INTERESTS, CLIMATES, PACES, ACTIVITIES, DIETARY,
   TRAVELLER_TYPES, BUDGETS, COUNTRIES
@@ -24,6 +29,17 @@ const STEPS = [
   "Details",
   "Review"
 ];
+
+const TRAVELLER_ICONS = { Solo: User, Couple: Heart, Friends: Users, Family: Baby };
+const BUDGET_ICONS = { Budget: Wallet, Moderate: Banknote, Comfortable: Gem, Premium: Crown };
+const CLIMATE_ICONS = { Warm: Sun, Mild: CloudSun, Cool: Cloud, "Cold or snowy": Snowflake, "No preference": Compass };
+const PACE_ICONS = { Relaxed: Coffee, Balanced: Scale, "Fast-paced": Zap };
+const ACTIVITY_ICONS = { Light: Feather, Moderate: Footprints, Active: Bike, "Highly active": Mountain };
+const INTEREST_ICONS = {
+  "Nature": Trees, "History and culture": Landmark, "Food": UtensilsCrossed,
+  "Beaches": Waves, "Hiking": Mountain, "Wildlife": Bird, "Adventure": Compass,
+  "Cities": Building2, "Relaxation": Armchair, "Photography": Camera
+};
 
 const blank = {
   residenceCountry: "",
@@ -47,7 +63,6 @@ const blank = {
 export default function Questionnaire() {
   const navigate = useNavigate();
   const [step, setStep] = useState(() => {
-    // Deep-link from Results revision suggestions without clearing answers.
     if (!getPrefs()) return 0;
     const s = Number(new URLSearchParams(window.location.search).get("step"));
     return Number.isFinite(s) && s >= 0 && s < STEPS.length ? Math.floor(s) : 0;
@@ -58,7 +73,6 @@ export default function Questionnaire() {
     return {
       ...blank,
       ...p,
-      // Migrate the legacy boolean allowDomestic to the 3-way travelScope.
       travelScope: p.travelScope || (p.allowDomestic === false ? "international" : "both"),
       visitedCountries: Array.isArray(p.visitedCountries)
         ? p.visitedCountries.join(", ")
@@ -145,18 +159,22 @@ export default function Questionnaire() {
       ? form.interests.filter((x) => x !== i)
       : [...form.interests, i]);
 
+  const progress = ((step + 1) / STEPS.length) * 100;
+
   return (
-    <div className="max-w-2xl mx-auto px-4 py-8">
-      {/* Progress */}
+    <div className="max-w-3xl mx-auto px-4 py-8 pb-24 sm:pb-10">
+      {/* Progress header */}
       <div className="mb-8">
-        <div className="flex justify-between text-xs text-[#0B1F3A]/60 mb-2">
-          <span>Step {step + 1} of {STEPS.length}</span>
-          <span>{STEPS[step]}</span>
+        <div className="flex items-baseline justify-between gap-3 mb-2">
+          <span className="font-display text-2xl font-bold text-ink">{STEPS[step]}</span>
+          <span className="text-sm text-muted-foreground">Step {step + 1} of {STEPS.length}</span>
         </div>
-        <Progress value={((step + 1) / STEPS.length) * 100} className="h-2" />
+        <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
+          <div className="h-full bg-teal rounded-full motion-safe:transition-[width] motion-safe:duration-300" style={{ width: `${progress}%` }} />
+        </div>
       </div>
 
-      <div className="bg-white rounded-2xl border border-[#E6E2D8] shadow-sm p-6 sm:p-8">
+      <div className="space-y-7">
         {step === 0 && (
           <Step title="Your travel basics" subtitle="So we can tailor your travel recommendations.">
             <SelectField label="Country of residence" value={form.residenceCountry}
@@ -184,22 +202,25 @@ export default function Questionnaire() {
               {MONTHS.map((m, i) => <SelectItem key={m} value={String(i + 1)}>{m}</SelectItem>)}
             </SelectField>
             <div>
-              <Label>Total trip length: <span className="font-semibold text-[#0B1F3A]">{form.travelDays} days</span></Label>
-              <p className="text-xs text-[#0B1F3A]/55 mt-1">Include all travel time—from leaving home until returning—including flights, driving, trains, buses, ferries and transfers.</p>
+              <div className="flex items-baseline justify-between gap-3">
+                <Label>Total trip length</Label>
+                <span className="font-display font-bold text-ink text-lg">{form.travelDays} days</span>
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">Include all travel time—from leaving home until returning—including flights, driving, trains, buses, ferries and transfers.</p>
               <div className="mt-3">
                 <Slider value={[form.travelDays]} min={3} max={14} step={1}
                   onValueChange={(v) => set("travelDays", v[0])} aria-label="Total trip length in days" />
               </div>
-              <div className="flex justify-between text-xs text-[#0B1F3A]/50 mt-1">
+              <div className="flex justify-between text-xs text-muted-foreground mt-1">
                 <span>3 days</span><span>14 days</span>
               </div>
               {errors.travelDays && <ErrorText>{errors.travelDays}</ErrorText>}
             </div>
-            <RadioCards label="May we recommend destinations inside your country of residence?"
+            <Segmented label="May we recommend destinations inside your country of residence?"
               value={form.travelScope}
               onChange={(v) => set("travelScope", v)}
               options={[
-                { value: "both", label: "Both domestic and international" },
+                { value: "both", label: "Both" },
                 { value: "international", label: "International only" },
                 { value: "domestic", label: "Domestic only" }
               ]} />
@@ -208,11 +229,13 @@ export default function Questionnaire() {
 
         {step === 2 && (
           <Step title="Your trip style" subtitle="Who you travel with and what you can spend.">
-            <RadioCards label="Travelling as" value={form.travellerType}
+            <TileGroup label="Travelling as" value={form.travellerType}
               onChange={(v) => set("travellerType", v)} error={errors.travellerType}
+              icons={TRAVELLER_ICONS}
               options={TRAVELLER_TYPES.map((t) => ({ value: t, label: t }))} />
-            <RadioCards label="Budget per person (excluding international flights)" value={form.budget}
+            <TileGroup label="Budget per person (excluding international flights)" value={form.budget}
               onChange={(v) => set("budget", v)} error={errors.budget}
+              icons={BUDGET_ICONS}
               options={BUDGETS.map((b, i) => ({
                 value: b, label: b,
                 desc: ["Lower-cost", "Mid-range", "Higher comfort", "Top-end"][i]
@@ -226,19 +249,18 @@ export default function Questionnaire() {
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 {INTERESTS.map((i) => {
                   const on = form.interests.includes(i);
+                  const IIcon = INTEREST_ICONS[i];
                   return (
                     <button key={i} type="button" aria-pressed={on}
                       onClick={() => toggleInterest(i)}
-                      className={`min-h-11 px-4 rounded-xl border text-sm font-medium transition text-left flex items-center gap-2 ${
-                        on ? "border-[#2EC4B6] bg-[#2EC4B6]/10 text-[#0B1F3A]"
-                          : "border-[#E6E2D8] bg-white hover:border-[#2EC4B6]/60"
+                      className={`group min-h-16 px-4 py-4 rounded-2xl text-left flex flex-col gap-2 motion-safe:transition motion-safe:duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal ${
+                        on ? "bg-teal/15 ring-1 ring-teal" : "bg-card hover:bg-teal/5 ring-1 ring-border"
                       }`}>
-                      <span className={`w-5 h-5 rounded-full border flex items-center justify-center flex-shrink-0 ${
-                        on ? "bg-[#2EC4B6] border-[#2EC4B6]" : "border-[#C9C3B6]"
-                      }`}>
-                        {on && <Check className="w-3 h-3 text-white" />}
+                      <span className={`w-9 h-9 rounded-xl flex items-center justify-center ${on ? "bg-teal text-cinema" : "bg-muted text-muted-foreground"}`}>
+                        {IIcon && <IIcon className="w-5 h-5" />}
                       </span>
-                      {i}
+                      <span className={`text-sm font-medium ${on ? "text-ink" : "text-ink/90"}`}>{i}</span>
+                      {on && <Check className="w-4 h-4 text-teal self-end" />}
                     </button>
                   );
                 })}
@@ -250,14 +272,17 @@ export default function Questionnaire() {
 
         {step === 4 && (
           <Step title="Your preferences" subtitle="Climate, pace and how active you want to be.">
-            <RadioCards label="Preferred climate" value={form.climate}
+            <TileGroup label="Preferred climate" value={form.climate}
               onChange={(v) => set("climate", v)} error={errors.climate}
+              icons={CLIMATE_ICONS}
               options={CLIMATES.map((c) => ({ value: c, label: c }))} />
-            <RadioCards label="Preferred pace" value={form.pace}
+            <TileGroup label="Preferred pace" value={form.pace}
               onChange={(v) => set("pace", v)} error={errors.pace}
+              icons={PACE_ICONS}
               options={PACES.map((p) => ({ value: p, label: p }))} />
-            <RadioCards label="Preferred physical activity" value={form.activity}
+            <TileGroup label="Preferred physical activity" value={form.activity}
               onChange={(v) => set("activity", v)} error={errors.activity}
+              icons={ACTIVITY_ICONS}
               options={ACTIVITIES.map((a) => ({ value: a, label: a }))} />
           </Step>
         )}
@@ -284,7 +309,7 @@ export default function Questionnaire() {
 
         {step === 6 && (
           <Step title="Review your answers" subtitle="Make any changes before we find your matches.">
-            <dl className="divide-y divide-[#E6E2D8]">
+            <dl className="divide-y divide-border">
               <ReviewRow label="Residence / departure / citizenship"
                 value={`${form.residenceCountry || "—"} · ${form.departureCity || "—"} · ${form.citizenship || "—"}`} />
               <ReviewRow label="When" value={form.travelMonth === "flexible" || !form.travelMonth ? "Flexible" : MONTHS[Number(form.travelMonth) - 1]} />
@@ -304,21 +329,23 @@ export default function Questionnaire() {
             {submitError && <ErrorText>{submitError}</ErrorText>}
           </Step>
         )}
+      </div>
 
-        {/* Nav */}
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mt-8 pt-6 border-t border-[#E6E2D8]">
+      {/* Sticky action area on mobile; inline on desktop */}
+      <div className="fixed bottom-0 left-0 right-0 z-30 bg-workflow/95 backdrop-blur border-t border-border px-4 py-3 sm:static sm:bg-transparent sm:border-0 sm:backdrop-blur-0 sm:py-0 sm:mt-8">
+        <div className="max-w-3xl mx-auto flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:pt-6 sm:border-t sm:border-border">
           <Button variant="ghost" onClick={back} disabled={step === 0}
             className="min-h-11 w-full sm:w-auto justify-center">
             <ArrowLeft className="w-4 h-4 mr-2 flex-shrink-0" /> Back
           </Button>
           {step < STEPS.length - 1 ? (
             <Button onClick={next}
-              className="bg-[#0B1F3A] hover:bg-[#0B1F3A]/90 text-white min-h-11 w-full sm:w-auto">
+              className="bg-ink hover:bg-ink/90 text-on-dark min-h-11 w-full sm:w-auto">
               Next <ArrowRight className="w-4 h-4 ml-2 flex-shrink-0" />
             </Button>
           ) : (
             <Button onClick={submit} disabled={submitting}
-              className="bg-[#FF6B5B] hover:bg-[#FF6B5B]/90 text-white min-h-11 w-full sm:w-auto max-w-full whitespace-normal break-words text-center">
+              className="bg-coral hover:bg-coral/90 text-white min-h-11 w-full sm:w-auto max-w-full whitespace-normal break-words text-center">
               {submitting ? "Finding recommendations…" : "See my recommendations"}
               {!submitting && <ArrowRight className="w-4 h-4 ml-2 flex-shrink-0" />}
             </Button>
@@ -334,15 +361,15 @@ export default function Questionnaire() {
 function Step({ title, subtitle, children }) {
   return (
     <div>
-      <h1 className="text-xl font-semibold">{title}</h1>
-      {subtitle && <p className="text-sm text-[#0B1F3A]/60 mt-1 mb-6">{subtitle}</p>}
+      <h1 className="font-display text-xl font-bold text-ink">{title}</h1>
+      {subtitle && <p className="text-sm text-muted-foreground mt-1 mb-5">{subtitle}</p>}
       <div className="space-y-6">{children}</div>
     </div>
   );
 }
 
 function ErrorText({ children }) {
-  return <p role="alert" className="text-sm text-[#FF6B5B] mt-2">{children}</p>;
+  return <p role="alert" className="text-sm text-destructive mt-2">{children}</p>;
 }
 
 function TextField({ label, value, onChange, error, placeholder }) {
@@ -351,7 +378,7 @@ function TextField({ label, value, onChange, error, placeholder }) {
       <Label htmlFor={label}>{label}</Label>
       <Input id={label} value={value} placeholder={placeholder}
         onChange={(e) => onChange(e.target.value)}
-        aria-invalid={!!error} className="mt-2 min-h-11" />
+        aria-invalid={!!error} className="mt-2 min-h-11 bg-card" />
       {error && <ErrorText>{error}</ErrorText>}
     </div>
   );
@@ -362,7 +389,7 @@ function SelectField({ label, value, onChange, error, placeholder, children }) {
     <div>
       <Label>{label}</Label>
       <Select value={value} onValueChange={onChange}>
-        <SelectTrigger className="mt-2 min-h-11" aria-label={label} aria-invalid={!!error}>
+        <SelectTrigger className="mt-2 min-h-11 bg-card" aria-label={label} aria-invalid={!!error}>
           <SelectValue placeholder={placeholder} />
         </SelectTrigger>
         <SelectContent>
@@ -374,22 +401,28 @@ function SelectField({ label, value, onChange, error, placeholder, children }) {
   );
 }
 
-function RadioCards({ label, value, onChange, options, error }) {
+// Icon-supported selection tiles for mutually exclusive choices.
+function TileGroup({ label, value, onChange, options, error, icons }) {
   return (
     <div>
-      <span className="text-sm font-medium">{label}</span>
-      <div role="radiogroup" aria-label={label} className="grid sm:grid-cols-2 gap-3 mt-2">
+      <span className="text-sm font-medium text-ink">{label}</span>
+      <div role="radiogroup" aria-label={label} className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-2">
         {options.map((o) => {
           const on = value === o.value;
+          const IIcon = icons[o.value];
           return (
             <button key={o.value} type="button" role="radio" aria-checked={on}
               onClick={() => onChange(o.value)}
-              className={`min-h-11 px-4 rounded-xl border text-left transition ${
-                on ? "border-[#2EC4B6] bg-[#2EC4B6]/10"
-                  : "border-[#E6E2D8] bg-white hover:border-[#2EC4B6]/60"
+              className={`min-h-16 px-3 py-3 rounded-2xl text-left flex flex-col items-start gap-2 motion-safe:transition motion-safe:duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal ${
+                on ? "bg-teal/15 ring-1 ring-teal" : "bg-card hover:bg-teal/5 ring-1 ring-border"
               }`}>
-              <div className="font-medium text-sm">{o.label}</div>
-              {o.desc && <div className="text-xs text-[#0B1F3A]/55 mt-0.5">{o.desc}</div>}
+              <span className={`w-9 h-9 rounded-xl flex items-center justify-center ${on ? "bg-teal text-cinema" : "bg-muted text-muted-foreground"}`}>
+                {IIcon && <IIcon className="w-5 h-5" />}
+              </span>
+              <span className="flex-1">
+                <span className={`block text-sm font-medium ${on ? "text-ink" : "text-ink/90"}`}>{o.label}</span>
+                {o.desc && <span className="block text-xs text-muted-foreground mt-0.5">{o.desc}</span>}
+              </span>
             </button>
           );
         })}
@@ -399,11 +432,35 @@ function RadioCards({ label, value, onChange, options, error }) {
   );
 }
 
+// Compact segmented control for short mutually exclusive choices (travel scope).
+function Segmented({ label, value, onChange, options }) {
+  return (
+    <div>
+      <span className="text-sm font-medium text-ink">{label}</span>
+      <div role="radiogroup" aria-label={label}
+        className="mt-2 inline-flex w-full rounded-xl bg-muted p-1 ring-1 ring-border">
+        {options.map((o) => {
+          const on = value === o.value;
+          return (
+            <button key={o.value} type="button" role="radio" aria-checked={on}
+              onClick={() => onChange(o.value)}
+              className={`flex-1 min-h-11 px-3 rounded-lg text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal ${
+                on ? "bg-card text-ink shadow-sm" : "text-muted-foreground hover:text-ink"
+              }`}>
+              {o.label}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 function ReviewRow({ label, value }) {
   return (
     <div className="py-3 flex justify-between gap-4">
-      <dt className="text-sm text-[#0B1F3A]/55 flex-shrink-0">{label}</dt>
-      <dd className="text-sm font-medium text-right">{value}</dd>
+      <dt className="text-sm text-muted-foreground flex-shrink-0">{label}</dt>
+      <dd className="text-sm font-medium text-right text-ink">{value}</dd>
     </div>
   );
 }
