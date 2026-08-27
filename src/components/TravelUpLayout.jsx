@@ -39,7 +39,7 @@ export default function TravelUpLayout() {
             aria-label="WhereNova home"
             className="flex items-center rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-on-dark"
           >
-            <WherenovaLogo onDark widthClass="w-[38px] sm:w-[42px]" />
+            <WherenovaLogo onDark widthClass="w-[38px] sm:w-[42px]" wordmarkClass="h-[22px] sm:h-[24px]" />
           </Link>
           <nav className="hidden sm:flex items-center gap-1">
             <Button asChild variant="ghost" className="text-on-dark hover:bg-white/10 hover:text-on-dark focus-visible:!ring-on-dark focus-visible:ring-offset-cinema">
@@ -98,7 +98,7 @@ export default function TravelUpLayout() {
       <footer className="bg-cinema text-on-dark/70">
         <div className="max-w-5xl mx-auto px-4 py-10 text-sm">
           <p className="mb-3 flex items-center gap-2">
-            <WherenovaLogo onDark widthClass="w-[34px]" wordSize="0.95rem" />
+            <WherenovaLogo onDark widthClass="w-[34px]" wordmarkClass="h-[18px]" />
           </p>
           <p className="mb-3">Helping unsure travellers discover where to go next.</p>
           <p className="text-xs max-w-2xl leading-relaxed">

@@ -109,8 +109,8 @@ export default function LandingHeroSlideshow() {
           Find where you&apos;ll love going.
         </h1>
         <p className="mt-5 text-lg sm:text-xl text-on-dark/90 max-w-xl leading-relaxed">
-          Tell us how you travel and WhereNova matches you with destinations that fit your time,
-          budget and pace — then turns your pick into a saveable itinerary.
+          Tell us how you travel — WhereNova finds destinations that fit your time, budget and pace,
+          then turns your pick into a saveable plan.
         </p>
 
         <div className="mt-8 flex flex-col sm:flex-row gap-3">

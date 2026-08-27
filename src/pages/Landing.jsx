@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { Compass, MapPinned, Bookmark, LifeBuoy, Gauge, UserX, ArrowRight, RotateCw } from "lucide-react";
+import { MapPinned, Gauge, UserX, ArrowRight, RotateCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { base44 } from "@/api/base44Client";
 import { getPrefs, getSavedTrips } from "@/lib/storage";
@@ -11,7 +11,7 @@ import DiscoveryDestinationCard from "@/components/discovery/DiscoveryDestinatio
 import SavedTripRail from "@/components/discovery/SavedTripRail";
 import DestinationPreviewDialog from "@/components/discovery/DestinationPreviewDialog";
 import DiscoveryRailSkeleton from "@/components/discovery/DiscoveryRailSkeleton";
-import JourneyPathway from "@/components/JourneyPathway";
+import HowWhereNovaWorks from "@/components/HowWhereNovaWorks";
 import {
   isReturningPrefs,
   returningContext,
@@ -26,13 +26,6 @@ import {
   strongInMonth,
   savedTripsRail
 } from "@/lib/discoveryCollections";
-
-const STEPS = [
-  { icon: Compass, title: "Discover", text: "Answer a short questionnaire and get the best practical matches from 54 curated destinations." },
-  { icon: MapPinned, title: "Plan", text: "Compare Travel Fit, then open a practical day-by-day itinerary and packing list." },
-  { icon: Bookmark, title: "Save", text: "Store multiple itinerary snapshots locally and reopen them from saved trips." },
-  { icon: LifeBuoy, title: "Travel companion", text: "Practical on-the-ground support after you arrive.", coming: true }
-];
 
 const TRUST = [
   { icon: MapPinned, label: "54 curated destinations" },
@@ -174,16 +167,10 @@ export default function Landing() {
         ))}
       </div>
 
-      {/* 5. The WhereNova journey */}
-      <section className="max-w-5xl mx-auto px-4 py-16">
-        <h2 className="font-display text-2xl sm:text-3xl font-bold mb-2 text-center text-on-dark">
-          The WhereNova journey
-        </h2>
-        <p className="text-sm text-muted-dark text-center mb-10 max-w-xl mx-auto">
-          From a few quick answers to a practical, saveable plan — all on this browser.
-        </p>
-        <JourneyPathway steps={STEPS} />
-        <div className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-3">
+      {/* 5. How WhereNova works */}
+      <HowWhereNovaWorks />
+      <section className="max-w-5xl mx-auto px-4 pb-16">
+        <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-3">
           {TRUST.map((t) => (
             <div key={t.label} className="inline-flex items-center gap-2 text-sm text-on-dark/80">
               <t.icon className="w-4 h-4 text-on-dark/70" aria-hidden="true" /> {t.label}
