@@ -3,9 +3,9 @@ import { ShieldCheck, Globe, Lock, Heart } from "lucide-react";
 export default function About() {
   return (
     <div className="max-w-2xl mx-auto px-4 py-12">
-      <h1 className="font-display text-3xl font-bold mb-4 text-ink">About TravelUp</h1>
+      <h1 className="font-display text-3xl font-bold mb-4 text-ink">About WhereNova</h1>
       <p className="text-ink/80 mb-8 leading-relaxed">
-        TravelUp helps people who want to travel but aren't sure where to go. Answer a short
+        WhereNova helps people who want to travel but aren't sure where to go. Answer a short
         questionnaire and we'll suggest three destinations that match your season, budget, interests
         and pace — then outline a day-by-day itinerary and a packing checklist. It's an early MVP to
         validate the core experience, not a booking platform.
@@ -29,19 +29,19 @@ export default function About() {
       <h2 className="font-display text-xl font-semibold mb-3 text-ink">Disclaimer</h2>
       <div className="rounded-2xl p-6 space-y-4 text-sm text-ink/80 leading-relaxed">
         <p>
-          All budgets, climates, seasons, itineraries and packing suggestions shown in TravelUp are
+          All budgets, climates, seasons, itineraries and packing suggestions shown in WhereNova are
           <span className="font-medium"> indicative estimates</span> based on curated data, not live
           information. Prices, weather and conditions change — treat everything here as a starting
           point, not a guarantee.
         </p>
         <p>
-          TravelUp does <span className="font-medium">not</span> provide definitive visa, entry,
+          WhereNova does <span className="font-medium">not</span> provide definitive visa, entry,
           safety or travel advice. Always verify visa requirements, entry conditions, health rules,
           safety and travel advisories using <span className="font-medium">official government
           sources</span> for your citizenship and destination before booking or travelling.
         </p>
         <p>
-          TravelUp is an early MVP. It does not book flights or accommodation, show live prices,
+          WhereNova is an early MVP. It does not book flights or accommodation, show live prices,
           process payments, provide maps or route optimization, offer reviews, or create user
           accounts.
         </p>

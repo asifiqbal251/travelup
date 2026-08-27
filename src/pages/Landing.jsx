@@ -174,7 +174,7 @@ export default function Landing() {
         ))}
       </div>
 
-      {/* 5. The TravelUp journey */}
+      {/* 5. The WhereNova journey */}
       <section className="max-w-5xl mx-auto px-4 py-16">
         <h2 className="font-display text-2xl sm:text-3xl font-bold mb-2 text-center text-on-dark">
           The WhereNova journey
