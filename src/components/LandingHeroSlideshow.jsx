@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Image } from "@/components/ui/image";
 import { HERO_SLIDES } from "@/lib/heroSlides";
-import { Sparkles, ChevronLeft, ChevronRight, Pause, Play, MapPin } from "lucide-react";
+import { Sparkles, ArrowRight, ChevronLeft, ChevronRight, Pause, Play, MapPin } from "lucide-react";
 
 const AUTOPLAY_MS = 5000;
 const FADE_MS = 800;
@@ -13,11 +13,12 @@ const ctrl =
 const dot =
   "h-11 w-11 rounded-full flex items-center justify-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-on-dark focus-visible:ring-offset-2 focus-visible:ring-offset-cinema hover:bg-white/10";
 
-// One tuned multi-stop scrim: strong behind the left/bottom copy, transparent
-// toward the upper-right so the photograph stays vivid. Tested against the four
-// hero slides for WCAG-readable contrast on the copy side.
+// Tuned multi-stop scrim: strong behind the left/bottom copy, transparent toward
+// the upper-right so the photograph stays vivid. A separate short top scrim keeps
+// the overlaying header logo + navigation readable over any hero photo.
 const SCRIM =
-  "linear-gradient(100deg, rgba(7,24,39,0.82) 0%, rgba(7,24,39,0.55) 26%, rgba(7,24,39,0.16) 58%, rgba(7,24,39,0) 100%), linear-gradient(to top, rgba(7,24,39,0.46) 0%, rgba(7,24,39,0) 46%)";
+  "linear-gradient(100deg, rgba(9,27,51,0.84) 0%, rgba(9,27,51,0.56) 26%, rgba(9,27,51,0.16) 58%, rgba(9,27,51,0) 100%), linear-gradient(to top, rgba(9,27,51,0.46) 0%, rgba(9,27,51,0) 46%)";
+const TOP_SCRIM = "linear-gradient(to bottom, rgba(9,27,51,0.62) 0%, rgba(9,27,51,0) 100%)";
 
 export default function LandingHeroSlideshow() {
   const count = HERO_SLIDES.length;
@@ -93,53 +94,48 @@ export default function LandingHeroSlideshow() {
             />
           </div>
         ))}
-        {/* Single multi-stop scrim (replaces the stacked 65% uniform + side gradient) */}
+        {/* Multi-stop scrim for copy contrast */}
         <div className="absolute inset-0" style={{ background: SCRIM }} />
+        {/* Short top scrim so the overlaying header stays readable over bright skies */}
+        <div className="absolute inset-x-0 top-0 h-24" style={{ background: TOP_SCRIM }} />
       </div>
 
-      {/* Static marketing copy (does not change with slides) */}
-      <div className="relative max-w-5xl mx-auto px-4 py-24 sm:py-32 text-on-dark">
-        <p className="inline-flex items-center gap-2 text-on-dark/85 text-sm font-semibold mb-4 uppercase tracking-wide">
-          <Sparkles className="w-4 h-4" /> Find your Travel Fit
+      {/* Marketing copy (does not change with slides) */}
+      <div className="relative max-w-5xl mx-auto px-4 pt-28 pb-20 sm:pt-36 sm:pb-28 text-on-dark">
+        <p className="inline-flex items-center gap-2 text-teal text-sm font-semibold mb-4 uppercase tracking-wide">
+          <Sparkles className="w-4 h-4" aria-hidden="true" /> Where to next?
         </p>
-        <h1 className="font-display text-4xl sm:text-5xl font-bold tracking-tight leading-[1.05] max-w-2xl">
-          Here&apos;s where we think you&apos;ll love going.
+        <h1 className="font-display text-4xl sm:text-6xl font-bold tracking-tight leading-[1.04] max-w-2xl">
+          Find where you&apos;ll love going.
         </h1>
-        <p className="mt-5 text-lg text-on-dark/90 max-w-xl">
-          Tell us how you travel, and TravelUp will match you with destinations that fit your time,
-          budget, interests and pace — then turn your choice into a practical itinerary you can save.
+        <p className="mt-5 text-lg sm:text-xl text-on-dark/90 max-w-xl leading-relaxed">
+          Tell us how you travel and WhereNova matches you with destinations that fit your time,
+          budget and pace — then turns your pick into a saveable itinerary.
         </p>
 
         <div className="mt-8 flex flex-col sm:flex-row gap-3">
           <Button
-          asChild
-          size="lg"
-          className="bg-coral hover:bg-coral/90 text-ink min-h-12 px-8 text-base focus-visible:!ring-on-dark focus-visible:ring-offset-cinema"
+            asChild
+            size="lg"
+            className="bg-ink hover:bg-ink/90 text-on-dark shadow-lg min-h-12 px-8 text-base focus-visible:!ring-on-dark focus-visible:ring-offset-cinema"
           >
-          <Link to="/questionnaire">Find my Travel Fit</Link>
+            <Link to="/questionnaire">
+              Find my Travel Fit <ArrowRight className="w-4 h-4 ml-2" />
+            </Link>
           </Button>
           <Button
-          asChild
-          variant="outline"
-          size="lg"
-          className="border-white/30 text-on-dark hover:bg-white/10 hover:text-on-dark hover:border-white/60 min-h-12 px-8 text-base focus-visible:!ring-on-dark focus-visible:ring-offset-cinema"
+            asChild
+            variant="outline"
+            size="lg"
+            className="border-white/30 text-on-dark hover:bg-white/10 hover:text-on-dark hover:border-white/60 min-h-12 px-8 text-base focus-visible:!ring-on-dark focus-visible:ring-offset-cinema"
           >
-          <Link to="/saved-trips">View saved trips</Link>
+            <Link to="/saved-trips">View saved trips</Link>
           </Button>
         </div>
 
-        <p className="mt-4 text-xs text-on-dark/75 max-w-md">
-          Your answers and saved trips stay on this browser — no account and no cross-device sync.
-        </p>
-
-        {/* Visible scene label (changes with slides; deliberately not a live region) */}
-        <p className="mt-6 inline-flex items-center gap-1.5 text-sm text-on-dark/85">
-          <MapPin className="w-4 h-4 text-on-dark/70" aria-hidden="true" /> {activeLabel}
-        </p>
-
         {/* Slideshow controls */}
         <div
-          className="mt-3 flex flex-wrap items-center justify-between gap-3"
+          className="mt-10 flex flex-wrap items-center justify-between gap-3"
           aria-roledescription="carousel"
           aria-label="Destination slideshow"
         >
@@ -183,6 +179,11 @@ export default function LandingHeroSlideshow() {
           </div>
         </div>
       </div>
+
+      {/* Editorial photo caption — lower-right corner, away from the main copy */}
+      <p className="absolute bottom-4 right-4 inline-flex items-center gap-1.5 text-xs text-on-dark/90 glass-badge px-2.5 py-1 rounded-full">
+        <MapPin className="w-3 h-3 text-on-dark/70" aria-hidden="true" /> {activeLabel}
+      </p>
     </section>
   );
 }

@@ -107,7 +107,7 @@ export default function Landing() {
 
       {/* 2. Returning-traveller context strip (glass, sits just under the hero) */}
       {returning && (
-        <div className="sticky top-16 z-30">
+        <div className="sticky top-0 z-30">
           <div className="glass">
             <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between gap-3 flex-wrap">
               <p className="text-sm text-on-dark/90">
@@ -148,7 +148,7 @@ export default function Landing() {
             <p className="text-on-dark/85 mb-4">We couldn’t load destinations right now.</p>
             <Button
               onClick={retry}
-              className="bg-coral hover:bg-coral/90 text-ink min-h-11 focus-visible:!ring-on-dark focus-visible:ring-offset-cinema"
+              className="bg-ink hover:bg-ink/90 text-on-dark min-h-11 focus-visible:!ring-on-dark focus-visible:ring-offset-cinema"
             >
               <RotateCw className="w-4 h-4 mr-2" /> Try again
             </Button>
@@ -177,7 +177,7 @@ export default function Landing() {
       {/* 5. The TravelUp journey */}
       <section className="max-w-5xl mx-auto px-4 py-16">
         <h2 className="font-display text-2xl sm:text-3xl font-bold mb-2 text-center text-on-dark">
-          The TravelUp journey
+          The WhereNova journey
         </h2>
         <p className="text-sm text-muted-dark text-center mb-10 max-w-xl mx-auto">
           From a few quick answers to a practical, saveable plan — all on this browser.
@@ -204,7 +204,7 @@ export default function Landing() {
           <Button
             asChild
             size="lg"
-            className="bg-coral hover:bg-coral/90 text-ink min-h-12 px-8 focus-visible:!ring-on-dark focus-visible:ring-offset-cinema"
+            className="bg-ink hover:bg-ink/90 text-on-dark shadow-lg min-h-12 px-8 focus-visible:!ring-on-dark focus-visible:ring-offset-cinema"
           >
             <Link to="/questionnaire">
               Find my Travel Fit <ArrowRight className="w-4 h-4 ml-2" />

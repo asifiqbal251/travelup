@@ -5,14 +5,15 @@
 @layer base {
   :root {
     /* ---- Midnight Travel Luxe brand palette ---- */
-    --cinema: 208 70% 9%;          /* #071827 cinematic background */
-    --surface-dark: 207 58% 15%;   /* #10283C elevated dark surface */
-    --workflow: 40 36% 95%;        /* #F7F4EE warm workflow background */
-    --ink: 208 64% 11%;            /* #0A1D2E primary dark text */
-    --on-dark: 43 33% 96%;         /* #F8F6F1 primary text on dark */
-    --muted-dark: 208 18% 71%;     /* #A9B7C3 muted text on dark */
-    --teal: 173 65% 54%;           /* #3DD6C3 Travel Fit teal */
-    --coral: 5 100% 67%;           /* #FF6658 action coral */
+    --cinema: 222 70% 11%;         /* #091B33 deep cinematic navy */
+    --surface-dark: 220 58% 20%;   /* #1B3A60 elevated navy surface */
+    --workflow: 40 36% 95%;        /* #F7F4EE warm off-white surface */
+    --ink: 219 76% 20%;            /* #0C2A59 primary navy */
+    --on-dark: 43 33% 96%;         /* #F8F6F1 text on dark */
+    --muted-dark: 220 16% 70%;     /* muted text on dark */
+    --teal: 184 90% 45%;           /* #02DAE3 WhereNova turquoise */
+    --coral: 14 98% 60%;           /* #FE6D32 supporting coral */
+    --orange: 28 98% 52%;          /* #FE8D0D warm accent */
 
     /* ---- Semantic shadcn tokens (light workflow surface) ---- */
     --background: var(--workflow);

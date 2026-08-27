@@ -1,7 +1,8 @@
 import { useState, useRef } from "react";
-import { Link, Outlet, useNavigate } from "react-router-dom";
-import { Plane, Menu, Trash2 } from "lucide-react";
+import { Link, Outlet, useNavigate, useLocation } from "react-router-dom";
+import { Menu, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import WherenovaLogo from "@/components/WherenovaLogo";
 import {
   AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogFooter,
   AlertDialogTitle, AlertDialogDescription, AlertDialogAction, AlertDialogCancel
@@ -10,6 +11,8 @@ import { clearState } from "@/lib/storage";
 
 export default function TravelUpLayout() {
   const navigate = useNavigate();
+  const { pathname } = useLocation();
+  const onLanding = pathname === "/";
   const [menuOpen, setMenuOpen] = useState(false);
   const [clearOpen, setClearOpen] = useState(false);
   const logoRef = useRef(null);
@@ -28,15 +31,15 @@ export default function TravelUpLayout() {
 
   return (
     <div className="min-h-screen flex flex-col bg-workflow text-ink">
-      <header className="glass sticky top-0 z-40">
+      <header className={`z-40 ${onLanding ? "absolute top-0 left-0 right-0 bg-transparent" : "glass sticky top-0"}`}>
         <div className="max-w-5xl mx-auto px-4 h-16 flex items-center justify-between">
           <Link
             ref={logoRef}
             to="/"
-            className="flex items-center gap-2 font-display font-bold tracking-tight text-lg text-on-dark focus:outline-none focus-visible:ring-2 focus-visible:ring-on-dark rounded"
+            aria-label="WhereNova home"
+            className="flex items-center rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-on-dark"
           >
-            <Plane className="w-5 h-5 text-on-dark" />
-            <span>TravelUp</span>
+            <WherenovaLogo onDark symbolSize={26} />
           </Link>
           <nav className="hidden sm:flex items-center gap-1">
             <Button asChild variant="ghost" className="text-on-dark hover:bg-white/10 hover:text-on-dark focus-visible:!ring-on-dark focus-visible:ring-offset-cinema">
@@ -94,8 +97,8 @@ export default function TravelUpLayout() {
 
       <footer className="bg-cinema text-on-dark/70">
         <div className="max-w-5xl mx-auto px-4 py-10 text-sm">
-          <p className="mb-1 font-semibold text-on-dark flex items-center gap-2">
-            <Plane className="w-4 h-4 text-on-dark/70" /> TravelUp
+          <p className="mb-3 flex items-center gap-2">
+            <WherenovaLogo onDark symbolSize={20} wordSize="0.95rem" />
           </p>
           <p className="mb-3">Helping unsure travellers discover where to go next.</p>
           <p className="text-xs max-w-2xl leading-relaxed">
