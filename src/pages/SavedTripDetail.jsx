@@ -35,7 +35,7 @@ export default function SavedTripDetail() {
   if (loading) {
     return (
       <div className="max-w-2xl mx-auto px-4 py-20 text-center text-muted-foreground">
-        <div className="w-8 h-8 mx-auto border-4 border-muted border-t-teal rounded-full animate-spin mb-4" />
+        <div className="w-8 h-8 mx-auto border-4 border-muted border-t-ink rounded-full animate-spin mb-4" />
         Opening saved trip…
       </div>
     );
@@ -44,7 +44,7 @@ export default function SavedTripDetail() {
   if (!trip) {
     return (
       <div className="max-w-2xl mx-auto px-4 py-16 text-center">
-        <Plane className="w-10 h-10 text-teal mx-auto mb-4" />
+        <Plane className="w-10 h-10 text-muted-foreground mx-auto mb-4" />
         <h1 className="font-display text-2xl font-bold mb-2 text-ink">Saved trip not found</h1>
         <p className="text-muted-foreground mb-6">
           This saved trip may have been deleted or is no longer available on this browser.

@@ -54,7 +54,7 @@ export default function TripDetail() {
   if (loading) {
     return (
       <div className="max-w-2xl mx-auto px-4 py-20 text-center text-muted-foreground">
-        <div className="w-8 h-8 mx-auto border-4 border-muted border-t-teal rounded-full animate-spin mb-4" />
+        <div className="w-8 h-8 mx-auto border-4 border-muted border-t-ink rounded-full animate-spin mb-4" />
         Building your trip…
       </div>
     );
@@ -141,7 +141,7 @@ export default function TripDetail() {
         <Button
           onClick={doSave}
           variant={alreadySaved ? "outline" : "default"}
-          className={`w-full sm:w-auto min-h-12 ${alreadySaved ? "" : "bg-coral hover:bg-coral/90 text-white"}`}
+          className={`w-full sm:w-auto min-h-12 ${alreadySaved ? "" : "bg-coral hover:bg-coral/90 text-ink"}`}
           aria-label={alreadySaved ? "Replace saved itinerary" : "Save itinerary"}
         >
           {alreadySaved

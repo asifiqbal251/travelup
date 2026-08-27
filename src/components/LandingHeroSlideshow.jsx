@@ -9,15 +9,15 @@ const AUTOPLAY_MS = 5000;
 const FADE_MS = 800;
 
 const ctrl =
-  "h-11 w-11 rounded-full flex items-center justify-center text-on-dark glass hover:opacity-90 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal focus-visible:ring-offset-2 focus-visible:ring-offset-cinema";
+  "h-11 w-11 rounded-full flex items-center justify-center text-on-dark glass hover:opacity-90 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-on-dark focus-visible:ring-offset-2 focus-visible:ring-offset-cinema";
 const dot =
-  "h-11 w-11 rounded-full flex items-center justify-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal focus-visible:ring-offset-2 focus-visible:ring-offset-cinema hover:bg-white/10";
+  "h-11 w-11 rounded-full flex items-center justify-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-on-dark focus-visible:ring-offset-2 focus-visible:ring-offset-cinema hover:bg-white/10";
 
 // One tuned multi-stop scrim: strong behind the left/bottom copy, transparent
 // toward the upper-right so the photograph stays vivid. Tested against the four
 // hero slides for WCAG-readable contrast on the copy side.
 const SCRIM =
-  "linear-gradient(100deg, rgba(7,24,39,0.88) 0%, rgba(7,24,39,0.62) 26%, rgba(7,24,39,0.20) 58%, rgba(7,24,39,0) 100%), linear-gradient(to top, rgba(7,24,39,0.52) 0%, rgba(7,24,39,0) 46%)";
+  "linear-gradient(100deg, rgba(7,24,39,0.82) 0%, rgba(7,24,39,0.55) 26%, rgba(7,24,39,0.16) 58%, rgba(7,24,39,0) 100%), linear-gradient(to top, rgba(7,24,39,0.46) 0%, rgba(7,24,39,0) 46%)";
 
 export default function LandingHeroSlideshow() {
   const count = HERO_SLIDES.length;
@@ -99,7 +99,7 @@ export default function LandingHeroSlideshow() {
 
       {/* Static marketing copy (does not change with slides) */}
       <div className="relative max-w-5xl mx-auto px-4 py-24 sm:py-32 text-on-dark">
-        <p className="inline-flex items-center gap-2 text-teal text-sm font-semibold mb-4 uppercase tracking-wide">
+        <p className="inline-flex items-center gap-2 text-on-dark/85 text-sm font-semibold mb-4 uppercase tracking-wide">
           <Sparkles className="w-4 h-4" /> Find your Travel Fit
         </p>
         <h1 className="font-display text-4xl sm:text-5xl font-bold tracking-tight leading-[1.05] max-w-2xl">
@@ -112,19 +112,19 @@ export default function LandingHeroSlideshow() {
 
         <div className="mt-8 flex flex-col sm:flex-row gap-3">
           <Button
-            asChild
-            size="lg"
-            className="bg-coral hover:bg-coral/90 text-white min-h-12 px-8 text-base"
+          asChild
+          size="lg"
+          className="bg-coral hover:bg-coral/90 text-ink min-h-12 px-8 text-base focus-visible:!ring-on-dark focus-visible:ring-offset-cinema"
           >
-            <Link to="/questionnaire">Find my Travel Fit</Link>
+          <Link to="/questionnaire">Find my Travel Fit</Link>
           </Button>
           <Button
-            asChild
-            variant="outline"
-            size="lg"
-            className="border-white/30 text-on-dark hover:bg-white/10 hover:text-on-dark hover:border-white/60 min-h-12 px-8 text-base"
+          asChild
+          variant="outline"
+          size="lg"
+          className="border-white/30 text-on-dark hover:bg-white/10 hover:text-on-dark hover:border-white/60 min-h-12 px-8 text-base focus-visible:!ring-on-dark focus-visible:ring-offset-cinema"
           >
-            <Link to="/saved-trips">View saved trips</Link>
+          <Link to="/saved-trips">View saved trips</Link>
           </Button>
         </div>
 
@@ -134,7 +134,7 @@ export default function LandingHeroSlideshow() {
 
         {/* Visible scene label (changes with slides; deliberately not a live region) */}
         <p className="mt-6 inline-flex items-center gap-1.5 text-sm text-on-dark/85">
-          <MapPin className="w-4 h-4 text-teal" aria-hidden="true" /> {activeLabel}
+          <MapPin className="w-4 h-4 text-on-dark/70" aria-hidden="true" /> {activeLabel}
         </p>
 
         {/* Slideshow controls */}

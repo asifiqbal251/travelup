@@ -170,7 +170,7 @@ export default function Questionnaire() {
           <span className="text-sm text-muted-foreground">Step {step + 1} of {STEPS.length}</span>
         </div>
         <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
-          <div className="h-full bg-teal rounded-full motion-safe:transition-[width] motion-safe:duration-300" style={{ width: `${progress}%` }} />
+          <div className="h-full bg-ink rounded-full motion-safe:transition-[width] motion-safe:duration-300" style={{ width: `${progress}%` }} />
         </div>
       </div>
 
@@ -253,14 +253,14 @@ export default function Questionnaire() {
                   return (
                     <button key={i} type="button" aria-pressed={on}
                       onClick={() => toggleInterest(i)}
-                      className={`group min-h-16 px-4 py-4 rounded-2xl text-left flex flex-col gap-2 motion-safe:transition motion-safe:duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal ${
-                        on ? "bg-teal/15 ring-1 ring-teal" : "bg-card hover:bg-teal/5 ring-1 ring-border"
+                      className={`group min-h-16 px-4 py-4 rounded-2xl text-left flex flex-col gap-2 motion-safe:transition motion-safe:duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink ${
+                        on ? "bg-ink ring-1 ring-ink text-on-dark" : "bg-card hover:bg-muted ring-1 ring-border text-ink"
                       }`}>
-                      <span className={`w-9 h-9 rounded-xl flex items-center justify-center ${on ? "bg-teal text-cinema" : "bg-muted text-muted-foreground"}`}>
+                      <span className={`w-9 h-9 rounded-xl flex items-center justify-center ${on ? "bg-on-dark/15 text-on-dark" : "bg-muted text-muted-foreground"}`}>
                         {IIcon && <IIcon className="w-5 h-5" />}
                       </span>
-                      <span className={`text-sm font-medium ${on ? "text-ink" : "text-ink/90"}`}>{i}</span>
-                      {on && <Check className="w-4 h-4 text-teal self-end" />}
+                      <span className="text-sm font-medium">{i}</span>
+                      {on && <Check className="w-4 h-4 text-on-dark self-end" />}
                     </button>
                   );
                 })}
@@ -345,7 +345,7 @@ export default function Questionnaire() {
             </Button>
           ) : (
             <Button onClick={submit} disabled={submitting}
-              className="bg-coral hover:bg-coral/90 text-white min-h-11 w-full sm:w-auto max-w-full whitespace-normal break-words text-center">
+              className="bg-coral hover:bg-coral/90 text-ink min-h-11 w-full sm:w-auto max-w-full whitespace-normal break-words text-center">
               {submitting ? "Finding recommendations…" : "See my recommendations"}
               {!submitting && <ArrowRight className="w-4 h-4 ml-2 flex-shrink-0" />}
             </Button>
@@ -413,15 +413,15 @@ function TileGroup({ label, value, onChange, options, error, icons }) {
           return (
             <button key={o.value} type="button" role="radio" aria-checked={on}
               onClick={() => onChange(o.value)}
-              className={`min-h-16 px-3 py-3 rounded-2xl text-left flex flex-col items-start gap-2 motion-safe:transition motion-safe:duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal ${
-                on ? "bg-teal/15 ring-1 ring-teal" : "bg-card hover:bg-teal/5 ring-1 ring-border"
+              className={`min-h-16 px-3 py-3 rounded-2xl text-left flex flex-col items-start gap-2 motion-safe:transition motion-safe:duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink ${
+                on ? "bg-ink ring-1 ring-ink text-on-dark" : "bg-card hover:bg-muted ring-1 ring-border text-ink"
               }`}>
-              <span className={`w-9 h-9 rounded-xl flex items-center justify-center ${on ? "bg-teal text-cinema" : "bg-muted text-muted-foreground"}`}>
+              <span className={`w-9 h-9 rounded-xl flex items-center justify-center ${on ? "bg-on-dark/15 text-on-dark" : "bg-muted text-muted-foreground"}`}>
                 {IIcon && <IIcon className="w-5 h-5" />}
               </span>
               <span className="flex-1">
-                <span className={`block text-sm font-medium ${on ? "text-ink" : "text-ink/90"}`}>{o.label}</span>
-                {o.desc && <span className="block text-xs text-muted-foreground mt-0.5">{o.desc}</span>}
+                <span className={`block text-sm font-medium ${on ? "text-on-dark" : "text-ink/90"}`}>{o.label}</span>
+                {o.desc && <span className={`block text-xs mt-0.5 ${on ? "text-on-dark/70" : "text-muted-foreground"}`}>{o.desc}</span>}
               </span>
             </button>
           );
@@ -444,7 +444,7 @@ function Segmented({ label, value, onChange, options }) {
           return (
             <button key={o.value} type="button" role="radio" aria-checked={on}
               onClick={() => onChange(o.value)}
-              className={`flex-1 min-h-11 px-3 rounded-lg text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal ${
+              className={`flex-1 min-h-11 px-3 rounded-lg text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink ${
                 on ? "bg-card text-ink shadow-sm" : "text-muted-foreground hover:text-ink"
               }`}>
               {o.label}

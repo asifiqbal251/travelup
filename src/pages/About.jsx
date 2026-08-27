@@ -19,7 +19,7 @@ export default function About() {
           { icon: ShieldCheck, title: "Indicative only", text: "All figures are estimates — please verify official requirements before you travel." }
         ].map((f) => (
           <div key={f.title} className="rounded-2xl p-6 bg-card shadow-sm">
-            <f.icon className="w-6 h-6 text-teal mb-3" />
+            <f.icon className="w-6 h-6 text-ink mb-3" />
             <h3 className="font-display font-semibold text-ink mb-1">{f.title}</h3>
             <p className="text-sm text-muted-foreground">{f.text}</p>
           </div>

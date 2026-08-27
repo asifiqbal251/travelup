@@ -33,32 +33,32 @@ export default function TravelUpLayout() {
           <Link
             ref={logoRef}
             to="/"
-            className="flex items-center gap-2 font-display font-bold tracking-tight text-lg text-on-dark focus:outline-none focus-visible:ring-2 focus-visible:ring-teal rounded"
+            className="flex items-center gap-2 font-display font-bold tracking-tight text-lg text-on-dark focus:outline-none focus-visible:ring-2 focus-visible:ring-on-dark rounded"
           >
-            <Plane className="w-5 h-5 text-teal" />
+            <Plane className="w-5 h-5 text-on-dark" />
             <span>TravelUp</span>
           </Link>
           <nav className="hidden sm:flex items-center gap-1">
-            <Button asChild variant="ghost" className="text-on-dark hover:bg-white/10 hover:text-on-dark">
+            <Button asChild variant="ghost" className="text-on-dark hover:bg-white/10 hover:text-on-dark focus-visible:!ring-on-dark focus-visible:ring-offset-cinema">
               <Link to="/">Home</Link>
             </Button>
-            <Button asChild variant="ghost" className="text-on-dark hover:bg-white/10 hover:text-on-dark">
+            <Button asChild variant="ghost" className="text-on-dark hover:bg-white/10 hover:text-on-dark focus-visible:!ring-on-dark focus-visible:ring-offset-cinema">
               <Link to="/saved-trips">Saved trips</Link>
             </Button>
-            <Button asChild variant="ghost" className="text-on-dark hover:bg-white/10 hover:text-on-dark">
+            <Button asChild variant="ghost" className="text-on-dark hover:bg-white/10 hover:text-on-dark focus-visible:!ring-on-dark focus-visible:ring-offset-cinema">
               <Link to="/about">About</Link>
             </Button>
             <button
               type="button"
               onClick={openClear}
-              className="ml-2 inline-flex items-center gap-1.5 h-9 px-3 rounded-lg text-xs font-medium text-on-dark/70 hover:text-on-dark hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal"
+              className="ml-2 inline-flex items-center gap-1.5 h-9 px-3 rounded-lg text-xs font-medium text-on-dark/70 hover:text-on-dark hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-on-dark"
               aria-label="Clear my data"
             >
               <Trash2 className="w-3.5 h-3.5" /> Clear my data
             </button>
           </nav>
           <button
-            className="sm:hidden p-2 min-h-11 min-w-11 text-on-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal rounded"
+            className="sm:hidden p-2 min-h-11 min-w-11 text-on-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-on-dark rounded"
             aria-label="Open menu"
             aria-expanded={menuOpen}
             onClick={() => setMenuOpen((o) => !o)}
@@ -68,19 +68,19 @@ export default function TravelUpLayout() {
         </div>
         {menuOpen && (
           <div className="sm:hidden glass border-t border-white/10 px-4 pb-4 pt-2 flex flex-col gap-1">
-            <Button asChild variant="ghost" className="text-on-dark hover:bg-white/10 justify-start min-h-11" onClick={close}>
+            <Button asChild variant="ghost" className="text-on-dark hover:bg-white/10 justify-start min-h-11 focus-visible:!ring-on-dark focus-visible:ring-offset-cinema" onClick={close}>
               <Link to="/">Home</Link>
             </Button>
-            <Button asChild variant="ghost" className="text-on-dark hover:bg-white/10 justify-start min-h-11" onClick={close}>
+            <Button asChild variant="ghost" className="text-on-dark hover:bg-white/10 justify-start min-h-11 focus-visible:!ring-on-dark focus-visible:ring-offset-cinema" onClick={close}>
               <Link to="/saved-trips">Saved trips</Link>
             </Button>
-            <Button asChild variant="ghost" className="text-on-dark hover:bg-white/10 justify-start min-h-11" onClick={close}>
+            <Button asChild variant="ghost" className="text-on-dark hover:bg-white/10 justify-start min-h-11 focus-visible:!ring-on-dark focus-visible:ring-offset-cinema" onClick={close}>
               <Link to="/about">About</Link>
             </Button>
             <Button
               onClick={() => { close(); openClear(); }}
               variant="ghost"
-              className="text-on-dark/70 hover:text-on-dark hover:bg-white/10 justify-start min-h-11"
+              className="text-on-dark/70 hover:text-on-dark hover:bg-white/10 justify-start min-h-11 focus-visible:!ring-on-dark focus-visible:ring-offset-cinema"
             >
               <Trash2 className="w-4 h-4 mr-2" /> Clear my data
             </Button>
@@ -95,7 +95,7 @@ export default function TravelUpLayout() {
       <footer className="bg-cinema text-on-dark/70">
         <div className="max-w-5xl mx-auto px-4 py-10 text-sm">
           <p className="mb-1 font-semibold text-on-dark flex items-center gap-2">
-            <Plane className="w-4 h-4 text-teal" /> TravelUp
+            <Plane className="w-4 h-4 text-on-dark/70" /> TravelUp
           </p>
           <p className="mb-3">Helping unsure travellers discover where to go next.</p>
           <p className="text-xs max-w-2xl leading-relaxed">
@@ -104,9 +104,9 @@ export default function TravelUpLayout() {
             advisories using official government sources for your citizenship.
           </p>
           <div className="mt-5 flex flex-wrap gap-4">
-            <Link to="/about" className="underline hover:text-on-dark">About &amp; disclaimer</Link>
-            <Link to="/saved-trips" className="underline hover:text-on-dark">Saved trips</Link>
-            <Link to="/" className="underline hover:text-on-dark">Home</Link>
+            <Link to="/about" className="underline hover:text-on-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-on-dark rounded">About &amp; disclaimer</Link>
+            <Link to="/saved-trips" className="underline hover:text-on-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-on-dark rounded">Saved trips</Link>
+            <Link to="/" className="underline hover:text-on-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-on-dark rounded">Home</Link>
           </div>
         </div>
       </footer>

@@ -24,7 +24,7 @@ function SavedTripCard({ trip, featured }) {
     <Link
       to={`/saved-trips/${trip.id}`}
       aria-label={`Continue saved trip to ${d.name || "destination"}`}
-      className={`group block ${width} text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal focus-visible:ring-offset-2 focus-visible:ring-offset-cinema motion-safe:transition-transform motion-safe:duration-200 motion-safe:ease-out motion-safe:hover:-translate-y-1 motion-safe:focus-visible:-translate-y-1`}
+      className={`group block ${width} text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-on-dark focus-visible:ring-offset-2 focus-visible:ring-offset-cinema motion-safe:transition-transform motion-safe:duration-200 motion-safe:ease-out motion-safe:hover:-translate-y-1 motion-safe:focus-visible:-translate-y-1`}
     >
       <span className="relative block w-full aspect-[4/5] overflow-hidden rounded-2xl bg-cinema/40">
         <Image
@@ -39,10 +39,10 @@ function SavedTripCard({ trip, featured }) {
           className="absolute inset-x-0 bottom-0 h-2/3 rounded-b-2xl"
           style={{
             background:
-              "linear-gradient(to top, rgba(7,24,39,0.92) 0%, rgba(7,24,39,0.6) 38%, rgba(7,24,39,0) 100%)"
+              "linear-gradient(to top, rgba(7,24,39,0.86) 0%, rgba(7,24,39,0.45) 42%, rgba(7,24,39,0) 100%)"
           }}
         />
-        <span className="glass absolute top-3 left-3 inline-flex items-center gap-1 text-on-dark text-[10px] font-semibold px-2 py-1 rounded-full">
+        <span className="glass-badge absolute top-3 left-3 inline-flex items-center gap-1 text-on-dark text-[10px] font-semibold px-2 py-1 rounded-full">
           <Bookmark className="w-3 h-3" /> Saved
         </span>
         <span className="absolute inset-x-0 bottom-0 p-4">
@@ -54,7 +54,7 @@ function SavedTripCard({ trip, featured }) {
           </span>
           {progress != null && (
             <span className="mt-2 block h-1 w-full overflow-hidden rounded-full bg-white/20" aria-hidden="true">
-              <span className="block h-full bg-teal" style={{ width: `${progress}%` }} />
+              <span className="block h-full bg-on-dark" style={{ width: `${progress}%` }} />
             </span>
           )}
         </span>

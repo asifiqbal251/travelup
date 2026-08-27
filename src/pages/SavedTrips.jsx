@@ -13,7 +13,7 @@ import { Trash2, Plane, ArrowRight } from "lucide-react";
 const FIT_BADGE = {
   Practical: { label: "Good fit", cls: "bg-teal text-cinema" },
   Manageable: { label: "Manageable", cls: "bg-ink text-on-dark" },
-  Stretch: { label: "Travel-heavy", cls: "bg-coral text-white" },
+  Stretch: { label: "Travel-heavy", cls: "bg-ink/80 text-on-dark" },
   "Poor practical fit": { label: "Poor fit", cls: "bg-destructive text-destructive-foreground" }
 };
 
@@ -66,12 +66,12 @@ export default function SavedTrips() {
   if (trips.length === 0) {
     return (
       <div className="max-w-2xl mx-auto px-4 py-16 text-center">
-        <Plane className="w-10 h-10 text-teal mx-auto mb-4" />
+        <Plane className="w-10 h-10 text-muted-foreground mx-auto mb-4" />
         <h1 className="font-display text-2xl font-bold mb-2 text-ink">No saved trips yet</h1>
         <p className="text-muted-foreground mb-6">
           You can save any itinerary from its trip page to view it again here later.
         </p>
-        <Button asChild className="bg-coral hover:bg-coral/90 text-white min-h-11">
+        <Button asChild className="bg-coral hover:bg-coral/90 text-ink min-h-11">
           <Link to="/questionnaire">Find my trip</Link>
         </Button>
       </div>
@@ -85,7 +85,7 @@ export default function SavedTrips() {
       </h1>
 
       <div className="flex items-start gap-3 mb-8 text-sm text-muted-foreground">
-        <Plane className="w-5 h-5 text-teal flex-shrink-0 mt-0.5" />
+        <Plane className="w-5 h-5 text-muted-foreground flex-shrink-0 mt-0.5" />
         <p>
           Saved trips stay on this browser and device. They are not synced to an account.
         </p>
@@ -105,7 +105,7 @@ export default function SavedTrips() {
               key={t.id}
               ref={(el) => { cardRefs.current[t.id] = el; }}
               tabIndex={-1}
-              className="relative rounded-3xl overflow-hidden focus:outline-none focus-visible:ring-2 focus-visible:ring-teal motion-safe:transition-transform motion-safe:duration-200 motion-safe:hover:-translate-y-1 group"
+              className="relative rounded-3xl overflow-hidden focus:outline-none focus-visible:ring-2 focus-visible:ring-ink motion-safe:transition-transform motion-safe:duration-200 motion-safe:hover:-translate-y-1 group"
             >
               <Link
                 to={`/saved-trips/${t.id}`}
@@ -124,10 +124,10 @@ export default function SavedTrips() {
                     className="absolute inset-x-0 bottom-0 h-2/3"
                     style={{
                       background:
-                        "linear-gradient(to top, rgba(7,24,39,0.92) 0%, rgba(7,24,39,0.5) 45%, rgba(7,24,39,0) 100%)"
+                        "linear-gradient(to top, rgba(7,24,39,0.86) 0%, rgba(7,24,39,0.45) 42%, rgba(7,24,39,0) 100%)"
                     }}
                   />
-                  <span className={`glass absolute top-3 left-3 text-[11px] font-semibold px-2.5 py-1 rounded-full ${fit.cls}`}>
+                  <span className={`glass-badge absolute top-3 left-3 text-[11px] font-semibold px-2.5 py-1 rounded-full ${fit.cls}`}>
                     {fit.label}
                   </span>
                   <span className="absolute inset-x-0 bottom-0 p-5 text-on-dark">
@@ -137,13 +137,13 @@ export default function SavedTrips() {
                     </span>
                     <span className="flex items-center gap-2 mt-2">
                       <span className="text-xs text-on-dark/75">Updated {formatDate(t.updatedAt)}</span>
-                      <span className="ml-auto inline-flex items-center text-xs font-semibold text-teal">
+                      <span className="ml-auto inline-flex items-center text-xs font-semibold text-on-dark">
                         Open trip <ArrowRight className="w-3.5 h-3.5 ml-1" />
                       </span>
                     </span>
                     {progress != null && (
                       <span className="mt-3 block h-1 w-full overflow-hidden rounded-full bg-white/20" aria-label={`${progress}% packed`}>
-                        <span className="block h-full bg-teal" style={{ width: `${progress}%` }} />
+                        <span className="block h-full bg-on-dark" style={{ width: `${progress}%` }} />
                       </span>
                     )}
                   </span>
@@ -151,7 +151,7 @@ export default function SavedTrips() {
               </Link>
               <button
                 onClick={() => setDeleteId(t.id)}
-                className="glass absolute top-3 right-3 h-9 w-9 grid place-items-center rounded-full text-on-dark hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal"
+                className="glass-badge absolute top-3 right-3 h-11 w-11 grid place-items-center rounded-full text-on-dark hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-on-dark"
                 aria-label={`Delete saved trip to ${d.name}`}
               >
                 <Trash2 className="w-4 h-4" />

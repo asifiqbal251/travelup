@@ -11,6 +11,7 @@ import DiscoveryDestinationCard from "@/components/discovery/DiscoveryDestinatio
 import SavedTripRail from "@/components/discovery/SavedTripRail";
 import DestinationPreviewDialog from "@/components/discovery/DestinationPreviewDialog";
 import DiscoveryRailSkeleton from "@/components/discovery/DiscoveryRailSkeleton";
+import JourneyPathway from "@/components/JourneyPathway";
 import {
   isReturningPrefs,
   returningContext,
@@ -117,7 +118,7 @@ export default function Landing() {
                 asChild
                 variant="outline"
                 size="sm"
-                className="border-white/20 text-on-dark hover:bg-white/10 hover:text-on-dark min-h-9"
+                className="border-white/20 text-on-dark hover:bg-white/10 hover:text-on-dark min-h-9 focus-visible:!ring-on-dark focus-visible:ring-offset-cinema"
               >
                 <Link to="/questionnaire">Update preferences</Link>
               </Button>
@@ -147,7 +148,7 @@ export default function Landing() {
             <p className="text-on-dark/85 mb-4">We couldn’t load destinations right now.</p>
             <Button
               onClick={retry}
-              className="bg-coral hover:bg-coral/90 text-white min-h-11"
+              className="bg-coral hover:bg-coral/90 text-ink min-h-11 focus-visible:!ring-on-dark focus-visible:ring-offset-cinema"
             >
               <RotateCw className="w-4 h-4 mr-2" /> Try again
             </Button>
@@ -181,28 +182,11 @@ export default function Landing() {
         <p className="text-sm text-muted-dark text-center mb-10 max-w-xl mx-auto">
           From a few quick answers to a practical, saveable plan — all on this browser.
         </p>
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {STEPS.map((s) => (
-            <div key={s.title} className="rounded-2xl p-6 bg-surface-dark/60">
-              <div className="w-11 h-11 rounded-xl bg-teal/15 text-teal flex items-center justify-center mb-4">
-                <s.icon className="w-5 h-5" />
-              </div>
-              <div className="flex items-center gap-2 mb-2">
-                <h3 className="font-display font-semibold text-on-dark">{s.title}</h3>
-                {s.coming && (
-                  <span className="text-[10px] font-semibold uppercase tracking-wide bg-on-dark/10 text-muted-dark px-2 py-0.5 rounded-full">
-                    Coming later
-                  </span>
-                )}
-              </div>
-              <p className="text-sm text-muted-dark">{s.text}</p>
-            </div>
-          ))}
-        </div>
+        <JourneyPathway steps={STEPS} />
         <div className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-3">
           {TRUST.map((t) => (
             <div key={t.label} className="inline-flex items-center gap-2 text-sm text-on-dark/80">
-              <t.icon className="w-4 h-4 text-teal" aria-hidden="true" /> {t.label}
+              <t.icon className="w-4 h-4 text-on-dark/70" aria-hidden="true" /> {t.label}
             </div>
           ))}
         </div>
@@ -220,7 +204,7 @@ export default function Landing() {
           <Button
             asChild
             size="lg"
-            className="bg-coral hover:bg-coral/90 text-white min-h-12 px-8"
+            className="bg-coral hover:bg-coral/90 text-ink min-h-12 px-8 focus-visible:!ring-on-dark focus-visible:ring-offset-cinema"
           >
             <Link to="/questionnaire">
               Find my Travel Fit <ArrowRight className="w-4 h-4 ml-2" />

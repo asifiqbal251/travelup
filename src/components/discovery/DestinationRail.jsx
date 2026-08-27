@@ -55,7 +55,7 @@ export default function DestinationRail({ title, id, items, renderItem, getKey }
           onClick={() => scrollByCard(-1)}
           disabled={!canLeft}
           aria-label={`Previous: ${title}`}
-          className="h-11 w-11 rounded-full glass text-on-dark disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal"
+          className="h-11 w-11 rounded-full bg-cinema/70 border border-white/15 text-on-dark disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-on-dark"
         >
           <ChevronLeft className="w-5 h-5" />
         </button>
@@ -64,7 +64,7 @@ export default function DestinationRail({ title, id, items, renderItem, getKey }
           onClick={() => scrollByCard(1)}
           disabled={!canRight}
           aria-label={`Next: ${title}`}
-          className="h-11 w-11 rounded-full glass text-on-dark disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal"
+          className="h-11 w-11 rounded-full bg-cinema/70 border border-white/15 text-on-dark disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-on-dark"
         >
           <ChevronRight className="w-5 h-5" />
         </button>
@@ -72,7 +72,7 @@ export default function DestinationRail({ title, id, items, renderItem, getKey }
       <div
         ref={scrollerRef}
         onScroll={update}
-        className="flex gap-4 overflow-x-auto snap-x snap-mandatory max-w-5xl mx-auto px-4 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        className="flex items-start gap-4 overflow-x-auto snap-x snap-mandatory max-w-5xl mx-auto px-4 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
         {items.map((item, i) => (
           <div key={keyFn(item, i)} data-card className="snap-start shrink-0 flex">

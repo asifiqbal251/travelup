@@ -33,7 +33,7 @@
     --destructive-foreground: 0 0% 98%;
     --border: 40 18% 86%;
     --input: 40 18% 86%;
-    --ring: var(--teal);
+    --ring: var(--ink);
     --chart-1: 173 65% 54%;
     --chart-2: 208 64% 40%;
     --chart-3: 5 100% 67%;
@@ -74,19 +74,46 @@
   /* One reusable liquid-glass treatment. Use only where a surface floats over
      imagery or moving content. The @supports block gives a solid high-contrast
      fallback when backdrop-filter is unavailable. */
+  /* Glass navigation/chrome — translucent navy, mild blur + saturation, a subtle
+     1px light edge and a restrained inner shadow. Explicit foreground keeps text
+     readable over any backdrop. */
   .glass {
     background-color: rgba(16, 40, 60, 0.72);
-    -webkit-backdrop-filter: blur(14px) saturate(130%);
-    backdrop-filter: blur(14px) saturate(130%);
-    border: 1px solid rgba(248, 246, 241, 0.14);
-    box-shadow: 0 10px 30px -12px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(248, 246, 241, 0.10);
+    -webkit-backdrop-filter: blur(14px) saturate(125%);
+    backdrop-filter: blur(14px) saturate(125%);
+    border: 1px solid rgba(248, 246, 241, 0.16);
+    box-shadow: 0 10px 30px -14px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(248, 246, 241, 0.10);
+    color: rgb(248, 246, 241);
+  }
+  /* Compact glass badges — floating score/status controls over imagery. */
+  .glass-badge {
+    background-color: rgba(16, 40, 60, 0.66);
+    -webkit-backdrop-filter: blur(10px) saturate(125%);
+    backdrop-filter: blur(10px) saturate(125%);
+    border: 1px solid rgba(248, 246, 241, 0.18);
+    box-shadow: inset 0 1px 0 rgba(248, 246, 241, 0.10);
+    color: rgb(248, 246, 241);
+  }
+  /* Glass dialog/content panels. */
+  .glass-panel {
+    background-color: rgba(10, 24, 36, 0.78);
+    -webkit-backdrop-filter: blur(18px) saturate(125%);
+    backdrop-filter: blur(18px) saturate(125%);
+    border: 1px solid rgba(248, 246, 241, 0.12);
+    box-shadow: 0 20px 50px -20px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(248, 246, 241, 0.08);
+    color: rgb(248, 246, 241);
   }
   @supports not ((-webkit-backdrop-filter: blur(2px)) or (backdrop-filter: blur(2px))) {
-    .glass {
-      background-color: rgb(16, 40, 60);
-      -webkit-backdrop-filter: none;
-      backdrop-filter: none;
-    }
+    .glass { background-color: rgb(16, 40, 60); -webkit-backdrop-filter: none; backdrop-filter: none; }
+    .glass-badge { background-color: rgb(16, 40, 60); -webkit-backdrop-filter: none; backdrop-filter: none; }
+    .glass-panel { background-color: rgb(10, 24, 36); -webkit-backdrop-filter: none; backdrop-filter: none; }
+  }
+  @media (prefers-reduced-transparency: reduce) {
+    .glass, .glass-badge, .glass-panel { -webkit-backdrop-filter: none; backdrop-filter: none; }
+    .glass { background-color: rgb(16, 40, 60); }
+    .glass-badge { background-color: rgb(16, 40, 60); }
+    .glass-panel { background-color: rgb(10, 24, 36); }
+    [class*="backdrop-blur"] { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
   }
 }
 

@@ -11,6 +11,7 @@ import { Image } from "@/components/ui/image";
 import { setSelectedDestinationId } from "@/lib/storage";
 import { TRAVEL_FALLBACK_IMAGE } from "@/lib/fallbackImage";
 import { bestMonthsSummary } from "@/lib/discoveryCollections";
+import { nameWithCountry } from "@/lib/destinationLabel";
 import { MapPin, Clock, Gauge, ArrowRight, Compass } from "lucide-react";
 
 // One shared cinematic preview dialog. It receives the already-loaded item
@@ -40,6 +41,13 @@ export default function DestinationPreviewDialog({ item, open, onOpenChange, ret
     new Set([...(d.primary_interests || []), ...(d.interest_tags || [])])
   ).slice(0, 4);
 
+  // Avoid repeating the country when the curated name already embeds it.
+  const labeled = nameWithCountry(d.name, d.country);
+  const showsCountry = labeled !== d.name;
+  const locLine = showsCountry
+    ? [d.country, d.region].filter(Boolean).join(" · ")
+    : (d.region || "");
+
   const viewTrip = () => {
     setSelectedDestinationId(d.id);
     onOpenChange(false);
@@ -49,7 +57,7 @@ export default function DestinationPreviewDialog({ item, open, onOpenChange, ret
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="max-w-3xl p-0 overflow-hidden rounded-none h-[100dvh] border-white/10 bg-cinema text-on-dark sm:h-auto sm:max-h-[90vh] sm:rounded-3xl"
+        className="max-w-3xl p-0 overflow-hidden rounded-none h-[100dvh] bg-cinema/80 backdrop-blur-lg backdrop-saturate-150 border-white/10 text-on-dark sm:h-auto sm:max-h-[90vh] sm:rounded-3xl"
       >
         <div className="flex flex-col h-full sm:grid sm:grid-cols-2">
           {/* Image side */}
@@ -66,12 +74,12 @@ export default function DestinationPreviewDialog({ item, open, onOpenChange, ret
               className="absolute inset-0"
               style={{
                 background:
-                  "linear-gradient(to top, rgba(7,24,39,0.85) 0%, rgba(7,24,39,0.1) 60%, rgba(7,24,39,0) 100%)"
+                  "linear-gradient(to top, rgba(7,24,39,0.78) 0%, rgba(7,24,39,0.08) 58%, rgba(7,24,39,0) 100%)"
               }}
             />
             <div className="absolute inset-x-0 bottom-0 p-5 sm:hidden">
               <h2 className="font-display text-2xl font-bold text-on-dark">{d.name}</h2>
-              <p className="text-sm text-on-dark/80">{d.country}{d.region ? ` · ${d.region}` : ""}</p>
+              <p className="text-sm text-on-dark/80">{locLine}</p>
             </div>
           </div>
 
@@ -85,7 +93,7 @@ export default function DestinationPreviewDialog({ item, open, onOpenChange, ret
                 <DialogDescription className="text-on-dark/70">
                   <span className="inline-flex items-center gap-1.5">
                     <MapPin className="w-3.5 h-3.5" />
-                    {d.country}{d.region ? ` · ${d.region}` : ""}
+                    {locLine}
                   </span>
                 </DialogDescription>
               </DialogHeader>
@@ -95,20 +103,20 @@ export default function DestinationPreviewDialog({ item, open, onOpenChange, ret
               )}
 
               <div className="mt-5">
-                <h3 className="text-xs font-semibold uppercase tracking-wide text-teal mb-2">
+                <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-dark mb-2">
                   Top experiences
                 </h3>
                 <ul className="text-sm text-on-dark/85 space-y-1.5">
                   {(d.top_experiences || []).slice(0, 3).map((x, i) => (
                     <li key={i} className="flex gap-2">
-                      <span className="text-teal">•</span>
+                      <span className="text-on-dark/40">•</span>
                       <span>{x}</span>
                     </li>
                   ))}
                 </ul>
               </div>
 
-              <dl className="mt-5 grid grid-cols-2 gap-x-6 gap-y-3 text-sm">
+              <dl className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3 text-sm">
                 <div>
                   <dt className="text-xs uppercase tracking-wide text-muted-dark">Suggested length</dt>
                   <dd className="font-display font-semibold text-on-dark mt-0.5">{d.min_days}–{d.max_days} days</dd>
@@ -160,18 +168,18 @@ export default function DestinationPreviewDialog({ item, open, onOpenChange, ret
             </div>
 
             {/* Sticky bottom CTA */}
-            <div className="border-t border-white/10 bg-cinema px-6 py-4 sm:px-8">
+            <div className="border-t border-white/10 px-6 py-4 sm:px-8">
               {returning ? (
                 <Button
                   onClick={viewTrip}
-                  className="w-full sm:w-auto bg-coral hover:bg-coral/90 text-white min-h-12"
+                  className="w-full sm:w-auto bg-coral hover:bg-coral/90 text-ink min-h-12 focus-visible:!ring-on-dark focus-visible:ring-offset-cinema"
                 >
                   View my trip <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
               ) : (
                 <Button
                   asChild
-                  className="w-full sm:w-auto bg-coral hover:bg-coral/90 text-white min-h-12"
+                  className="w-full sm:w-auto bg-coral hover:bg-coral/90 text-ink min-h-12 focus-visible:!ring-on-dark focus-visible:ring-offset-cinema"
                 >
                   <Link to="/questionnaire">Find my Travel Fit</Link>
                 </Button>

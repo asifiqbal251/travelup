@@ -14,13 +14,14 @@ import {
 import TravelFit from "@/components/TravelFit";
 import DayCard from "@/components/DayCard";
 import { TRAVEL_FALLBACK_IMAGE } from "@/lib/fallbackImage";
+import { nameWithCountry } from "@/lib/destinationLabel";
 import { Check, Plus, Trash2, RotateCcw, Info } from "lucide-react";
 
 const INTENSITY_COLOR = {
-  Light: "bg-teal/15 text-teal",
+  Light: "bg-muted text-muted-foreground",
   Moderate: "bg-ink/10 text-ink",
-  High: "bg-coral/15 text-coral",
-  "Highly active": "bg-coral/15 text-coral"
+  High: "bg-ink text-on-dark",
+  "Highly active": "bg-ink text-on-dark"
 };
 
 // Larger editorial destination hero: natural image brightness, localized
@@ -30,7 +31,7 @@ export function TripHeader({ display }) {
     <div className="relative h-60 sm:h-72 rounded-3xl overflow-hidden mb-6">
       <Image
         src={display.imageUrl}
-        alt={`${display.name}, ${display.country}`}
+        alt={nameWithCountry(display.name, display.country)}
         fittingType="fill"
         fallbackSrc={TRAVEL_FALLBACK_IMAGE}
         className="w-full h-full"
@@ -39,7 +40,7 @@ export function TripHeader({ display }) {
         className="absolute inset-0"
         style={{
           background:
-            "linear-gradient(to top, rgba(7,24,39,0.9) 0%, rgba(7,24,39,0.35) 45%, rgba(7,24,39,0) 100%)"
+            "linear-gradient(to top, rgba(7,24,39,0.85) 0%, rgba(7,24,39,0.28) 45%, rgba(7,24,39,0) 100%)"
         }}
       />
       <div className="absolute bottom-0 p-6 text-on-dark">
@@ -59,7 +60,7 @@ export default function TripView({
   return (
     <Tabs defaultValue="itinerary" className="w-full">
       {travelFit && <div className="mb-6"><TravelFit prac={travelFit} /></div>}
-      <div className="sticky top-16 z-20 -mx-4 px-4 py-2 bg-workflow/95 backdrop-blur">
+      <div className="sticky top-16 z-20 -mx-4 px-4 py-2 bg-workflow border-b border-border">
         <TabsList className="grid grid-cols-3 w-full max-w-md mx-auto">
           <TabsTrigger value="itinerary">Itinerary</TabsTrigger>
           <TabsTrigger value="packing">Packing</TabsTrigger>
@@ -89,20 +90,34 @@ function ItineraryView({ itinerary }) {
     return <p className="text-muted-foreground">No itinerary available for this combination.</p>;
   }
   return (
-    <div className="space-y-4">
-      <p className="text-sm text-muted-foreground">
+    <div>
+      <p className="text-sm text-muted-foreground mb-5">
         A suggested {itinerary.length}-day plan including outbound and return travel. Indicative
         only — verify opening hours and tickets before you go.
       </p>
-      {itinerary.map((d) => (
-        <DayCard
-          key={d.day}
-          day={d}
-          isOpen={openDay === d.day}
-          badge={INTENSITY_COLOR[d.intensity] || ""}
-          onToggle={() => setOpenDay((cur) => (cur === d.day ? null : d.day))}
-        />
-      ))}
+      <div className="relative">
+        <span className="absolute left-4 top-4 bottom-4 w-px bg-border" aria-hidden="true" />
+        <div className="space-y-5">
+          {itinerary.map((d) => (
+            <div key={d.day} className="relative flex gap-4">
+              <span
+                className="relative z-10 flex-shrink-0 w-8 h-8 rounded-full bg-card ring-1 ring-border flex items-center justify-center font-display text-xs font-bold text-ink"
+                aria-hidden="true"
+              >
+                {d.day}
+              </span>
+              <div className="flex-1 min-w-0">
+                <DayCard
+                  day={d}
+                  isOpen={openDay === d.day}
+                  badge={INTENSITY_COLOR[d.intensity] || ""}
+                  onToggle={() => setOpenDay((cur) => (cur === d.day ? null : d.day))}
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
@@ -224,8 +239,8 @@ function PackingRow({ id, label, checked, onToggle, custom, onRemove }) {
         role="checkbox"
         aria-checked={checked}
         aria-label={label}
-        className={`w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal ${
-          checked ? "bg-teal text-cinema" : "ring-1 ring-border bg-card hover:ring-teal"
+        className={`w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink ${
+          checked ? "bg-ink text-on-dark" : "ring-1 ring-border bg-card hover:ring-ink"
         }`}
       >
         {checked && <Check className="w-4 h-4" />}
@@ -255,7 +270,7 @@ function OverviewView({ display }) {
         <h3 className="font-display font-bold text-ink mb-3">Top experiences</h3>
         <ul className="space-y-2 text-sm text-ink/80">
           {(display.topExperiences || []).map((e, i) => (
-            <li key={i} className="flex gap-2"><span className="text-teal">•</span>{e}</li>
+            <li key={i} className="flex gap-2"><span className="text-ink/40">•</span>{e}</li>
           ))}
         </ul>
       </div>
@@ -272,8 +287,8 @@ function OverviewView({ display }) {
         </dl>
       </div>
 
-      <div className="rounded-2xl bg-teal/8 ring-1 ring-teal/25 p-4 flex gap-3">
-        <Info className="w-5 h-5 text-teal flex-shrink-0 mt-0.5" />
+      <div className="rounded-2xl bg-muted ring-1 ring-border p-4 flex gap-3">
+        <Info className="w-5 h-5 text-muted-foreground flex-shrink-0 mt-0.5" />
         <p className="text-sm text-ink/75">
           Visa &amp; entry: This is general guidance only. Always confirm visa requirements, entry
           conditions, safety and travel advisories through official government sources for your

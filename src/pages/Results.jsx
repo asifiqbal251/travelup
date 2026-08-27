@@ -6,6 +6,7 @@ import { base44 } from "@/api/base44Client";
 import { getPrefs, setSelectedDestinationId } from "@/lib/storage";
 import { TRAVEL_FALLBACK_IMAGE } from "@/lib/fallbackImage";
 import { rankDestinations, buildReasons, buildSuggestions, practicalityExcludedCount } from "@/lib/scoring";
+import { nameWithCountry } from "@/lib/destinationLabel";
 import TravelFit from "@/components/TravelFit";
 import { ArrowLeft, ArrowRight, Info, ChevronDown, MapPin } from "lucide-react";
 
@@ -45,7 +46,7 @@ export default function Results() {
   if (loading) {
     return (
       <div className="max-w-2xl mx-auto px-4 py-20 text-center text-muted-foreground">
-        <div className="w-8 h-8 mx-auto border-4 border-muted border-t-teal rounded-full animate-spin mb-4" />
+        <div className="w-8 h-8 mx-auto border-4 border-muted border-t-ink rounded-full animate-spin mb-4" />
         Finding your best matches…
       </div>
     );
@@ -76,7 +77,7 @@ export default function Results() {
       {/* Methodology disclosure (collapsible) */}
       <details className="mb-6 rounded-2xl bg-card p-4 group">
         <summary className="cursor-pointer text-sm font-medium text-ink list-none flex items-center gap-2 [&::-webkit-details-marker]:hidden">
-          <Info className="w-4 h-4 text-teal" />
+          <Info className="w-4 h-4 text-muted-foreground" />
           How matches are calculated
           <ChevronDown className="w-4 h-4 ml-auto text-muted-foreground motion-safe:transition-transform motion-safe:duration-200 group-open:rotate-180" />
         </summary>
@@ -88,7 +89,7 @@ export default function Results() {
       </details>
 
       {showPracticalityNote && (
-        <div className="rounded-2xl bg-teal/10 ring-1 ring-teal/30 p-4 mb-6">
+        <div className="rounded-2xl bg-muted ring-1 ring-border p-4 mb-6">
           <p className="text-sm text-ink/80">
             Some longer-distance destinations weren't included because this trip length doesn't leave
             enough time to make the travel worthwhile — a longer trip would open up more options.
@@ -97,7 +98,7 @@ export default function Results() {
       )}
 
       {suggestions.length > 0 && (
-        <div className="rounded-2xl bg-coral/10 ring-1 ring-coral/30 p-4 mb-6">
+        <div className="rounded-2xl bg-muted ring-1 ring-border p-4 mb-6">
           <p className="text-sm font-medium text-ink">
             These are weaker practical matches for your current preferences.
           </p>
@@ -106,7 +107,7 @@ export default function Results() {
               <Link
                 key={i}
                 to={`/questionnaire?step=${s.step}`}
-                className="inline-flex items-center gap-1.5 text-sm font-medium bg-card ring-1 ring-border hover:ring-teal rounded-lg px-3 py-2 min-h-9"
+                className="inline-flex items-center gap-1.5 text-sm font-medium bg-card ring-1 ring-border hover:ring-ink rounded-lg px-3 py-2 min-h-9"
               >
                 {s.label} <ArrowRight className="w-3.5 h-3.5" />
               </Link>
@@ -116,7 +117,7 @@ export default function Results() {
       )}
 
       {ranked.length > 0 && ranked.length < 3 && suggestions.length === 0 && (
-        <div className="rounded-2xl bg-teal/10 ring-1 ring-teal/40 p-4 mb-6">
+        <div className="rounded-2xl bg-muted ring-1 ring-border p-4 mb-6">
           <p className="text-sm font-medium text-ink">
             We found {ranked.length} practical match{ranked.length === 1 ? "" : "es"} that fit your preferences well — there simply aren't more destinations in the catalogue that meet these specific constraints.
           </p>
@@ -167,21 +168,27 @@ function DestinationCard({ rank, dest, result, prefs, onSelect }) {
   const labelClass =
     finalScore >= 70 ? "bg-teal text-cinema"
       : finalScore >= 50 ? "bg-ink text-on-dark"
-      : finalScore >= 30 ? "bg-coral text-white"
+      : finalScore >= 30 ? "bg-ink/80 text-on-dark"
       : "bg-destructive text-destructive-foreground";
   const prac = result.practicality;
   const budgetLabel = (dest.budget_categories || []).join(" – ") || "Varies";
   const climateLabel = (dest.climate_tags || []).join(", ") || "Varies";
 
   const dominant = rank === 1;
+  // Formalized variants: featured (rank 1) and supporting share the same content
+  // order and badge placement; only image height, type scale and spacing differ.
+  const variant = dominant ? "featured" : "supporting";
   const imgH = dominant ? "h-60 sm:h-80" : "h-44 sm:h-52";
 
   return (
     <article className={`group rounded-3xl bg-card overflow-hidden shadow-sm motion-safe:transition-transform motion-safe:duration-200 motion-safe:ease-out motion-safe:hover:-translate-y-1 ${dominant ? "ring-1 ring-border" : ""}`}>
       <div className={`relative ${imgH}`}>
-        <Image src={dest.image_url} alt={`${dest.name}, ${dest.country}`} fittingType="fill" fallbackSrc={TRAVEL_FALLBACK_IMAGE} className="w-full h-full motion-safe:transition-transform motion-safe:duration-300 motion-safe:group-hover:scale-[1.03] motion-safe:group-focus-within:scale-[1.03]" />
-        <div className="absolute inset-0 bg-gradient-to-t from-cinema/90 via-cinema/30 to-transparent" />
-        <div className="glass absolute top-3 right-3 text-on-dark text-sm font-semibold px-3 py-1 rounded-full">
+        <Image src={dest.image_url} alt={nameWithCountry(dest.name, dest.country)} fittingType="fill" fallbackSrc={TRAVEL_FALLBACK_IMAGE} className="w-full h-full motion-safe:transition-transform motion-safe:duration-300 motion-safe:group-hover:scale-[1.03] motion-safe:group-focus-within:scale-[1.03]" />
+        <span
+          className="absolute inset-x-0 bottom-0 h-2/3"
+          style={{ background: "linear-gradient(to top, rgba(7,24,39,0.9) 0%, rgba(7,24,39,0.5) 42%, rgba(7,24,39,0) 100%)" }}
+        />
+        <div className="glass-badge absolute top-3 right-3 text-on-dark text-sm font-semibold px-3 py-1 rounded-full">
           {finalScore}/100
         </div>
         <div className={`absolute top-3 left-3 text-xs font-semibold px-2.5 py-1 rounded-full ${labelClass}`}>
@@ -194,7 +201,7 @@ function DestinationCard({ rank, dest, result, prefs, onSelect }) {
             </span>
           )}
           <h2 className={`font-display font-bold text-on-dark flex items-center gap-2 ${dominant ? "text-2xl sm:text-3xl" : "text-xl"}`}>
-            <MapPin className="w-4 h-4 text-teal" /> {dest.name}
+            <MapPin className="w-4 h-4 text-on-dark/70" /> {dest.name}
           </h2>
           <p className="text-on-dark/80 text-sm">{dest.country} · {dest.region}</p>
         </div>
@@ -231,7 +238,7 @@ function DestinationCard({ rank, dest, result, prefs, onSelect }) {
 
         <button
           onClick={() => setOpen((o) => !o)}
-          className="inline-flex items-center gap-1.5 text-sm font-medium text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal rounded"
+          className="inline-flex items-center gap-1.5 text-sm font-medium text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink rounded"
           aria-expanded={open}
         >
           {open ? "Hide score breakdown" : "See score breakdown"}
@@ -273,7 +280,7 @@ function DestinationCard({ rank, dest, result, prefs, onSelect }) {
           </div>
         )}
 
-        <Button onClick={() => onSelect(dest.id)} className="w-full mt-5 bg-coral hover:bg-coral/90 text-white min-h-12">
+        <Button onClick={() => onSelect(dest.id)} className="w-full mt-5 bg-coral hover:bg-coral/90 text-ink min-h-12">
           View my trip <ArrowRight className="w-4 h-4 ml-2" />
         </Button>
       </div>

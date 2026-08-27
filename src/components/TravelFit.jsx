@@ -7,7 +7,7 @@ import React from "react";
 const BADGE = {
   Practical: { label: "Good fit", cls: "bg-teal text-cinema" },
   Manageable: { label: "Manageable", cls: "bg-ink text-on-dark" },
-  Stretch: { label: "Travel-heavy", cls: "bg-coral text-white" },
+  Stretch: { label: "Travel-heavy", cls: "bg-ink/80 text-on-dark" },
   "Poor practical fit": { label: "Poor fit", cls: "bg-destructive text-destructive-foreground" }
 };
 
