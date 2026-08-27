@@ -1,19 +1,17 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import SnapSlider from "@/components/SnapSlider";
 import {
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem
 } from "@/components/ui/select";
 import {
-  ArrowLeft, ArrowRight, Check, Compass,
+  ArrowLeft, ArrowRight, Check, Compass, Sparkles,
   User, Heart, Users, Baby, Wallet, Banknote, Gem, Crown,
   Sun, CloudSun, Cloud, Snowflake, Coffee, Scale, Zap,
   Feather, Footprints, Bike, Mountain, Trees, Landmark, UtensilsCrossed,
-  Waves, Bird, Building2, Armchair, Camera
+  Waves, Bird, Building2, Armchair, Camera, ChevronDown
 } from "lucide-react";
 import {
   MONTHS, INTERESTS, DIETARY, TRAVELLER_TYPES, COUNTRIES,
@@ -21,19 +19,25 @@ import {
 } from "@/lib/options";
 import { setPrefs, getPrefs, setSelectedDestinationId } from "@/lib/storage";
 
-const STEPS = [
-  "Your travel basics",
-  "Timing",
-  "Trip style",
-  "Your interests",
-  "Preferences",
-  "Details",
-  "Review"
-];
+// Compact two-screen Travel Fit experience (+ a minimal match-reveal state).
+// Screen 1 "Your trip": origin, timing, trip length, scope, traveller type,
+//   interests.
+// Screen 2 "Your travel style": budget, climate, pace, activity (snap sliders,
+//   each with an optional "No preference" opt-out) + optional refinements
+//   (dietary, visited, excluded).
+// Reveal state: "Your Travel Fit is ready." → primary CTA → short transition
+//   into Results.
+//
+// Every value still maps to the SAME recommendation inputs and controlled
+// vocabulary. "No preference" is stored as the literal string the engine already
+// recognises: climate "No preference" scores full climate points; pace/activity
+// "No preference" fall outside the ordered scales and score neutrally (0), which
+// is the existing absence behaviour. No new backend values, no formula changes.
+const STAGE_LABELS = ["Your trip", "Your travel style", "Ready"];
 
 const TRAVELLER_ICONS = { Solo: User, Couple: Heart, Friends: Users, Family: Baby };
 const BUDGET_ICONS = { Budget: Wallet, Moderate: Banknote, Comfortable: Gem, Premium: Crown };
-const CLIMATE_ICONS = { Warm: Sun, Mild: CloudSun, Cool: Cloud, "Cold or snowy": Snowflake, "No preference": Compass };
+const CLIMATE_ICONS = { Warm: Sun, Mild: CloudSun, Cool: Cloud, "Cold or snowy": Snowflake };
 const PACE_ICONS = { Relaxed: Coffee, Balanced: Scale, "Fast-paced": Zap };
 const ACTIVITY_ICONS = { Light: Feather, Moderate: Footprints, Active: Bike, "Highly active": Mountain };
 const INTEREST_ICONS = {
@@ -42,8 +46,6 @@ const INTEREST_ICONS = {
   "Cities": Building2, "Relaxation": Armchair, "Photography": Camera
 };
 
-// Ordered scales used by the scoring engine — the slider stores these exact
-// string values; no new backend vocabulary is introduced.
 const BUDGET_POINTS = BUDGET_ORDER.map((b) => ({ value: b, label: b, icon: BUDGET_ICONS[b] }));
 const PACE_POINTS = PACE_ORDER.map((p) => ({ value: p, label: p, icon: PACE_ICONS[p] }));
 const ACTIVITY_POINTS = ACTIVITY_ORDER.map((a) => ({ value: a, label: a, icon: ACTIVITY_ICONS[a] }));
@@ -68,12 +70,15 @@ const blank = {
   excludedDestinations: ""
 };
 
+const PRIMARY_CTA =
+  "inline-flex items-center justify-center gap-2 h-12 px-8 rounded-full bg-ink text-on-dark font-semibold ring-1 ring-teal/40 shadow-[0_10px_30px_-12px_rgba(2,218,227,0.55)] hover:bg-surface-dark hover:ring-teal/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-on-dark motion-safe:transition";
+
 export default function Questionnaire() {
   const navigate = useNavigate();
-  const [step, setStep] = useState(() => {
-    if (!getPrefs()) return 0;
+  const [stage, setStage] = useState(() => {
     const s = Number(new URLSearchParams(window.location.search).get("step"));
-    return Number.isFinite(s) && s >= 0 && s < STEPS.length ? Math.floor(s) : 0;
+    // Old 7-step suggestion links: steps 0–3 map to Screen 1, 4+ to Screen 2.
+    return Number.isFinite(s) && s >= 4 ? 1 : 0;
   });
   const [form, setForm] = useState(() => {
     const p = getPrefs();
@@ -91,296 +96,334 @@ export default function Questionnaire() {
     };
   });
   const [errors, setErrors] = useState({});
-  const [submitting, setSubmitting] = useState(false);
-  const [submitError, setSubmitError] = useState("");
+  const [revealing, setRevealing] = useState(false);
+  const [barW, setBarW] = useState(0);
+  const [showRefinements, setShowRefinements] = useState(false);
 
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
-
-  const validate = () => {
-    const e = {};
-    if (step === 0) {
-      if (!form.residenceCountry) e.residenceCountry = "Please select your country of residence.";
-      if (!form.departureCity.trim()) e.departureCity = "Please enter your departure city.";
-      if (!form.citizenship) e.citizenship = "Please select your citizenship.";
-    }
-    if (step === 1) {
-      if (!form.travelMonth) e.travelMonth = "Please choose a month or flexible.";
-      if (!form.travelDays || form.travelDays < 3 || form.travelDays > 14)
-        e.travelDays = "Choose between 3 and 14 days.";
-    }
-    if (step === 2) {
-      if (!form.travellerType) e.travellerType = "Please select who you are travelling with.";
-      if (!form.budget) e.budget = "Please select a budget level.";
-    }
-    if (step === 3) {
-      if (!form.interests.length) e.interests = "Pick at least one interest.";
-    }
-    if (step === 4) {
-      if (!form.climate) e.climate = "Please choose a climate preference.";
-      if (!form.pace) e.pace = "Please choose a preferred pace.";
-      if (!form.activity) e.activity = "Please choose an activity level.";
-    }
-    if (step === 5) {
-      if (!form.dietary) e.dietary = "Please select a dietary option.";
-    }
-    setErrors(e);
-    return Object.keys(e).length === 0;
-  };
-
-  const next = () => {
-    if (!validate()) return;
-    setStep((s) => Math.min(s + 1, STEPS.length - 1));
-  };
-  const back = () => setStep((s) => Math.max(s - 1, 0));
-
-  const submit = () => {
-    setSubmitError("");
-    if (submitting) return;
-    if (!validate()) return;
-    setSubmitting(true);
-    try {
-      const toArray = (v) =>
-        Array.isArray(v)
-          ? v.map((s) => String(s).trim()).filter(Boolean)
-          : v
-          ? String(v).split(",").map((s) => s.trim()).filter(Boolean)
-          : [];
-      const prefs = {
-        ...form,
-        departureCity: form.departureCity.trim(),
-        dietary: form.dietary === "Other" ? (form.dietaryOther || "").trim() || "Other" : form.dietary,
-        visitedCountries: toArray(form.visitedCountries),
-        excludedDestinations: toArray(form.excludedDestinations)
-      };
-      setPrefs(prefs);
-      setSelectedDestinationId(null);
-      navigate("/results");
-    } catch (e) {
-      setSubmitError("Something went wrong saving your answers. Please try again.");
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
   const toggleInterest = (i) =>
     set("interests", form.interests.includes(i)
       ? form.interests.filter((x) => x !== i)
       : [...form.interests, i]);
 
-  const progress = ((step + 1) / STEPS.length) * 100;
+  const validateStage = (s) => {
+    const e = {};
+    if (s === 0) {
+      if (!form.residenceCountry) e.residenceCountry = "Select your country of residence.";
+      if (!form.departureCity.trim()) e.departureCity = "Enter your departure city.";
+      if (!form.citizenship) e.citizenship = "Select your citizenship.";
+      if (!form.travelMonth) e.travelMonth = "Choose a month or flexible.";
+      if (!form.travelDays || form.travelDays < 3 || form.travelDays > 14)
+        e.travelDays = "Choose between 3 and 14 days.";
+      if (!form.travellerType) e.travellerType = "Select who you're travelling with.";
+      if (!form.interests.length) e.interests = "Pick at least one interest.";
+    }
+    if (s === 1) {
+      if (!form.budget) e.budget = "Choose a budget level.";
+      if (!form.climate) e.climate = "Choose a weather preference.";
+      if (!form.pace) e.pace = "Choose a preferred pace.";
+      if (!form.activity) e.activity = "Choose an activity level.";
+    }
+    setErrors(e);
+    return Object.keys(e).length === 0;
+  };
+
+  const advance = () => {
+    if (!validateStage(stage)) return;
+    setStage((s) => Math.min(s + 1, 2));
+  };
+  const back = () => {
+    if (stage === 0) { navigate("/"); return; }
+    setStage((s) => s - 1);
+  };
+
+  const buildPrefs = () => {
+    const toArray = (v) =>
+      Array.isArray(v)
+        ? v.map((s) => String(s).trim()).filter(Boolean)
+        : v
+        ? String(v).split(",").map((s) => s.trim()).filter(Boolean)
+        : [];
+    return {
+      ...form,
+      departureCity: form.departureCity.trim(),
+      dietary: form.dietary === "Other" ? (form.dietaryOther || "").trim() || "Other" : form.dietary,
+      visitedCountries: toArray(form.visitedCountries),
+      excludedDestinations: toArray(form.excludedDestinations)
+    };
+  };
+
+  const reveal = () => {
+    if (revealing) return;
+    setPrefs(buildPrefs());
+    setSelectedDestinationId(null);
+    const reduced =
+      typeof window !== "undefined" &&
+      window.matchMedia &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    setRevealing(true);
+    requestAnimationFrame(() => setBarW(100));
+    window.setTimeout(() => navigate("/results"), reduced ? 250 : 1100);
+  };
+
+  // Dynamic, subtle microcopy reflecting current selections.
+  const microcopy =
+    stage === 0
+      ? form.departureCity.trim() && form.travellerType && form.travelDays
+        ? `A ${form.travelDays}-day ${form.travellerType.toLowerCase()} trip from ${form.departureCity.trim()}.`
+        : "A few details so we can match you."
+      : stage === 1
+      ? [
+          form.budget || "Budget —",
+          form.climate === "No preference" || !form.climate ? "any weather" : form.climate.toLowerCase(),
+          form.pace === "No preference" || !form.pace ? "any pace" : form.pace.toLowerCase()
+        ].join(" · ")
+      : "";
+
+  const progress = stage === 0 ? 50 : 100;
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-8 pb-24 sm:pb-12">
-      {/* Subtle progress: "3 / 7" + thin teal bar */}
-      <div className="mb-8">
-        <div className="flex items-baseline justify-between gap-3 mb-2">
-          <span className="text-sm font-semibold text-ink">
-            {step + 1} <span className="text-muted-foreground font-normal">/ {STEPS.length}</span>
-          </span>
-          <span className="text-xs text-muted-foreground">{STEPS[step]}</span>
-        </div>
-        <div className="h-1 w-full rounded-full bg-muted overflow-hidden">
-          <div className="h-full bg-teal motion-safe:transition-[width] motion-safe:duration-300" style={{ width: `${progress}%` }} />
-        </div>
-      </div>
+    <div className="min-h-screen bg-cinema text-on-dark">
+      {revealing && <RevealOverlay barW={barW} />}
 
-      <div key={step} className="step-enter space-y-7">
-        {step === 0 && (
-          <Step question="Where are you starting from?" hint="So we can tailor your matches.">
-            <SelectField label="Country of residence" value={form.residenceCountry}
-              onChange={(v) => set("residenceCountry", v)} error={errors.residenceCountry}
-              placeholder="Select country">
-              {COUNTRIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-            </SelectField>
-            <TextField label="Departure city" value={form.departureCity}
-              onChange={(v) => set("departureCity", v)} error={errors.departureCity}
-              placeholder="e.g. London" />
-            <SelectField label="Citizenship" value={form.citizenship}
-              onChange={(v) => set("citizenship", v)} error={errors.citizenship}
-              placeholder="Select citizenship">
-              {COUNTRIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-            </SelectField>
-          </Step>
-        )}
-
-        {step === 1 && (
-          <Step question="When works for you?" hint="Month helps us match the right season.">
-            <SelectField label="Preferred travel month" value={form.travelMonth}
-              onChange={(v) => set("travelMonth", v)} error={errors.travelMonth}
-              placeholder="Choose a month or flexible">
-              <SelectItem value="flexible">Flexible / anytime</SelectItem>
-              {MONTHS.map((m, i) => <SelectItem key={m} value={String(i + 1)}>{m}</SelectItem>)}
-            </SelectField>
-            <div>
-              <div className="flex items-baseline justify-between gap-3">
-                <Label>Total trip length</Label>
-                <span className="font-display font-bold text-ink text-lg">{form.travelDays} days</span>
-              </div>
-              <p className="text-xs text-muted-foreground mt-1">Include all travel time — flights, driving, trains, ferries and transfers.</p>
-              <div className="mt-3">
-                <Slider value={[form.travelDays]} min={3} max={14} step={1}
-                  onValueChange={(v) => set("travelDays", v[0])} aria-label="Total trip length in days" />
-              </div>
-              <div className="flex justify-between text-xs text-muted-foreground mt-1">
-                <span>3 days</span><span>14 days</span>
-              </div>
-              {errors.travelDays && <ErrorText>{errors.travelDays}</ErrorText>}
+      <div className="max-w-2xl mx-auto px-4 py-6 sm:py-10">
+        {/* Top bar: back arrow + step progress */}
+        <div className="flex items-center gap-3 mb-6">
+          <button
+            type="button"
+            onClick={back}
+            aria-label={stage === 0 ? "Back to home" : "Back"}
+            className="inline-flex items-center justify-center h-11 w-11 rounded-full bg-white/5 ring-1 ring-white/10 text-on-dark hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal motion-safe:transition shrink-0"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+          <div className="flex-1">
+            <div className="flex items-baseline justify-between mb-1.5">
+              <span className="text-xs font-semibold text-on-dark/80">
+                {stage < 2 ? `Step ${stage + 1} of 2` : "Ready"}
+              </span>
+              <span className="text-xs text-on-dark/50">{STAGE_LABELS[stage]}</span>
             </div>
-            <Segmented label="Include destinations inside your country of residence?"
-              value={form.travelScope}
-              onChange={(v) => set("travelScope", v)}
-              options={[
-                { value: "both", label: "Both" },
-                { value: "international", label: "International only" },
-                { value: "domestic", label: "Domestic only" }
-              ]} />
-          </Step>
-        )}
-
-        {step === 2 && (
-          <Step question="Who's going, and what's your budget?" hint="Budget per person, excluding international flights.">
-            <TileGroup label="Travelling as" value={form.travellerType}
-              onChange={(v) => set("travellerType", v)} error={errors.travellerType}
-              icons={TRAVELLER_ICONS}
-              options={TRAVELLER_TYPES.map((t) => ({ value: t, label: t }))} />
-            <PrefSlider label="Budget" value={form.budget}
-              onChange={(v) => set("budget", v)} error={errors.budget}
-              points={BUDGET_POINTS} ariaLabel="Budget level" />
-          </Step>
-        )}
-
-        {step === 3 && (
-          <Step question="What do you love?" hint="Select all that appeal.">
-            <div role="group" aria-label="Interests">
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
-                {INTERESTS.map((i) => {
-                  const on = form.interests.includes(i);
-                  const IIcon = INTEREST_ICONS[i];
-                  return (
-                    <button key={i} type="button" aria-pressed={on}
-                      onClick={() => toggleInterest(i)}
-                      className={`min-h-14 px-3 py-3 rounded-xl text-left flex items-center gap-2.5 motion-safe:transition motion-safe:duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink ${
-                        on ? "bg-ink ring-1 ring-ink text-on-dark" : "bg-card hover:bg-muted ring-1 ring-border text-ink"
-                      }`}>
-                      <span className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${on ? "bg-on-dark/15 text-on-dark" : "bg-muted text-muted-foreground"}`}>
-                        {IIcon && <IIcon className="w-4 h-4" />}
-                      </span>
-                      <span className="text-sm font-medium flex-1">{i}</span>
-                      {on && <Check className="w-4 h-4 text-on-dark shrink-0" aria-hidden="true" />}
-                    </button>
-                  );
-                })}
-              </div>
-              {errors.interests && <ErrorText>{errors.interests}</ErrorText>}
+            <div className="h-1 w-full rounded-full bg-white/10 overflow-hidden">
+              <div
+                className="h-full bg-teal motion-safe:transition-[width] motion-safe:duration-500"
+                style={{ width: `${progress}%` }}
+              />
             </div>
-          </Step>
-        )}
+          </div>
+        </div>
 
-        {step === 4 && (
-          <Step question="What feels right?" hint="Weather, pace and how active you want to be.">
-            <ClimateField value={form.climate} onChange={(v) => set("climate", v)} error={errors.climate} />
-            <PrefSlider label="Pace" value={form.pace}
-              onChange={(v) => set("pace", v)} error={errors.pace}
-              points={PACE_POINTS} ariaLabel="Preferred pace" />
-            <PrefSlider label="Activity" value={form.activity}
-              onChange={(v) => set("activity", v)} error={errors.activity}
-              points={ACTIVITY_POINTS} ariaLabel="Activity level" />
-          </Step>
-        )}
+        <div key={stage} className="step-enter">
+          {stage === 0 && (
+            <section className="rounded-3xl bg-white/5 ring-1 ring-white/10 p-5 sm:p-7 space-y-7">
+              <header>
+                <h1 className="font-display text-2xl sm:text-3xl font-bold text-on-dark leading-tight">Your trip</h1>
+                <p className="text-sm text-on-dark/65 mt-1.5">{microcopy}</p>
+              </header>
 
-        {step === 5 && (
-          <Step question="Anything else?" hint="Optional, but it helps us refine your matches.">
-            <SelectField label="Dietary considerations" value={form.dietary}
-              onChange={(v) => set("dietary", v)} error={errors.dietary}
-              placeholder="Select an option">
-              {DIETARY.map((d) => <SelectItem key={d} value={d}>{d}</SelectItem>)}
-            </SelectField>
-            {form.dietary === "Other" && (
-              <TextField label="Please specify" value={form.dietaryOther}
-                onChange={(v) => set("dietaryOther", v)} placeholder="e.g. Kosher, pescatarian" />
-            )}
-            <TextField label="Previously visited countries (optional)" value={form.visitedCountries}
-              onChange={(v) => set("visitedCountries", v)}
-              placeholder="Comma-separated, e.g. Japan, Portugal" />
-            <TextField label="Destinations to exclude (optional)" value={form.excludedDestinations}
-              onChange={(v) => set("excludedDestinations", v)}
-              placeholder="Comma-separated, e.g. Iceland, Thailand" />
-          </Step>
-        )}
+              <div className="space-y-4">
+                <SelectField label="Country of residence" value={form.residenceCountry}
+                  onChange={(v) => set("residenceCountry", v)} error={errors.residenceCountry}
+                  placeholder="Select country">
+                  {COUNTRIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                </SelectField>
+                <TextField label="Departure city" value={form.departureCity}
+                  onChange={(v) => set("departureCity", v)} error={errors.departureCity}
+                  placeholder="e.g. London" />
+                <SelectField label="Citizenship" value={form.citizenship}
+                  onChange={(v) => set("citizenship", v)} error={errors.citizenship}
+                  placeholder="Select citizenship">
+                  {COUNTRIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                </SelectField>
+              </div>
 
-        {step === 6 && (
-          <Step question="Ready to see your matches?" hint="Check your answers below.">
-            <dl className="divide-y divide-border">
-              <ReviewRow label="Residence / departure / citizenship"
-                value={`${form.residenceCountry || "—"} · ${form.departureCity || "—"} · ${form.citizenship || "—"}`} />
-              <ReviewRow label="When" value={form.travelMonth === "flexible" || !form.travelMonth ? "Flexible" : MONTHS[Number(form.travelMonth) - 1]} />
-              <ReviewRow label="Total trip" value={`${form.travelDays} days, including travel time`} />
-              <ReviewRow label="Domestic" value={
-                form.travelScope === "international" ? "International only"
-                  : form.travelScope === "domestic" ? "Domestic only"
-                  : "Both"
-              } />
-              <ReviewRow label="Traveller & budget" value={`${form.travellerType || "—"} · ${form.budget || "—"}`} />
-              <ReviewRow label="Interests" value={form.interests.join(", ") || "—"} />
-              <ReviewRow label="Climate / pace / activity" value={`${form.climate || "—"} · ${form.pace || "—"} · ${form.activity || "—"}`} />
-              <ReviewRow label="Dietary" value={form.dietary === "Other" ? form.dietaryOther || "Other" : form.dietary} />
-              <ReviewRow label="Visited" value={form.visitedCountries || "None"} />
-              <ReviewRow label="Excluded" value={form.excludedDestinations || "None"} />
-            </dl>
-            {submitError && <ErrorText>{submitError}</ErrorText>}
-          </Step>
-        )}
-      </div>
+              <div className="space-y-4">
+                <SelectField label="Travel month" value={form.travelMonth}
+                  onChange={(v) => set("travelMonth", v)} error={errors.travelMonth}
+                  placeholder="Choose a month or flexible">
+                  <SelectItem value="flexible">Flexible / anytime</SelectItem>
+                  {MONTHS.map((m, i) => <SelectItem key={m} value={String(i + 1)}>{m}</SelectItem>)}
+                </SelectField>
+                <div>
+                  <div className="flex items-baseline justify-between gap-3">
+                    <span className="text-sm font-medium text-on-dark/80">Trip length</span>
+                    <span className="font-display font-bold text-on-dark text-lg">{form.travelDays} days</span>
+                  </div>
+                  <p className="text-xs text-on-dark/50 mt-1">All travel time, including flights and transfers.</p>
+                  <div className="mt-2">
+                    <Slider dark value={[form.travelDays]} min={3} max={14} step={1}
+                      onValueChange={(v) => set("travelDays", v[0])} aria-label="Total trip length in days" />
+                  </div>
+                  <div className="flex justify-between text-xs text-on-dark/50 mt-1">
+                    <span>3 days</span><span>14 days</span>
+                  </div>
+                  {errors.travelDays && <p className="text-coral text-sm mt-1.5">{errors.travelDays}</p>}
+                </div>
+                <Segmented label="Destinations inside your country of residence?"
+                  value={form.travelScope}
+                  onChange={(v) => set("travelScope", v)}
+                  options={[
+                    { value: "both", label: "Both" },
+                    { value: "international", label: "International only" },
+                    { value: "domestic", label: "Domestic only" }
+                  ]} />
+              </div>
 
-      {/* Sticky action area on mobile; inline on desktop */}
-      <div className="fixed bottom-0 left-0 right-0 z-30 bg-workflow/95 backdrop-blur border-t border-border px-4 py-3 sm:static sm:bg-transparent sm:border-0 sm:backdrop-blur-0 sm:py-0 sm:mt-8">
-        <div className="max-w-3xl mx-auto flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:pt-6 sm:border-t sm:border-border">
-          <Button variant="ghost" onClick={back} disabled={step === 0}
-            className="min-h-11 w-full sm:w-auto justify-center">
-            <ArrowLeft className="w-4 h-4 mr-2 flex-shrink-0" /> Back
-          </Button>
-          {step < STEPS.length - 1 ? (
-            <Button onClick={next}
-              className="bg-ink hover:bg-ink/90 text-on-dark min-h-11 w-full sm:w-auto">
-              Continue <ArrowRight className="w-4 h-4 ml-2 flex-shrink-0" />
-            </Button>
-          ) : (
-            <Button onClick={submit} disabled={submitting}
-              className="bg-ink hover:bg-ink/90 text-on-dark shadow-lg min-h-12 w-full sm:w-auto px-8 text-base">
-              {submitting ? "Finding recommendations…" : "See my recommendations"}
-              {!submitting && <ArrowRight className="w-4 h-4 ml-2 flex-shrink-0" />}
-            </Button>
+              <TileGroup label="Travelling as" value={form.travellerType}
+                onChange={(v) => set("travellerType", v)} error={errors.travellerType}
+                icons={TRAVELLER_ICONS}
+                options={TRAVELLER_TYPES.map((t) => ({ value: t, label: t }))} />
+
+              <div>
+                <span className="text-sm font-medium text-on-dark/80">Interests</span>
+                <p className="text-xs text-on-dark/50 mt-1">Select all that appeal.</p>
+                <div role="group" aria-label="Interests" className="mt-2">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                    {INTERESTS.map((i) => {
+                      const on = form.interests.includes(i);
+                      const IIcon = INTEREST_ICONS[i];
+                      return (
+                        <button key={i} type="button" aria-pressed={on}
+                          onClick={() => toggleInterest(i)}
+                          className={`min-h-12 px-3 py-2.5 rounded-xl text-left flex items-center gap-2.5 motion-safe:transition motion-safe:duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal ${
+                            on ? "bg-teal text-cinema ring-1 ring-teal" : "bg-white/5 text-on-dark ring-1 ring-white/10 hover:bg-white/10"
+                          }`}>
+                          <span className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${on ? "bg-cinema/15 text-cinema" : "bg-white/10 text-on-dark/70"}`}>
+                            {IIcon && <IIcon className="w-4 h-4" />}
+                          </span>
+                          <span className="text-sm font-medium flex-1">{i}</span>
+                          {on && <Check className="w-4 h-4 text-cinema shrink-0" aria-hidden="true" />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {errors.interests && <p className="text-coral text-sm mt-2">{errors.interests}</p>}
+                </div>
+              </div>
+            </section>
+          )}
+
+          {stage === 1 && (
+            <section className="rounded-3xl bg-white/5 ring-1 ring-white/10 p-5 sm:p-7 space-y-7">
+              <header>
+                <h1 className="font-display text-2xl sm:text-3xl font-bold text-on-dark leading-tight">Your travel style</h1>
+                <p className="text-sm text-on-dark/65 mt-1.5">{microcopy}</p>
+              </header>
+
+              <PrefSlider label="Budget" value={form.budget}
+                onChange={(v) => set("budget", v)} error={errors.budget}
+                points={BUDGET_POINTS} ariaLabel="Budget level" />
+
+              <PrefSlider label="Weather" value={form.climate}
+                onChange={(v) => set("climate", v)} error={errors.climate}
+                points={CLIMATE_POINTS} ariaLabel="Preferred weather" noPref noPrefLabel="No preference" />
+
+              <PrefSlider label="Pace" value={form.pace}
+                onChange={(v) => set("pace", v)} error={errors.pace}
+                points={PACE_POINTS} ariaLabel="Preferred pace" noPref noPrefLabel="No preferred pace" />
+
+              <PrefSlider label="Activity" value={form.activity}
+                onChange={(v) => set("activity", v)} error={errors.activity}
+                points={ACTIVITY_POINTS} ariaLabel="Activity level" noPref noPrefLabel="No preference" />
+
+              {/* Optional refinements (collapsible) — preserves dietary / visited / excluded */}
+              <div className="pt-2 border-t border-white/10">
+                <button type="button" onClick={() => setShowRefinements((o) => !o)}
+                  aria-expanded={showRefinements}
+                  className="inline-flex items-center gap-1.5 text-sm font-medium text-on-dark/80 hover:text-on-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal rounded">
+                  More refinements (optional)
+                  <ChevronDown className={`w-4 h-4 motion-safe:transition-transform motion-safe:duration-200 ${showRefinements ? "rotate-180" : ""}`} />
+                </button>
+                {showRefinements && (
+                  <div className="mt-4 space-y-4 step-enter">
+                    <SelectField label="Dietary considerations" value={form.dietary}
+                      onChange={(v) => set("dietary", v)} error={errors.dietary}
+                      placeholder="Select an option">
+                      {DIETARY.map((d) => <SelectItem key={d} value={d}>{d}</SelectItem>)}
+                    </SelectField>
+                    {form.dietary === "Other" && (
+                      <TextField label="Please specify" value={form.dietaryOther}
+                        onChange={(v) => set("dietaryOther", v)} placeholder="e.g. Kosher, pescatarian" />
+                    )}
+                    <TextField label="Previously visited countries (optional)" value={form.visitedCountries}
+                      onChange={(v) => set("visitedCountries", v)}
+                      placeholder="Comma-separated, e.g. Japan, Portugal" />
+                    <TextField label="Destinations to exclude (optional)" value={form.excludedDestinations}
+                      onChange={(v) => set("excludedDestinations", v)}
+                      placeholder="Comma-separated, e.g. Iceland, Thailand" />
+                  </div>
+                )}
+              </div>
+            </section>
+          )}
+
+          {stage === 2 && (
+            <section className="text-center py-10 sm:py-16">
+              <div className="mx-auto w-16 h-16 rounded-full bg-teal/15 ring-1 ring-teal/30 flex items-center justify-center mb-6">
+                <Sparkles className="w-7 h-7 text-teal" aria-hidden="true" />
+              </div>
+              <h1 className="font-display text-3xl sm:text-4xl font-bold text-on-dark">Your Travel Fit is ready.</h1>
+              <p className="text-on-dark/70 mt-3 max-w-md mx-auto">
+                We've matched your trip and style. Reveal your top destinations.
+              </p>
+              <button type="button" onClick={reveal} className={`${PRIMARY_CTA} mt-8`}>
+                Reveal my matches <ArrowRight className="w-4 h-4" />
+              </button>
+            </section>
           )}
         </div>
+
+        {/* Subtle next control between the two input screens */}
+        {stage < 2 && (
+          <div className="flex justify-end mt-6">
+            <button
+              type="button"
+              onClick={advance}
+              aria-label={`Next: ${stage === 0 ? "Your travel style" : "Your matches"}`}
+              className="inline-flex items-center gap-2 h-12 px-6 rounded-full bg-teal text-cinema font-semibold shadow-[0_10px_30px_-12px_rgba(2,218,227,0.6)] hover:brightness-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-on-dark motion-safe:transition"
+            >
+              {stage === 0 ? "Travel style" : "See matches"} <ArrowRight className="w-4 h-4" />
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
 }
 
-/* ---------- small building blocks ---------- */
-
-function Step({ question, hint, children }) {
+function RevealOverlay({ barW }) {
   return (
-    <div>
-      <h1 className="font-display text-2xl sm:text-3xl font-bold text-ink leading-tight">{question}</h1>
-      {hint && <p className="text-sm text-muted-foreground mt-1.5">{hint}</p>}
-      <div className="mt-6 space-y-6">{children}</div>
+    <div className="fixed inset-0 z-50 bg-cinema flex flex-col items-center justify-center" role="status" aria-live="polite">
+      <div className="text-center px-6">
+        <div className="relative w-14 h-14 mx-auto mb-6">
+          <span className="absolute inset-0 rounded-full bg-teal/20 motion-safe:animate-ping opacity-60" aria-hidden="true" />
+          <span className="relative inline-flex w-14 h-14 rounded-full bg-teal items-center justify-center">
+            <Compass className="w-6 h-6 text-cinema" aria-hidden="true" />
+          </span>
+        </div>
+        <p className="font-display text-xl font-semibold text-on-dark">Finding your Travel Fit…</p>
+        <div className="mt-5 w-48 mx-auto h-1 rounded-full bg-white/10 overflow-hidden">
+          <div
+            className="h-full bg-teal motion-safe:transition-[width] motion-safe:duration-1000 ease-out"
+            style={{ width: `${barW}%` }}
+          />
+        </div>
+      </div>
     </div>
   );
 }
 
-function ErrorText({ children }) {
-  return <p role="alert" className="text-sm text-destructive mt-2">{children}</p>;
-}
+/* ---------- dark-surface building blocks ---------- */
 
 function TextField({ label, value, onChange, error, placeholder }) {
   return (
     <div>
-      <Label htmlFor={label}>{label}</Label>
-      <Input id={label} value={value} placeholder={placeholder}
+      <span className="text-sm font-medium text-on-dark/80">{label}</span>
+      <Input value={value} placeholder={placeholder}
         onChange={(e) => onChange(e.target.value)}
-        aria-invalid={!!error} className="mt-2 min-h-11 bg-card" />
-      {error && <ErrorText>{error}</ErrorText>}
+        aria-invalid={!!error}
+        className="mt-2 min-h-11 bg-white/10 border-white/15 text-on-dark placeholder:text-on-dark/40 focus-visible:ring-teal" />
+      {error && <p className="text-coral text-sm mt-2">{error}</p>}
     </div>
   );
 }
@@ -388,65 +431,59 @@ function TextField({ label, value, onChange, error, placeholder }) {
 function SelectField({ label, value, onChange, error, placeholder, children }) {
   return (
     <div>
-      <Label>{label}</Label>
+      <span className="text-sm font-medium text-on-dark/80">{label}</span>
       <Select value={value} onValueChange={onChange}>
-        <SelectTrigger className="mt-2 min-h-11 bg-card" aria-label={label} aria-invalid={!!error}>
+        <SelectTrigger className="mt-2 min-h-11 bg-white/10 border-white/15 text-on-dark hover:bg-white/15 focus-visible:ring-teal"
+          aria-label={label} aria-invalid={!!error}>
           <SelectValue placeholder={placeholder} />
         </SelectTrigger>
-        <SelectContent>
-          {children}
-        </SelectContent>
+        <SelectContent>{children}</SelectContent>
       </Select>
-      {error && <ErrorText>{error}</ErrorText>}
+      {error && <p className="text-coral text-sm mt-2">{error}</p>}
     </div>
   );
 }
 
-// Icon-supported selection tiles for mutually exclusive categorical choices
-// (traveller type). Ordered preferences use SnapSlider / PrefSlider instead.
 function TileGroup({ label, value, onChange, options, error, icons }) {
   return (
     <div>
-      <span className="text-sm font-medium text-ink">{label}</span>
-      <div role="radiogroup" aria-label={label} className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-2">
+      <span className="text-sm font-medium text-on-dark/80">{label}</span>
+      <div role="radiogroup" aria-label={label} className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mt-2">
         {options.map((o) => {
           const on = value === o.value;
           const IIcon = icons[o.value];
           return (
             <button key={o.value} type="button" role="radio" aria-checked={on}
               onClick={() => onChange(o.value)}
-              className={`min-h-14 px-3 py-3 rounded-2xl text-left flex flex-col items-start gap-2 motion-safe:transition motion-safe:duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink ${
-                on ? "bg-ink ring-1 ring-ink text-on-dark" : "bg-card hover:bg-muted ring-1 ring-border text-ink"
+              className={`min-h-14 px-3 py-3 rounded-2xl text-left flex flex-col items-start gap-2 motion-safe:transition motion-safe:duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal ${
+                on ? "bg-teal text-cinema ring-1 ring-teal" : "bg-white/5 text-on-dark ring-1 ring-white/10 hover:bg-white/10"
               }`}>
-              <span className={`w-9 h-9 rounded-xl flex items-center justify-center ${on ? "bg-on-dark/15 text-on-dark" : "bg-muted text-muted-foreground"}`}>
+              <span className={`w-9 h-9 rounded-xl flex items-center justify-center ${on ? "bg-cinema/15 text-cinema" : "bg-white/10 text-on-dark/70"}`}>
                 {IIcon && <IIcon className="w-5 h-5" />}
               </span>
-              <span className="flex-1">
-                <span className={`block text-sm font-medium ${on ? "text-on-dark" : "text-ink/90"}`}>{o.label}</span>
-              </span>
+              <span className="text-sm font-medium">{o.label}</span>
             </button>
           );
         })}
       </div>
-      {error && <ErrorText>{error}</ErrorText>}
+      {error && <p className="text-coral text-sm mt-2">{error}</p>}
     </div>
   );
 }
 
-// Compact segmented control for short mutually exclusive choices (travel scope).
 function Segmented({ label, value, onChange, options }) {
   return (
     <div>
-      <span className="text-sm font-medium text-ink">{label}</span>
+      <span className="text-sm font-medium text-on-dark/80">{label}</span>
       <div role="radiogroup" aria-label={label}
-        className="mt-2 inline-flex w-full rounded-xl bg-muted p-1 ring-1 ring-border">
+        className="mt-2 inline-flex w-full rounded-xl bg-white/5 p-1 ring-1 ring-white/10">
         {options.map((o) => {
           const on = value === o.value;
           return (
             <button key={o.value} type="button" role="radio" aria-checked={on}
               onClick={() => onChange(o.value)}
-              className={`flex-1 min-h-11 px-3 rounded-lg text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink ${
-                on ? "bg-card text-ink shadow-sm" : "text-muted-foreground hover:text-ink"
+              className={`flex-1 min-h-10 px-3 rounded-lg text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal ${
+                on ? "bg-white/15 text-on-dark shadow-sm" : "text-on-dark/60 hover:text-on-dark"
               }`}>
               {o.label}
             </button>
@@ -457,64 +494,40 @@ function Segmented({ label, value, onChange, options }) {
   );
 }
 
-// Live-value snap slider field for ordered preferences (budget, pace, activity).
-function PrefSlider({ label, value, onChange, error, points, ariaLabel }) {
+// Live-value snap slider field for ordered preferences (budget, climate, pace,
+// activity). `noPref` enables a "No preference" opt-out chip; when active the
+// slider is dimmed and the literal "No preference" string is stored.
+function PrefSlider({ label, value, onChange, error, points, ariaLabel, noPref, noPrefLabel }) {
+  const isNoPref = noPref && value === "No preference";
   const index = points.findIndex((p) => p.value === value);
   const current = index >= 0 ? points[index] : null;
   return (
     <div>
-      <span className="text-sm font-medium text-ink">{label}</span>
-      <div className="mt-1 flex items-center gap-2 min-h-9">
-        <span className={`font-display text-2xl font-bold ${current ? "text-ink" : "text-muted-foreground"}`}>
-          {current ? current.label : "—"}
-        </span>
-        {current?.icon && <current.icon className="w-5 h-5 text-teal" aria-hidden="true" />}
+      <div className="flex items-baseline justify-between gap-3">
+        <span className="text-sm font-medium text-on-dark/80">{label}</span>
+        <div className="flex items-center gap-2">
+          <span className={`font-display text-xl font-bold ${isNoPref || !current ? "text-on-dark/60" : "text-on-dark"}`}>
+            {isNoPref ? (noPrefLabel || "No preference") : current ? current.label : "—"}
+          </span>
+          {current && !isNoPref && current.icon && <current.icon className="w-4 h-4 text-teal" aria-hidden="true" />}
+        </div>
       </div>
       <div className="mt-2">
-        <SnapSlider points={points} value={value} onChange={onChange} ariaLabel={ariaLabel || label} />
+        <SnapSlider dark points={points} value={isNoPref ? "" : value} onChange={onChange}
+          ariaLabel={ariaLabel || label} dimmed={isNoPref} />
       </div>
-      {error && <ErrorText>{error}</ErrorText>}
-    </div>
-  );
-}
-
-// Climate uses the 4-point ordered slider plus a separate "No preference"
-// toggle, preserving the full controlled vocabulary expected by the engine.
-function ClimateField({ value, onChange, error }) {
-  const isNoPref = value === "No preference";
-  const ActiveIcon = !isNoPref && value ? CLIMATE_ICONS[value] : null;
-  return (
-    <div>
-      <span className="text-sm font-medium text-ink">Weather</span>
-      <div className="mt-1 flex items-center gap-2 min-h-9">
-        <span className={`font-display text-2xl font-bold ${value && !isNoPref ? "text-ink" : "text-muted-foreground"}`}>
-          {isNoPref ? "No preference" : (value || "—")}
-        </span>
-        {ActiveIcon && <ActiveIcon className="w-5 h-5 text-teal" aria-hidden="true" />}
-      </div>
-      <div className="mt-2">
-        <SnapSlider points={CLIMATE_POINTS} value={isNoPref ? "" : value} onChange={onChange}
-          ariaLabel="Preferred weather" dimmed={isNoPref} />
-      </div>
-      <div className="mt-2">
-        <button type="button" aria-pressed={isNoPref}
-          onClick={() => onChange(isNoPref ? "" : "No preference")}
-          className={`inline-flex items-center gap-1.5 min-h-9 px-3 rounded-full text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink ${
-            isNoPref ? "bg-ink text-on-dark" : "bg-muted text-muted-foreground hover:text-ink ring-1 ring-border"
-          }`}>
-          <Compass className="w-4 h-4" aria-hidden="true" /> No preference
-        </button>
-      </div>
-      {error && <ErrorText>{error}</ErrorText>}
-    </div>
-  );
-}
-
-function ReviewRow({ label, value }) {
-  return (
-    <div className="py-3 flex justify-between gap-4">
-      <dt className="text-sm text-muted-foreground flex-shrink-0">{label}</dt>
-      <dd className="text-sm font-medium text-right text-ink">{value}</dd>
+      {noPref && (
+        <div className="mt-2">
+          <button type="button" aria-pressed={isNoPref}
+            onClick={() => onChange(isNoPref ? "" : "No preference")}
+            className={`inline-flex items-center gap-1.5 min-h-9 px-3 rounded-full text-xs font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal ${
+              isNoPref ? "bg-teal text-cinema" : "bg-white/5 text-on-dark/70 ring-1 ring-white/10 hover:bg-white/10"
+            }`}>
+            <Compass className="w-3.5 h-3.5" aria-hidden="true" /> {noPrefLabel || "No preference"}
+          </button>
+        </div>
+      )}
+      {error && <p className="text-coral text-sm mt-2">{error}</p>}
     </div>
   );
 }

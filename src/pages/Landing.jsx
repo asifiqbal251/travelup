@@ -38,7 +38,7 @@ export default function Landing() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
-  const [preview, setPreview] = useState({ item: null, open: false });
+  const [preview, setPreview] = useState({ items: [], index: 0, open: false });
 
   const [prefs] = useState(() => getPrefs());
   const [saved] = useState(() => getSavedTrips());
@@ -66,8 +66,12 @@ export default function Landing() {
 
   const retry = () => setReloadKey((k) => k + 1);
 
-  const openPreview = (item) => setPreview({ item, open: true });
+  const openPreview = (items, item) => {
+    const idx = items.findIndex((it) => it.dest && item.dest && it.dest.id === item.dest.id);
+    setPreview({ items, index: idx >= 0 ? idx : 0, open: true });
+  };
   const closePreview = () => setPreview((p) => ({ ...p, open: false }));
+  const navigatePreview = (index) => setPreview((p) => ({ ...p, index }));
 
   const { rails, savedItems } = useMemo(() => {
     if (loading || error || !destinations.length) return { rails: [], savedItems: [] };
@@ -158,7 +162,7 @@ export default function Landing() {
             renderItem={(item, i) => (
               <DiscoveryDestinationCard
                 item={item}
-                onOpen={openPreview}
+                onOpen={(item) => openPreview(r.items, item)}
                 personalized={r.personalized}
                 featured={i === 0}
               />
@@ -191,7 +195,7 @@ export default function Landing() {
           <Button
             asChild
             size="lg"
-            className="bg-ink hover:bg-ink/90 text-on-dark shadow-lg min-h-12 px-8 focus-visible:!ring-on-dark focus-visible:ring-offset-cinema"
+            className="bg-ink text-on-dark ring-1 ring-teal/40 shadow-[0_10px_30px_-12px_rgba(2,218,227,0.55)] hover:bg-surface-dark hover:ring-teal/70 min-h-12 px-8 focus-visible:!ring-teal focus-visible:ring-offset-cinema"
           >
             <Link to="/questionnaire">
               Find my Travel Fit <ArrowRight className="w-4 h-4 ml-2" />
@@ -202,11 +206,13 @@ export default function Landing() {
 
       {/* Shared destination preview dialog */}
       <DestinationPreviewDialog
-        item={preview.item}
+        items={preview.items}
+        index={preview.index}
         open={preview.open}
         onOpenChange={(o) => {
           if (!o) closePreview();
         }}
+        onIndexChange={navigatePreview}
         returning={returning}
       />
     </div>

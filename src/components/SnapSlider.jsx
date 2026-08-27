@@ -1,8 +1,11 @@
 import { useRef } from "react";
+import { cn } from "@/lib/utils";
 
 // Accessible discrete snap slider for ordered preference scales (budget,
 // climate, pace, activity). Renders the official controlled vocabulary exactly
 // as passed — no new values. Stores the selected value string, not an index.
+//
+// `dark` switches the track/thumb/labels to a cinema/navy surface variant.
 //
 // Accessibility: role="slider", full keyboard (arrows / Home / End), aria-valuemin
 // /max/now and a human-readable aria-valuetext, visible focus ring. Selection is
@@ -13,6 +16,7 @@ export default function SnapSlider({
   onChange,
   ariaLabel,
   dimmed = false,
+  dark = false,
   id
 }) {
   const count = points.length;
@@ -83,16 +87,24 @@ export default function SnapSlider({
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
-        className="relative h-11 flex items-center cursor-pointer touch-none select-none rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink focus-visible:ring-offset-2 focus-visible:ring-offset-workflow"
+        className={cn(
+          "relative h-11 flex items-center cursor-pointer touch-none select-none rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2",
+          dark
+            ? "focus-visible:ring-teal focus-visible:ring-offset-cinema"
+            : "focus-visible:ring-ink focus-visible:ring-offset-workflow"
+        )}
       >
-        <div className="absolute left-0 right-0 h-2 rounded-full bg-muted" />
+        <div className={cn("absolute left-0 right-0 h-2 rounded-full", dark ? "bg-white/15" : "bg-muted")} />
         <div
           className="absolute left-0 h-2 rounded-full bg-teal motion-safe:transition-[width] motion-safe:duration-200"
           style={{ width: `${pct}%` }}
         />
         {hasSel && (
           <div
-            className="absolute h-6 w-6 -ml-3 rounded-full bg-ink shadow-md ring-2 ring-on-dark motion-safe:transition-[left] motion-safe:duration-200"
+            className={cn(
+              "absolute h-6 w-6 -ml-3 rounded-full shadow-md ring-2 motion-safe:transition-[left] motion-safe:duration-200",
+              dark ? "bg-on-dark ring-teal" : "bg-ink ring-on-dark"
+            )}
             style={{ left: `${pct}%` }}
           />
         )}
@@ -109,16 +121,24 @@ export default function SnapSlider({
               type="button"
               onClick={() => setIndex(i)}
               aria-pressed={on}
-              className="flex-1 min-h-11 px-1 py-1 rounded-lg flex flex-col items-center gap-1 text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink"
+              className={cn(
+                "flex-1 min-h-11 px-1 py-1 rounded-lg flex flex-col items-center gap-1 text-center focus-visible:outline-none focus-visible:ring-2",
+                dark ? "focus-visible:ring-teal" : "focus-visible:ring-ink"
+              )}
             >
               {IIcon && (
                 <IIcon
-                  className={`w-4 h-4 ${on ? "text-teal" : "text-muted-foreground"}`}
+                  className={cn("w-4 h-4", on ? "text-teal" : dark ? "text-on-dark/55" : "text-muted-foreground")}
                   aria-hidden="true"
                 />
               )}
               <span
-                className={`text-[11px] sm:text-xs leading-tight ${on ? "font-semibold text-ink" : "font-medium text-muted-foreground"}`}
+                className={cn(
+                  "text-[11px] sm:text-xs leading-tight",
+                  on
+                    ? "font-semibold " + (dark ? "text-on-dark" : "text-ink")
+                    : "font-medium " + (dark ? "text-on-dark/60" : "text-muted-foreground")
+                )}
               >
                 {p.label}
               </span>

@@ -24,7 +24,7 @@ export default function LandingHeroSlideshow() {
   const count = HERO_SLIDES.length;
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
-  const [hovered, setHovered] = useState(false);
+  // hover-pause intentionally removed: a resting mouse must not block autoplay.
   const [focusWithin, setFocusWithin] = useState(false);
   const [hidden, setHidden] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
@@ -49,7 +49,7 @@ export default function LandingHeroSlideshow() {
   }, []);
 
   const shouldAutoplay =
-    !reducedMotion && !paused && !hovered && !focusWithin && !hidden;
+    !reducedMotion && !paused && !focusWithin && !hidden;
 
   // One autoplay timer, recreated only when shouldAutoplay flips.
   useEffect(() => {
@@ -69,8 +69,6 @@ export default function LandingHeroSlideshow() {
   return (
     <section
       className="relative"
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
       onFocusCapture={() => setFocusWithin(true)}
       onBlurCapture={(e) => {
         if (!e.currentTarget.contains(e.relatedTarget)) setFocusWithin(false);
@@ -105,19 +103,19 @@ export default function LandingHeroSlideshow() {
         <p className="inline-flex items-center gap-2 text-teal text-sm font-semibold mb-4 uppercase tracking-wide">
           <Sparkles className="w-4 h-4" aria-hidden="true" /> Where to next?
         </p>
-        <h1 className="font-display text-4xl sm:text-6xl font-bold tracking-tight leading-[1.04] max-w-2xl">
+        <h1 className="font-display text-4xl sm:text-6xl font-bold tracking-tight leading-[1.04] max-w-4xl">
           Find where you&apos;ll love going.
         </h1>
         <p className="mt-5 text-lg sm:text-xl text-on-dark/90 max-w-xl leading-relaxed">
-          Tell us how you travel — WhereNova finds destinations that fit your time, budget and pace,
-          then turns your pick into a saveable plan.
+          Tell us how you travel — WhereNova matches destinations to your time, budget and pace,
+          then turns your pick into a plan.
         </p>
 
         <div className="mt-8 flex flex-col sm:flex-row gap-3">
           <Button
             asChild
             size="lg"
-            className="bg-ink hover:bg-ink/90 text-on-dark shadow-lg min-h-12 px-8 text-base focus-visible:!ring-on-dark focus-visible:ring-offset-cinema"
+            className="bg-ink text-on-dark ring-1 ring-teal/40 shadow-[0_10px_30px_-12px_rgba(2,218,227,0.55)] hover:bg-surface-dark hover:ring-teal/70 min-h-12 px-8 text-base focus-visible:!ring-teal focus-visible:ring-offset-cinema"
           >
             <Link to="/questionnaire">
               Find my Travel Fit <ArrowRight className="w-4 h-4 ml-2" />

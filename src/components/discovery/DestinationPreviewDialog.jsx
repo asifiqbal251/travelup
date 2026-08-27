@@ -13,16 +13,16 @@ import { TRAVEL_FALLBACK_IMAGE } from "@/lib/fallbackImage";
 import { bestMonthsSummary } from "@/lib/discoveryCollections";
 import { nameWithCountry } from "@/lib/destinationLabel";
 import { flagForCountry } from "@/lib/countryFlag";
-import { MapPin, Clock, Gauge, ArrowRight, Compass } from "lucide-react";
+import { MapPin, Clock, Gauge, ArrowRight, Compass, ChevronLeft, ChevronRight } from "lucide-react";
 
-// One shared cinematic preview dialog. It receives the already-loaded item
-// (destination record plus, for personalized recommendations, the ranked
-// result) so opening a card never re-fetches or recomputes. Radix handles
-// Escape, focus containment, and focus restoration to the originating card.
+// One shared cinematic preview dialog. It receives the full collection items
+// plus the active index so the user can browse prev/next within the SAME
+// collection/heading without closing the modal (wrap-around at the ends).
+// Radix still handles Escape, focus containment and outside-click close.
 //
 // Desktop: spacious side-by-side image + content. Mobile: near-full-screen sheet
-// with a sticky bottom CTA. Metadata uses typography and separators, not a
-// border around every value.
+// with a sticky bottom CTA. Prev/next controls live at the top of the image so
+// they never clash with the mobile name overlay at the bottom.
 function normalizeMode(mode) {
   if (!mode) return "Local transport";
   return String(mode)
@@ -31,8 +31,19 @@ function normalizeMode(mode) {
     .replace(/ground transfer/gi, "transfer");
 }
 
-export default function DestinationPreviewDialog({ item, open, onOpenChange, returning }) {
+export default function DestinationPreviewDialog({
+  items,
+  index,
+  open,
+  onOpenChange,
+  onIndexChange,
+  returning
+}) {
   const navigate = useNavigate();
+  const list = Array.isArray(items) ? items : [];
+  const safeIndex = Math.max(0, Math.min(list.length - 1, Number(index) || 0));
+  const item = list.length ? list[safeIndex] : null;
+
   if (!item) return null;
   const dest = item.dest;
   const result = item.result || null;
@@ -42,7 +53,6 @@ export default function DestinationPreviewDialog({ item, open, onOpenChange, ret
     new Set([...(d.primary_interests || []), ...(d.interest_tags || [])])
   ).slice(0, 4);
 
-  // Avoid repeating the country when the curated name already embeds it.
   const labeled = nameWithCountry(d.name, d.country);
   const showsCountry = labeled !== d.name;
   const flag = flagForCountry(d.country);
@@ -56,9 +66,21 @@ export default function DestinationPreviewDialog({ item, open, onOpenChange, ret
     navigate("/trip");
   };
 
+  const go = (dir) => {
+    if (list.length < 2) return;
+    const n = (safeIndex + dir + list.length) % list.length;
+    onIndexChange && onIndexChange(n);
+  };
+
+  const onKeyDown = (e) => {
+    if (e.key === "ArrowLeft") { e.preventDefault(); go(-1); }
+    else if (e.key === "ArrowRight") { e.preventDefault(); go(1); }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
+        onKeyDown={onKeyDown}
         className="max-w-3xl p-0 overflow-hidden rounded-none h-[100dvh] bg-cinema/80 backdrop-blur-lg backdrop-saturate-150 border-white/10 text-on-dark sm:h-auto sm:max-h-[90vh] sm:rounded-3xl"
       >
         <div className="flex flex-col h-full sm:grid sm:grid-cols-2">
@@ -79,6 +101,30 @@ export default function DestinationPreviewDialog({ item, open, onOpenChange, ret
                   "linear-gradient(to top, rgba(7,24,39,0.78) 0%, rgba(7,24,39,0.08) 58%, rgba(7,24,39,0) 100%)"
               }}
             />
+            {/* Prev / next browser (same collection, wrap-around) */}
+            {list.length > 1 && (
+              <div className="absolute top-3 inset-x-0 flex items-center justify-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => go(-1)}
+                  aria-label="Previous destination"
+                  className="h-11 w-11 rounded-full glass-badge flex items-center justify-center hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-on-dark"
+                >
+                  <ChevronLeft className="w-5 h-5" />
+                </button>
+                <span className="glass-badge text-xs text-on-dark/85 px-2.5 py-1 rounded-full tabular-nums">
+                  {safeIndex + 1} / {list.length}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => go(1)}
+                  aria-label="Next destination"
+                  className="h-11 w-11 rounded-full glass-badge flex items-center justify-center hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-on-dark"
+                >
+                  <ChevronRight className="w-5 h-5" />
+                </button>
+              </div>
+            )}
             <div className="absolute inset-x-0 bottom-0 p-5 sm:hidden">
               <h2 className="font-display text-2xl font-bold text-on-dark">{d.name}</h2>
               <p className="text-sm text-on-dark/80">{locLine}</p>
