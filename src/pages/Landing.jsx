@@ -87,7 +87,7 @@ export default function Landing() {
         { id: "top-fits", title: `Top Travel Fits for your ${prefs.travelDays}-day trip`, items: topTravelFits(ranked, prefs), personalized: true },
         { id: "easy-escapes", title: `Easy escapes from ${prefs.departureCity}`, items: easyEscapes(ranked, prefs), personalized: true },
         { id: "because-you-like", title: `Because you like ${liked}`, items: becauseYouLike(ranked, prefs), personalized: true },
-        { id: "strong-in-month", title: `Strong in ${monthName}`, items: strongInMonth(ranked, prefs), personalized: true }
+        { id: "strong-in-month", title: `Great in ${monthName}`, items: strongInMonth(ranked, prefs), personalized: true }
       ].filter((r) => r.items.length > 0);
       return { rails, savedItems };
     }

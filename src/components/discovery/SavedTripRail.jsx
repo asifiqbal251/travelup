@@ -8,7 +8,7 @@ import DestinationRail from "@/components/discovery/DestinationRail";
 // Discovery Home. Opening a card navigates to the saved detail page using the
 // immutable snapshot — it never regenerates anything. A subtle packing-progress
 // bar is shown over the image when progress data exists.
-function SavedTripCard({ trip, featured }) {
+function SavedTripCard({ trip }) {
   const d = trip.destination || {};
   const checked = (trip.packing && trip.packing.checkedItemIds) || [];
   const groups = (trip.packing && trip.packing.groups) || [];
@@ -16,9 +16,9 @@ function SavedTripCard({ trip, featured }) {
   const total = groups.reduce((n, g) => n + (g.items || []).length, 0) + custom.length;
   const progress = total ? Math.round((checked.length / total) * 100) : null;
 
-  const width = featured
-    ? "w-[82vw] max-w-[340px] sm:w-[340px] lg:w-[360px]"
-    : "w-[78vw] max-w-[300px] sm:w-[300px] lg:w-[320px]";
+  // Uniform dimensions: every saved-trip card in the rail uses the same width,
+  // aspect ratio and crop — no first-card enlargement.
+  const width = "w-[78vw] max-w-[300px] sm:w-[300px] lg:w-[320px]";
 
   return (
     <Link
@@ -70,7 +70,7 @@ export default function SavedTripRail({ items }) {
       id="saved-trips"
       items={items}
       getKey={(item) => String(item.trip.id || "")}
-      renderItem={(item, i) => <SavedTripCard trip={item.trip} featured={i === 0} />}
+      renderItem={(item) => <SavedTripCard trip={item.trip} />}
     />
   );
 }

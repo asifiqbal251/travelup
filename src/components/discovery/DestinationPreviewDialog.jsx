@@ -12,6 +12,7 @@ import { setSelectedDestinationId } from "@/lib/storage";
 import { TRAVEL_FALLBACK_IMAGE } from "@/lib/fallbackImage";
 import { bestMonthsSummary } from "@/lib/discoveryCollections";
 import { nameWithCountry } from "@/lib/destinationLabel";
+import { flagForCountry } from "@/lib/countryFlag";
 import { MapPin, Clock, Gauge, ArrowRight, Compass } from "lucide-react";
 
 // One shared cinematic preview dialog. It receives the already-loaded item
@@ -44,8 +45,9 @@ export default function DestinationPreviewDialog({ item, open, onOpenChange, ret
   // Avoid repeating the country when the curated name already embeds it.
   const labeled = nameWithCountry(d.name, d.country);
   const showsCountry = labeled !== d.name;
+  const flag = flagForCountry(d.country);
   const locLine = showsCountry
-    ? [d.country, d.region].filter(Boolean).join(" · ")
+    ? [flag ? `${flag} ${d.country}` : d.country, d.region].filter(Boolean).join(" · ")
     : (d.region || "");
 
   const viewTrip = () => {
@@ -103,26 +105,19 @@ export default function DestinationPreviewDialog({ item, open, onOpenChange, ret
               )}
 
               <div className="mt-5">
-                <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-dark mb-2">
-                  Top experiences
-                </h3>
-                <ul className="text-sm text-on-dark/85 space-y-1.5">
-                  {(d.top_experiences || []).slice(0, 3).map((x, i) => (
-                    <li key={i} className="flex gap-2">
-                      <span className="text-on-dark/40">•</span>
-                      <span>{x}</span>
-                    </li>
-                  ))}
-                </ul>
+                <h3 className="text-xs font-medium text-on-dark/60 mb-1.5">Top experiences</h3>
+                <p className="text-sm text-on-dark/85 leading-snug">
+                  {(d.top_experiences || []).slice(0, 3).join(" · ")}
+                </p>
               </div>
 
-              <dl className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3 text-sm">
+              <dl className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2.5 text-sm">
                 <div>
-                  <dt className="text-xs uppercase tracking-wide text-muted-dark">Suggested length</dt>
+                  <dt className="text-xs font-medium text-on-dark/60">Suggested length</dt>
                   <dd className="font-display font-semibold text-on-dark mt-0.5">{d.min_days}–{d.max_days} days</dd>
                 </div>
                 <div>
-                  <dt className="text-xs uppercase tracking-wide text-muted-dark">Best months</dt>
+                  <dt className="text-xs font-medium text-on-dark/60">Best months</dt>
                   <dd className="text-on-dark mt-0.5 leading-snug">{bestMonthsSummary(d)}</dd>
                 </div>
               </dl>
@@ -142,11 +137,14 @@ export default function DestinationPreviewDialog({ item, open, onOpenChange, ret
 
               {result && prac && (
                 <div className="mt-5 pt-5 border-t border-white/10">
-                  <div className="flex items-center gap-3 mb-3">
-                    <span className="font-display text-3xl font-bold text-on-dark leading-none">
-                      {result.finalScore}
-                      <span className="text-muted-dark text-sm font-medium">/100</span>
-                    </span>
+                  <div className="flex items-end justify-between gap-3 mb-3">
+                    <div>
+                      <div className="flex items-baseline gap-0.5 leading-none">
+                        <span className="font-display text-3xl font-bold text-on-dark">{result.finalScore}</span>
+                        <span className="text-sm font-medium text-muted-dark">/100</span>
+                      </div>
+                      <span className="block text-[10px] uppercase tracking-wide text-muted-dark mt-1">Travel Fit</span>
+                    </div>
                     <span className="text-sm text-teal font-semibold">{result.matchLabel}</span>
                   </div>
                   <dl className="grid grid-cols-1 gap-y-2 text-sm">

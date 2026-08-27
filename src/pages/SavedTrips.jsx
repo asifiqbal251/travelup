@@ -127,8 +127,11 @@ export default function SavedTrips() {
                         "linear-gradient(to top, rgba(7,24,39,0.86) 0%, rgba(7,24,39,0.45) 42%, rgba(7,24,39,0) 100%)"
                     }}
                   />
-                  <span className={`glass-badge absolute top-3 left-3 text-[11px] font-semibold px-2.5 py-1 rounded-full ${fit.cls}`}>
-                    {fit.label}
+                  <span className="glass-badge absolute top-3 left-3 px-2.5 py-2 rounded-2xl text-left">
+                    <span className="block text-[10px] uppercase tracking-wide text-on-dark/70 leading-none">Travel Fit</span>
+                    <span className={`inline-flex mt-1.5 text-sm font-bold px-2.5 py-0.5 rounded-full ${fit.cls}`}>
+                      {fit.label}
+                    </span>
                   </span>
                   <span className="absolute inset-x-0 bottom-0 p-5 text-on-dark">
                     <span className="block font-display text-xl font-bold leading-tight">{d.name}</span>

@@ -100,14 +100,41 @@ export function returningContext(prefs) {
   return parts.join(" · ");
 }
 
+// Compact month ranges: consecutive months collapse to "May – Sep"; scattered
+// months group concisely (e.g. "May, Jul – Sep"). Best/Good distinction is kept.
+function monthRanges(nums) {
+  const sorted = [...new Set((nums || []).filter((n) => n >= 1 && n <= 12))].sort(
+    (a, b) => a - b
+  );
+  if (!sorted.length) return "";
+  const groups = [];
+  let start = sorted[0];
+  let prev = sorted[0];
+  for (let i = 1; i < sorted.length; i++) {
+    const v = sorted[i];
+    if (v === prev + 1) {
+      prev = v;
+      continue;
+    }
+    groups.push([start, prev]);
+    start = v;
+    prev = v;
+  }
+  groups.push([start, prev]);
+  return groups
+    .map(([s, e]) => (s === e ? MONTHS[s - 1] : `${MONTHS[s - 1]} – ${MONTHS[e - 1]}`))
+    .join(", ");
+}
+
 export function bestMonthsSummary(dest) {
   if (!dest) return "Year-round";
-  const s = (dest.strong_months || []).map((m) => MONTHS[m - 1]).filter(Boolean);
-  const sh = (dest.shoulder_months || []).map((m) => MONTHS[m - 1]).filter(Boolean);
+  const s = monthRanges(dest.strong_months || []);
+  const sh = monthRanges(dest.shoulder_months || []);
+  if (!s && !sh) return "Year-round";
   const parts = [];
-  if (s.length) parts.push(`Best: ${s.join(", ")}`);
-  if (sh.length) parts.push(`Good: ${sh.join(", ")}`);
-  return parts.join(" · ") || "Year-round";
+  if (s) parts.push(`Best ${s}`);
+  if (sh) parts.push(`Good ${sh}`);
+  return parts.join(" · ");
 }
 
 // ---- First-time editorial rails (no scores, no travel estimates) ----

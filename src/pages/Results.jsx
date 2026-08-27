@@ -7,6 +7,7 @@ import { getPrefs, setSelectedDestinationId } from "@/lib/storage";
 import { TRAVEL_FALLBACK_IMAGE } from "@/lib/fallbackImage";
 import { rankDestinations, buildReasons, buildSuggestions, practicalityExcludedCount } from "@/lib/scoring";
 import { nameWithCountry } from "@/lib/destinationLabel";
+import { flagForCountry } from "@/lib/countryFlag";
 import TravelFit from "@/components/TravelFit";
 import { ArrowLeft, ArrowRight, Info, ChevronDown, MapPin } from "lucide-react";
 
@@ -188,8 +189,12 @@ function DestinationCard({ rank, dest, result, prefs, onSelect }) {
           className="absolute inset-x-0 bottom-0 h-2/3"
           style={{ background: "linear-gradient(to top, rgba(7,24,39,0.9) 0%, rgba(7,24,39,0.5) 42%, rgba(7,24,39,0) 100%)" }}
         />
-        <div className="glass-badge absolute top-3 right-3 text-on-dark text-sm font-semibold px-3 py-1 rounded-full">
-          {finalScore}/100
+        <div className="glass-badge absolute top-3 right-3 px-3 py-2 rounded-2xl text-right">
+          <div className="flex items-baseline gap-0.5 justify-end leading-none">
+            <span className={`font-display font-bold text-on-dark ${dominant ? "text-2xl" : "text-lg"}`}>{finalScore}</span>
+            <span className="text-xs font-medium text-on-dark/70">/100</span>
+          </div>
+          <span className="block text-[10px] uppercase tracking-wide text-on-dark/70 mt-1">Travel Fit</span>
         </div>
         <div className={`absolute top-3 left-3 text-xs font-semibold px-2.5 py-1 rounded-full ${labelClass}`}>
           {result.matchLabel}
@@ -203,7 +208,10 @@ function DestinationCard({ rank, dest, result, prefs, onSelect }) {
           <h2 className={`font-display font-bold text-on-dark flex items-center gap-2 ${dominant ? "text-2xl sm:text-3xl" : "text-xl"}`}>
             <MapPin className="w-4 h-4 text-on-dark/70" /> {dest.name}
           </h2>
-          <p className="text-on-dark/80 text-sm">{dest.country} · {dest.region}</p>
+          <p className="text-on-dark/80 text-sm flex items-center gap-1.5">
+            {flagForCountry(dest.country) && <span aria-hidden="true">{flagForCountry(dest.country)}</span>}
+            {dest.country} · {dest.region}
+          </p>
         </div>
       </div>
 
