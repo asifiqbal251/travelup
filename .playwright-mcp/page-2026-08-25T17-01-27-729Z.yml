@@ -1,0 +1,174 @@
+- generic [ref=f105e4]:
+  - generic [ref=f105e5]:
+    - banner [ref=f105e6]:
+      - generic [ref=f105e7]:
+        - link "TravelUp" [ref=f105e8] [cursor=pointer]:
+          - /url: /
+        - navigation [ref=f105e12]:
+          - link "Home" [ref=f105e13] [cursor=pointer]:
+            - /url: /
+          - link "About" [ref=f105e14] [cursor=pointer]:
+            - /url: /about
+          - button "Clear My Data" [ref=f105e15] [cursor=pointer]
+    - main [ref=f105e16]:
+      - generic [ref=f105e464]:
+        - generic [ref=f105e465]:
+          - generic [ref=f105e466]:
+            - heading "Your top 3 matches" [level=1] [ref=f105e467]
+            - paragraph [ref=f105e468]: Final scores combine your preference fit with travel practicality for your trip length. Estimates only.
+          - button "Revise" [ref=f105e469] [cursor=pointer]
+        - paragraph [ref=f105e473]: Scores are estimates based on your preferences and curated destination data, not live availability or flight schedules. Always verify visa and entry requirements through official government sources for your citizenship.
+        - generic [ref=f105e474]:
+          - article [ref=f105e475]:
+            - generic [ref=f105e476]:
+              - img "New York City, United States" [ref=f105e478]
+              - generic [ref=f105e479]: 97/100
+              - generic [ref=f105e480]: Strong match
+              - generic [ref=f105e481]:
+                - heading "New York City" [level=2] [ref=f105e482]
+                - paragraph [ref=f105e486]: United States · Northeast, United States
+            - generic [ref=f105e487]:
+              - region "Travel fit" [ref=f105e488]:
+                - generic [ref=f105e489]:
+                  - heading "Travel fit" [level=3] [ref=f105e490]
+                  - 'status "Travel fit: Good fit" [ref=f105e491]': Good fit
+                - generic [ref=f105e492]:
+                  - generic [ref=f105e493]:
+                    - term [ref=f105e494]: How you'll travel
+                    - definition [ref=f105e495]: Domestic flight + local public transportation
+                  - generic [ref=f105e496]:
+                    - term [ref=f105e497]: Travel time
+                    - definition [ref=f105e498]: About 2.3 hours each way
+                  - generic [ref=f105e499]:
+                    - term [ref=f105e500]: Time at destination
+                    - definition [ref=f105e501]: About 5 days
+              - list [ref=f105e502]:
+                - listitem [ref=f105e503]:
+                  - generic [ref=f105e504]: •
+                  - text: Great for photography, history and culture, cities
+                - listitem [ref=f105e505]:
+                  - generic [ref=f105e506]: •
+                  - text: Peak season in May
+                - listitem [ref=f105e507]:
+                  - generic [ref=f105e508]: •
+                  - text: Fits your selected budget level
+              - generic [ref=f105e509]:
+                - generic [ref=f105e510]:
+                  - generic [ref=f105e514]: Trip length
+                  - generic [ref=f105e515]: 3–9d
+                - generic [ref=f105e516]:
+                  - generic [ref=f105e520]: Budget
+                  - generic [ref=f105e521]: Premium – Comfortable
+                - generic [ref=f105e522]:
+                  - generic [ref=f105e526]: Climate
+                  - generic [ref=f105e527]: Mild, Cool, Cold or snowy
+              - generic [ref=f105e528]: "Main experiences: Central Park · Times Square · Statue of Liberty · the MET"
+              - generic [ref=f105e529]: "Suited to: Solo, Couple, Friends, Family"
+              - button "See score breakdown" [ref=f105e530] [cursor=pointer]
+              - button "View My Trip" [ref=f105e531] [cursor=pointer]
+          - article [ref=f105e532]:
+            - generic [ref=f105e533]:
+              - img "Mexico City, Mexico" [ref=f105e535]
+              - generic [ref=f105e536]: 97/100
+              - generic [ref=f105e537]: Strong match
+              - generic [ref=f105e538]:
+                - heading "Mexico City" [level=2] [ref=f105e539]
+                - paragraph [ref=f105e543]: Mexico · Central Mexico
+            - generic [ref=f105e544]:
+              - region "Travel fit" [ref=f105e545]:
+                - generic [ref=f105e546]:
+                  - heading "Travel fit" [level=3] [ref=f105e547]
+                  - 'status "Travel fit: Good fit" [ref=f105e548]': Good fit
+                - generic [ref=f105e549]:
+                  - generic [ref=f105e550]:
+                    - term [ref=f105e551]: How you'll travel
+                    - definition [ref=f105e552]: International flight + local transport
+                  - generic [ref=f105e553]:
+                    - term [ref=f105e554]: Travel time
+                    - definition [ref=f105e555]: About 8.4 hours each way
+                  - generic [ref=f105e556]:
+                    - term [ref=f105e557]: Time at destination
+                    - definition [ref=f105e558]: About 3 days
+              - list [ref=f105e559]:
+                - listitem [ref=f105e560]:
+                  - generic [ref=f105e561]: •
+                  - text: Great for photography, history and culture, cities
+                - listitem [ref=f105e562]:
+                  - generic [ref=f105e563]: •
+                  - text: Peak season in May
+                - listitem [ref=f105e564]:
+                  - generic [ref=f105e565]: •
+                  - text: Fits your selected budget level
+              - generic [ref=f105e566]:
+                - generic [ref=f105e567]:
+                  - generic [ref=f105e571]: Trip length
+                  - generic [ref=f105e572]: 3–9d
+                - generic [ref=f105e573]:
+                  - generic [ref=f105e577]: Budget
+                  - generic [ref=f105e578]: Moderate – Comfortable – Budget
+                - generic [ref=f105e579]:
+                  - generic [ref=f105e583]: Climate
+                  - generic [ref=f105e584]: Mild
+              - generic [ref=f105e585]: "Main experiences: Zócalo · Teotihuacán pyramids · Frida Kahlo museum · Xochimilco"
+              - generic [ref=f105e586]: "Suited to: Solo, Couple, Friends, Family"
+              - button "See score breakdown" [ref=f105e587] [cursor=pointer]
+              - button "View My Trip" [ref=f105e588] [cursor=pointer]
+          - article [ref=f105e589]:
+            - generic [ref=f105e590]:
+              - img "Edinburgh, United Kingdom" [ref=f105e592]
+              - generic [ref=f105e593]: 89/100
+              - generic [ref=f105e594]: Strong match
+              - generic [ref=f105e595]:
+                - heading "Edinburgh" [level=2] [ref=f105e596]
+                - paragraph [ref=f105e600]: United Kingdom · Lothian, Scotland, United Kingdom
+            - generic [ref=f105e601]:
+              - region "Travel fit" [ref=f105e602]:
+                - generic [ref=f105e603]:
+                  - heading "Travel fit" [level=3] [ref=f105e604]
+                  - 'status "Travel fit: Manageable" [ref=f105e605]': Manageable
+                - generic [ref=f105e606]:
+                  - generic [ref=f105e607]:
+                    - term [ref=f105e608]: How you'll travel
+                    - definition [ref=f105e609]: Direct train
+                  - generic [ref=f105e610]:
+                    - term [ref=f105e611]: Travel time
+                    - definition [ref=f105e612]: About 12.3 hours each way
+                  - generic [ref=f105e613]:
+                    - term [ref=f105e614]: Time at destination
+                    - definition [ref=f105e615]: About 3 days
+              - list [ref=f105e616]:
+                - listitem [ref=f105e617]:
+                  - generic [ref=f105e618]: •
+                  - text: Great for photography, history and culture, cities
+                - listitem [ref=f105e619]:
+                  - generic [ref=f105e620]: •
+                  - text: Peak season in May
+                - listitem [ref=f105e621]:
+                  - generic [ref=f105e622]: •
+                  - text: Fits your selected budget level
+              - generic [ref=f105e623]:
+                - generic [ref=f105e624]:
+                  - generic [ref=f105e628]: Trip length
+                  - generic [ref=f105e629]: 2–4d
+                - generic [ref=f105e630]:
+                  - generic [ref=f105e634]: Budget
+                  - generic [ref=f105e635]: Budget – Moderate – Comfortable
+                - generic [ref=f105e636]:
+                  - generic [ref=f105e640]: Climate
+                  - generic [ref=f105e641]: Cool, Mild, Cold or snowy
+              - generic [ref=f105e642]: "Main experiences: Edinburgh Castle · Royal Mile · Arthur's Seat hike (weather-dependent) · Holyrood Palace"
+              - generic [ref=f105e643]: "Suited to: Solo, Couple, Friends, Family"
+              - button "See score breakdown" [ref=f105e644] [cursor=pointer]
+              - button "View My Trip" [ref=f105e645] [cursor=pointer]
+    - contentinfo [ref=f105e41]:
+      - generic [ref=f105e42]:
+        - paragraph [ref=f105e43]: TravelUp
+        - paragraph [ref=f105e46]: Helping unsure travellers discover where to go next.
+        - paragraph [ref=f105e47]: All budgets, climates, seasons, itineraries and packing suggestions are indicative estimates, not live information. Always verify visa requirements, entry conditions, safety and travel advisories using official government sources for your citizenship.
+        - generic [ref=f105e48]:
+          - link "About & disclaimer" [ref=f105e49] [cursor=pointer]:
+            - /url: /about
+          - link "Home" [ref=f105e50] [cursor=pointer]:
+            - /url: /
+  - region "Notifications (F8)":
+    - list

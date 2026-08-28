@@ -1,0 +1,116 @@
+- generic [ref=f19e4]:
+  - generic [ref=f19e5]:
+    - banner [ref=f19e6]:
+      - generic [ref=f19e7]:
+        - link "TravelUp" [ref=f19e8] [cursor=pointer]:
+          - /url: /
+        - navigation [ref=f19e12]:
+          - link "Home" [ref=f19e13] [cursor=pointer]:
+            - /url: /
+          - link "About" [ref=f19e14] [cursor=pointer]:
+            - /url: /about
+          - button "Clear My Data" [ref=f19e15] [cursor=pointer]
+    - main [ref=f19e16]:
+      - generic [ref=f19e917]:
+        - button "Back to recommendations" [ref=f19e918] [cursor=pointer]
+        - generic [ref=f19e919]:
+          - img "San Diego, United States" [ref=f19e921]
+          - generic [ref=f19e923]:
+            - heading "San Diego" [level=1] [ref=f19e924]
+            - paragraph [ref=f19e925]: United States · Southern California, United States
+        - generic [ref=f19e926]:
+          - tablist [ref=f19e927]:
+            - tab "Itinerary" [selected] [ref=f19e928] [cursor=pointer]
+            - tab "Packing" [ref=f19e929] [cursor=pointer]
+            - tab "Overview" [ref=f19e930] [cursor=pointer]
+          - tabpanel "Itinerary" [ref=f19e931]:
+            - generic [ref=f19e932]:
+              - paragraph [ref=f19e933]: A suggested 4-day plan including outbound and return travel. Indicative only — verify opening hours and tickets before you go.
+              - button "Day 1 Coronado & Gaslamp Quarter San Diego Light intensity Cities Beaches View details" [ref=f19e1026] [cursor=pointer]:
+                - generic [ref=f19e936]:
+                  - generic [ref=f19e937]:
+                    - generic [ref=f19e938]: Day 1
+                    - heading "Coronado & Gaslamp Quarter" [level=3] [ref=f19e939]
+                    - generic [ref=f19e940]: San Diego
+                  - generic [ref=f19e941]: Light intensity
+                - generic [ref=f19e942]:
+                  - generic [ref=f19e943]: Cities
+                  - generic [ref=f19e944]: Beaches
+                - generic [ref=f19e945]: View details
+              - button "Day 2 San Diego Zoo San Diego Moderate intensity Wildlife Cities View details" [ref=f19e1081] [cursor=pointer]:
+                - generic [ref=f19e992]:
+                  - generic [ref=f19e993]:
+                    - generic [ref=f19e994]: Day 2
+                    - heading "San Diego Zoo" [level=3] [ref=f19e995]
+                    - generic [ref=f19e996]: San Diego
+                  - generic [ref=f19e997]: Moderate intensity
+                - generic [ref=f19e998]:
+                  - generic [ref=f19e999]: Wildlife
+                  - generic [ref=f19e1000]: Cities
+                - generic [ref=f19e1001]: View details
+              - button "Day 3 Balboa Park museums San Diego Light intensity History and culture Cities View details" [ref=f19e1136] [cursor=pointer]:
+                - generic [ref=f19e1004]:
+                  - generic [ref=f19e1005]:
+                    - generic [ref=f19e1006]: Day 3
+                    - heading "Balboa Park museums" [level=3] [ref=f19e1007]
+                    - generic [ref=f19e1008]: San Diego
+                  - generic [ref=f19e1009]: Light intensity
+                - generic [ref=f19e1010]:
+                  - generic [ref=f19e1011]: History and culture
+                  - generic [ref=f19e1012]: Cities
+                - generic [ref=f19e1013]: View details
+              - generic [ref=f19e1014]:
+                - button "Day 4 La Jolla Cove San Diego Moderate intensity Beaches Nature Hide details" [expanded] [active] [ref=f19e1137] [cursor=pointer]:
+                  - generic [ref=f19e1016]:
+                    - generic [ref=f19e1017]:
+                      - generic [ref=f19e1018]: Day 4
+                      - heading "La Jolla Cove" [level=3] [ref=f19e1019]
+                      - generic [ref=f19e1020]: San Diego
+                    - generic [ref=f19e1021]: Moderate intensity
+                  - generic [ref=f19e1022]:
+                    - generic [ref=f19e1023]: Beaches
+                    - generic [ref=f19e1024]: Nature
+                  - generic [ref=f19e1025]: Hide details
+                - generic [ref=f19e1138]:
+                  - list [ref=f19e1139]:
+                    - listitem [ref=f19e1140]:
+                      - generic [ref=f19e1141]:
+                        - generic [ref=f19e1142]: 08:00–11:00
+                        - generic [ref=f19e1143]: ~3 hr
+                        - generic [ref=f19e1144]: Morning
+                      - generic [ref=f19e1145]:
+                        - generic [ref=f19e1146]: See the seals and sea lions…
+                        - paragraph [ref=f19e1147]: See the seals and sea lions at La Jolla Cove; if the tide is low, explore the tide pools.
+                    - listitem [ref=f19e1148]:
+                      - generic [ref=f19e1149]: Return begins
+                      - generic [ref=f19e1151]:
+                        - generic [ref=f19e1152]: Begin the return journey
+                        - paragraph [ref=f19e1153]: Check out and travel home.
+                    - listitem [ref=f19e1154]:
+                      - generic [ref=f19e1155]: Arrive home
+                      - generic [ref=f19e1157]:
+                        - generic [ref=f19e1158]: Arrive home
+                        - paragraph [ref=f19e1159]: Travel home to Los Angeles.
+                  - paragraph [ref=f19e1160]: "Estimated total journey: about 2.5 hours each way."
+                  - generic [ref=f19e1161]:
+                    - generic [ref=f19e1162]:
+                      - generic [ref=f19e1163]: Getting around
+                      - generic [ref=f19e1164]: Public transit, rideshare or car depending on the area.
+                    - generic [ref=f19e1165]:
+                      - generic [ref=f19e1166]: Plan ahead
+                      - generic [ref=f19e1167]: Confirm your departure time and any bookings.
+                    - generic [ref=f19e1168]:
+                      - generic [ref=f19e1169]: Overnight
+                      - generic [ref=f19e1170]: Home
+    - contentinfo [ref=f19e41]:
+      - generic [ref=f19e42]:
+        - paragraph [ref=f19e43]: TravelUp
+        - paragraph [ref=f19e46]: Helping unsure travellers discover where to go next.
+        - paragraph [ref=f19e47]: All budgets, climates, seasons, itineraries and packing suggestions are indicative estimates, not live information. Always verify visa requirements, entry conditions, safety and travel advisories using official government sources for your citizenship.
+        - generic [ref=f19e48]:
+          - link "About & disclaimer" [ref=f19e49] [cursor=pointer]:
+            - /url: /about
+          - link "Home" [ref=f19e50] [cursor=pointer]:
+            - /url: /
+  - region "Notifications (F8)":
+    - list

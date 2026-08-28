@@ -1,0 +1,138 @@
+- generic [ref=f37e4]:
+  - generic [ref=f37e5]:
+    - banner [ref=f37e6]:
+      - generic [ref=f37e7]:
+        - link "TravelUp" [ref=f37e8] [cursor=pointer]:
+          - /url: /
+        - navigation [ref=f37e12]:
+          - link "Home" [ref=f37e13] [cursor=pointer]:
+            - /url: /
+          - link "About" [ref=f37e14] [cursor=pointer]:
+            - /url: /about
+          - button "Clear My Data" [ref=f37e15] [cursor=pointer]
+    - main [ref=f37e16]:
+      - generic [ref=f37e916]:
+        - button "Back to recommendations" [ref=f37e917] [cursor=pointer]
+        - generic [ref=f37e918]:
+          - img "Yosemite National Park, United States" [ref=f37e920]
+          - generic [ref=f37e922]:
+            - heading "Yosemite National Park" [level=1] [ref=f37e923]
+            - paragraph [ref=f37e924]: United States · Sierra Nevada, California, United States
+        - generic [ref=f37e925]:
+          - tablist [ref=f37e926]:
+            - tab "Itinerary" [selected] [ref=f37e927] [cursor=pointer]
+            - tab "Packing" [ref=f37e928] [cursor=pointer]
+            - tab "Overview" [ref=f37e929] [cursor=pointer]
+          - tabpanel "Itinerary" [ref=f37e930]:
+            - generic [ref=f37e931]:
+              - paragraph [ref=f37e932]: A suggested 4-day plan including outbound and return travel. Indicative only — verify opening hours and tickets before you go.
+              - button "Day 1 Yosemite Valley highlights Yosemite National Park High intensity Nature Photography View details" [ref=f37e1015] [cursor=pointer]:
+                - generic [ref=f37e935]:
+                  - generic [ref=f37e936]:
+                    - generic [ref=f37e937]: Day 1
+                    - heading "Yosemite Valley highlights" [level=3] [ref=f37e938]
+                    - generic [ref=f37e939]: Yosemite National Park
+                  - generic [ref=f37e940]: High intensity
+                - generic [ref=f37e941]:
+                  - generic [ref=f37e942]: Nature
+                  - generic [ref=f37e943]: Photography
+                - generic [ref=f37e944]: View details
+              - button "Day 2 Glacier Point Yosemite National Park High intensity Photography Nature View details" [ref=f37e1067] [cursor=pointer]:
+                - generic [ref=f37e980]:
+                  - generic [ref=f37e981]:
+                    - generic [ref=f37e982]: Day 2
+                    - heading "Glacier Point" [level=3] [ref=f37e983]
+                    - generic [ref=f37e984]: Yosemite National Park
+                  - generic [ref=f37e985]: High intensity
+                - generic [ref=f37e986]:
+                  - generic [ref=f37e987]: Photography
+                  - generic [ref=f37e988]: Nature
+                - generic [ref=f37e989]: View details
+              - button "Day 3 Mariposa Grove sequoias Yosemite National Park High intensity Nature Wildlife View details" [ref=f37e1100] [cursor=pointer]:
+                - generic [ref=f37e992]:
+                  - generic [ref=f37e993]:
+                    - generic [ref=f37e994]: Day 3
+                    - heading "Mariposa Grove sequoias" [level=3] [ref=f37e995]
+                    - generic [ref=f37e996]: Yosemite National Park
+                  - generic [ref=f37e997]: High intensity
+                - generic [ref=f37e998]:
+                  - generic [ref=f37e999]: Nature
+                  - generic [ref=f37e1000]: Wildlife
+                - generic [ref=f37e1001]: View details
+              - generic [ref=f37e1002]:
+                - button "Day 4 · Flexible Flexible day Yosemite National Park Light intensity Slow start Café and laundry Easy stroll Hide details" [expanded] [active] [ref=f37e1101] [cursor=pointer]:
+                  - generic [ref=f37e1004]:
+                    - generic [ref=f37e1005]:
+                      - generic [ref=f37e1006]: Day 4 · Flexible
+                      - heading "Flexible day" [level=3] [ref=f37e1007]
+                      - generic [ref=f37e1008]: Yosemite National Park
+                    - generic [ref=f37e1009]: Light intensity
+                  - generic [ref=f37e1010]:
+                    - generic [ref=f37e1011]: Slow start
+                    - generic [ref=f37e1012]: Café and laundry
+                    - generic [ref=f37e1013]: Easy stroll
+                  - generic [ref=f37e1014]: Hide details
+                - generic [ref=f37e1102]:
+                  - list [ref=f37e1103]:
+                    - listitem [ref=f37e1104]:
+                      - generic [ref=f37e1105]:
+                        - generic [ref=f37e1106]: 09:00–11:00
+                        - generic [ref=f37e1107]: ~2 hr
+                        - generic [ref=f37e1108]: Morning
+                      - generic [ref=f37e1109]:
+                        - generic [ref=f37e1110]: Slow start
+                        - paragraph [ref=f37e1111]: Sleep in or enjoy a relaxed breakfast.
+                    - listitem [ref=f37e1112]:
+                      - generic [ref=f37e1113]: Late morning
+                      - generic [ref=f37e1115]:
+                        - generic [ref=f37e1116]: Café and laundry
+                        - paragraph [ref=f37e1117]: Catch up on laundry and postcards.
+                    - listitem [ref=f37e1118]:
+                      - generic [ref=f37e1119]:
+                        - generic [ref=f37e1120]: 12:30–14:00
+                        - generic [ref=f37e1121]: ~1.5 hr
+                        - generic [ref=f37e1122]: Lunch
+                      - generic [ref=f37e1123]:
+                        - generic [ref=f37e1124]: Local bite
+                        - paragraph [ref=f37e1125]: An unhurried lunch at a spot you missed.
+                    - listitem [ref=f37e1126]:
+                      - generic [ref=f37e1127]:
+                        - generic [ref=f37e1128]: 14:00–17:00
+                        - generic [ref=f37e1129]: ~3 hr
+                        - generic [ref=f37e1130]: Afternoon
+                      - generic [ref=f37e1131]:
+                        - generic [ref=f37e1132]: Easy stroll
+                        - paragraph [ref=f37e1133]: Catch up on laundry and postcards.
+                    - listitem [ref=f37e1134]:
+                      - generic [ref=f37e1135]:
+                        - generic [ref=f37e1136]: 18:30–21:00
+                        - generic [ref=f37e1137]: ~2.5 hr
+                        - generic [ref=f37e1138]: Evening
+                      - generic [ref=f37e1139]:
+                        - generic [ref=f37e1140]: Optional night out
+                        - paragraph [ref=f37e1141]: Rest, or revisit a favourite spot.
+                  - generic [ref=f37e1142]:
+                    - generic [ref=f37e1143]:
+                      - generic [ref=f37e1144]: Getting around
+                      - generic [ref=f37e1145]: Park shuttle when operating, car and walking trails.
+                    - generic [ref=f37e1146]:
+                      - generic [ref=f37e1147]: Plan ahead
+                      - generic [ref=f37e1148]: Use this day to recharge or revisit a favourite.
+                    - generic [ref=f37e1149]:
+                      - generic [ref=f37e1150]: Optional swap
+                      - generic [ref=f37e1151]: Add a short excursion if you feel rested.
+                    - generic [ref=f37e1152]:
+                      - generic [ref=f37e1153]: Overnight
+                      - generic [ref=f37e1154]: Overnight in Yosemite National Park.
+    - contentinfo [ref=f37e41]:
+      - generic [ref=f37e42]:
+        - paragraph [ref=f37e43]: TravelUp
+        - paragraph [ref=f37e46]: Helping unsure travellers discover where to go next.
+        - paragraph [ref=f37e47]: All budgets, climates, seasons, itineraries and packing suggestions are indicative estimates, not live information. Always verify visa requirements, entry conditions, safety and travel advisories using official government sources for your citizenship.
+        - generic [ref=f37e48]:
+          - link "About & disclaimer" [ref=f37e49] [cursor=pointer]:
+            - /url: /about
+          - link "Home" [ref=f37e50] [cursor=pointer]:
+            - /url: /
+  - region "Notifications (F8)":
+    - list

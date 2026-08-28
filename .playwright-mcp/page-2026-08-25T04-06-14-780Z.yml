@@ -1,0 +1,69 @@
+- generic [ref=f90e4]:
+  - generic [ref=f90e5]:
+    - banner [ref=f90e6]:
+      - generic [ref=f90e7]:
+        - link "TravelUp" [ref=f90e8] [cursor=pointer]:
+          - /url: /
+        - navigation [ref=f90e12]:
+          - link "Home" [ref=f90e13] [cursor=pointer]:
+            - /url: /
+          - link "About" [ref=f90e14] [cursor=pointer]:
+            - /url: /about
+          - button "Clear My Data" [ref=f90e15] [cursor=pointer]
+    - main [ref=f90e16]:
+      - generic [ref=f90e17]:
+        - generic [ref=f90e18]:
+          - generic [ref=f90e19]:
+            - generic [ref=f90e20]: Step 7 of 7
+            - generic [ref=f90e21]: Review
+          - progressbar [ref=f90e22]
+        - generic [ref=f90e24]:
+          - generic [ref=f90e50]:
+            - heading "Review your answers" [level=1] [ref=f90e51]
+            - paragraph [ref=f90e52]: Make any changes before we find your matches.
+            - generic [ref=f90e54]:
+              - generic [ref=f90e55]:
+                - term [ref=f90e56]: Residence / departure / citizenship
+                - definition [ref=f90e57]: Canada · Vancouver · Canada
+              - generic [ref=f90e58]:
+                - term [ref=f90e59]: When
+                - definition [ref=f90e60]: August
+              - generic [ref=f90e61]:
+                - term [ref=f90e62]: Total trip
+                - definition [ref=f90e63]: 7 days, including travel time
+              - generic [ref=f90e64]:
+                - term [ref=f90e65]: Domestic
+                - definition [ref=f90e66]: Domestic only
+              - generic [ref=f90e67]:
+                - term [ref=f90e68]: Traveller & budget
+                - definition [ref=f90e69]: Family · Moderate
+              - generic [ref=f90e70]:
+                - term [ref=f90e71]: Interests
+                - definition [ref=f90e72]: Nature, Relaxation
+              - generic [ref=f90e73]:
+                - term [ref=f90e74]: Climate / pace / activity
+                - definition [ref=f90e75]: Mild · Relaxed · Moderate
+              - generic [ref=f90e76]:
+                - term [ref=f90e77]: Dietary
+                - definition [ref=f90e78]: None
+              - generic [ref=f90e79]:
+                - term [ref=f90e80]: Visited
+                - definition [ref=f90e81]: None
+              - generic [ref=f90e82]:
+                - term [ref=f90e83]: Excluded
+                - definition [ref=f90e84]: None
+          - generic [ref=f90e37]:
+            - button "Back" [ref=f90e38] [cursor=pointer]
+            - button "See my recommendations" [active] [ref=f90e85] [cursor=pointer]
+    - contentinfo [ref=f90e40]:
+      - generic [ref=f90e41]:
+        - paragraph [ref=f90e42]: TravelUp
+        - paragraph [ref=f90e45]: Helping unsure travellers discover where to go next.
+        - paragraph [ref=f90e46]: All budgets, climates, seasons, itineraries and packing suggestions are indicative estimates, not live information. Always verify visa requirements, entry conditions, safety and travel advisories using official government sources for your citizenship.
+        - generic [ref=f90e47]:
+          - link "About & disclaimer" [ref=f90e48] [cursor=pointer]:
+            - /url: /about
+          - link "Home" [ref=f90e49] [cursor=pointer]:
+            - /url: /
+  - region "Notifications (F8)":
+    - list

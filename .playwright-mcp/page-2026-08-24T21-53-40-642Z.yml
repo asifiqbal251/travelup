@@ -1,0 +1,137 @@
+- generic [ref=f19e4]:
+  - generic [ref=f19e5]:
+    - banner [ref=f19e6]:
+      - generic [ref=f19e7]:
+        - link "TravelUp" [ref=f19e8] [cursor=pointer]:
+          - /url: /
+        - navigation [ref=f19e12]:
+          - link "Home" [ref=f19e13] [cursor=pointer]:
+            - /url: /
+          - link "About" [ref=f19e14] [cursor=pointer]:
+            - /url: /about
+          - button "Clear My Data" [ref=f19e15] [cursor=pointer]
+    - main [ref=f19e16]:
+      - generic [ref=f19e917]:
+        - button "Back to recommendations" [ref=f19e918] [cursor=pointer]
+        - generic [ref=f19e919]:
+          - img "San Diego, United States" [ref=f19e921]
+          - generic [ref=f19e923]:
+            - heading "San Diego" [level=1] [ref=f19e924]
+            - paragraph [ref=f19e925]: United States · Southern California, United States
+        - generic [ref=f19e926]:
+          - tablist [ref=f19e927]:
+            - tab "Itinerary" [selected] [ref=f19e928] [cursor=pointer]
+            - tab "Packing" [ref=f19e929] [cursor=pointer]
+            - tab "Overview" [ref=f19e930] [cursor=pointer]
+          - tabpanel "Itinerary" [ref=f19e931]:
+            - generic [ref=f19e932]:
+              - paragraph [ref=f19e933]: A suggested 4-day plan including outbound and return travel. Indicative only — verify opening hours and tickets before you go.
+              - button "Day 1 Coronado & Gaslamp Quarter San Diego Light intensity Cities Beaches View details" [ref=f19e1026] [cursor=pointer]:
+                - generic [ref=f19e936]:
+                  - generic [ref=f19e937]:
+                    - generic [ref=f19e938]: Day 1
+                    - heading "Coronado & Gaslamp Quarter" [level=3] [ref=f19e939]
+                    - generic [ref=f19e940]: San Diego
+                  - generic [ref=f19e941]: Light intensity
+                - generic [ref=f19e942]:
+                  - generic [ref=f19e943]: Cities
+                  - generic [ref=f19e944]: Beaches
+                - generic [ref=f19e945]: View details
+              - generic [ref=f19e990]:
+                - button "Day 2 San Diego Zoo San Diego Moderate intensity Wildlife Cities Hide details" [expanded] [active] [ref=f19e1027] [cursor=pointer]:
+                  - generic [ref=f19e992]:
+                    - generic [ref=f19e993]:
+                      - generic [ref=f19e994]: Day 2
+                      - heading "San Diego Zoo" [level=3] [ref=f19e995]
+                      - generic [ref=f19e996]: San Diego
+                    - generic [ref=f19e997]: Moderate intensity
+                  - generic [ref=f19e998]:
+                    - generic [ref=f19e999]: Wildlife
+                    - generic [ref=f19e1000]: Cities
+                  - generic [ref=f19e1001]: Hide details
+                - generic [ref=f19e1028]:
+                  - list [ref=f19e1029]:
+                    - listitem [ref=f19e1030]:
+                      - generic [ref=f19e1031]:
+                        - generic [ref=f19e1032]: 08:00–11:00
+                        - generic [ref=f19e1033]: ~3 hr
+                        - generic [ref=f19e1034]: Morning
+                      - generic [ref=f19e1035]:
+                        - generic [ref=f19e1036]: Spend the morning at the San…
+                        - paragraph [ref=f19e1037]: Spend the morning at the San Diego Zoo.
+                    - listitem [ref=f19e1038]:
+                      - generic [ref=f19e1039]: Late morning
+                      - generic [ref=f19e1041]:
+                        - generic [ref=f19e1042]: Mid-morning break
+                        - paragraph [ref=f19e1043]: A short break or local transit between stops.
+                    - listitem [ref=f19e1044]:
+                      - generic [ref=f19e1045]:
+                        - generic [ref=f19e1046]: 12:30–14:00
+                        - generic [ref=f19e1047]: ~1.5 hr
+                        - generic [ref=f19e1048]: Lunch
+                      - generic [ref=f19e1049]:
+                        - generic [ref=f19e1050]: Local bite
+                        - paragraph [ref=f19e1051]: Fresh pasta in Little Italy.
+                    - listitem [ref=f19e1052]:
+                      - generic [ref=f19e1053]:
+                        - generic [ref=f19e1054]: 14:00–18:00
+                        - generic [ref=f19e1055]: ~4 hr
+                        - generic [ref=f19e1056]: Afternoon
+                      - generic [ref=f19e1057]:
+                        - generic [ref=f19e1058]: Continue through the zoo's habitats
+                        - paragraph [ref=f19e1059]: Continue through the zoo's habitats, or ease into the surrounding Balboa Park gardens.
+                    - listitem [ref=f19e1060]:
+                      - generic [ref=f19e1061]:
+                        - generic [ref=f19e1062]: 18:30–21:30
+                        - generic [ref=f19e1063]: ~3 hr
+                        - generic [ref=f19e1064]: Evening
+                      - generic [ref=f19e1065]:
+                        - generic [ref=f19e1066]: Dinner in Little Italy
+                        - paragraph [ref=f19e1067]: Dinner in Little Italy.
+                  - generic [ref=f19e1068]:
+                    - generic [ref=f19e1069]:
+                      - generic [ref=f19e1070]: Getting around
+                      - generic [ref=f19e1071]: Public transit, rideshare or car depending on the area.
+                    - generic [ref=f19e1072]:
+                      - generic [ref=f19e1073]: Plan ahead
+                      - generic [ref=f19e1074]: Confirm opening hours and book popular tickets before you travel.
+                    - generic [ref=f19e1075]:
+                      - generic [ref=f19e1076]: Optional swap
+                      - generic [ref=f19e1077]: Swap for “USS Midway or free beach day” if it suits your pace.
+                    - generic [ref=f19e1078]:
+                      - generic [ref=f19e1079]: Overnight
+                      - generic [ref=f19e1080]: Overnight in San Diego.
+              - button "Day 3 Balboa Park museums San Diego Light intensity History and culture Cities View details" [ref=f19e1003] [cursor=pointer]:
+                - generic [ref=f19e1004]:
+                  - generic [ref=f19e1005]:
+                    - generic [ref=f19e1006]: Day 3
+                    - heading "Balboa Park museums" [level=3] [ref=f19e1007]
+                    - generic [ref=f19e1008]: San Diego
+                  - generic [ref=f19e1009]: Light intensity
+                - generic [ref=f19e1010]:
+                  - generic [ref=f19e1011]: History and culture
+                  - generic [ref=f19e1012]: Cities
+                - generic [ref=f19e1013]: View details
+              - button "Day 4 La Jolla Cove San Diego Moderate intensity Beaches Nature View details" [ref=f19e1015] [cursor=pointer]:
+                - generic [ref=f19e1016]:
+                  - generic [ref=f19e1017]:
+                    - generic [ref=f19e1018]: Day 4
+                    - heading "La Jolla Cove" [level=3] [ref=f19e1019]
+                    - generic [ref=f19e1020]: San Diego
+                  - generic [ref=f19e1021]: Moderate intensity
+                - generic [ref=f19e1022]:
+                  - generic [ref=f19e1023]: Beaches
+                  - generic [ref=f19e1024]: Nature
+                - generic [ref=f19e1025]: View details
+    - contentinfo [ref=f19e41]:
+      - generic [ref=f19e42]:
+        - paragraph [ref=f19e43]: TravelUp
+        - paragraph [ref=f19e46]: Helping unsure travellers discover where to go next.
+        - paragraph [ref=f19e47]: All budgets, climates, seasons, itineraries and packing suggestions are indicative estimates, not live information. Always verify visa requirements, entry conditions, safety and travel advisories using official government sources for your citizenship.
+        - generic [ref=f19e48]:
+          - link "About & disclaimer" [ref=f19e49] [cursor=pointer]:
+            - /url: /about
+          - link "Home" [ref=f19e50] [cursor=pointer]:
+            - /url: /
+  - region "Notifications (F8)":
+    - list

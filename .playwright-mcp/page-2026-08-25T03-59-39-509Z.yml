@@ -1,0 +1,174 @@
+- generic [ref=f69e4]:
+  - generic [ref=f69e5]:
+    - banner [ref=f69e6]:
+      - generic [ref=f69e7]:
+        - link "TravelUp" [ref=f69e8] [cursor=pointer]:
+          - /url: /
+        - navigation [ref=f69e12]:
+          - link "Home" [ref=f69e13] [cursor=pointer]:
+            - /url: /
+          - link "About" [ref=f69e14] [cursor=pointer]:
+            - /url: /about
+          - button "Clear My Data" [ref=f69e15] [cursor=pointer]
+    - main [ref=f69e16]:
+      - generic [ref=f69e734]:
+        - generic [ref=f69e735]:
+          - generic [ref=f69e736]:
+            - heading "Your top 3 matches" [level=1] [ref=f69e737]
+            - paragraph [ref=f69e738]: Final scores combine your preference fit with travel practicality for your trip length. Estimates only.
+          - button "Revise" [ref=f69e739] [cursor=pointer]
+        - paragraph [ref=f69e743]: Scores are estimates based on your preferences and curated destination data, not live availability or flight schedules. Always verify visa and entry requirements through official government sources for your citizenship.
+        - generic [ref=f69e744]:
+          - article [ref=f69e745]:
+            - generic [ref=f69e746]:
+              - img "Kelowna and the Okanagan Valley, Canada" [ref=f69e748]
+              - generic [ref=f69e749]: 93/100
+              - generic [ref=f69e750]: Strong match
+              - generic [ref=f69e751]:
+                - heading "Kelowna and the Okanagan Valley" [level=2] [ref=f69e752]
+                - paragraph [ref=f69e756]: Canada · Okanagan Valley, British Columbia, Canada
+            - generic [ref=f69e757]:
+              - region "Travel fit" [ref=f69e758]:
+                - generic [ref=f69e759]:
+                  - heading "Travel fit" [level=3] [ref=f69e760]
+                  - 'status "Travel fit: Good fit" [ref=f69e761]': Good fit
+                - generic [ref=f69e762]:
+                  - generic [ref=f69e763]:
+                    - term [ref=f69e764]: How you'll travel
+                    - definition [ref=f69e765]: Drive
+                  - generic [ref=f69e766]:
+                    - term [ref=f69e767]: Travel time
+                    - definition [ref=f69e768]: About 4.5 hours each way
+                  - generic [ref=f69e769]:
+                    - term [ref=f69e770]: Time at destination
+                    - definition [ref=f69e771]: About 6.5 days
+              - list [ref=f69e772]:
+                - listitem [ref=f69e773]:
+                  - generic [ref=f69e774]: •
+                  - text: Great for nature, relaxation
+                - listitem [ref=f69e775]:
+                  - generic [ref=f69e776]: •
+                  - text: Peak season in August
+                - listitem [ref=f69e777]:
+                  - generic [ref=f69e778]: •
+                  - text: Fits your selected budget level
+              - generic [ref=f69e779]:
+                - generic [ref=f69e780]:
+                  - generic [ref=f69e784]: Trip length
+                  - generic [ref=f69e785]: 2–5d
+                - generic [ref=f69e786]:
+                  - generic [ref=f69e790]: Budget
+                  - generic [ref=f69e791]: Moderate – Comfortable – Premium
+                - generic [ref=f69e792]:
+                  - generic [ref=f69e796]: Climate
+                  - generic [ref=f69e797]: Warm, Mild
+              - generic [ref=f69e798]: "Main experiences: Okanagan wine tours · Kelowna waterfront beaches · Knox Mountain hike · Orchard fruit stands"
+              - generic [ref=f69e799]: "Suited to: Solo, Couple, Friends, Family"
+              - button "See score breakdown" [ref=f69e800] [cursor=pointer]
+              - button "View My Trip" [ref=f69e801] [cursor=pointer]
+          - article [ref=f69e802]:
+            - generic [ref=f69e803]:
+              - img "Montréal and Québec City, Canada" [ref=f69e805]
+              - generic [ref=f69e806]: 90/100
+              - generic [ref=f69e807]: Strong match
+              - generic [ref=f69e808]:
+                - heading "Montréal and Québec City" [level=2] [ref=f69e809]
+                - paragraph [ref=f69e813]: Canada · Québec, Canada
+            - generic [ref=f69e814]:
+              - region "Travel fit" [ref=f69e815]:
+                - generic [ref=f69e816]:
+                  - heading "Travel fit" [level=3] [ref=f69e817]
+                  - 'status "Travel fit: Good fit" [ref=f69e818]': Good fit
+                - generic [ref=f69e819]:
+                  - generic [ref=f69e820]:
+                    - term [ref=f69e821]: How you'll travel
+                    - definition [ref=f69e822]: Domestic flight + train/transfer
+                  - generic [ref=f69e823]:
+                    - term [ref=f69e824]: Travel time
+                    - definition [ref=f69e825]: About 6.8 hours each way
+                  - generic [ref=f69e826]:
+                    - term [ref=f69e827]: Time at destination
+                    - definition [ref=f69e828]: About 6 days
+              - list [ref=f69e829]:
+                - listitem [ref=f69e830]:
+                  - generic [ref=f69e831]: •
+                  - text: Great for nature, relaxation
+                - listitem [ref=f69e832]:
+                  - generic [ref=f69e833]: •
+                  - text: Peak season in August
+                - listitem [ref=f69e834]:
+                  - generic [ref=f69e835]: •
+                  - text: Fits your selected budget level
+              - generic [ref=f69e836]:
+                - generic [ref=f69e837]:
+                  - generic [ref=f69e841]: Trip length
+                  - generic [ref=f69e842]: 3–10d
+                - generic [ref=f69e843]:
+                  - generic [ref=f69e847]: Budget
+                  - generic [ref=f69e848]: Comfortable – Moderate
+                - generic [ref=f69e849]:
+                  - generic [ref=f69e853]: Climate
+                  - generic [ref=f69e854]: Cool, Cold or snowy, Mild
+              - generic [ref=f69e855]: "Main experiences: Old Montréal · Mont-Royal · Notre-Dame Basilica · Québec City old town"
+              - generic [ref=f69e856]: "Suited to: Couple, Family, Friends"
+              - button "See score breakdown" [ref=f69e857] [cursor=pointer]
+              - button "View My Trip" [ref=f69e858] [cursor=pointer]
+          - article [ref=f69e859]:
+            - generic [ref=f69e860]:
+              - img "Whistler, Canada" [ref=f69e862]
+              - generic [ref=f69e863]: 88/100
+              - generic [ref=f69e864]: Strong match
+              - generic [ref=f69e865]:
+                - heading "Whistler" [level=2] [ref=f69e866]
+                - paragraph [ref=f69e870]: Canada · Sea to Sky, British Columbia, Canada
+            - generic [ref=f69e871]:
+              - region "Travel fit" [ref=f69e872]:
+                - generic [ref=f69e873]:
+                  - heading "Travel fit" [level=3] [ref=f69e874]
+                  - 'status "Travel fit: Good fit" [ref=f69e875]': Good fit
+                - generic [ref=f69e876]:
+                  - generic [ref=f69e877]:
+                    - term [ref=f69e878]: How you'll travel
+                    - definition [ref=f69e879]: Drive or scheduled shuttle
+                  - generic [ref=f69e880]:
+                    - term [ref=f69e881]: Travel time
+                    - definition [ref=f69e882]: About 2 hours each way
+                  - generic [ref=f69e883]:
+                    - term [ref=f69e884]: Time at destination
+                    - definition [ref=f69e885]: About 7 days
+              - list [ref=f69e886]:
+                - listitem [ref=f69e887]:
+                  - generic [ref=f69e888]: •
+                  - text: Great for nature, relaxation
+                - listitem [ref=f69e889]:
+                  - generic [ref=f69e890]: •
+                  - text: Peak season in August
+                - listitem [ref=f69e891]:
+                  - generic [ref=f69e892]: •
+                  - text: Fits your selected budget level
+              - generic [ref=f69e893]:
+                - generic [ref=f69e894]:
+                  - generic [ref=f69e898]: Trip length
+                  - generic [ref=f69e899]: 2–5d
+                - generic [ref=f69e900]:
+                  - generic [ref=f69e904]: Budget
+                  - generic [ref=f69e905]: Moderate – Comfortable – Premium
+                - generic [ref=f69e906]:
+                  - generic [ref=f69e910]: Climate
+                  - generic [ref=f69e911]: Cold or snowy, Cool, Mild
+              - generic [ref=f69e912]: "Main experiences: Peak 2 Peak Gondola (when operating) · Skiing and snowboarding · Lost Lake · Whistler Village"
+              - generic [ref=f69e913]: "Suited to: Solo, Couple, Friends, Family"
+              - button "See score breakdown" [ref=f69e914] [cursor=pointer]
+              - button "View My Trip" [ref=f69e915] [cursor=pointer]
+    - contentinfo [ref=f69e41]:
+      - generic [ref=f69e42]:
+        - paragraph [ref=f69e43]: TravelUp
+        - paragraph [ref=f69e46]: Helping unsure travellers discover where to go next.
+        - paragraph [ref=f69e47]: All budgets, climates, seasons, itineraries and packing suggestions are indicative estimates, not live information. Always verify visa requirements, entry conditions, safety and travel advisories using official government sources for your citizenship.
+        - generic [ref=f69e48]:
+          - link "About & disclaimer" [ref=f69e49] [cursor=pointer]:
+            - /url: /about
+          - link "Home" [ref=f69e50] [cursor=pointer]:
+            - /url: /
+  - region "Notifications (F8)":
+    - list

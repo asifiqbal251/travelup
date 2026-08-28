@@ -1,0 +1,69 @@
+- generic [ref=f108e4]:
+  - generic [ref=f108e5]:
+    - banner [ref=f108e6]:
+      - generic [ref=f108e7]:
+        - link "TravelUp" [ref=f108e8] [cursor=pointer]:
+          - /url: /
+        - navigation [ref=f108e12]:
+          - link "Home" [ref=f108e13] [cursor=pointer]:
+            - /url: /
+          - link "About" [ref=f108e14] [cursor=pointer]:
+            - /url: /about
+          - button "Clear My Data" [ref=f108e15] [cursor=pointer]
+    - main [ref=f108e16]:
+      - generic [ref=f108e4363]:
+        - generic [ref=f108e4364]:
+          - generic [ref=f108e4365]:
+            - generic [ref=f108e4366]: Step 7 of 7
+            - generic [ref=f108e4367]: Review
+          - progressbar [ref=f108e4368]
+        - generic [ref=f108e4370]:
+          - generic [ref=f108e4523]:
+            - heading "Review your answers" [level=1] [ref=f108e4524]
+            - paragraph [ref=f108e4525]: Make any changes before we find your matches.
+            - generic [ref=f108e4527]:
+              - generic [ref=f108e4528]:
+                - term [ref=f108e4529]: Residence / departure / citizenship
+                - definition [ref=f108e4530]: United States · New York · United Kingdom
+              - generic [ref=f108e4531]:
+                - term [ref=f108e4532]: When
+                - definition [ref=f108e4533]: Flexible
+              - generic [ref=f108e4534]:
+                - term [ref=f108e4535]: Total trip
+                - definition [ref=f108e4536]: 14 days, including travel time
+              - generic [ref=f108e4537]:
+                - term [ref=f108e4538]: Domestic
+                - definition [ref=f108e4539]: International only
+              - generic [ref=f108e4540]:
+                - term [ref=f108e4541]: Traveller & budget
+                - definition [ref=f108e4542]: Friends · Moderate
+              - generic [ref=f108e4543]:
+                - term [ref=f108e4544]: Interests
+                - definition [ref=f108e4545]: Cities, Food, History and culture
+              - generic [ref=f108e4546]:
+                - term [ref=f108e4547]: Climate / pace / activity
+                - definition [ref=f108e4548]: Mild · Balanced · Active
+              - generic [ref=f108e4549]:
+                - term [ref=f108e4550]: Dietary
+                - definition [ref=f108e4551]: None
+              - generic [ref=f108e4552]:
+                - term [ref=f108e4553]: Visited
+                - definition [ref=f108e4554]: None
+              - generic [ref=f108e4555]:
+                - term [ref=f108e4556]: Excluded
+                - definition [ref=f108e4557]: None
+          - generic [ref=f108e4385]:
+            - button "Back" [ref=f108e4416] [cursor=pointer]
+            - button "See my recommendations" [active] [ref=f108e4558] [cursor=pointer]
+    - contentinfo [ref=f108e57]:
+      - generic [ref=f108e58]:
+        - paragraph [ref=f108e59]: TravelUp
+        - paragraph [ref=f108e62]: Helping unsure travellers discover where to go next.
+        - paragraph [ref=f108e63]: All budgets, climates, seasons, itineraries and packing suggestions are indicative estimates, not live information. Always verify visa requirements, entry conditions, safety and travel advisories using official government sources for your citizenship.
+        - generic [ref=f108e64]:
+          - link "About & disclaimer" [ref=f108e65] [cursor=pointer]:
+            - /url: /about
+          - link "Home" [ref=f108e66] [cursor=pointer]:
+            - /url: /
+  - region "Notifications (F8)":
+    - list

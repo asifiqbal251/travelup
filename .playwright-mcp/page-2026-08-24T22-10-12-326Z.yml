@@ -1,0 +1,260 @@
+- generic [ref=f40e4]:
+  - generic [ref=f40e5]:
+    - banner [ref=f40e6]:
+      - generic [ref=f40e7]:
+        - link "TravelUp" [ref=f40e8] [cursor=pointer]:
+          - /url: /
+        - navigation [ref=f40e12]:
+          - link "Home" [ref=f40e13] [cursor=pointer]:
+            - /url: /
+          - link "About" [ref=f40e14] [cursor=pointer]:
+            - /url: /about
+          - button "Clear My Data" [ref=f40e15] [cursor=pointer]
+    - main [ref=f40e16]:
+      - generic [ref=f40e453]:
+        - button "Back to recommendations" [ref=f40e454] [cursor=pointer]
+        - generic [ref=f40e455]:
+          - img "Tokyo & Kyoto, Japan, Japan" [ref=f40e457]
+          - generic [ref=f40e459]:
+            - heading "Tokyo & Kyoto, Japan" [level=1] [ref=f40e460]
+            - paragraph [ref=f40e461]: Japan · East Asia
+        - generic [ref=f40e462]:
+          - tablist [ref=f40e463]:
+            - tab "Itinerary" [selected] [ref=f40e464] [cursor=pointer]
+            - tab "Packing" [ref=f40e465] [cursor=pointer]
+            - tab "Overview" [ref=f40e466] [cursor=pointer]
+          - tabpanel "Itinerary" [ref=f40e467]:
+            - generic [ref=f40e468]:
+              - paragraph [ref=f40e469]: A suggested 14-day plan including outbound and return travel. Indicative only — verify opening hours and tickets before you go.
+              - 'button "Day 1 · Travel Outbound: New York → Tokyo & Kyoto, Japan In transit Light intensity Departure In transit Continue transit View details" [ref=f40e691] [cursor=pointer]':
+                - generic [ref=f40e472]:
+                  - generic [ref=f40e473]:
+                    - generic [ref=f40e474]: Day 1 · Travel
+                    - 'heading "Outbound: New York → Tokyo & Kyoto, Japan" [level=3] [ref=f40e475]'
+                    - generic [ref=f40e476]: In transit
+                  - generic [ref=f40e477]: Light intensity
+                - generic [ref=f40e478]:
+                  - generic [ref=f40e479]: Departure
+                  - generic [ref=f40e480]: In transit
+                  - generic [ref=f40e481]: Continue transit
+                - generic [ref=f40e482]: View details
+              - button "Day 2 · Travel Arrival & recovery Tokyo & Kyoto, Japan Light intensity Arrival Transfer Recovery View details" [ref=f40e524] [cursor=pointer]:
+                - generic [ref=f40e525]:
+                  - generic [ref=f40e526]:
+                    - generic [ref=f40e527]: Day 2 · Travel
+                    - heading "Arrival & recovery" [level=3] [ref=f40e528]
+                    - generic [ref=f40e529]: Tokyo & Kyoto, Japan
+                  - generic [ref=f40e530]: Light intensity
+                - generic [ref=f40e531]:
+                  - generic [ref=f40e532]: Arrival
+                  - generic [ref=f40e533]: Transfer
+                  - generic [ref=f40e534]: Recovery
+                - generic [ref=f40e535]: View details
+              - generic [ref=f40e536]:
+                - button "Day 3 Asakusa & the old city Tokyo & Kyoto, Japan High intensity History and culture Food Cities Hide details" [expanded] [active] [ref=f40e801] [cursor=pointer]:
+                  - generic [ref=f40e538]:
+                    - generic [ref=f40e539]:
+                      - generic [ref=f40e540]: Day 3
+                      - heading "Asakusa & the old city" [level=3] [ref=f40e541]
+                      - generic [ref=f40e542]: Tokyo & Kyoto, Japan
+                    - generic [ref=f40e543]: High intensity
+                  - generic [ref=f40e544]:
+                    - generic [ref=f40e545]: History and culture
+                    - generic [ref=f40e546]: Food
+                    - generic [ref=f40e547]: Cities
+                  - generic [ref=f40e548]: Hide details
+                - generic [ref=f40e802]:
+                  - list [ref=f40e803]:
+                    - listitem [ref=f40e804]:
+                      - generic [ref=f40e805]:
+                        - generic [ref=f40e806]: 08:00–11:00
+                        - generic [ref=f40e807]: ~3 hr
+                        - generic [ref=f40e808]: Morning
+                      - generic [ref=f40e809]:
+                        - generic [ref=f40e810]: Visit Senso-ji temple and Nakamise market
+                        - paragraph [ref=f40e811]: Visit Senso-ji temple and Nakamise market.
+                    - listitem [ref=f40e812]:
+                      - generic [ref=f40e813]: Late morning
+                      - generic [ref=f40e815]:
+                        - generic [ref=f40e816]: Mid-morning break
+                        - paragraph [ref=f40e817]: A short break or local transit between stops.
+                    - listitem [ref=f40e818]:
+                      - generic [ref=f40e819]:
+                        - generic [ref=f40e820]: 12:30–14:00
+                        - generic [ref=f40e821]: ~1.5 hr
+                        - generic [ref=f40e822]: Lunch
+                      - generic [ref=f40e823]:
+                        - generic [ref=f40e824]: Local bite
+                        - paragraph [ref=f40e825]: Sample tempura and street snacks near Asakusa.
+                    - listitem [ref=f40e826]:
+                      - generic [ref=f40e827]:
+                        - generic [ref=f40e828]: 14:00–18:00
+                        - generic [ref=f40e829]: ~4 hr
+                        - generic [ref=f40e830]: Afternoon
+                      - generic [ref=f40e831]:
+                        - generic [ref=f40e832]: Cruise the Sumida river and explore…
+                        - paragraph [ref=f40e833]: Cruise the Sumida river and explore Akihabara.
+                    - listitem [ref=f40e834]:
+                      - generic [ref=f40e835]:
+                        - generic [ref=f40e836]: 18:30–21:30
+                        - generic [ref=f40e837]: ~3 hr
+                        - generic [ref=f40e838]: Evening
+                      - generic [ref=f40e839]:
+                        - generic [ref=f40e840]: Izakaya hopping in Ueno
+                        - paragraph [ref=f40e841]: Izakaya hopping in Ueno.
+                  - generic [ref=f40e842]:
+                    - generic [ref=f40e843]:
+                      - generic [ref=f40e844]: Getting around
+                      - generic [ref=f40e845]: Taxis, rideshares and local transit.
+                    - generic [ref=f40e846]:
+                      - generic [ref=f40e847]: Plan ahead
+                      - generic [ref=f40e848]: Confirm opening hours and book popular tickets before you travel.
+                    - generic [ref=f40e849]:
+                      - generic [ref=f40e850]: Optional swap
+                      - generic [ref=f40e851]: Swap for “Hiroshima & Miyajima” if it suits your pace.
+                    - generic [ref=f40e852]:
+                      - generic [ref=f40e853]: Overnight
+                      - generic [ref=f40e854]: Overnight in Tokyo & Kyoto, Japan.
+              - button "Day 4 Meiji Shrine, Harajuku & Shibuya Tokyo & Kyoto, Japan High intensity Cities Food History and culture View details" [ref=f40e855] [cursor=pointer]:
+                - generic [ref=f40e551]:
+                  - generic [ref=f40e552]:
+                    - generic [ref=f40e553]: Day 4
+                    - heading "Meiji Shrine, Harajuku & Shibuya" [level=3] [ref=f40e554]
+                    - generic [ref=f40e555]: Tokyo & Kyoto, Japan
+                  - generic [ref=f40e556]: High intensity
+                - generic [ref=f40e557]:
+                  - generic [ref=f40e558]: Cities
+                  - generic [ref=f40e559]: Food
+                  - generic [ref=f40e560]: History and culture
+                - generic [ref=f40e561]: View details
+              - button "Day 5 Day trip to Nikko Tokyo & Kyoto, Japan Highly active intensity History and culture Nature Photography View details" [ref=f40e563] [cursor=pointer]:
+                - generic [ref=f40e564]:
+                  - generic [ref=f40e565]:
+                    - generic [ref=f40e566]: Day 5
+                    - heading "Day trip to Nikko" [level=3] [ref=f40e567]
+                    - generic [ref=f40e568]: Tokyo & Kyoto, Japan
+                  - generic [ref=f40e569]: Highly active intensity
+                - generic [ref=f40e570]:
+                  - generic [ref=f40e571]: History and culture
+                  - generic [ref=f40e572]: Nature
+                  - generic [ref=f40e573]: Photography
+                - generic [ref=f40e574]: View details
+              - button "Day 6 Hakone & Mt Fuji views Tokyo & Kyoto, Japan Moderate intensity Nature Relaxation Photography View details" [ref=f40e576] [cursor=pointer]:
+                - generic [ref=f40e577]:
+                  - generic [ref=f40e578]:
+                    - generic [ref=f40e579]: Day 6
+                    - heading "Hakone & Mt Fuji views" [level=3] [ref=f40e580]
+                    - generic [ref=f40e581]: Tokyo & Kyoto, Japan
+                  - generic [ref=f40e582]: Moderate intensity
+                - generic [ref=f40e583]:
+                  - generic [ref=f40e584]: Nature
+                  - generic [ref=f40e585]: Relaxation
+                  - generic [ref=f40e586]: Photography
+                - generic [ref=f40e587]: View details
+              - button "Day 7 · Flexible Flexible day Tokyo & Kyoto, Japan Light intensity Slow start Café and laundry Easy stroll View details" [ref=f40e589] [cursor=pointer]:
+                - generic [ref=f40e590]:
+                  - generic [ref=f40e591]:
+                    - generic [ref=f40e592]: Day 7 · Flexible
+                    - heading "Flexible day" [level=3] [ref=f40e593]
+                    - generic [ref=f40e594]: Tokyo & Kyoto, Japan
+                  - generic [ref=f40e595]: Light intensity
+                - generic [ref=f40e596]:
+                  - generic [ref=f40e597]: Slow start
+                  - generic [ref=f40e598]: Café and laundry
+                  - generic [ref=f40e599]: Easy stroll
+                - generic [ref=f40e600]: View details
+              - button "Day 8 Bullet train to Kyoto & Gion Tokyo & Kyoto, Japan Moderate intensity History and culture Food Nature View details" [ref=f40e602] [cursor=pointer]:
+                - generic [ref=f40e603]:
+                  - generic [ref=f40e604]:
+                    - generic [ref=f40e605]: Day 8
+                    - heading "Bullet train to Kyoto & Gion" [level=3] [ref=f40e606]
+                    - generic [ref=f40e607]: Tokyo & Kyoto, Japan
+                  - generic [ref=f40e608]: Moderate intensity
+                - generic [ref=f40e609]:
+                  - generic [ref=f40e610]: History and culture
+                  - generic [ref=f40e611]: Food
+                  - generic [ref=f40e612]: Nature
+                - generic [ref=f40e613]: View details
+              - button "Day 9 Arashiyama bamboo & temples Tokyo & Kyoto, Japan High intensity Nature History and culture Photography View details" [ref=f40e615] [cursor=pointer]:
+                - generic [ref=f40e616]:
+                  - generic [ref=f40e617]:
+                    - generic [ref=f40e618]: Day 9
+                    - heading "Arashiyama bamboo & temples" [level=3] [ref=f40e619]
+                    - generic [ref=f40e620]: Tokyo & Kyoto, Japan
+                  - generic [ref=f40e621]: High intensity
+                - generic [ref=f40e622]:
+                  - generic [ref=f40e623]: Nature
+                  - generic [ref=f40e624]: History and culture
+                  - generic [ref=f40e625]: Photography
+                - generic [ref=f40e626]: View details
+              - button "Day 10 Fushimi Inari & Nara Tokyo & Kyoto, Japan Highly active intensity History and culture Nature Wildlife View details" [ref=f40e628] [cursor=pointer]:
+                - generic [ref=f40e629]:
+                  - generic [ref=f40e630]:
+                    - generic [ref=f40e631]: Day 10
+                    - heading "Fushimi Inari & Nara" [level=3] [ref=f40e632]
+                    - generic [ref=f40e633]: Tokyo & Kyoto, Japan
+                  - generic [ref=f40e634]: Highly active intensity
+                - generic [ref=f40e635]:
+                  - generic [ref=f40e636]: History and culture
+                  - generic [ref=f40e637]: Nature
+                  - generic [ref=f40e638]: Wildlife
+                - generic [ref=f40e639]: View details
+              - button "Day 11 Kyoto to Osaka Tokyo & Kyoto, Japan High intensity Cities Food View details" [ref=f40e641] [cursor=pointer]:
+                - generic [ref=f40e642]:
+                  - generic [ref=f40e643]:
+                    - generic [ref=f40e644]: Day 11
+                    - heading "Kyoto to Osaka" [level=3] [ref=f40e645]
+                    - generic [ref=f40e646]: Tokyo & Kyoto, Japan
+                  - generic [ref=f40e647]: High intensity
+                - generic [ref=f40e648]:
+                  - generic [ref=f40e649]: Cities
+                  - generic [ref=f40e650]: Food
+                - generic [ref=f40e651]: View details
+              - button "Day 12 Himeji & Kobe day trip Tokyo & Kyoto, Japan High intensity History and culture Cities Food View details" [ref=f40e653] [cursor=pointer]:
+                - generic [ref=f40e654]:
+                  - generic [ref=f40e655]:
+                    - generic [ref=f40e656]: Day 12
+                    - heading "Himeji & Kobe day trip" [level=3] [ref=f40e657]
+                    - generic [ref=f40e658]: Tokyo & Kyoto, Japan
+                  - generic [ref=f40e659]: High intensity
+                - generic [ref=f40e660]:
+                  - generic [ref=f40e661]: History and culture
+                  - generic [ref=f40e662]: Cities
+                  - generic [ref=f40e663]: Food
+                - generic [ref=f40e664]: View details
+              - 'button "Day 13 · Travel Return begins: Tokyo & Kyoto, Japan → New York In transit Light intensity Check-out Return begins In transit View details" [ref=f40e666] [cursor=pointer]':
+                - generic [ref=f40e667]:
+                  - generic [ref=f40e668]:
+                    - generic [ref=f40e669]: Day 13 · Travel
+                    - 'heading "Return begins: Tokyo & Kyoto, Japan → New York" [level=3] [ref=f40e670]'
+                    - generic [ref=f40e671]: In transit
+                  - generic [ref=f40e672]: Light intensity
+                - generic [ref=f40e673]:
+                  - generic [ref=f40e674]: Check-out
+                  - generic [ref=f40e675]: Return begins
+                  - generic [ref=f40e676]: In transit
+                - generic [ref=f40e677]: View details
+              - 'button "Day 14 · Travel Return: Tokyo & Kyoto, Japan → New York In transit Light intensity Return In transit Arrive home View details" [ref=f40e679] [cursor=pointer]':
+                - generic [ref=f40e680]:
+                  - generic [ref=f40e681]:
+                    - generic [ref=f40e682]: Day 14 · Travel
+                    - 'heading "Return: Tokyo & Kyoto, Japan → New York" [level=3] [ref=f40e683]'
+                    - generic [ref=f40e684]: In transit
+                  - generic [ref=f40e685]: Light intensity
+                - generic [ref=f40e686]:
+                  - generic [ref=f40e687]: Return
+                  - generic [ref=f40e688]: In transit
+                  - generic [ref=f40e689]: Arrive home
+                - generic [ref=f40e690]: View details
+    - contentinfo [ref=f40e61]:
+      - generic [ref=f40e62]:
+        - paragraph [ref=f40e63]: TravelUp
+        - paragraph [ref=f40e66]: Helping unsure travellers discover where to go next.
+        - paragraph [ref=f40e67]: All budgets, climates, seasons, itineraries and packing suggestions are indicative estimates, not live information. Always verify visa requirements, entry conditions, safety and travel advisories using official government sources for your citizenship.
+        - generic [ref=f40e68]:
+          - link "About & disclaimer" [ref=f40e69] [cursor=pointer]:
+            - /url: /about
+          - link "Home" [ref=f40e70] [cursor=pointer]:
+            - /url: /
+  - region "Notifications (F8)":
+    - list

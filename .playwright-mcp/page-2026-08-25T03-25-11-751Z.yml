@@ -1,0 +1,130 @@
+- generic [ref=f15e4]:
+  - generic [ref=f15e5]:
+    - banner [ref=f15e6]:
+      - generic [ref=f15e7]:
+        - link "TravelUp" [ref=f15e8] [cursor=pointer]:
+          - /url: /
+        - navigation [ref=f15e12]:
+          - link "Home" [ref=f15e13] [cursor=pointer]:
+            - /url: /
+          - link "About" [ref=f15e14] [cursor=pointer]:
+            - /url: /about
+          - button "Clear My Data" [ref=f15e15] [cursor=pointer]
+    - main [ref=f15e16]:
+      - generic [ref=f15e918]:
+        - button "Back to recommendations" [ref=f15e919] [cursor=pointer]
+        - generic [ref=f15e920]:
+          - img "Whistler, Canada" [ref=f15e922]
+          - generic [ref=f15e924]:
+            - heading "Whistler" [level=1] [ref=f15e925]
+            - paragraph [ref=f15e926]: Canada · Sea to Sky, British Columbia, Canada
+        - generic [ref=f15e927]:
+          - tablist [ref=f15e928]:
+            - tab "Itinerary" [selected] [ref=f15e929] [cursor=pointer]
+            - tab "Packing" [ref=f15e930] [cursor=pointer]
+            - tab "Overview" [ref=f15e931] [cursor=pointer]
+          - tabpanel "Itinerary" [ref=f15e932]:
+            - generic [ref=f15e933]:
+              - paragraph [ref=f15e934]: A suggested 4-day plan including outbound and return travel. Indicative only — verify opening hours and tickets before you go.
+              - generic [ref=f15e935]:
+                - 'button "Day 1 Mountain day: hiking or skiing Whistler Active intensity Adventure Hiking Hide details" [expanded] [ref=f15e936] [cursor=pointer]':
+                  - generic [ref=f15e937]:
+                    - generic [ref=f15e938]:
+                      - generic [ref=f15e939]: Day 1
+                      - 'heading "Mountain day: hiking or skiing" [level=3] [ref=f15e940]'
+                      - generic [ref=f15e941]: Whistler
+                    - generic [ref=f15e942]: Active intensity
+                  - generic [ref=f15e943]:
+                    - generic [ref=f15e944]: Adventure
+                    - generic [ref=f15e945]: Hiking
+                  - generic [ref=f15e946]: Hide details
+                - generic [ref=f15e947]:
+                  - list [ref=f15e948]:
+                    - listitem [ref=f15e949]:
+                      - generic [ref=f15e950]: Departure
+                      - generic [ref=f15e952]:
+                        - generic [ref=f15e953]: Reach the pickup point
+                        - paragraph [ref=f15e954]: Meet the scheduled shuttle.
+                    - listitem [ref=f15e955]:
+                      - generic [ref=f15e956]: Shuttle
+                      - generic [ref=f15e958]:
+                        - generic [ref=f15e959]: Board the scheduled shuttle
+                        - paragraph [ref=f15e960]: Travel to the destination.
+                    - listitem [ref=f15e961]:
+                      - generic [ref=f15e962]: Arrival
+                      - generic [ref=f15e964]:
+                        - generic [ref=f15e965]: Arrive and check in
+                        - paragraph [ref=f15e966]: Reach your destination and settle into your stay.
+                    - listitem [ref=f15e967]:
+                      - generic [ref=f15e968]:
+                        - generic [ref=f15e969]: 14:00–17:00
+                        - generic [ref=f15e970]: ~3 hr
+                        - generic [ref=f15e971]: Afternoon
+                      - generic [ref=f15e972]:
+                        - generic [ref=f15e973]: Alpine hiking trails in summer, or skiing/snowboarding in winter.
+                        - paragraph
+                    - listitem [ref=f15e974]:
+                      - generic [ref=f15e975]:
+                        - generic [ref=f15e976]: 18:30–20:30
+                        - generic [ref=f15e977]: ~2 hr
+                        - generic [ref=f15e978]: Evening
+                      - generic [ref=f15e979]:
+                        - generic [ref=f15e980]: Dinner and rest
+                        - paragraph [ref=f15e981]: A relaxed dinner near your stay after the day's travel.
+                  - paragraph [ref=f15e982]: "Estimated total journey: about 2 hours each way."
+                  - generic [ref=f15e983]:
+                    - generic [ref=f15e984]:
+                      - generic [ref=f15e985]: Getting around
+                      - generic [ref=f15e986]: Walking, village transit and local shuttles.
+                    - generic [ref=f15e987]:
+                      - generic [ref=f15e988]: Plan ahead
+                      - generic [ref=f15e989]: Confirm opening hours and book popular tickets before you travel.
+                    - generic [ref=f15e990]:
+                      - generic [ref=f15e991]: Overnight
+                      - generic [ref=f15e992]: Overnight in Whistler.
+              - button "Day 2 Whistler Village & Peak 2 Peak Whistler High intensity Adventure Photography View details" [ref=f15e994] [cursor=pointer]:
+                - generic [ref=f15e995]:
+                  - generic [ref=f15e996]:
+                    - generic [ref=f15e997]: Day 2
+                    - heading "Whistler Village & Peak 2 Peak" [level=3] [ref=f15e998]
+                    - generic [ref=f15e999]: Whistler
+                  - generic [ref=f15e1000]: High intensity
+                - generic [ref=f15e1001]:
+                  - generic [ref=f15e1002]: Adventure
+                  - generic [ref=f15e1003]: Photography
+                - generic [ref=f15e1004]: View details
+              - button "Day 3 · Flexible Flexible day Whistler Light intensity Slow start Café and laundry Easy stroll View details" [ref=f15e1006] [cursor=pointer]:
+                - generic [ref=f15e1007]:
+                  - generic [ref=f15e1008]:
+                    - generic [ref=f15e1009]: Day 3 · Flexible
+                    - heading "Flexible day" [level=3] [ref=f15e1010]
+                    - generic [ref=f15e1011]: Whistler
+                  - generic [ref=f15e1012]: Light intensity
+                - generic [ref=f15e1013]:
+                  - generic [ref=f15e1014]: Slow start
+                  - generic [ref=f15e1015]: Café and laundry
+                  - generic [ref=f15e1016]: Easy stroll
+                - generic [ref=f15e1017]: View details
+              - button "Day 4 Lost Lake & forest trails Whistler Moderate intensity Nature Relaxation View details" [ref=f15e1019] [cursor=pointer]:
+                - generic [ref=f15e1020]:
+                  - generic [ref=f15e1021]:
+                    - generic [ref=f15e1022]: Day 4
+                    - heading "Lost Lake & forest trails" [level=3] [ref=f15e1023]
+                    - generic [ref=f15e1024]: Whistler
+                  - generic [ref=f15e1025]: Moderate intensity
+                - generic [ref=f15e1026]:
+                  - generic [ref=f15e1027]: Nature
+                  - generic [ref=f15e1028]: Relaxation
+                - generic [ref=f15e1029]: View details
+    - contentinfo [ref=f15e41]:
+      - generic [ref=f15e42]:
+        - paragraph [ref=f15e43]: TravelUp
+        - paragraph [ref=f15e46]: Helping unsure travellers discover where to go next.
+        - paragraph [ref=f15e47]: All budgets, climates, seasons, itineraries and packing suggestions are indicative estimates, not live information. Always verify visa requirements, entry conditions, safety and travel advisories using official government sources for your citizenship.
+        - generic [ref=f15e48]:
+          - link "About & disclaimer" [ref=f15e49] [cursor=pointer]:
+            - /url: /about
+          - link "Home" [ref=f15e50] [cursor=pointer]:
+            - /url: /
+  - region "Notifications (F8)":
+    - list

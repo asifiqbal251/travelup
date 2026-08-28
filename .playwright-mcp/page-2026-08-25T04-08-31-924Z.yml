@@ -1,0 +1,174 @@
+- generic [ref=f90e4]:
+  - generic [ref=f90e5]:
+    - banner [ref=f90e6]:
+      - generic [ref=f90e7]:
+        - link "TravelUp" [ref=f90e8] [cursor=pointer]:
+          - /url: /
+        - navigation [ref=f90e12]:
+          - link "Home" [ref=f90e13] [cursor=pointer]:
+            - /url: /
+          - link "About" [ref=f90e14] [cursor=pointer]:
+            - /url: /about
+          - button "Clear My Data" [ref=f90e15] [cursor=pointer]
+    - main [ref=f90e16]:
+      - generic [ref=f90e621]:
+        - generic [ref=f90e622]:
+          - generic [ref=f90e623]:
+            - heading "Your top 3 matches" [level=1] [ref=f90e624]
+            - paragraph [ref=f90e625]: Final scores combine your preference fit with travel practicality for your trip length. Estimates only.
+          - button "Revise" [ref=f90e626] [cursor=pointer]
+        - paragraph [ref=f90e630]: Scores are estimates based on your preferences and curated destination data, not live availability or flight schedules. Always verify visa and entry requirements through official government sources for your citizenship.
+        - generic [ref=f90e631]:
+          - article [ref=f90e632]:
+            - generic [ref=f90e633]:
+              - img "Canadian Rockies, Canada, Canada" [ref=f90e635]
+              - generic [ref=f90e636]: 98/100
+              - generic [ref=f90e637]: Strong match
+              - generic [ref=f90e638]:
+                - heading "Canadian Rockies, Canada" [level=2] [ref=f90e639]
+                - paragraph [ref=f90e643]: Canada · North America
+            - generic [ref=f90e644]:
+              - region "Travel fit" [ref=f90e645]:
+                - generic [ref=f90e646]:
+                  - heading "Travel fit" [level=3] [ref=f90e647]
+                  - 'status "Travel fit: Good fit" [ref=f90e648]': Good fit
+                - generic [ref=f90e649]:
+                  - generic [ref=f90e650]:
+                    - term [ref=f90e651]: How you'll travel
+                    - definition [ref=f90e652]: Domestic flight + domestic connection + rental car
+                  - generic [ref=f90e653]:
+                    - term [ref=f90e654]: Travel time
+                    - definition [ref=f90e655]: About 3.1 hours each way
+                  - generic [ref=f90e656]:
+                    - term [ref=f90e657]: Time at destination
+                    - definition [ref=f90e658]: About 7 days
+              - list [ref=f90e659]:
+                - listitem [ref=f90e660]:
+                  - generic [ref=f90e661]: •
+                  - text: Great for wildlife
+                - listitem [ref=f90e662]:
+                  - generic [ref=f90e663]: •
+                  - text: Peak season in August
+                - listitem [ref=f90e664]:
+                  - generic [ref=f90e665]: •
+                  - text: Fits your selected budget level
+              - generic [ref=f90e666]:
+                - generic [ref=f90e667]:
+                  - generic [ref=f90e671]: Trip length
+                  - generic [ref=f90e672]: 6–12d
+                - generic [ref=f90e673]:
+                  - generic [ref=f90e677]: Budget
+                  - generic [ref=f90e678]: Moderate – Comfortable – Premium
+                - generic [ref=f90e679]:
+                  - generic [ref=f90e683]: Climate
+                  - generic [ref=f90e684]: Cool, Cold or snowy
+              - generic [ref=f90e685]: "Main experiences: Lake Louise and Moraine Lake · Banff and Jasper towns · Columbia Icefield · Wildlife spotting"
+              - generic [ref=f90e686]: "Suited to: Solo, Couple, Friends, Family"
+              - button "See score breakdown" [ref=f90e687] [cursor=pointer]
+              - button "View My Trip" [ref=f90e688] [cursor=pointer]
+          - article [ref=f90e689]:
+            - generic [ref=f90e690]:
+              - img "Whistler, Canada" [ref=f90e692]
+              - generic [ref=f90e693]: 68/100
+              - generic [ref=f90e694]: Fair match
+              - generic [ref=f90e695]:
+                - heading "Whistler" [level=2] [ref=f90e696]
+                - paragraph [ref=f90e700]: Canada · Sea to Sky, British Columbia, Canada
+            - generic [ref=f90e701]:
+              - region "Travel fit" [ref=f90e702]:
+                - generic [ref=f90e703]:
+                  - heading "Travel fit" [level=3] [ref=f90e704]
+                  - 'status "Travel fit: Good fit" [ref=f90e705]': Good fit
+                - generic [ref=f90e706]:
+                  - generic [ref=f90e707]:
+                    - term [ref=f90e708]: How you'll travel
+                    - definition [ref=f90e709]: Drive or scheduled shuttle
+                  - generic [ref=f90e710]:
+                    - term [ref=f90e711]: Travel time
+                    - definition [ref=f90e712]: About 2 hours each way
+                  - generic [ref=f90e713]:
+                    - term [ref=f90e714]: Time at destination
+                    - definition [ref=f90e715]: About 7 days
+              - list [ref=f90e716]:
+                - listitem [ref=f90e717]:
+                  - generic [ref=f90e718]: •
+                  - text: Peak season in August
+                - listitem [ref=f90e719]:
+                  - generic [ref=f90e720]: •
+                  - text: Fits your selected budget level
+                - listitem [ref=f90e721]:
+                  - generic [ref=f90e722]: •
+                  - text: cold or snowy climate as you prefer
+              - generic [ref=f90e723]:
+                - generic [ref=f90e724]:
+                  - generic [ref=f90e728]: Trip length
+                  - generic [ref=f90e729]: 2–5d
+                - generic [ref=f90e730]:
+                  - generic [ref=f90e734]: Budget
+                  - generic [ref=f90e735]: Moderate – Comfortable – Premium
+                - generic [ref=f90e736]:
+                  - generic [ref=f90e740]: Climate
+                  - generic [ref=f90e741]: Cold or snowy, Cool, Mild
+              - generic [ref=f90e742]: "Main experiences: Peak 2 Peak Gondola (when operating) · Skiing and snowboarding · Lost Lake · Whistler Village"
+              - generic [ref=f90e743]: "Suited to: Solo, Couple, Friends, Family"
+              - button "See score breakdown" [ref=f90e744] [cursor=pointer]
+              - button "View My Trip" [ref=f90e745] [cursor=pointer]
+          - article [ref=f90e746]:
+            - generic [ref=f90e747]:
+              - img "Kelowna and the Okanagan Valley, Canada" [ref=f90e749]
+              - generic [ref=f90e750]: 56/100
+              - generic [ref=f90e751]: Fair match
+              - generic [ref=f90e752]:
+                - heading "Kelowna and the Okanagan Valley" [level=2] [ref=f90e753]
+                - paragraph [ref=f90e757]: Canada · Okanagan Valley, British Columbia, Canada
+            - generic [ref=f90e758]:
+              - region "Travel fit" [ref=f90e759]:
+                - generic [ref=f90e760]:
+                  - heading "Travel fit" [level=3] [ref=f90e761]
+                  - 'status "Travel fit: Good fit" [ref=f90e762]': Good fit
+                - generic [ref=f90e763]:
+                  - generic [ref=f90e764]:
+                    - term [ref=f90e765]: How you'll travel
+                    - definition [ref=f90e766]: Drive
+                  - generic [ref=f90e767]:
+                    - term [ref=f90e768]: Travel time
+                    - definition [ref=f90e769]: About 4.5 hours each way
+                  - generic [ref=f90e770]:
+                    - term [ref=f90e771]: Time at destination
+                    - definition [ref=f90e772]: About 6.5 days
+              - list [ref=f90e773]:
+                - listitem [ref=f90e774]:
+                  - generic [ref=f90e775]: •
+                  - text: Peak season in August
+                - listitem [ref=f90e776]:
+                  - generic [ref=f90e777]: •
+                  - text: Fits your selected budget level
+                - listitem [ref=f90e778]:
+                  - generic [ref=f90e779]: •
+                  - text: Pace, activity and group type suit you
+              - generic [ref=f90e780]:
+                - generic [ref=f90e781]:
+                  - generic [ref=f90e785]: Trip length
+                  - generic [ref=f90e786]: 2–5d
+                - generic [ref=f90e787]:
+                  - generic [ref=f90e791]: Budget
+                  - generic [ref=f90e792]: Moderate – Comfortable – Premium
+                - generic [ref=f90e793]:
+                  - generic [ref=f90e797]: Climate
+                  - generic [ref=f90e798]: Warm, Mild
+              - generic [ref=f90e799]: "Main experiences: Okanagan wine tours · Kelowna waterfront beaches · Knox Mountain hike · Orchard fruit stands"
+              - generic [ref=f90e800]: "Suited to: Solo, Couple, Friends, Family"
+              - button "See score breakdown" [ref=f90e801] [cursor=pointer]
+              - button "View My Trip" [ref=f90e802] [cursor=pointer]
+    - contentinfo [ref=f90e40]:
+      - generic [ref=f90e41]:
+        - paragraph [ref=f90e42]: TravelUp
+        - paragraph [ref=f90e45]: Helping unsure travellers discover where to go next.
+        - paragraph [ref=f90e46]: All budgets, climates, seasons, itineraries and packing suggestions are indicative estimates, not live information. Always verify visa requirements, entry conditions, safety and travel advisories using official government sources for your citizenship.
+        - generic [ref=f90e47]:
+          - link "About & disclaimer" [ref=f90e48] [cursor=pointer]:
+            - /url: /about
+          - link "Home" [ref=f90e49] [cursor=pointer]:
+            - /url: /
+  - region "Notifications (F8)":
+    - list

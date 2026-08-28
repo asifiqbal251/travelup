@@ -1,0 +1,135 @@
+- generic [ref=f37e4]:
+  - generic [ref=f37e5]:
+    - banner [ref=f37e6]:
+      - generic [ref=f37e7]:
+        - link "TravelUp" [ref=f37e8] [cursor=pointer]:
+          - /url: /
+        - navigation [ref=f37e12]:
+          - link "Home" [ref=f37e13] [cursor=pointer]:
+            - /url: /
+          - link "About" [ref=f37e14] [cursor=pointer]:
+            - /url: /about
+          - button "Clear My Data" [ref=f37e15] [cursor=pointer]
+    - main [ref=f37e16]:
+      - generic [ref=f37e916]:
+        - button "Back to recommendations" [ref=f37e917] [cursor=pointer]
+        - generic [ref=f37e918]:
+          - img "Yosemite National Park, United States" [ref=f37e920]
+          - generic [ref=f37e922]:
+            - heading "Yosemite National Park" [level=1] [ref=f37e923]
+            - paragraph [ref=f37e924]: United States · Sierra Nevada, California, United States
+        - generic [ref=f37e925]:
+          - tablist [ref=f37e926]:
+            - tab "Itinerary" [selected] [ref=f37e927] [cursor=pointer]
+            - tab "Packing" [ref=f37e928] [cursor=pointer]
+            - tab "Overview" [ref=f37e929] [cursor=pointer]
+          - tabpanel "Itinerary" [ref=f37e930]:
+            - generic [ref=f37e931]:
+              - paragraph [ref=f37e932]: A suggested 4-day plan including outbound and return travel. Indicative only — verify opening hours and tickets before you go.
+              - button "Day 1 Yosemite Valley highlights Yosemite National Park High intensity Nature Photography View details" [ref=f37e1015] [cursor=pointer]:
+                - generic [ref=f37e935]:
+                  - generic [ref=f37e936]:
+                    - generic [ref=f37e937]: Day 1
+                    - heading "Yosemite Valley highlights" [level=3] [ref=f37e938]
+                    - generic [ref=f37e939]: Yosemite National Park
+                  - generic [ref=f37e940]: High intensity
+                - generic [ref=f37e941]:
+                  - generic [ref=f37e942]: Nature
+                  - generic [ref=f37e943]: Photography
+                - generic [ref=f37e944]: View details
+              - generic [ref=f37e978]:
+                - button "Day 2 Glacier Point Yosemite National Park High intensity Photography Nature Hide details" [expanded] [active] [ref=f37e1016] [cursor=pointer]:
+                  - generic [ref=f37e980]:
+                    - generic [ref=f37e981]:
+                      - generic [ref=f37e982]: Day 2
+                      - heading "Glacier Point" [level=3] [ref=f37e983]
+                      - generic [ref=f37e984]: Yosemite National Park
+                    - generic [ref=f37e985]: High intensity
+                  - generic [ref=f37e986]:
+                    - generic [ref=f37e987]: Photography
+                    - generic [ref=f37e988]: Nature
+                  - generic [ref=f37e989]: Hide details
+                - generic [ref=f37e1017]:
+                  - list [ref=f37e1018]:
+                    - listitem [ref=f37e1019]:
+                      - generic [ref=f37e1020]:
+                        - generic [ref=f37e1021]: 08:00–11:00
+                        - generic [ref=f37e1022]: ~3 hr
+                        - generic [ref=f37e1023]: Morning
+                      - generic [ref=f37e1024]:
+                        - generic [ref=f37e1025]: Drive to Glacier Point when…
+                        - paragraph [ref=f37e1026]: Drive to Glacier Point when the road is open (typically late May through October or November); when closed, substitute Valley viewpoints such as Tunnel View and Valley View.
+                    - listitem [ref=f37e1027]:
+                      - generic [ref=f37e1028]: Late morning
+                      - generic [ref=f37e1030]:
+                        - generic [ref=f37e1031]: Mid-morning break
+                        - paragraph [ref=f37e1032]: A short break or local transit between stops.
+                    - listitem [ref=f37e1033]:
+                      - generic [ref=f37e1034]:
+                        - generic [ref=f37e1035]: 12:30–14:00
+                        - generic [ref=f37e1036]: ~1.5 hr
+                        - generic [ref=f37e1037]: Lunch
+                      - generic [ref=f37e1038]:
+                        - generic [ref=f37e1039]: Local bite
+                        - paragraph [ref=f37e1040]: A packed trail lunch.
+                    - listitem [ref=f37e1041]:
+                      - generic [ref=f37e1042]:
+                        - generic [ref=f37e1043]: 14:00–18:00
+                        - generic [ref=f37e1044]: ~4 hr
+                        - generic [ref=f37e1045]: Afternoon
+                      - generic [ref=f37e1046]:
+                        - generic [ref=f37e1047]: Viewpoint time and a short connecting…
+                        - paragraph [ref=f37e1048]: Viewpoint time and a short connecting trail.
+                    - listitem [ref=f37e1049]:
+                      - generic [ref=f37e1050]:
+                        - generic [ref=f37e1051]: 18:30–21:30
+                        - generic [ref=f37e1052]: ~3 hr
+                        - generic [ref=f37e1053]: Evening
+                      - generic [ref=f37e1054]:
+                        - generic [ref=f37e1055]: Casual dinner
+                        - paragraph [ref=f37e1056]: Casual dinner.
+                  - generic [ref=f37e1057]:
+                    - generic [ref=f37e1058]:
+                      - generic [ref=f37e1059]: Getting around
+                      - generic [ref=f37e1060]: Park shuttle when operating, car and walking trails.
+                    - generic [ref=f37e1061]:
+                      - generic [ref=f37e1062]: Plan ahead
+                      - generic [ref=f37e1063]: Confirm opening hours and book popular tickets before you travel.
+                    - generic [ref=f37e1064]:
+                      - generic [ref=f37e1065]: Overnight
+                      - generic [ref=f37e1066]: Overnight in Yosemite National Park.
+              - button "Day 3 Mariposa Grove sequoias Yosemite National Park High intensity Nature Wildlife View details" [ref=f37e991] [cursor=pointer]:
+                - generic [ref=f37e992]:
+                  - generic [ref=f37e993]:
+                    - generic [ref=f37e994]: Day 3
+                    - heading "Mariposa Grove sequoias" [level=3] [ref=f37e995]
+                    - generic [ref=f37e996]: Yosemite National Park
+                  - generic [ref=f37e997]: High intensity
+                - generic [ref=f37e998]:
+                  - generic [ref=f37e999]: Nature
+                  - generic [ref=f37e1000]: Wildlife
+                - generic [ref=f37e1001]: View details
+              - button "Day 4 · Flexible Flexible day Yosemite National Park Light intensity Slow start Café and laundry Easy stroll View details" [ref=f37e1003] [cursor=pointer]:
+                - generic [ref=f37e1004]:
+                  - generic [ref=f37e1005]:
+                    - generic [ref=f37e1006]: Day 4 · Flexible
+                    - heading "Flexible day" [level=3] [ref=f37e1007]
+                    - generic [ref=f37e1008]: Yosemite National Park
+                  - generic [ref=f37e1009]: Light intensity
+                - generic [ref=f37e1010]:
+                  - generic [ref=f37e1011]: Slow start
+                  - generic [ref=f37e1012]: Café and laundry
+                  - generic [ref=f37e1013]: Easy stroll
+                - generic [ref=f37e1014]: View details
+    - contentinfo [ref=f37e41]:
+      - generic [ref=f37e42]:
+        - paragraph [ref=f37e43]: TravelUp
+        - paragraph [ref=f37e46]: Helping unsure travellers discover where to go next.
+        - paragraph [ref=f37e47]: All budgets, climates, seasons, itineraries and packing suggestions are indicative estimates, not live information. Always verify visa requirements, entry conditions, safety and travel advisories using official government sources for your citizenship.
+        - generic [ref=f37e48]:
+          - link "About & disclaimer" [ref=f37e49] [cursor=pointer]:
+            - /url: /about
+          - link "Home" [ref=f37e50] [cursor=pointer]:
+            - /url: /
+  - region "Notifications (F8)":
+    - list

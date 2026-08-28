@@ -1,0 +1,81 @@
+- generic:
+  - generic:
+    - generic:
+      - banner:
+        - generic:
+          - link:
+            - /url: /
+            - generic: TravelUp
+          - navigation:
+            - link:
+              - /url: /
+              - text: Home
+            - link:
+              - /url: /about
+              - text: About
+            - button: Clear My Data
+      - main:
+        - generic:
+          - generic:
+            - generic:
+              - generic: Step 2 of 7
+              - generic: Timing
+            - progressbar
+          - generic:
+            - generic:
+              - heading [level=1]: When and for how long
+              - paragraph: Month helps us match the right season.
+              - generic:
+                - generic:
+                  - text: Preferred travel month
+                  - combobox [expanded]:
+                    - generic: Choose a month or flexible
+                - generic:
+                  - generic:
+                    - text: "Total trip length:"
+                    - generic: 7 days
+                  - paragraph: Include all travel time—from leaving home until returning—including flights, driving, trains, buses, ferries and transfers.
+                  - generic:
+                    - generic:
+                      - generic:
+                        - slider
+                  - generic:
+                    - generic: 3 days
+                    - generic: 14 days
+                - generic:
+                  - text: May we recommend destinations inside your country of residence?
+                  - radiogroup:
+                    - radio [checked]:
+                      - generic: Yes, include domestic trips
+                    - radio:
+                      - generic: No, only international
+            - generic:
+              - button: Back
+              - button: Next
+      - contentinfo:
+        - generic:
+          - paragraph: TravelUp
+          - paragraph: Helping unsure travellers discover where to go next.
+          - paragraph: All budgets, climates, seasons, itineraries and packing suggestions are indicative estimates, not live information. Always verify visa requirements, entry conditions, safety and travel advisories using official government sources for your citizenship.
+          - generic:
+            - link:
+              - /url: /about
+              - text: About & disclaimer
+            - link:
+              - /url: /
+              - text: Home
+    - list
+  - listbox [ref=f31e549]:
+    - option "Flexible / anytime" [active] [ref=f31e550]
+    - option "January" [ref=f31e553]
+    - option "February" [ref=f31e556]
+    - option "March" [ref=f31e559]
+    - option "April" [ref=f31e562]
+    - option "May" [ref=f31e565]
+    - option "June" [ref=f31e568]
+    - option "July" [ref=f31e571]
+    - option "August" [ref=f31e574]
+    - option "September" [ref=f31e577]
+    - option "October" [ref=f31e580]
+    - option "November" [ref=f31e583]
+    - option "December" [ref=f31e586]

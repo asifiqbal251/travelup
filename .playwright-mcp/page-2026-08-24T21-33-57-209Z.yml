@@ -1,0 +1,174 @@
+- generic [ref=e4]:
+  - generic [ref=e5]:
+    - banner [ref=e6]:
+      - generic [ref=e7]:
+        - link "TravelUp" [ref=e8] [cursor=pointer]:
+          - /url: /
+        - navigation [ref=e12]:
+          - link "Home" [ref=e13] [cursor=pointer]:
+            - /url: /
+          - link "About" [ref=e14] [cursor=pointer]:
+            - /url: /about
+          - button "Clear My Data" [ref=e15] [cursor=pointer]
+    - main [ref=e16]:
+      - generic [ref=e780]:
+        - generic [ref=e781]:
+          - generic [ref=e782]:
+            - heading "Your top 3 matches" [level=1] [ref=e783]
+            - paragraph [ref=e784]: Final scores combine your preference fit with travel practicality for your trip length. Estimates only.
+          - button "Revise" [ref=e785] [cursor=pointer]
+        - paragraph [ref=e789]: Scores are estimates based on your preferences and curated destination data, not live availability or flight schedules. Always verify visa and entry requirements through official government sources for your citizenship.
+        - generic [ref=e790]:
+          - article [ref=e791]:
+            - generic [ref=e792]:
+              - img "Kelowna and the Okanagan Valley, Canada" [ref=e794]
+              - generic [ref=e795]: 92/100
+              - generic [ref=e796]: Strong match
+              - generic [ref=e797]:
+                - heading "Kelowna and the Okanagan Valley" [level=2] [ref=e798]
+                - paragraph [ref=e802]: Canada · Okanagan Valley, British Columbia, Canada
+            - generic [ref=e803]:
+              - region "Travel fit" [ref=e804]:
+                - generic [ref=e805]:
+                  - heading "Travel fit" [level=3] [ref=e806]
+                  - 'status "Travel fit: Good fit" [ref=e807]': Good fit
+                - generic [ref=e808]:
+                  - generic [ref=e809]:
+                    - term [ref=e810]: How you'll travel
+                    - definition [ref=e811]: Drive
+                  - generic [ref=e812]:
+                    - term [ref=e813]: Travel time
+                    - definition [ref=e814]: About 4.5 hours each way
+                  - generic [ref=e815]:
+                    - term [ref=e816]: Time at destination
+                    - definition [ref=e817]: About 2.5 days
+              - list [ref=e818]:
+                - listitem [ref=e819]:
+                  - generic [ref=e820]: •
+                  - text: Great for nature, relaxation, photography
+                - listitem [ref=e821]:
+                  - generic [ref=e822]: •
+                  - text: Enjoyable in your chosen month
+                - listitem [ref=e823]:
+                  - generic [ref=e824]: •
+                  - text: Fits your selected budget level
+              - generic [ref=e825]:
+                - generic [ref=e826]:
+                  - generic [ref=e830]: Trip length
+                  - generic [ref=e831]: 2–5d
+                - generic [ref=e832]:
+                  - generic [ref=e836]: Budget
+                  - generic [ref=e837]: Moderate – Comfortable – Premium
+                - generic [ref=e838]:
+                  - generic [ref=e842]: Climate
+                  - generic [ref=e843]: Warm, Mild
+              - generic [ref=e844]: "Main experiences: Okanagan wine tours · Kelowna waterfront beaches · Knox Mountain hike · Orchard fruit stands"
+              - generic [ref=e845]: "Suited to: Solo, Couple, Friends, Family"
+              - button "See score breakdown" [ref=e846] [cursor=pointer]
+              - button "View My Trip" [ref=e847] [cursor=pointer]
+          - article [ref=e848]:
+            - generic [ref=e849]:
+              - img "Whistler, Canada" [ref=e851]
+              - generic [ref=e852]: 88/100
+              - generic [ref=e853]: Strong match
+              - generic [ref=e854]:
+                - heading "Whistler" [level=2] [ref=e855]
+                - paragraph [ref=e859]: Canada · Sea to Sky, British Columbia, Canada
+            - generic [ref=e860]:
+              - region "Travel fit" [ref=e861]:
+                - generic [ref=e862]:
+                  - heading "Travel fit" [level=3] [ref=e863]
+                  - 'status "Travel fit: Good fit" [ref=e864]': Good fit
+                - generic [ref=e865]:
+                  - generic [ref=e866]:
+                    - term [ref=e867]: How you'll travel
+                    - definition [ref=e868]: Drive or scheduled shuttle
+                  - generic [ref=e869]:
+                    - term [ref=e870]: Travel time
+                    - definition [ref=e871]: About 2 hours each way
+                  - generic [ref=e872]:
+                    - term [ref=e873]: Time at destination
+                    - definition [ref=e874]: About 3 days
+              - list [ref=e875]:
+                - listitem [ref=e876]:
+                  - generic [ref=e877]: •
+                  - text: Great for nature, relaxation, photography
+                - listitem [ref=e878]:
+                  - generic [ref=e879]: •
+                  - text: Enjoyable in your chosen month
+                - listitem [ref=e880]:
+                  - generic [ref=e881]: •
+                  - text: Fits your selected budget level
+              - generic [ref=e882]:
+                - generic [ref=e883]:
+                  - generic [ref=e887]: Trip length
+                  - generic [ref=e888]: 2–5d
+                - generic [ref=e889]:
+                  - generic [ref=e893]: Budget
+                  - generic [ref=e894]: Moderate – Comfortable – Premium
+                - generic [ref=e895]:
+                  - generic [ref=e899]: Climate
+                  - generic [ref=e900]: Cold or snowy, Cool, Mild
+              - generic [ref=e901]: "Main experiences: Peak 2 Peak Gondola (when operating) · Skiing and snowboarding · Lost Lake · Whistler Village"
+              - generic [ref=e902]: "Suited to: Solo, Couple, Friends, Family"
+              - button "See score breakdown" [ref=e903] [cursor=pointer]
+              - button "View My Trip" [ref=e904] [cursor=pointer]
+          - article [ref=e905]:
+            - generic [ref=e906]:
+              - img "Napa and Sonoma, United States" [ref=e908]
+              - generic [ref=e909]: 85/100
+              - generic [ref=e910]: Strong match
+              - generic [ref=e911]:
+                - heading "Napa and Sonoma" [level=2] [ref=e912]
+                - paragraph [ref=e916]: United States · North Bay, California, United States
+            - generic [ref=e917]:
+              - region "Travel fit" [ref=e918]:
+                - generic [ref=e919]:
+                  - heading "Travel fit" [level=3] [ref=e920]
+                  - 'status "Travel fit: Good fit" [ref=e921]': Good fit
+                - generic [ref=e922]:
+                  - generic [ref=e923]:
+                    - term [ref=e924]: How you'll travel
+                    - definition [ref=e925]: Drive or transfer from a Bay Area gateway
+                  - generic [ref=e926]:
+                    - term [ref=e927]: Travel time
+                    - definition [ref=e928]: About 6.3 hours each way
+                  - generic [ref=e929]:
+                    - term [ref=e930]: Time at destination
+                    - definition [ref=e931]: About 2 days
+              - list [ref=e932]:
+                - listitem [ref=e933]:
+                  - generic [ref=e934]: •
+                  - text: Great for nature, relaxation, photography
+                - listitem [ref=e935]:
+                  - generic [ref=e936]: •
+                  - text: Enjoyable in your chosen month
+                - listitem [ref=e937]:
+                  - generic [ref=e938]: •
+                  - text: Close to your moderate budget
+              - generic [ref=e939]:
+                - generic [ref=e940]:
+                  - generic [ref=e944]: Trip length
+                  - generic [ref=e945]: 2–4d
+                - generic [ref=e946]:
+                  - generic [ref=e950]: Budget
+                  - generic [ref=e951]: Comfortable – Premium
+                - generic [ref=e952]:
+                  - generic [ref=e956]: Climate
+                  - generic [ref=e957]: Warm, Mild
+              - generic [ref=e958]: "Main experiences: Napa Valley wine tasting · Sonoma Plaza · Hot air balloon ride · Culinary walking tour"
+              - generic [ref=e959]: "Suited to: Solo, Couple, Friends"
+              - button "See score breakdown" [ref=e960] [cursor=pointer]
+              - button "View My Trip" [ref=e961] [cursor=pointer]
+    - contentinfo [ref=e61]:
+      - generic [ref=e62]:
+        - paragraph [ref=e63]: TravelUp
+        - paragraph [ref=e66]: Helping unsure travellers discover where to go next.
+        - paragraph [ref=e67]: All budgets, climates, seasons, itineraries and packing suggestions are indicative estimates, not live information. Always verify visa requirements, entry conditions, safety and travel advisories using official government sources for your citizenship.
+        - generic [ref=e68]:
+          - link "About & disclaimer" [ref=e69] [cursor=pointer]:
+            - /url: /about
+          - link "Home" [ref=e70] [cursor=pointer]:
+            - /url: /
+  - region "Notifications (F8)":
+    - list

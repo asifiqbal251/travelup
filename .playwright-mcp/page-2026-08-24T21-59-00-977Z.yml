@@ -1,0 +1,138 @@
+- generic [ref=f25e4]:
+  - generic [ref=f25e5]:
+    - banner [ref=f25e6]:
+      - generic [ref=f25e7]:
+        - link "TravelUp" [ref=f25e8] [cursor=pointer]:
+          - /url: /
+        - navigation [ref=f25e12]:
+          - link "Home" [ref=f25e13] [cursor=pointer]:
+            - /url: /
+          - link "About" [ref=f25e14] [cursor=pointer]:
+            - /url: /about
+          - button "Clear My Data" [ref=f25e15] [cursor=pointer]
+    - main [ref=f25e16]:
+      - generic [ref=f25e914]:
+        - button "Back to recommendations" [ref=f25e915] [cursor=pointer]
+        - generic [ref=f25e916]:
+          - img "Las Vegas, United States" [ref=f25e918]
+          - generic [ref=f25e920]:
+            - heading "Las Vegas" [level=1] [ref=f25e921]
+            - paragraph [ref=f25e922]: United States · Mojave Desert, Nevada, United States
+        - generic [ref=f25e923]:
+          - tablist [ref=f25e924]:
+            - tab "Itinerary" [selected] [ref=f25e925] [cursor=pointer]
+            - tab "Packing" [ref=f25e926] [cursor=pointer]
+            - tab "Overview" [ref=f25e927] [cursor=pointer]
+          - tabpanel "Itinerary" [ref=f25e928]:
+            - generic [ref=f25e929]:
+              - paragraph [ref=f25e930]: A suggested 4-day plan including outbound and return travel. Indicative only — verify opening hours and tickets before you go.
+              - button "Day 1 Fremont Street & Old Vegas Las Vegas Light intensity Cities Food View details" [ref=f25e1013] [cursor=pointer]:
+                - generic [ref=f25e933]:
+                  - generic [ref=f25e934]:
+                    - generic [ref=f25e935]: Day 1
+                    - heading "Fremont Street & Old Vegas" [level=3] [ref=f25e936]
+                    - generic [ref=f25e937]: Las Vegas
+                  - generic [ref=f25e938]: Light intensity
+                - generic [ref=f25e939]:
+                  - generic [ref=f25e940]: Cities
+                  - generic [ref=f25e941]: Food
+                - generic [ref=f25e942]: View details
+              - button "Day 2 The Strip Las Vegas Light intensity Cities Photography View details" [ref=f25e1068] [cursor=pointer]:
+                - generic [ref=f25e978]:
+                  - generic [ref=f25e979]:
+                    - generic [ref=f25e980]: Day 2
+                    - heading "The Strip" [level=3] [ref=f25e981]
+                    - generic [ref=f25e982]: Las Vegas
+                  - generic [ref=f25e983]: Light intensity
+                - generic [ref=f25e984]:
+                  - generic [ref=f25e985]: Cities
+                  - generic [ref=f25e986]: Photography
+                - generic [ref=f25e987]: View details
+              - button "Day 3 Red Rock Canyon Las Vegas Moderate intensity Nature Adventure View details" [ref=f25e1101] [cursor=pointer]:
+                - generic [ref=f25e990]:
+                  - generic [ref=f25e991]:
+                    - generic [ref=f25e992]: Day 3
+                    - heading "Red Rock Canyon" [level=3] [ref=f25e993]
+                    - generic [ref=f25e994]: Las Vegas
+                  - generic [ref=f25e995]: Moderate intensity
+                - generic [ref=f25e996]:
+                  - generic [ref=f25e997]: Nature
+                  - generic [ref=f25e998]: Adventure
+                - generic [ref=f25e999]: View details
+              - generic [ref=f25e1000]:
+                - button "Day 4 · Flexible Flexible day Las Vegas Light intensity Slow start Café and laundry Easy stroll Hide details" [expanded] [active] [ref=f25e1102] [cursor=pointer]:
+                  - generic [ref=f25e1002]:
+                    - generic [ref=f25e1003]:
+                      - generic [ref=f25e1004]: Day 4 · Flexible
+                      - heading "Flexible day" [level=3] [ref=f25e1005]
+                      - generic [ref=f25e1006]: Las Vegas
+                    - generic [ref=f25e1007]: Light intensity
+                  - generic [ref=f25e1008]:
+                    - generic [ref=f25e1009]: Slow start
+                    - generic [ref=f25e1010]: Café and laundry
+                    - generic [ref=f25e1011]: Easy stroll
+                  - generic [ref=f25e1012]: Hide details
+                - generic [ref=f25e1103]:
+                  - list [ref=f25e1104]:
+                    - listitem [ref=f25e1105]:
+                      - generic [ref=f25e1106]:
+                        - generic [ref=f25e1107]: 09:00–11:00
+                        - generic [ref=f25e1108]: ~2 hr
+                        - generic [ref=f25e1109]: Morning
+                      - generic [ref=f25e1110]:
+                        - generic [ref=f25e1111]: Slow start
+                        - paragraph [ref=f25e1112]: Sleep in or enjoy a relaxed breakfast.
+                    - listitem [ref=f25e1113]:
+                      - generic [ref=f25e1114]: Late morning
+                      - generic [ref=f25e1116]:
+                        - generic [ref=f25e1117]: Café and laundry
+                        - paragraph [ref=f25e1118]: Catch up on laundry and postcards.
+                    - listitem [ref=f25e1119]:
+                      - generic [ref=f25e1120]:
+                        - generic [ref=f25e1121]: 12:30–14:00
+                        - generic [ref=f25e1122]: ~1.5 hr
+                        - generic [ref=f25e1123]: Lunch
+                      - generic [ref=f25e1124]:
+                        - generic [ref=f25e1125]: Local bite
+                        - paragraph [ref=f25e1126]: An unhurried lunch at a spot you missed.
+                    - listitem [ref=f25e1127]:
+                      - generic [ref=f25e1128]:
+                        - generic [ref=f25e1129]: 14:00–17:00
+                        - generic [ref=f25e1130]: ~3 hr
+                        - generic [ref=f25e1131]: Afternoon
+                      - generic [ref=f25e1132]:
+                        - generic [ref=f25e1133]: Easy stroll
+                        - paragraph [ref=f25e1134]: Catch up on laundry and postcards.
+                    - listitem [ref=f25e1135]:
+                      - generic [ref=f25e1136]:
+                        - generic [ref=f25e1137]: 18:30–21:00
+                        - generic [ref=f25e1138]: ~2.5 hr
+                        - generic [ref=f25e1139]: Evening
+                      - generic [ref=f25e1140]:
+                        - generic [ref=f25e1141]: Optional night out
+                        - paragraph [ref=f25e1142]: Rest, or revisit a favourite spot.
+                  - generic [ref=f25e1143]:
+                    - generic [ref=f25e1144]:
+                      - generic [ref=f25e1145]: Getting around
+                      - generic [ref=f25e1146]: Walking, monorail, taxi or rideshare.
+                    - generic [ref=f25e1147]:
+                      - generic [ref=f25e1148]: Plan ahead
+                      - generic [ref=f25e1149]: Use this day to recharge or revisit a favourite.
+                    - generic [ref=f25e1150]:
+                      - generic [ref=f25e1151]: Optional swap
+                      - generic [ref=f25e1152]: Add a short excursion if you feel rested.
+                    - generic [ref=f25e1153]:
+                      - generic [ref=f25e1154]: Overnight
+                      - generic [ref=f25e1155]: Overnight in Las Vegas.
+    - contentinfo [ref=f25e41]:
+      - generic [ref=f25e42]:
+        - paragraph [ref=f25e43]: TravelUp
+        - paragraph [ref=f25e46]: Helping unsure travellers discover where to go next.
+        - paragraph [ref=f25e47]: All budgets, climates, seasons, itineraries and packing suggestions are indicative estimates, not live information. Always verify visa requirements, entry conditions, safety and travel advisories using official government sources for your citizenship.
+        - generic [ref=f25e48]:
+          - link "About & disclaimer" [ref=f25e49] [cursor=pointer]:
+            - /url: /about
+          - link "Home" [ref=f25e50] [cursor=pointer]:
+            - /url: /
+  - region "Notifications (F8)":
+    - list

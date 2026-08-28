@@ -1,0 +1,123 @@
+- generic [ref=f63e3]:
+  - generic:
+    - region "Notifications (F8)":
+      - list
+  - generic:
+    - region "Notifications alt+T"
+  - generic [ref=f63e7]:
+    - status [ref=f63e9]:
+      - generic [ref=f63e10]:
+        - paragraph [ref=f63e17]: Get a custom domain that matches your app and is easy to share
+        - link [ref=f63e19] [cursor=pointer]:
+          - /url: https://app.base44.com/last-app/editor/workspace/domains
+      - button "Dismiss announcement" [ref=f63e21] [cursor=pointer]
+    - generic [ref=f63e24]:
+      - generic [ref=f63e26]:
+        - generic [ref=f63e28]:
+          - generic [ref=f63e29]:
+            - link "Account menu" [ref=f63e31] [cursor=pointer]:
+              - /url: /
+              - img "Base44" [ref=f63e32]
+            - separator [ref=f63e36]
+          - button "Branches" [ref=f63e39] [cursor=pointer]:
+            - img "TravelUp" [ref=f63e42]
+            - generic [ref=f63e43]: TravelUp
+          - generic [ref=f63e45]:
+            - button "Theme" [ref=f63e48] [cursor=pointer]
+            - button "Version history" [ref=f63e51] [cursor=pointer]
+            - button "Hide chat panel" [ref=f63e54] [cursor=pointer]
+        - generic [ref=f63e57]:
+          - status [ref=f63e58]: Base44 response complete.
+          - generic [ref=f63e60]:
+            - log "Chat conversation"
+          - generic [ref=f63e61]:
+            - generic:
+              - generic:
+                - button "Latest messages"
+          - generic [ref=f63e69]:
+            - textbox "Prompt" [ref=f63e71]:
+              - /placeholder: What would you like to build?
+            - generic [ref=f63e72]:
+              - generic [ref=f63e74]:
+                - button "Add" [ref=f63e77] [cursor=pointer]
+                - button "Models" [ref=f63e80] [cursor=pointer]:
+                  - generic [ref=f63e81]: Auto
+              - generic [ref=f63e82]:
+                - button "Build" [ref=f63e84] [cursor=pointer]
+                - button "Speech to text" [ref=f63e86] [cursor=pointer]
+                - generic [ref=f63e87]:
+                  - button "Send" [disabled]
+      - separator [ref=f63e88]
+      - generic [ref=f63e91]:
+        - generic [ref=f63e92]:
+          - generic [ref=f63e94]:
+            - group [ref=f63e95]:
+              - radio "Preview" [checked] [ref=f63e96] [cursor=pointer]
+              - radio "Dashboard" [ref=f63e97] [cursor=pointer]
+            - group [ref=f63e99]:
+              - button "Edit mode" [ref=f63e101] [cursor=pointer]
+            - group [ref=f63e106]:
+              - button "Canvas" [ref=f63e107] [cursor=pointer]
+          - generic [ref=f63e112]:
+            - button "Refresh preview" [ref=f63e115] [cursor=pointer]
+            - textbox "/page" [ref=f63e116]: Home
+            - button "Show tablet preview" [ref=f63e119] [cursor=pointer]
+          - generic [ref=f63e120]:
+            - button [ref=f63e121] [cursor=pointer]:
+              - img "AP" [ref=f63e125]
+            - generic [ref=f63e130]:
+              - button "More actions" [ref=f63e133] [cursor=pointer]
+              - button "Upgrade plan" [ref=f63e134] [cursor=pointer]: Upgrade
+            - button "Publish App" [ref=f63e139] [cursor=pointer]
+        - iframe [ref=f63e153]:
+          - generic [ref=f67e2]:
+            - generic [ref=f67e3]:
+              - banner [ref=f67e4]:
+                - generic [ref=f67e5]:
+                  - link "TravelUp" [ref=f67e6] [cursor=pointer]:
+                    - /url: /
+                  - navigation [ref=f67e10]:
+                    - link "Home" [ref=f67e11] [cursor=pointer]:
+                      - /url: /
+                    - link "About" [ref=f67e12] [cursor=pointer]:
+                      - /url: /about
+                    - button "Clear My Data" [ref=f67e13] [cursor=pointer]
+              - main [ref=f67e14]:
+                - generic [ref=f67e15]:
+                  - generic [ref=f67e16]:
+                    - img "A traveller overlooking a breathtaking coastline at golden hour" [ref=f67e19]
+                    - generic [ref=f67e21]:
+                      - paragraph [ref=f67e22]: Not sure where to go?
+                      - heading "Find the trip that fits you — in five minutes." [level=1] [ref=f67e25]
+                      - paragraph [ref=f67e26]: Answer a few friendly questions and TravelUp will suggest three destinations that match your season, budget, interests and pace — with a day-by-day plan and packing list.
+                      - link "Find My Trip" [ref=f67e28] [cursor=pointer]:
+                        - /url: /questionnaire
+                  - generic [ref=f67e29]:
+                    - heading "How TravelUp works" [level=2] [ref=f67e30]
+                    - generic [ref=f67e31]:
+                      - generic [ref=f67e32]:
+                        - heading "Answer a short questionnaire" [level=3] [ref=f67e37]
+                        - paragraph [ref=f67e38]: Tell us your month, budget, interests, pace and more in a quick guided flow.
+                      - generic [ref=f67e39]:
+                        - heading "Get three matched destinations" [level=3] [ref=f67e45]
+                        - paragraph [ref=f67e46]: We score 54 curated trips out of 100 and show exactly why each one fits you.
+                      - generic [ref=f67e47]:
+                        - heading "Receive a plan & packing list" [level=3] [ref=f67e52]
+                        - paragraph [ref=f67e53]: Pick a destination to get a day-by-day itinerary and a checkable packing checklist.
+                  - generic [ref=f67e55]:
+                    - heading "Your next trip is a few questions away." [level=2] [ref=f67e56]
+                    - paragraph [ref=f67e57]: No sign-up, no bookings, no data leaves your browser. Just inspiration and a plan.
+                    - link "Start the questionnaire" [ref=f67e58] [cursor=pointer]:
+                      - /url: /questionnaire
+              - contentinfo [ref=f67e59]:
+                - generic [ref=f67e60]:
+                  - paragraph [ref=f67e61]: TravelUp
+                  - paragraph [ref=f67e64]: Helping unsure travellers discover where to go next.
+                  - paragraph [ref=f67e65]: All budgets, climates, seasons, itineraries and packing suggestions are indicative estimates, not live information. Always verify visa requirements, entry conditions, safety and travel advisories using official government sources for your citizenship.
+                  - generic [ref=f67e66]:
+                    - link "About & disclaimer" [ref=f67e67] [cursor=pointer]:
+                      - /url: /about
+                    - link "Home" [ref=f67e68] [cursor=pointer]:
+                      - /url: /
+            - region "Notifications (F8)":
+              - list

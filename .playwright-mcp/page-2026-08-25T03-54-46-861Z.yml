@@ -1,0 +1,174 @@
+- generic [ref=f57e4]:
+  - generic [ref=f57e5]:
+    - banner [ref=f57e6]:
+      - generic [ref=f57e7]:
+        - link "TravelUp" [ref=f57e8] [cursor=pointer]:
+          - /url: /
+        - navigation [ref=f57e12]:
+          - link "Home" [ref=f57e13] [cursor=pointer]:
+            - /url: /
+          - link "About" [ref=f57e14] [cursor=pointer]:
+            - /url: /about
+          - button "Clear My Data" [ref=f57e15] [cursor=pointer]
+    - main [ref=f57e16]:
+      - generic [ref=f57e734]:
+        - generic [ref=f57e735]:
+          - generic [ref=f57e736]:
+            - heading "Your top 3 matches" [level=1] [ref=f57e737]
+            - paragraph [ref=f57e738]: Final scores combine your preference fit with travel practicality for your trip length. Estimates only.
+          - button "Revise" [ref=f57e739] [cursor=pointer]
+        - paragraph [ref=f57e743]: Scores are estimates based on your preferences and curated destination data, not live availability or flight schedules. Always verify visa and entry requirements through official government sources for your citizenship.
+        - generic [ref=f57e744]:
+          - article [ref=f57e745]:
+            - generic [ref=f57e746]:
+              - img "Whistler, Canada" [ref=f57e748]
+              - generic [ref=f57e749]: 100/100
+              - generic [ref=f57e750]: Strong match
+              - generic [ref=f57e751]:
+                - heading "Whistler" [level=2] [ref=f57e752]
+                - paragraph [ref=f57e756]: Canada · Sea to Sky, British Columbia, Canada
+            - generic [ref=f57e757]:
+              - region "Travel fit" [ref=f57e758]:
+                - generic [ref=f57e759]:
+                  - heading "Travel fit" [level=3] [ref=f57e760]
+                  - 'status "Travel fit: Good fit" [ref=f57e761]': Good fit
+                - generic [ref=f57e762]:
+                  - generic [ref=f57e763]:
+                    - term [ref=f57e764]: How you'll travel
+                    - definition [ref=f57e765]: Drive or scheduled shuttle
+                  - generic [ref=f57e766]:
+                    - term [ref=f57e767]: Travel time
+                    - definition [ref=f57e768]: About 2 hours each way
+                  - generic [ref=f57e769]:
+                    - term [ref=f57e770]: Time at destination
+                    - definition [ref=f57e771]: About 3 days
+              - list [ref=f57e772]:
+                - listitem [ref=f57e773]:
+                  - generic [ref=f57e774]: •
+                  - text: Great for nature, hiking
+                - listitem [ref=f57e775]:
+                  - generic [ref=f57e776]: •
+                  - text: Peak season in July
+                - listitem [ref=f57e777]:
+                  - generic [ref=f57e778]: •
+                  - text: Fits your selected budget level
+              - generic [ref=f57e779]:
+                - generic [ref=f57e780]:
+                  - generic [ref=f57e784]: Trip length
+                  - generic [ref=f57e785]: 2–5d
+                - generic [ref=f57e786]:
+                  - generic [ref=f57e790]: Budget
+                  - generic [ref=f57e791]: Moderate – Comfortable – Premium
+                - generic [ref=f57e792]:
+                  - generic [ref=f57e796]: Climate
+                  - generic [ref=f57e797]: Cold or snowy, Cool, Mild
+              - generic [ref=f57e798]: "Main experiences: Peak 2 Peak Gondola (when operating) · Skiing and snowboarding · Lost Lake · Whistler Village"
+              - generic [ref=f57e799]: "Suited to: Solo, Couple, Friends, Family"
+              - button "See score breakdown" [ref=f57e800] [cursor=pointer]
+              - button "View My Trip" [ref=f57e801] [cursor=pointer]
+          - article [ref=f57e802]:
+            - generic [ref=f57e803]:
+              - img "Tofino, Canada" [ref=f57e805]
+              - generic [ref=f57e806]: 88/100
+              - generic [ref=f57e807]: Strong match
+              - generic [ref=f57e808]:
+                - heading "Tofino" [level=2] [ref=f57e809]
+                - paragraph [ref=f57e813]: Canada · West Coast Vancouver Island, British Columbia, Canada
+            - generic [ref=f57e814]:
+              - region "Travel fit" [ref=f57e815]:
+                - generic [ref=f57e816]:
+                  - heading "Travel fit" [level=3] [ref=f57e817]
+                  - 'status "Travel fit: Good fit" [ref=f57e818]': Good fit
+                - generic [ref=f57e819]:
+                  - generic [ref=f57e820]:
+                    - term [ref=f57e821]: How you'll travel
+                    - definition [ref=f57e822]: Ferry + drive
+                  - generic [ref=f57e823]:
+                    - term [ref=f57e824]: Travel time
+                    - definition [ref=f57e825]: About 6 hours each way
+                  - generic [ref=f57e826]:
+                    - term [ref=f57e827]: Time at destination
+                    - definition [ref=f57e828]: About 2.5 days
+              - list [ref=f57e829]:
+                - listitem [ref=f57e830]:
+                  - generic [ref=f57e831]: •
+                  - text: Great for nature
+                - listitem [ref=f57e832]:
+                  - generic [ref=f57e833]: •
+                  - text: Peak season in July
+                - listitem [ref=f57e834]:
+                  - generic [ref=f57e835]: •
+                  - text: Fits your selected budget level
+              - generic [ref=f57e836]:
+                - generic [ref=f57e837]:
+                  - generic [ref=f57e841]: Trip length
+                  - generic [ref=f57e842]: 3–5d
+                - generic [ref=f57e843]:
+                  - generic [ref=f57e847]: Budget
+                  - generic [ref=f57e848]: Moderate – Comfortable – Premium
+                - generic [ref=f57e849]:
+                  - generic [ref=f57e853]: Climate
+                  - generic [ref=f57e854]: Mild, Cool
+              - generic [ref=f57e855]: "Main experiences: Long Beach · Pacific Rim National Park trails · Surfing lessons · Storm watching"
+              - generic [ref=f57e856]: "Suited to: Solo, Couple, Friends, Family"
+              - button "See score breakdown" [ref=f57e857] [cursor=pointer]
+              - button "View My Trip" [ref=f57e858] [cursor=pointer]
+          - article [ref=f57e859]:
+            - generic [ref=f57e860]:
+              - img "Victoria, Canada" [ref=f57e862]
+              - generic [ref=f57e863]: 86/100
+              - generic [ref=f57e864]: Strong match
+              - generic [ref=f57e865]:
+                - heading "Victoria" [level=2] [ref=f57e866]
+                - paragraph [ref=f57e870]: Canada · Vancouver Island, British Columbia, Canada
+            - generic [ref=f57e871]:
+              - region "Travel fit" [ref=f57e872]:
+                - generic [ref=f57e873]:
+                  - heading "Travel fit" [level=3] [ref=f57e874]
+                  - 'status "Travel fit: Good fit" [ref=f57e875]': Good fit
+                - generic [ref=f57e876]:
+                  - generic [ref=f57e877]:
+                    - term [ref=f57e878]: How you'll travel
+                    - definition [ref=f57e879]: Ferry + ground transfer
+                  - generic [ref=f57e880]:
+                    - term [ref=f57e881]: Travel time
+                    - definition [ref=f57e882]: About 4 hours each way
+                  - generic [ref=f57e883]:
+                    - term [ref=f57e884]: Time at destination
+                    - definition [ref=f57e885]: About 2.5 days
+              - list [ref=f57e886]:
+                - listitem [ref=f57e887]:
+                  - generic [ref=f57e888]: •
+                  - text: Great for nature
+                - listitem [ref=f57e889]:
+                  - generic [ref=f57e890]: •
+                  - text: Peak season in July
+                - listitem [ref=f57e891]:
+                  - generic [ref=f57e892]: •
+                  - text: Fits your selected budget level
+              - generic [ref=f57e893]:
+                - generic [ref=f57e894]:
+                  - generic [ref=f57e898]: Trip length
+                  - generic [ref=f57e899]: 2–4d
+                - generic [ref=f57e900]:
+                  - generic [ref=f57e904]: Budget
+                  - generic [ref=f57e905]: Moderate – Comfortable
+                - generic [ref=f57e906]:
+                  - generic [ref=f57e910]: Climate
+                  - generic [ref=f57e911]: Mild, Cool
+              - generic [ref=f57e912]: "Main experiences: Butchart Gardens · Inner Harbour · Fisherman's Wharf · Royal BC Museum"
+              - generic [ref=f57e913]: "Suited to: Solo, Couple, Friends, Family"
+              - button "See score breakdown" [ref=f57e914] [cursor=pointer]
+              - button "View My Trip" [ref=f57e915] [cursor=pointer]
+    - contentinfo [ref=f57e41]:
+      - generic [ref=f57e42]:
+        - paragraph [ref=f57e43]: TravelUp
+        - paragraph [ref=f57e46]: Helping unsure travellers discover where to go next.
+        - paragraph [ref=f57e47]: All budgets, climates, seasons, itineraries and packing suggestions are indicative estimates, not live information. Always verify visa requirements, entry conditions, safety and travel advisories using official government sources for your citizenship.
+        - generic [ref=f57e48]:
+          - link "About & disclaimer" [ref=f57e49] [cursor=pointer]:
+            - /url: /about
+          - link "Home" [ref=f57e50] [cursor=pointer]:
+            - /url: /
+  - region "Notifications (F8)":
+    - list

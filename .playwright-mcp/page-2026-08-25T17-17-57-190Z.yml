@@ -1,0 +1,174 @@
+- generic [ref=f108e4]:
+  - generic [ref=f108e5]:
+    - banner [ref=f108e6]:
+      - generic [ref=f108e7]:
+        - link "TravelUp" [ref=f108e8] [cursor=pointer]:
+          - /url: /
+        - navigation [ref=f108e12]:
+          - link "Home" [ref=f108e13] [cursor=pointer]:
+            - /url: /
+          - link "About" [ref=f108e14] [cursor=pointer]:
+            - /url: /about
+          - button "Clear My Data" [ref=f108e15] [cursor=pointer]
+    - main [ref=f108e16]:
+      - generic [ref=f108e4181]:
+        - generic [ref=f108e4182]:
+          - generic [ref=f108e4183]:
+            - heading "Your top 3 matches" [level=1] [ref=f108e4184]
+            - paragraph [ref=f108e4185]: Final scores combine your preference fit with travel practicality for your trip length. Estimates only.
+          - button "Revise" [ref=f108e4186] [cursor=pointer]
+        - paragraph [ref=f108e4190]: Scores are estimates based on your preferences and curated destination data, not live availability or flight schedules. Always verify visa and entry requirements through official government sources for your citizenship.
+        - generic [ref=f108e4191]:
+          - article [ref=f108e4192]:
+            - generic [ref=f108e4193]:
+              - img "San Diego, United States" [ref=f108e4195]
+              - generic [ref=f108e4196]: 95/100
+              - generic [ref=f108e4197]: Strong match
+              - generic [ref=f108e4198]:
+                - heading "San Diego" [level=2] [ref=f108e4199]
+                - paragraph [ref=f108e4203]: United States · Southern California, United States
+            - generic [ref=f108e4204]:
+              - region "Travel fit" [ref=f108e4205]:
+                - generic [ref=f108e4206]:
+                  - heading "Travel fit" [level=3] [ref=f108e4207]
+                  - 'status "Travel fit: Good fit" [ref=f108e4208]': Good fit
+                - generic [ref=f108e4209]:
+                  - generic [ref=f108e4210]:
+                    - term [ref=f108e4211]: How you'll travel
+                    - definition [ref=f108e4212]: Drive or train
+                  - generic [ref=f108e4213]:
+                    - term [ref=f108e4214]: Travel time
+                    - definition [ref=f108e4215]: About 2.5 hours each way
+                  - generic [ref=f108e4216]:
+                    - term [ref=f108e4217]: Time at destination
+                    - definition [ref=f108e4218]: About 4 days
+              - list [ref=f108e4219]:
+                - listitem [ref=f108e4220]:
+                  - generic [ref=f108e4221]: •
+                  - text: Great for beaches, cities, food
+                - listitem [ref=f108e4222]:
+                  - generic [ref=f108e4223]: •
+                  - text: Enjoyable in your chosen month
+                - listitem [ref=f108e4224]:
+                  - generic [ref=f108e4225]: •
+                  - text: Fits your selected budget level
+              - generic [ref=f108e4226]:
+                - generic [ref=f108e4227]:
+                  - generic [ref=f108e4231]: Trip length
+                  - generic [ref=f108e4232]: 2–5d
+                - generic [ref=f108e4233]:
+                  - generic [ref=f108e4237]: Budget
+                  - generic [ref=f108e4238]: Moderate – Comfortable – Premium
+                - generic [ref=f108e4239]:
+                  - generic [ref=f108e4243]: Climate
+                  - generic [ref=f108e4244]: Warm, Mild
+              - generic [ref=f108e4245]: "Main experiences: Balboa Park and San Diego Zoo · La Jolla Cove · Gaslamp Quarter · Coronado Beach"
+              - generic [ref=f108e4246]: "Suited to: Solo, Couple, Friends, Family"
+              - button "See score breakdown" [ref=f108e4247] [cursor=pointer]
+              - button "View My Trip" [ref=f108e4248] [cursor=pointer]
+          - article [ref=f108e4249]:
+            - generic [ref=f108e4250]:
+              - img "Las Vegas, United States" [ref=f108e4252]
+              - generic [ref=f108e4253]: 87/100
+              - generic [ref=f108e4254]: Strong match
+              - generic [ref=f108e4255]:
+                - heading "Las Vegas" [level=2] [ref=f108e4256]
+                - paragraph [ref=f108e4260]: United States · Mojave Desert, Nevada, United States
+            - generic [ref=f108e4261]:
+              - region "Travel fit" [ref=f108e4262]:
+                - generic [ref=f108e4263]:
+                  - heading "Travel fit" [level=3] [ref=f108e4264]
+                  - 'status "Travel fit: Good fit" [ref=f108e4265]': Good fit
+                - generic [ref=f108e4266]:
+                  - generic [ref=f108e4267]:
+                    - term [ref=f108e4268]: How you'll travel
+                    - definition [ref=f108e4269]: Flight or drive
+                  - generic [ref=f108e4270]:
+                    - term [ref=f108e4271]: Travel time
+                    - definition [ref=f108e4272]: About 4.5 hours each way
+                  - generic [ref=f108e4273]:
+                    - term [ref=f108e4274]: Time at destination
+                    - definition [ref=f108e4275]: About 3.5 days
+              - list [ref=f108e4276]:
+                - listitem [ref=f108e4277]:
+                  - generic [ref=f108e4278]: •
+                  - text: Great for cities, food
+                - listitem [ref=f108e4279]:
+                  - generic [ref=f108e4280]: •
+                  - text: Enjoyable in your chosen month
+                - listitem [ref=f108e4281]:
+                  - generic [ref=f108e4282]: •
+                  - text: Fits your selected budget level
+              - generic [ref=f108e4283]:
+                - generic [ref=f108e4284]:
+                  - generic [ref=f108e4288]: Trip length
+                  - generic [ref=f108e4289]: 2–4d
+                - generic [ref=f108e4290]:
+                  - generic [ref=f108e4294]: Budget
+                  - generic [ref=f108e4295]: Budget – Moderate – Comfortable – Premium
+                - generic [ref=f108e4296]:
+                  - generic [ref=f108e4300]: Climate
+                  - generic [ref=f108e4301]: Warm, Mild
+              - generic [ref=f108e4302]: "Main experiences: The Strip at night · Bellagio Fountains · Red Rock Canyon · A headline show"
+              - generic [ref=f108e4303]: "Suited to: Solo, Couple, Friends"
+              - button "See score breakdown" [ref=f108e4304] [cursor=pointer]
+              - button "View My Trip" [ref=f108e4305] [cursor=pointer]
+          - article [ref=f108e4306]:
+            - generic [ref=f108e4307]:
+              - img "Mexico City, Mexico" [ref=f108e4309]
+              - generic [ref=f108e4310]: 87/100
+              - generic [ref=f108e4311]: Strong match
+              - generic [ref=f108e4312]:
+                - heading "Mexico City" [level=2] [ref=f108e4313]
+                - paragraph [ref=f108e4317]: Mexico · Central Mexico
+            - generic [ref=f108e4318]:
+              - region "Travel fit" [ref=f108e4319]:
+                - generic [ref=f108e4320]:
+                  - heading "Travel fit" [level=3] [ref=f108e4321]
+                  - 'status "Travel fit: Good fit" [ref=f108e4322]': Good fit
+                - generic [ref=f108e4323]:
+                  - generic [ref=f108e4324]:
+                    - term [ref=f108e4325]: How you'll travel
+                    - definition [ref=f108e4326]: International flight + local transport
+                  - generic [ref=f108e4327]:
+                    - term [ref=f108e4328]: Travel time
+                    - definition [ref=f108e4329]: About 7.4 hours each way
+                  - generic [ref=f108e4330]:
+                    - term [ref=f108e4331]: Time at destination
+                    - definition [ref=f108e4332]: About 3 days
+              - list [ref=f108e4333]:
+                - listitem [ref=f108e4334]:
+                  - generic [ref=f108e4335]: •
+                  - text: Great for cities, food
+                - listitem [ref=f108e4336]:
+                  - generic [ref=f108e4337]: •
+                  - text: Enjoyable in your chosen month
+                - listitem [ref=f108e4338]:
+                  - generic [ref=f108e4339]: •
+                  - text: Fits your selected budget level
+              - generic [ref=f108e4340]:
+                - generic [ref=f108e4341]:
+                  - generic [ref=f108e4345]: Trip length
+                  - generic [ref=f108e4346]: 3–9d
+                - generic [ref=f108e4347]:
+                  - generic [ref=f108e4351]: Budget
+                  - generic [ref=f108e4352]: Moderate – Comfortable – Budget
+                - generic [ref=f108e4353]:
+                  - generic [ref=f108e4357]: Climate
+                  - generic [ref=f108e4358]: Mild
+              - generic [ref=f108e4359]: "Main experiences: Zócalo · Teotihuacán pyramids · Frida Kahlo museum · Xochimilco"
+              - generic [ref=f108e4360]: "Suited to: Solo, Couple, Friends, Family"
+              - button "See score breakdown" [ref=f108e4361] [cursor=pointer]
+              - button "View My Trip" [ref=f108e4362] [cursor=pointer]
+    - contentinfo [ref=f108e57]:
+      - generic [ref=f108e58]:
+        - paragraph [ref=f108e59]: TravelUp
+        - paragraph [ref=f108e62]: Helping unsure travellers discover where to go next.
+        - paragraph [ref=f108e63]: All budgets, climates, seasons, itineraries and packing suggestions are indicative estimates, not live information. Always verify visa requirements, entry conditions, safety and travel advisories using official government sources for your citizenship.
+        - generic [ref=f108e64]:
+          - link "About & disclaimer" [ref=f108e65] [cursor=pointer]:
+            - /url: /about
+          - link "Home" [ref=f108e66] [cursor=pointer]:
+            - /url: /
+  - region "Notifications (F8)":
+    - list

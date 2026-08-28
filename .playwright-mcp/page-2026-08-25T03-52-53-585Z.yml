@@ -1,0 +1,134 @@
+- generic:
+  - generic:
+    - generic:
+      - banner:
+        - generic:
+          - link:
+            - /url: /
+            - generic: TravelUp
+          - navigation:
+            - link:
+              - /url: /
+              - text: Home
+            - link:
+              - /url: /about
+              - text: About
+            - button: Clear My Data
+      - main:
+        - generic:
+          - generic:
+            - generic:
+              - generic: Step 1 of 7
+              - generic: Your travel basics
+            - progressbar
+          - generic:
+            - generic:
+              - heading [level=1]: Your travel basics
+              - paragraph: So we can tailor your travel recommendations.
+              - generic:
+                - generic:
+                  - text: Country of residence
+                  - combobox [expanded]:
+                    - generic: Select country
+                - generic:
+                  - text: Departure city
+                  - textbox:
+                    - /placeholder: e.g. London
+                - generic:
+                  - text: Citizenship
+                  - combobox:
+                    - generic: Select citizenship
+            - generic:
+              - button [disabled]: Back
+              - button: Next
+      - contentinfo:
+        - generic:
+          - paragraph: TravelUp
+          - paragraph: Helping unsure travellers discover where to go next.
+          - paragraph: All budgets, climates, seasons, itineraries and packing suggestions are indicative estimates, not live information. Always verify visa requirements, entry conditions, safety and travel advisories using official government sources for your citizenship.
+          - generic:
+            - link:
+              - /url: /about
+              - text: About & disclaimer
+            - link:
+              - /url: /
+              - text: Home
+    - list
+  - listbox [ref=f57e51]:
+    - option "Argentina" [active] [ref=f57e52]
+    - option "Australia" [ref=f57e55]
+    - option "Austria" [ref=f57e58]
+    - option "Bangladesh" [ref=f57e61]
+    - option "Belgium" [ref=f57e64]
+    - option "Brazil" [ref=f57e67]
+    - option "Bulgaria" [ref=f57e70]
+    - option "Cambodia" [ref=f57e73]
+    - option "Canada" [ref=f57e76]
+    - option "Chile" [ref=f57e79]
+    - option "China" [ref=f57e82]
+    - option "Colombia" [ref=f57e85]
+    - option "Croatia" [ref=f57e88]
+    - option "Cuba" [ref=f57e91]
+    - option "Cyprus" [ref=f57e94]
+    - option "Czech Republic" [ref=f57e97]
+    - option "Denmark" [ref=f57e100]
+    - option "Egypt" [ref=f57e103]
+    - option "Estonia" [ref=f57e106]
+    - option "Finland" [ref=f57e109]
+    - option "France" [ref=f57e112]
+    - option "Germany" [ref=f57e115]
+    - option "Ghana" [ref=f57e118]
+    - option "Greece" [ref=f57e121]
+    - option "Hong Kong" [ref=f57e124]
+    - option "Hungary" [ref=f57e127]
+    - option "Iceland" [ref=f57e130]
+    - option "India" [ref=f57e133]
+    - option "Indonesia" [ref=f57e136]
+    - option "Iran" [ref=f57e139]
+    - option "Ireland" [ref=f57e142]
+    - option "Israel" [ref=f57e145]
+    - option "Italy" [ref=f57e148]
+    - option "Japan" [ref=f57e151]
+    - option "Jordan" [ref=f57e154]
+    - option "Kenya" [ref=f57e157]
+    - option "Latvia" [ref=f57e160]
+    - option "Lithuania" [ref=f57e163]
+    - option "Malaysia" [ref=f57e166]
+    - option "Mexico" [ref=f57e169]
+    - option "Morocco" [ref=f57e172]
+    - option "Namibia" [ref=f57e175]
+    - option "Nepal" [ref=f57e178]
+    - option "Netherlands" [ref=f57e181]
+    - option "New Zealand" [ref=f57e184]
+    - option "Nigeria" [ref=f57e187]
+    - option "Norway" [ref=f57e190]
+    - option "Pakistan" [ref=f57e193]
+    - option "Peru" [ref=f57e196]
+    - option "Philippines" [ref=f57e199]
+    - option "Poland" [ref=f57e202]
+    - option "Portugal" [ref=f57e205]
+    - option "Qatar" [ref=f57e208]
+    - option "Romania" [ref=f57e211]
+    - option "Russia" [ref=f57e214]
+    - option "Saudi Arabia" [ref=f57e217]
+    - option "Serbia" [ref=f57e220]
+    - option "Singapore" [ref=f57e223]
+    - option "Slovakia" [ref=f57e226]
+    - option "South Africa" [ref=f57e229]
+    - option "South Korea" [ref=f57e232]
+    - option "Spain" [ref=f57e235]
+    - option "Sri Lanka" [ref=f57e238]
+    - option "Sweden" [ref=f57e241]
+    - option "Switzerland" [ref=f57e244]
+    - option "Taiwan" [ref=f57e247]
+    - option "Tanzania" [ref=f57e250]
+    - option "Thailand" [ref=f57e253]
+    - option "Tunisia" [ref=f57e256]
+    - option "Türkiye" [ref=f57e259]
+    - option "Ukraine" [ref=f57e262]
+    - option "United Arab Emirates" [ref=f57e265]
+    - option "United Kingdom" [ref=f57e268]
+    - option "United States" [ref=f57e271]
+    - option "Uruguay" [ref=f57e274]
+    - option "Venezuela" [ref=f57e277]
+    - option "Vietnam" [ref=f57e280]

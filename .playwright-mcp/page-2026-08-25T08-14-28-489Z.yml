@@ -1,0 +1,174 @@
+- generic [ref=f3e4]:
+  - generic [ref=f3e5]:
+    - banner [ref=f3e6]:
+      - generic [ref=f3e7]:
+        - link "TravelUp" [ref=f3e8] [cursor=pointer]:
+          - /url: /
+        - navigation [ref=f3e12]:
+          - link "Home" [ref=f3e13] [cursor=pointer]:
+            - /url: /
+          - link "About" [ref=f3e14] [cursor=pointer]:
+            - /url: /about
+          - button "Clear My Data" [ref=f3e15] [cursor=pointer]
+    - main [ref=f3e16]:
+      - generic [ref=f3e736]:
+        - generic [ref=f3e737]:
+          - generic [ref=f3e738]:
+            - heading "Your top 3 matches" [level=1] [ref=f3e739]
+            - paragraph [ref=f3e740]: Final scores combine your preference fit with travel practicality for your trip length. Estimates only.
+          - button "Revise" [ref=f3e741] [cursor=pointer]
+        - paragraph [ref=f3e745]: Scores are estimates based on your preferences and curated destination data, not live availability or flight schedules. Always verify visa and entry requirements through official government sources for your citizenship.
+        - generic [ref=f3e746]:
+          - article [ref=f3e747]:
+            - generic [ref=f3e748]:
+              - img "Paris, France" [ref=f3e750]
+              - generic [ref=f3e751]: 95/100
+              - generic [ref=f3e752]: Strong match
+              - generic [ref=f3e753]:
+                - heading "Paris" [level=2] [ref=f3e754]
+                - paragraph [ref=f3e758]: France · Île-de-France, France
+            - generic [ref=f3e759]:
+              - region "Travel fit" [ref=f3e760]:
+                - generic [ref=f3e761]:
+                  - heading "Travel fit" [level=3] [ref=f3e762]
+                  - 'status "Travel fit: Good fit" [ref=f3e763]': Good fit
+                - generic [ref=f3e764]:
+                  - generic [ref=f3e765]:
+                    - term [ref=f3e766]: How you'll travel
+                    - definition [ref=f3e767]: Direct Eurostar train
+                  - generic [ref=f3e768]:
+                    - term [ref=f3e769]: Travel time
+                    - definition [ref=f3e770]: About 3 hours each way
+                  - generic [ref=f3e771]:
+                    - term [ref=f3e772]: Time at destination
+                    - definition [ref=f3e773]: About 4 days
+              - list [ref=f3e774]:
+                - listitem [ref=f3e775]:
+                  - generic [ref=f3e776]: •
+                  - text: Great for cities, history and culture, food
+                - listitem [ref=f3e777]:
+                  - generic [ref=f3e778]: •
+                  - text: Enjoyable in your chosen month
+                - listitem [ref=f3e779]:
+                  - generic [ref=f3e780]: •
+                  - text: Fits your selected budget level
+              - generic [ref=f3e781]:
+                - generic [ref=f3e782]:
+                  - generic [ref=f3e786]: Trip length
+                  - generic [ref=f3e787]: 2–4d
+                - generic [ref=f3e788]:
+                  - generic [ref=f3e792]: Budget
+                  - generic [ref=f3e793]: Moderate – Comfortable – Premium
+                - generic [ref=f3e794]:
+                  - generic [ref=f3e798]: Climate
+                  - generic [ref=f3e799]: Mild, Warm, Cool
+              - generic [ref=f3e800]: "Main experiences: Louvre or Musée d'Orsay (deterministic choice) · Eiffel Tower & Seine walk · Montmartre · French bistro dinner"
+              - generic [ref=f3e801]: "Suited to: Solo, Couple, Friends, Family"
+              - button "See score breakdown" [ref=f3e802] [cursor=pointer]
+              - button "View My Trip" [ref=f3e803] [cursor=pointer]
+          - article [ref=f3e804]:
+            - generic [ref=f3e805]:
+              - img "Amsterdam, Netherlands" [ref=f3e807]
+              - generic [ref=f3e808]: 95/100
+              - generic [ref=f3e809]: Strong match
+              - generic [ref=f3e810]:
+                - heading "Amsterdam" [level=2] [ref=f3e811]
+                - paragraph [ref=f3e815]: Netherlands · North Holland, Netherlands
+            - generic [ref=f3e816]:
+              - region "Travel fit" [ref=f3e817]:
+                - generic [ref=f3e818]:
+                  - heading "Travel fit" [level=3] [ref=f3e819]
+                  - 'status "Travel fit: Good fit" [ref=f3e820]': Good fit
+                - generic [ref=f3e821]:
+                  - generic [ref=f3e822]:
+                    - term [ref=f3e823]: How you'll travel
+                    - definition [ref=f3e824]: Direct Eurostar train
+                  - generic [ref=f3e825]:
+                    - term [ref=f3e826]: Travel time
+                    - definition [ref=f3e827]: About 5 hours each way
+                  - generic [ref=f3e828]:
+                    - term [ref=f3e829]: Time at destination
+                    - definition [ref=f3e830]: About 3.5 days
+              - list [ref=f3e831]:
+                - listitem [ref=f3e832]:
+                  - generic [ref=f3e833]: •
+                  - text: Great for cities, history and culture, food
+                - listitem [ref=f3e834]:
+                  - generic [ref=f3e835]: •
+                  - text: Enjoyable in your chosen month
+                - listitem [ref=f3e836]:
+                  - generic [ref=f3e837]: •
+                  - text: Fits your selected budget level
+              - generic [ref=f3e838]:
+                - generic [ref=f3e839]:
+                  - generic [ref=f3e843]: Trip length
+                  - generic [ref=f3e844]: 2–4d
+                - generic [ref=f3e845]:
+                  - generic [ref=f3e849]: Budget
+                  - generic [ref=f3e850]: Moderate – Comfortable – Premium
+                - generic [ref=f3e851]:
+                  - generic [ref=f3e855]: Climate
+                  - generic [ref=f3e856]: Mild, Cool, Cold or snowy
+              - generic [ref=f3e857]: "Main experiences: Canal cruise · Rijksmuseum or Van Gogh Museum (alternative) · Jordaan neighborhood · Cycling (optional)"
+              - generic [ref=f3e858]: "Suited to: Solo, Couple, Friends, Family"
+              - button "See score breakdown" [ref=f3e859] [cursor=pointer]
+              - button "View My Trip" [ref=f3e860] [cursor=pointer]
+          - article [ref=f3e861]:
+            - generic [ref=f3e862]:
+              - img "Brussels & Bruges, Belgium" [ref=f3e864]
+              - generic [ref=f3e865]: 88/100
+              - generic [ref=f3e866]: Strong match
+              - generic [ref=f3e867]:
+                - heading "Brussels & Bruges" [level=2] [ref=f3e868]
+                - paragraph [ref=f3e872]: Belgium · Flanders, Belgium
+            - generic [ref=f3e873]:
+              - region "Travel fit" [ref=f3e874]:
+                - generic [ref=f3e875]:
+                  - heading "Travel fit" [level=3] [ref=f3e876]
+                  - 'status "Travel fit: Good fit" [ref=f3e877]': Good fit
+                - generic [ref=f3e878]:
+                  - generic [ref=f3e879]:
+                    - term [ref=f3e880]: How you'll travel
+                    - definition [ref=f3e881]: Eurostar + onward Belgian train
+                  - generic [ref=f3e882]:
+                    - term [ref=f3e883]: Travel time
+                    - definition [ref=f3e884]: About 3.5 hours each way
+                  - generic [ref=f3e885]:
+                    - term [ref=f3e886]: Time at destination
+                    - definition [ref=f3e887]: About 3.5 days
+              - list [ref=f3e888]:
+                - listitem [ref=f3e889]:
+                  - generic [ref=f3e890]: •
+                  - text: Great for cities, history and culture, food
+                - listitem [ref=f3e891]:
+                  - generic [ref=f3e892]: •
+                  - text: Enjoyable in your chosen month
+                - listitem [ref=f3e893]:
+                  - generic [ref=f3e894]: •
+                  - text: Fits your selected budget level
+              - generic [ref=f3e895]:
+                - generic [ref=f3e896]:
+                  - generic [ref=f3e900]: Trip length
+                  - generic [ref=f3e901]: 2–3d
+                - generic [ref=f3e902]:
+                  - generic [ref=f3e906]: Budget
+                  - generic [ref=f3e907]: Moderate – Comfortable
+                - generic [ref=f3e908]:
+                  - generic [ref=f3e912]: Climate
+                  - generic [ref=f3e913]: Mild, Cool, Cold or snowy
+              - generic [ref=f3e914]: "Main experiences: Grand Place (Brussels) · Belgian chocolate/waffle tasting · Bruges canal walk and old town (canal rides when operating)"
+              - generic [ref=f3e915]: "Suited to: Solo, Couple, Friends, Family"
+              - button "See score breakdown" [ref=f3e916] [cursor=pointer]
+              - button "View My Trip" [ref=f3e917] [cursor=pointer]
+    - contentinfo [ref=f3e41]:
+      - generic [ref=f3e42]:
+        - paragraph [ref=f3e43]: TravelUp
+        - paragraph [ref=f3e46]: Helping unsure travellers discover where to go next.
+        - paragraph [ref=f3e47]: All budgets, climates, seasons, itineraries and packing suggestions are indicative estimates, not live information. Always verify visa requirements, entry conditions, safety and travel advisories using official government sources for your citizenship.
+        - generic [ref=f3e48]:
+          - link "About & disclaimer" [ref=f3e49] [cursor=pointer]:
+            - /url: /about
+          - link "Home" [ref=f3e50] [cursor=pointer]:
+            - /url: /
+  - region "Notifications (F8)":
+    - list

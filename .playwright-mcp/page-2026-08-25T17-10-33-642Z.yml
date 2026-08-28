@@ -1,0 +1,174 @@
+- generic [ref=f108e4]:
+  - generic [ref=f108e5]:
+    - banner [ref=f108e6]:
+      - generic [ref=f108e7]:
+        - link "TravelUp" [ref=f108e8] [cursor=pointer]:
+          - /url: /
+        - navigation [ref=f108e12]:
+          - link "Home" [ref=f108e13] [cursor=pointer]:
+            - /url: /
+          - link "About" [ref=f108e14] [cursor=pointer]:
+            - /url: /about
+          - button "Clear My Data" [ref=f108e15] [cursor=pointer]
+    - main [ref=f108e16]:
+      - generic [ref=f108e1960]:
+        - generic [ref=f108e1961]:
+          - generic [ref=f108e1962]:
+            - heading "Your top 3 matches" [level=1] [ref=f108e1963]
+            - paragraph [ref=f108e1964]: Final scores combine your preference fit with travel practicality for your trip length. Estimates only.
+          - button "Revise" [ref=f108e1965] [cursor=pointer]
+        - paragraph [ref=f108e1969]: Scores are estimates based on your preferences and curated destination data, not live availability or flight schedules. Always verify visa and entry requirements through official government sources for your citizenship.
+        - generic [ref=f108e1970]:
+          - article [ref=f108e1971]:
+            - generic [ref=f108e1972]:
+              - img "San Diego, United States" [ref=f108e1974]
+              - generic [ref=f108e1975]: 88/100
+              - generic [ref=f108e1976]: Strong match
+              - generic [ref=f108e1977]:
+                - heading "San Diego" [level=2] [ref=f108e1978]
+                - paragraph [ref=f108e1982]: United States · Southern California, United States
+            - generic [ref=f108e1983]:
+              - region "Travel fit" [ref=f108e1984]:
+                - generic [ref=f108e1985]:
+                  - heading "Travel fit" [level=3] [ref=f108e1986]
+                  - 'status "Travel fit: Good fit" [ref=f108e1987]': Good fit
+                - generic [ref=f108e1988]:
+                  - generic [ref=f108e1989]:
+                    - term [ref=f108e1990]: How you'll travel
+                    - definition [ref=f108e1991]: Flight, train or drive depending on origin
+                  - generic [ref=f108e1992]:
+                    - term [ref=f108e1993]: Travel time
+                    - definition [ref=f108e1994]: About 5.6 hours each way
+                  - generic [ref=f108e1995]:
+                    - term [ref=f108e1996]: Time at destination
+                    - definition [ref=f108e1997]: About 3 days
+              - list [ref=f108e1998]:
+                - listitem [ref=f108e1999]:
+                  - generic [ref=f108e2000]: •
+                  - text: Great for beaches, wildlife
+                - listitem [ref=f108e2001]:
+                  - generic [ref=f108e2002]: •
+                  - text: Peak season in May
+                - listitem [ref=f108e2003]:
+                  - generic [ref=f108e2004]: •
+                  - text: Fits your selected budget level
+              - generic [ref=f108e2005]:
+                - generic [ref=f108e2006]:
+                  - generic [ref=f108e2010]: Trip length
+                  - generic [ref=f108e2011]: 2–5d
+                - generic [ref=f108e2012]:
+                  - generic [ref=f108e2016]: Budget
+                  - generic [ref=f108e2017]: Moderate – Comfortable – Premium
+                - generic [ref=f108e2018]:
+                  - generic [ref=f108e2022]: Climate
+                  - generic [ref=f108e2023]: Warm, Mild
+              - generic [ref=f108e2024]: "Main experiences: Balboa Park and San Diego Zoo · La Jolla Cove · Gaslamp Quarter · Coronado Beach"
+              - generic [ref=f108e2025]: "Suited to: Solo, Couple, Friends, Family"
+              - button "See score breakdown" [ref=f108e2026] [cursor=pointer]
+              - button "View My Trip" [ref=f108e2027] [cursor=pointer]
+          - article [ref=f108e2028]:
+            - generic [ref=f108e2029]:
+              - img "Yosemite National Park, United States" [ref=f108e2031]
+              - generic [ref=f108e2032]: 88/100
+              - generic [ref=f108e2033]: Strong match
+              - generic [ref=f108e2034]:
+                - heading "Yosemite National Park" [level=2] [ref=f108e2035]
+                - paragraph [ref=f108e2039]: United States · Sierra Nevada, California, United States
+            - generic [ref=f108e2040]:
+              - region "Travel fit" [ref=f108e2041]:
+                - generic [ref=f108e2042]:
+                  - heading "Travel fit" [level=3] [ref=f108e2043]
+                  - 'status "Travel fit: Good fit" [ref=f108e2044]': Good fit
+                - generic [ref=f108e2045]:
+                  - generic [ref=f108e2046]:
+                    - term [ref=f108e2047]: How you'll travel
+                    - definition [ref=f108e2048]: Drive or transfer from a California gateway
+                  - generic [ref=f108e2049]:
+                    - term [ref=f108e2050]: Travel time
+                    - definition [ref=f108e2051]: About 8.9 hours each way
+                  - generic [ref=f108e2052]:
+                    - term [ref=f108e2053]: Time at destination
+                    - definition [ref=f108e2054]: About 2 days
+              - list [ref=f108e2055]:
+                - listitem [ref=f108e2056]:
+                  - generic [ref=f108e2057]: •
+                  - text: Great for nature, wildlife
+                - listitem [ref=f108e2058]:
+                  - generic [ref=f108e2059]: •
+                  - text: Peak season in May
+                - listitem [ref=f108e2060]:
+                  - generic [ref=f108e2061]: •
+                  - text: Fits your selected budget level
+              - generic [ref=f108e2062]:
+                - generic [ref=f108e2063]:
+                  - generic [ref=f108e2067]: Trip length
+                  - generic [ref=f108e2068]: 3–5d
+                - generic [ref=f108e2069]:
+                  - generic [ref=f108e2073]: Budget
+                  - generic [ref=f108e2074]: Budget – Moderate – Comfortable
+                - generic [ref=f108e2075]:
+                  - generic [ref=f108e2079]: Climate
+                  - generic [ref=f108e2080]: Cool, Mild, Cold or snowy
+              - generic [ref=f108e2081]: "Main experiences: Yosemite Valley viewpoints · Glacier Point (seasonal) · Lower Yosemite Fall Trail · Mariposa Grove of giant sequoias"
+              - generic [ref=f108e2082]: "Suited to: Solo, Couple, Friends, Family"
+              - button "See score breakdown" [ref=f108e2083] [cursor=pointer]
+              - button "View My Trip" [ref=f108e2084] [cursor=pointer]
+          - article [ref=f108e2085]:
+            - generic [ref=f108e2086]:
+              - img "Tofino, Canada" [ref=f108e2088]
+              - generic [ref=f108e2089]: 87/100
+              - generic [ref=f108e2090]: Strong match
+              - generic [ref=f108e2091]:
+                - heading "Tofino" [level=2] [ref=f108e2092]
+                - paragraph [ref=f108e2096]: Canada · West Coast Vancouver Island, British Columbia, Canada
+            - generic [ref=f108e2097]:
+              - region "Travel fit" [ref=f108e2098]:
+                - generic [ref=f108e2099]:
+                  - heading "Travel fit" [level=3] [ref=f108e2100]
+                  - 'status "Travel fit: Good fit" [ref=f108e2101]': Good fit
+                - generic [ref=f108e2102]:
+                  - generic [ref=f108e2103]:
+                    - term [ref=f108e2104]: How you'll travel
+                    - definition [ref=f108e2105]: Ferry + drive
+                  - generic [ref=f108e2106]:
+                    - term [ref=f108e2107]: Travel time
+                    - definition [ref=f108e2108]: About 6 hours each way
+                  - generic [ref=f108e2109]:
+                    - term [ref=f108e2110]: Time at destination
+                    - definition [ref=f108e2111]: About 3.5 days
+              - list [ref=f108e2112]:
+                - listitem [ref=f108e2113]:
+                  - generic [ref=f108e2114]: •
+                  - text: Great for nature, beaches, wildlife
+                - listitem [ref=f108e2115]:
+                  - generic [ref=f108e2116]: •
+                  - text: Enjoyable in your chosen month
+                - listitem [ref=f108e2117]:
+                  - generic [ref=f108e2118]: •
+                  - text: Fits your selected budget level
+              - generic [ref=f108e2119]:
+                - generic [ref=f108e2120]:
+                  - generic [ref=f108e2124]: Trip length
+                  - generic [ref=f108e2125]: 3–5d
+                - generic [ref=f108e2126]:
+                  - generic [ref=f108e2130]: Budget
+                  - generic [ref=f108e2131]: Moderate – Comfortable – Premium
+                - generic [ref=f108e2132]:
+                  - generic [ref=f108e2136]: Climate
+                  - generic [ref=f108e2137]: Mild, Cool
+              - generic [ref=f108e2138]: "Main experiences: Long Beach · Pacific Rim National Park trails · Surfing lessons · Storm watching"
+              - generic [ref=f108e2139]: "Suited to: Solo, Couple, Friends, Family"
+              - button "See score breakdown" [ref=f108e2140] [cursor=pointer]
+              - button "View My Trip" [ref=f108e2141] [cursor=pointer]
+    - contentinfo [ref=f108e57]:
+      - generic [ref=f108e58]:
+        - paragraph [ref=f108e59]: TravelUp
+        - paragraph [ref=f108e62]: Helping unsure travellers discover where to go next.
+        - paragraph [ref=f108e63]: All budgets, climates, seasons, itineraries and packing suggestions are indicative estimates, not live information. Always verify visa requirements, entry conditions, safety and travel advisories using official government sources for your citizenship.
+        - generic [ref=f108e64]:
+          - link "About & disclaimer" [ref=f108e65] [cursor=pointer]:
+            - /url: /about
+          - link "Home" [ref=f108e66] [cursor=pointer]:
+            - /url: /
+  - region "Notifications (F8)":
+    - list

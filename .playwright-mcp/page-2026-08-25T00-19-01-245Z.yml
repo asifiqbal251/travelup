@@ -1,0 +1,130 @@
+- generic [ref=f49e4]:
+  - generic [ref=f49e5]:
+    - banner [ref=f49e6]:
+      - generic [ref=f49e7]:
+        - link "TravelUp" [ref=f49e8] [cursor=pointer]:
+          - /url: /
+        - navigation [ref=f49e12]:
+          - link "Home" [ref=f49e13] [cursor=pointer]:
+            - /url: /
+          - link "About" [ref=f49e14] [cursor=pointer]:
+            - /url: /about
+          - button "Clear My Data" [ref=f49e15] [cursor=pointer]
+    - main [ref=f49e16]:
+      - generic [ref=f49e730]:
+        - generic [ref=f49e731]:
+          - generic [ref=f49e732]:
+            - heading "Your top 2 matches" [level=1] [ref=f49e733]
+            - paragraph [ref=f49e734]: Final scores combine your preference fit with travel practicality for your trip length. Estimates only.
+          - button "Revise" [ref=f49e735] [cursor=pointer]
+        - paragraph [ref=f49e739]: Scores are estimates based on your preferences and curated destination data, not live availability or flight schedules. Always verify visa and entry requirements through official government sources for your citizenship.
+        - generic [ref=f49e740]:
+          - paragraph [ref=f49e741]: We found only 2 practical matches for a 3-day trip from your location.
+          - paragraph [ref=f49e742]: The current destination catalogue has limited practical options for this trip length. Try a longer trip, broader preferences, or nearby and domestic destinations.
+        - generic [ref=f49e743]:
+          - article [ref=f49e744]:
+            - generic [ref=f49e745]:
+              - img "Kelowna and the Okanagan Valley, Canada" [ref=f49e747]
+              - generic [ref=f49e748]: 69/100
+              - generic [ref=f49e749]: Fair match
+              - generic [ref=f49e750]:
+                - heading "Kelowna and the Okanagan Valley" [level=2] [ref=f49e751]
+                - paragraph [ref=f49e755]: Canada · Okanagan Valley, British Columbia, Canada
+            - generic [ref=f49e756]:
+              - region "Travel fit" [ref=f49e757]:
+                - generic [ref=f49e758]:
+                  - heading "Travel fit" [level=3] [ref=f49e759]
+                  - 'status "Travel fit: Manageable" [ref=f49e760]': Manageable
+                - generic [ref=f49e761]:
+                  - generic [ref=f49e762]:
+                    - term [ref=f49e763]: How you'll travel
+                    - definition [ref=f49e764]: Drive or regional flight
+                  - generic [ref=f49e765]:
+                    - term [ref=f49e766]: Travel time
+                    - definition [ref=f49e767]: About 7.8 hours each way
+                  - generic [ref=f49e768]:
+                    - term [ref=f49e769]: Time at destination
+                    - definition [ref=f49e770]: About 2 days
+              - list [ref=f49e771]:
+                - listitem [ref=f49e772]:
+                  - generic [ref=f49e773]: •
+                  - text: Great for photography
+                - listitem [ref=f49e774]:
+                  - generic [ref=f49e775]: •
+                  - text: Enjoyable in your chosen month
+                - listitem [ref=f49e776]:
+                  - generic [ref=f49e777]: •
+                  - text: Fits your selected budget level
+              - generic [ref=f49e778]:
+                - generic [ref=f49e779]:
+                  - generic [ref=f49e783]: Trip length
+                  - generic [ref=f49e784]: 2–5d
+                - generic [ref=f49e785]:
+                  - generic [ref=f49e789]: Budget
+                  - generic [ref=f49e790]: Moderate – Comfortable – Premium
+                - generic [ref=f49e791]:
+                  - generic [ref=f49e795]: Climate
+                  - generic [ref=f49e796]: Warm, Mild
+              - generic [ref=f49e797]: "Main experiences: Okanagan wine tours · Kelowna waterfront beaches · Knox Mountain hike · Orchard fruit stands"
+              - generic [ref=f49e798]: "Suited to: Solo, Couple, Friends, Family"
+              - button "See score breakdown" [ref=f49e799] [cursor=pointer]
+              - button "View My Trip" [ref=f49e800] [cursor=pointer]
+          - article [ref=f49e801]:
+            - generic [ref=f49e802]:
+              - img "Montréal and Québec City, Canada" [ref=f49e804]
+              - generic [ref=f49e805]: 56/100
+              - generic [ref=f49e806]: Fair match
+              - generic [ref=f49e807]:
+                - heading "Montréal and Québec City" [level=2] [ref=f49e808]
+                - paragraph [ref=f49e812]: Canada · Québec, Canada
+            - generic [ref=f49e813]:
+              - region "Travel fit" [ref=f49e814]:
+                - generic [ref=f49e815]:
+                  - heading "Travel fit" [level=3] [ref=f49e816]
+                  - 'status "Travel fit: Manageable" [ref=f49e817]': Manageable
+                - generic [ref=f49e818]:
+                  - generic [ref=f49e819]:
+                    - term [ref=f49e820]: How you'll travel
+                    - definition [ref=f49e821]: International flight + train/transfer
+                  - generic [ref=f49e822]:
+                    - term [ref=f49e823]: Travel time
+                    - definition [ref=f49e824]: About 7.4 hours each way
+                  - generic [ref=f49e825]:
+                    - term [ref=f49e826]: Time at destination
+                    - definition [ref=f49e827]: About 2 days
+              - list [ref=f49e828]:
+                - listitem [ref=f49e829]:
+                  - generic [ref=f49e830]: •
+                  - text: Enjoyable in your chosen month
+                - listitem [ref=f49e831]:
+                  - generic [ref=f49e832]: •
+                  - text: Close to your premium budget
+                - listitem [ref=f49e833]:
+                  - generic [ref=f49e834]: •
+                  - text: Ideal for 3 total days
+              - generic [ref=f49e835]:
+                - generic [ref=f49e836]:
+                  - generic [ref=f49e840]: Trip length
+                  - generic [ref=f49e841]: 3–10d
+                - generic [ref=f49e842]:
+                  - generic [ref=f49e846]: Budget
+                  - generic [ref=f49e847]: Comfortable – Moderate
+                - generic [ref=f49e848]:
+                  - generic [ref=f49e852]: Climate
+                  - generic [ref=f49e853]: Cool, Cold or snowy, Mild
+              - generic [ref=f49e854]: "Main experiences: Old Montréal · Mont-Royal · Notre-Dame Basilica · Québec City old town"
+              - generic [ref=f49e855]: "Suited to: Couple, Family, Friends"
+              - button "See score breakdown" [ref=f49e856] [cursor=pointer]
+              - button "View My Trip" [ref=f49e857] [cursor=pointer]
+    - contentinfo [ref=f49e41]:
+      - generic [ref=f49e42]:
+        - paragraph [ref=f49e43]: TravelUp
+        - paragraph [ref=f49e46]: Helping unsure travellers discover where to go next.
+        - paragraph [ref=f49e47]: All budgets, climates, seasons, itineraries and packing suggestions are indicative estimates, not live information. Always verify visa requirements, entry conditions, safety and travel advisories using official government sources for your citizenship.
+        - generic [ref=f49e48]:
+          - link "About & disclaimer" [ref=f49e49] [cursor=pointer]:
+            - /url: /about
+          - link "Home" [ref=f49e50] [cursor=pointer]:
+            - /url: /
+  - region "Notifications (F8)":
+    - list

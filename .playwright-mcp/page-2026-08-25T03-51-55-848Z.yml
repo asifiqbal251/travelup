@@ -1,0 +1,240 @@
+- generic [ref=f51e4]:
+  - generic [ref=f51e5]:
+    - banner [ref=f51e6]:
+      - generic [ref=f51e7]:
+        - link "TravelUp" [ref=f51e8] [cursor=pointer]:
+          - /url: /
+        - navigation [ref=f51e12]:
+          - link "Home" [ref=f51e13] [cursor=pointer]:
+            - /url: /
+          - link "About" [ref=f51e14] [cursor=pointer]:
+            - /url: /about
+          - button "Clear My Data" [ref=f51e15] [cursor=pointer]
+    - main [ref=f51e16]:
+      - generic [ref=f51e2089]:
+        - button "Back to recommendations" [ref=f51e2090] [cursor=pointer]
+        - generic [ref=f51e2091]:
+          - img "Istanbul & Cappadocia, Türkiye, Türkiye" [ref=f51e2093]
+          - generic [ref=f51e2095]:
+            - heading "Istanbul & Cappadocia, Türkiye" [level=1] [ref=f51e2096]
+            - paragraph [ref=f51e2097]: Türkiye · Western Asia
+        - generic [ref=f51e2098]:
+          - tablist [ref=f51e2099]:
+            - tab "Itinerary" [selected] [ref=f51e2100] [cursor=pointer]
+            - tab "Packing" [ref=f51e2101] [cursor=pointer]
+            - tab "Overview" [ref=f51e2102] [cursor=pointer]
+          - tabpanel "Itinerary" [ref=f51e2103]:
+            - generic [ref=f51e2104]:
+              - paragraph [ref=f51e2105]: A suggested 14-day plan including outbound and return travel. Indicative only — verify opening hours and tickets before you go.
+              - generic [ref=f51e2106]:
+                - 'button "Day 1 · Travel Outbound: New York → Istanbul & Cappadocia, Türkiye In transit Light intensity Departure In transit Continue transit Hide details" [expanded] [ref=f51e2107] [cursor=pointer]':
+                  - generic [ref=f51e2108]:
+                    - generic [ref=f51e2109]:
+                      - generic [ref=f51e2110]: Day 1 · Travel
+                      - 'heading "Outbound: New York → Istanbul & Cappadocia, Türkiye" [level=3] [ref=f51e2111]'
+                      - generic [ref=f51e2112]: In transit
+                    - generic [ref=f51e2113]: Light intensity
+                  - generic [ref=f51e2114]:
+                    - generic [ref=f51e2115]: Departure
+                    - generic [ref=f51e2116]: In transit
+                    - generic [ref=f51e2117]: Continue transit
+                  - generic [ref=f51e2118]: Hide details
+                - generic [ref=f51e2119]:
+                  - list [ref=f51e2120]:
+                    - listitem [ref=f51e2121]:
+                      - generic [ref=f51e2122]: Departure
+                      - generic [ref=f51e2124]:
+                        - generic [ref=f51e2125]: Check-in and departure
+                        - paragraph [ref=f51e2126]: Allow time for check-in and security.
+                    - listitem [ref=f51e2127]:
+                      - generic [ref=f51e2128]: In transit
+                      - generic [ref=f51e2130]:
+                        - generic [ref=f51e2131]: Travel to Istanbul & Cappadocia, Türkiye
+                        - paragraph [ref=f51e2132]: "Estimated total journey: about 18.3 hours each way."
+                    - listitem [ref=f51e2133]:
+                      - generic [ref=f51e2134]: Continue transit
+                      - generic [ref=f51e2136]:
+                        - generic [ref=f51e2137]: Long-haul travel
+                        - paragraph [ref=f51e2138]: The journey continues; rest where you can.
+                  - paragraph [ref=f51e2139]: "Estimated total journey: about 18.3 hours each way."
+                  - generic [ref=f51e2140]:
+                    - generic [ref=f51e2141]:
+                      - generic [ref=f51e2142]: Getting around
+                      - generic [ref=f51e2143]: Taxis, rideshares and local transit.
+                    - generic [ref=f51e2144]:
+                      - generic [ref=f51e2145]: Plan ahead
+                      - generic [ref=f51e2146]: Keep travel documents and accommodation confirmations accessible.
+                    - generic [ref=f51e2147]:
+                      - generic [ref=f51e2148]: Optional swap
+                      - generic [ref=f51e2149]: Arrange a private transfer for a smoother arrival.
+                    - generic [ref=f51e2150]:
+                      - generic [ref=f51e2151]: Overnight
+                      - generic [ref=f51e2152]: Overnight in transit.
+              - button "Day 2 · Travel Arrival & recovery Istanbul & Cappadocia, Türkiye Light intensity Arrival Transfer Recovery View details" [ref=f51e2154] [cursor=pointer]:
+                - generic [ref=f51e2155]:
+                  - generic [ref=f51e2156]:
+                    - generic [ref=f51e2157]: Day 2 · Travel
+                    - heading "Arrival & recovery" [level=3] [ref=f51e2158]
+                    - generic [ref=f51e2159]: Istanbul & Cappadocia, Türkiye
+                  - generic [ref=f51e2160]: Light intensity
+                - generic [ref=f51e2161]:
+                  - generic [ref=f51e2162]: Arrival
+                  - generic [ref=f51e2163]: Transfer
+                  - generic [ref=f51e2164]: Recovery
+                - generic [ref=f51e2165]: View details
+              - button "Day 3 Sultanahmet Istanbul & Cappadocia, Türkiye Moderate intensity History and culture Cities Food View details" [ref=f51e2167] [cursor=pointer]:
+                - generic [ref=f51e2168]:
+                  - generic [ref=f51e2169]:
+                    - generic [ref=f51e2170]: Day 3
+                    - heading "Sultanahmet" [level=3] [ref=f51e2171]
+                    - generic [ref=f51e2172]: Istanbul & Cappadocia, Türkiye
+                  - generic [ref=f51e2173]: Moderate intensity
+                - generic [ref=f51e2174]:
+                  - generic [ref=f51e2175]: History and culture
+                  - generic [ref=f51e2176]: Cities
+                  - generic [ref=f51e2177]: Food
+                - generic [ref=f51e2178]: View details
+              - button "Day 4 Bosphorus & bazaar Istanbul & Cappadocia, Türkiye Light intensity Cities Food History and culture View details" [ref=f51e2180] [cursor=pointer]:
+                - generic [ref=f51e2181]:
+                  - generic [ref=f51e2182]:
+                    - generic [ref=f51e2183]: Day 4
+                    - heading "Bosphorus & bazaar" [level=3] [ref=f51e2184]
+                    - generic [ref=f51e2185]: Istanbul & Cappadocia, Türkiye
+                  - generic [ref=f51e2186]: Light intensity
+                - generic [ref=f51e2187]:
+                  - generic [ref=f51e2188]: Cities
+                  - generic [ref=f51e2189]: Food
+                  - generic [ref=f51e2190]: History and culture
+                - generic [ref=f51e2191]: View details
+              - button "Day 5 Asian side of Istanbul Istanbul & Cappadocia, Türkiye Light intensity Cities Food Photography View details" [ref=f51e2193] [cursor=pointer]:
+                - generic [ref=f51e2194]:
+                  - generic [ref=f51e2195]:
+                    - generic [ref=f51e2196]: Day 5
+                    - heading "Asian side of Istanbul" [level=3] [ref=f51e2197]
+                    - generic [ref=f51e2198]: Istanbul & Cappadocia, Türkiye
+                  - generic [ref=f51e2199]: Light intensity
+                - generic [ref=f51e2200]:
+                  - generic [ref=f51e2201]: Cities
+                  - generic [ref=f51e2202]: Food
+                  - generic [ref=f51e2203]: Photography
+                - generic [ref=f51e2204]: View details
+              - button "Day 6 Fly to Cappadocia Istanbul & Cappadocia, Türkiye Light intensity History and culture Photography Adventure View details" [ref=f51e2206] [cursor=pointer]:
+                - generic [ref=f51e2207]:
+                  - generic [ref=f51e2208]:
+                    - generic [ref=f51e2209]: Day 6
+                    - heading "Fly to Cappadocia" [level=3] [ref=f51e2210]
+                    - generic [ref=f51e2211]: Istanbul & Cappadocia, Türkiye
+                  - generic [ref=f51e2212]: Light intensity
+                - generic [ref=f51e2213]:
+                  - generic [ref=f51e2214]: History and culture
+                  - generic [ref=f51e2215]: Photography
+                  - generic [ref=f51e2216]: Adventure
+                - generic [ref=f51e2217]: View details
+              - button "Day 7 · Flexible Flexible day Istanbul & Cappadocia, Türkiye Light intensity Slow start Café and laundry Easy stroll View details" [ref=f51e2219] [cursor=pointer]:
+                - generic [ref=f51e2220]:
+                  - generic [ref=f51e2221]:
+                    - generic [ref=f51e2222]: Day 7 · Flexible
+                    - heading "Flexible day" [level=3] [ref=f51e2223]
+                    - generic [ref=f51e2224]: Istanbul & Cappadocia, Türkiye
+                  - generic [ref=f51e2225]: Light intensity
+                - generic [ref=f51e2226]:
+                  - generic [ref=f51e2227]: Slow start
+                  - generic [ref=f51e2228]: Café and laundry
+                  - generic [ref=f51e2229]: Easy stroll
+                - generic [ref=f51e2230]: View details
+              - button "Day 8 Balloons & valleys Istanbul & Cappadocia, Türkiye High intensity Adventure Nature Photography View details" [ref=f51e2232] [cursor=pointer]:
+                - generic [ref=f51e2233]:
+                  - generic [ref=f51e2234]:
+                    - generic [ref=f51e2235]: Day 8
+                    - heading "Balloons & valleys" [level=3] [ref=f51e2236]
+                    - generic [ref=f51e2237]: Istanbul & Cappadocia, Türkiye
+                  - generic [ref=f51e2238]: High intensity
+                - generic [ref=f51e2239]:
+                  - generic [ref=f51e2240]: Adventure
+                  - generic [ref=f51e2241]: Nature
+                  - generic [ref=f51e2242]: Photography
+                - generic [ref=f51e2243]: View details
+              - button "Day 9 Underground city Istanbul & Cappadocia, Türkiye Moderate intensity History and culture Hiking Adventure View details" [ref=f51e2245] [cursor=pointer]:
+                - generic [ref=f51e2246]:
+                  - generic [ref=f51e2247]:
+                    - generic [ref=f51e2248]: Day 9
+                    - heading "Underground city" [level=3] [ref=f51e2249]
+                    - generic [ref=f51e2250]: Istanbul & Cappadocia, Türkiye
+                  - generic [ref=f51e2251]: Moderate intensity
+                - generic [ref=f51e2252]:
+                  - generic [ref=f51e2253]: History and culture
+                  - generic [ref=f51e2254]: Hiking
+                  - generic [ref=f51e2255]: Adventure
+                - generic [ref=f51e2256]: View details
+              - button "Day 10 Red & Rose valleys Istanbul & Cappadocia, Türkiye Moderate intensity Photography Nature Food View details" [ref=f51e2258] [cursor=pointer]:
+                - generic [ref=f51e2259]:
+                  - generic [ref=f51e2260]:
+                    - generic [ref=f51e2261]: Day 10
+                    - heading "Red & Rose valleys" [level=3] [ref=f51e2262]
+                    - generic [ref=f51e2263]: Istanbul & Cappadocia, Türkiye
+                  - generic [ref=f51e2264]: Moderate intensity
+                - generic [ref=f51e2265]:
+                  - generic [ref=f51e2266]: Photography
+                  - generic [ref=f51e2267]: Nature
+                  - generic [ref=f51e2268]: Food
+                - generic [ref=f51e2269]: View details
+              - button "Day 11 Cappadocia to Antalya Istanbul & Cappadocia, Türkiye Moderate intensity Nature History and culture Adventure View details" [ref=f51e2271] [cursor=pointer]:
+                - generic [ref=f51e2272]:
+                  - generic [ref=f51e2273]:
+                    - generic [ref=f51e2274]: Day 11
+                    - heading "Cappadocia to Antalya" [level=3] [ref=f51e2275]
+                    - generic [ref=f51e2276]: Istanbul & Cappadocia, Türkiye
+                  - generic [ref=f51e2277]: Moderate intensity
+                - generic [ref=f51e2278]:
+                  - generic [ref=f51e2279]: Nature
+                  - generic [ref=f51e2280]: History and culture
+                  - generic [ref=f51e2281]: Adventure
+                - generic [ref=f51e2282]: View details
+              - button "Day 12 Antalya old town Istanbul & Cappadocia, Türkiye Light intensity Cities History and culture Nature View details" [ref=f51e2284] [cursor=pointer]:
+                - generic [ref=f51e2285]:
+                  - generic [ref=f51e2286]:
+                    - generic [ref=f51e2287]: Day 12
+                    - heading "Antalya old town" [level=3] [ref=f51e2288]
+                    - generic [ref=f51e2289]: Istanbul & Cappadocia, Türkiye
+                  - generic [ref=f51e2290]: Light intensity
+                - generic [ref=f51e2291]:
+                  - generic [ref=f51e2292]: Cities
+                  - generic [ref=f51e2293]: History and culture
+                  - generic [ref=f51e2294]: Nature
+                - generic [ref=f51e2295]: View details
+              - 'button "Day 13 · Travel Return begins: Istanbul & Cappadocia, Türkiye → New York In transit Light intensity Check-out Return begins In transit View details" [ref=f51e2297] [cursor=pointer]':
+                - generic [ref=f51e2298]:
+                  - generic [ref=f51e2299]:
+                    - generic [ref=f51e2300]: Day 13 · Travel
+                    - 'heading "Return begins: Istanbul & Cappadocia, Türkiye → New York" [level=3] [ref=f51e2301]'
+                    - generic [ref=f51e2302]: In transit
+                  - generic [ref=f51e2303]: Light intensity
+                - generic [ref=f51e2304]:
+                  - generic [ref=f51e2305]: Check-out
+                  - generic [ref=f51e2306]: Return begins
+                  - generic [ref=f51e2307]: In transit
+                - generic [ref=f51e2308]: View details
+              - 'button "Day 14 · Travel Return: Istanbul & Cappadocia, Türkiye → New York In transit Light intensity Return In transit Arrive home View details" [ref=f51e2310] [cursor=pointer]':
+                - generic [ref=f51e2311]:
+                  - generic [ref=f51e2312]:
+                    - generic [ref=f51e2313]: Day 14 · Travel
+                    - 'heading "Return: Istanbul & Cappadocia, Türkiye → New York" [level=3] [ref=f51e2314]'
+                    - generic [ref=f51e2315]: In transit
+                  - generic [ref=f51e2316]: Light intensity
+                - generic [ref=f51e2317]:
+                  - generic [ref=f51e2318]: Return
+                  - generic [ref=f51e2319]: In transit
+                  - generic [ref=f51e2320]: Arrive home
+                - generic [ref=f51e2321]: View details
+    - contentinfo [ref=f51e41]:
+      - generic [ref=f51e42]:
+        - paragraph [ref=f51e43]: TravelUp
+        - paragraph [ref=f51e46]: Helping unsure travellers discover where to go next.
+        - paragraph [ref=f51e47]: All budgets, climates, seasons, itineraries and packing suggestions are indicative estimates, not live information. Always verify visa requirements, entry conditions, safety and travel advisories using official government sources for your citizenship.
+        - generic [ref=f51e48]:
+          - link "About & disclaimer" [ref=f51e49] [cursor=pointer]:
+            - /url: /about
+          - link "Home" [ref=f51e50] [cursor=pointer]:
+            - /url: /
+  - region "Notifications (F8)":
+    - list

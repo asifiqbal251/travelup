@@ -1,0 +1,174 @@
+- generic [ref=f93e4]:
+  - generic [ref=f93e5]:
+    - banner [ref=f93e6]:
+      - generic [ref=f93e7]:
+        - link "TravelUp" [ref=f93e8] [cursor=pointer]:
+          - /url: /
+        - navigation [ref=f93e12]:
+          - link "Home" [ref=f93e13] [cursor=pointer]:
+            - /url: /
+          - link "About" [ref=f93e14] [cursor=pointer]:
+            - /url: /about
+          - button "Clear My Data" [ref=f93e15] [cursor=pointer]
+    - main [ref=f93e16]:
+      - generic [ref=f93e212]:
+        - generic [ref=f93e213]:
+          - generic [ref=f93e214]:
+            - heading "Your top 3 matches" [level=1] [ref=f93e215]
+            - paragraph [ref=f93e216]: Final scores combine your preference fit with travel practicality for your trip length. Estimates only.
+          - button "Revise" [ref=f93e217] [cursor=pointer]
+        - paragraph [ref=f93e221]: Scores are estimates based on your preferences and curated destination data, not live availability or flight schedules. Always verify visa and entry requirements through official government sources for your citizenship.
+        - generic [ref=f93e222]:
+          - article [ref=f93e223]:
+            - generic [ref=f93e224]:
+              - img "Paris, France" [ref=f93e226]
+              - generic [ref=f93e227]: 89/100
+              - generic [ref=f93e228]: Strong match
+              - generic [ref=f93e229]:
+                - heading "Paris" [level=2] [ref=f93e230]
+                - paragraph [ref=f93e234]: France · Île-de-France, France
+            - generic [ref=f93e235]:
+              - region "Travel fit" [ref=f93e236]:
+                - generic [ref=f93e237]:
+                  - heading "Travel fit" [level=3] [ref=f93e238]
+                  - 'status "Travel fit: Good fit" [ref=f93e239]': Good fit
+                - generic [ref=f93e240]:
+                  - generic [ref=f93e241]:
+                    - term [ref=f93e242]: How you'll travel
+                    - definition [ref=f93e243]: Direct Eurostar train
+                  - generic [ref=f93e244]:
+                    - term [ref=f93e245]: Travel time
+                    - definition [ref=f93e246]: About 3 hours each way
+                  - generic [ref=f93e247]:
+                    - term [ref=f93e248]: Time at destination
+                    - definition [ref=f93e249]: About 4 days
+              - list [ref=f93e250]:
+                - listitem [ref=f93e251]:
+                  - generic [ref=f93e252]: •
+                  - text: Great for cities, history and culture, food
+                - listitem [ref=f93e253]:
+                  - generic [ref=f93e254]: •
+                  - text: Enjoyable in your chosen month
+                - listitem [ref=f93e255]:
+                  - generic [ref=f93e256]: •
+                  - text: Fits your selected budget level
+              - generic [ref=f93e257]:
+                - generic [ref=f93e258]:
+                  - generic [ref=f93e262]: Trip length
+                  - generic [ref=f93e263]: 2–4d
+                - generic [ref=f93e264]:
+                  - generic [ref=f93e268]: Budget
+                  - generic [ref=f93e269]: Moderate – Comfortable – Premium
+                - generic [ref=f93e270]:
+                  - generic [ref=f93e274]: Climate
+                  - generic [ref=f93e275]: Mild, Warm, Cool
+              - generic [ref=f93e276]: "Main experiences: Louvre or Musée d'Orsay (deterministic choice) · Eiffel Tower & Seine walk · Montmartre · French bistro dinner"
+              - generic [ref=f93e277]: "Suited to: Solo, Couple, Friends, Family"
+              - button "See score breakdown" [ref=f93e278] [cursor=pointer]
+              - button "View My Trip" [ref=f93e279] [cursor=pointer]
+          - article [ref=f93e280]:
+            - generic [ref=f93e281]:
+              - img "Edinburgh, United Kingdom" [ref=f93e283]
+              - generic [ref=f93e284]: 89/100
+              - generic [ref=f93e285]: Strong match
+              - generic [ref=f93e286]:
+                - heading "Edinburgh" [level=2] [ref=f93e287]
+                - paragraph [ref=f93e291]: United Kingdom · Lothian, Scotland, United Kingdom
+            - generic [ref=f93e292]:
+              - region "Travel fit" [ref=f93e293]:
+                - generic [ref=f93e294]:
+                  - heading "Travel fit" [level=3] [ref=f93e295]
+                  - 'status "Travel fit: Good fit" [ref=f93e296]': Good fit
+                - generic [ref=f93e297]:
+                  - generic [ref=f93e298]:
+                    - term [ref=f93e299]: How you'll travel
+                    - definition [ref=f93e300]: Direct train
+                  - generic [ref=f93e301]:
+                    - term [ref=f93e302]: Travel time
+                    - definition [ref=f93e303]: About 4.5 hours each way
+                  - generic [ref=f93e304]:
+                    - term [ref=f93e305]: Time at destination
+                    - definition [ref=f93e306]: About 3.5 days
+              - list [ref=f93e307]:
+                - listitem [ref=f93e308]:
+                  - generic [ref=f93e309]: •
+                  - text: Great for cities, history and culture, nature
+                - listitem [ref=f93e310]:
+                  - generic [ref=f93e311]: •
+                  - text: Enjoyable in your chosen month
+                - listitem [ref=f93e312]:
+                  - generic [ref=f93e313]: •
+                  - text: Fits your selected budget level
+              - generic [ref=f93e314]:
+                - generic [ref=f93e315]:
+                  - generic [ref=f93e319]: Trip length
+                  - generic [ref=f93e320]: 2–4d
+                - generic [ref=f93e321]:
+                  - generic [ref=f93e325]: Budget
+                  - generic [ref=f93e326]: Budget – Moderate – Comfortable
+                - generic [ref=f93e327]:
+                  - generic [ref=f93e331]: Climate
+                  - generic [ref=f93e332]: Cool, Mild, Cold or snowy
+              - generic [ref=f93e333]: "Main experiences: Edinburgh Castle · Royal Mile · Arthur's Seat hike (weather-dependent) · Holyrood Palace"
+              - generic [ref=f93e334]: "Suited to: Solo, Couple, Friends, Family"
+              - button "See score breakdown" [ref=f93e335] [cursor=pointer]
+              - button "View My Trip" [ref=f93e336] [cursor=pointer]
+          - article [ref=f93e337]:
+            - generic [ref=f93e338]:
+              - img "Amsterdam, Netherlands" [ref=f93e340]
+              - generic [ref=f93e341]: 89/100
+              - generic [ref=f93e342]: Strong match
+              - generic [ref=f93e343]:
+                - heading "Amsterdam" [level=2] [ref=f93e344]
+                - paragraph [ref=f93e348]: Netherlands · North Holland, Netherlands
+            - generic [ref=f93e349]:
+              - region "Travel fit" [ref=f93e350]:
+                - generic [ref=f93e351]:
+                  - heading "Travel fit" [level=3] [ref=f93e352]
+                  - 'status "Travel fit: Good fit" [ref=f93e353]': Good fit
+                - generic [ref=f93e354]:
+                  - generic [ref=f93e355]:
+                    - term [ref=f93e356]: How you'll travel
+                    - definition [ref=f93e357]: Direct Eurostar train
+                  - generic [ref=f93e358]:
+                    - term [ref=f93e359]: Travel time
+                    - definition [ref=f93e360]: About 5 hours each way
+                  - generic [ref=f93e361]:
+                    - term [ref=f93e362]: Time at destination
+                    - definition [ref=f93e363]: About 3.5 days
+              - list [ref=f93e364]:
+                - listitem [ref=f93e365]:
+                  - generic [ref=f93e366]: •
+                  - text: Great for cities, history and culture, food
+                - listitem [ref=f93e367]:
+                  - generic [ref=f93e368]: •
+                  - text: Enjoyable in your chosen month
+                - listitem [ref=f93e369]:
+                  - generic [ref=f93e370]: •
+                  - text: Fits your selected budget level
+              - generic [ref=f93e371]:
+                - generic [ref=f93e372]:
+                  - generic [ref=f93e376]: Trip length
+                  - generic [ref=f93e377]: 2–4d
+                - generic [ref=f93e378]:
+                  - generic [ref=f93e382]: Budget
+                  - generic [ref=f93e383]: Moderate – Comfortable – Premium
+                - generic [ref=f93e384]:
+                  - generic [ref=f93e388]: Climate
+                  - generic [ref=f93e389]: Mild, Cool, Cold or snowy
+              - generic [ref=f93e390]: "Main experiences: Canal cruise · Rijksmuseum or Van Gogh Museum (alternative) · Jordaan neighborhood · Cycling (optional)"
+              - generic [ref=f93e391]: "Suited to: Solo, Couple, Friends, Family"
+              - button "See score breakdown" [ref=f93e392] [cursor=pointer]
+              - button "View My Trip" [ref=f93e393] [cursor=pointer]
+    - contentinfo [ref=f93e56]:
+      - generic [ref=f93e57]:
+        - paragraph [ref=f93e58]: TravelUp
+        - paragraph [ref=f93e61]: Helping unsure travellers discover where to go next.
+        - paragraph [ref=f93e62]: All budgets, climates, seasons, itineraries and packing suggestions are indicative estimates, not live information. Always verify visa requirements, entry conditions, safety and travel advisories using official government sources for your citizenship.
+        - generic [ref=f93e63]:
+          - link "About & disclaimer" [ref=f93e64] [cursor=pointer]:
+            - /url: /about
+          - link "Home" [ref=f93e65] [cursor=pointer]:
+            - /url: /
+  - region "Notifications (F8)":
+    - list

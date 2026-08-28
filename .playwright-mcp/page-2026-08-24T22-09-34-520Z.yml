@@ -1,0 +1,174 @@
+- generic [ref=f40e4]:
+  - generic [ref=f40e5]:
+    - banner [ref=f40e6]:
+      - generic [ref=f40e7]:
+        - link "TravelUp" [ref=f40e8] [cursor=pointer]:
+          - /url: /
+        - navigation [ref=f40e12]:
+          - link "Home" [ref=f40e13] [cursor=pointer]:
+            - /url: /
+          - link "About" [ref=f40e14] [cursor=pointer]:
+            - /url: /about
+          - button "Clear My Data" [ref=f40e15] [cursor=pointer]
+    - main [ref=f40e16]:
+      - generic [ref=f40e271]:
+        - generic [ref=f40e272]:
+          - generic [ref=f40e273]:
+            - heading "Your top 3 matches" [level=1] [ref=f40e274]
+            - paragraph [ref=f40e275]: Final scores combine your preference fit with travel practicality for your trip length. Estimates only.
+          - button "Revise" [ref=f40e276] [cursor=pointer]
+        - paragraph [ref=f40e280]: Scores are estimates based on your preferences and curated destination data, not live availability or flight schedules. Always verify visa and entry requirements through official government sources for your citizenship.
+        - generic [ref=f40e281]:
+          - article [ref=f40e282]:
+            - generic [ref=f40e283]:
+              - img "Tokyo & Kyoto, Japan, Japan" [ref=f40e285]
+              - generic [ref=f40e286]: 93/100
+              - generic [ref=f40e287]: Strong match
+              - generic [ref=f40e288]:
+                - heading "Tokyo & Kyoto, Japan" [level=2] [ref=f40e289]
+                - paragraph [ref=f40e293]: Japan · East Asia
+            - generic [ref=f40e294]:
+              - region "Travel fit" [ref=f40e295]:
+                - generic [ref=f40e296]:
+                  - heading "Travel fit" [level=3] [ref=f40e297]
+                  - 'status "Travel fit: Good fit" [ref=f40e298]': Good fit
+                - generic [ref=f40e299]:
+                  - generic [ref=f40e300]:
+                    - term [ref=f40e301]: How you'll travel
+                    - definition [ref=f40e302]: International flight + local rail/local transport
+                  - generic [ref=f40e303]:
+                    - term [ref=f40e304]: Travel time
+                    - definition [ref=f40e305]: About 23.8 hours each way
+                  - generic [ref=f40e306]:
+                    - term [ref=f40e307]: Time at destination
+                    - definition [ref=f40e308]: About 10 days
+              - list [ref=f40e309]:
+                - listitem [ref=f40e310]:
+                  - generic [ref=f40e311]: •
+                  - text: Great for history and culture, food, cities
+                - listitem [ref=f40e312]:
+                  - generic [ref=f40e313]: •
+                  - text: Enjoyable in your chosen month
+                - listitem [ref=f40e314]:
+                  - generic [ref=f40e315]: •
+                  - text: Fits your selected budget level
+              - generic [ref=f40e316]:
+                - generic [ref=f40e317]:
+                  - generic [ref=f40e321]: Trip length
+                  - generic [ref=f40e322]: 7–14d
+                - generic [ref=f40e323]:
+                  - generic [ref=f40e327]: Budget
+                  - generic [ref=f40e328]: Moderate – Comfortable – Premium
+                - generic [ref=f40e329]:
+                  - generic [ref=f40e333]: Climate
+                  - generic [ref=f40e334]: Mild, Cool
+              - generic [ref=f40e335]: "Main experiences: Temples and gardens of Kyoto · Shibuya crossing and neon Tokyo · Sushi and ramen trails · Bullet train journey"
+              - generic [ref=f40e336]: "Suited to: Solo, Couple, Friends, Family"
+              - button "See score breakdown" [ref=f40e337] [cursor=pointer]
+              - button "View My Trip" [ref=f40e338] [cursor=pointer]
+          - article [ref=f40e339]:
+            - generic [ref=f40e340]:
+              - img "Hanoi, Central Vietnam & Ho Chi Minh City, Vietnam, Vietnam" [ref=f40e342]
+              - generic [ref=f40e343]: 90/100
+              - generic [ref=f40e344]: Strong match
+              - generic [ref=f40e345]:
+                - heading "Hanoi, Central Vietnam & Ho Chi Minh City, Vietnam" [level=2] [ref=f40e346]
+                - paragraph [ref=f40e350]: Vietnam · Southeast Asia
+            - generic [ref=f40e351]:
+              - region "Travel fit" [ref=f40e352]:
+                - generic [ref=f40e353]:
+                  - heading "Travel fit" [level=3] [ref=f40e354]
+                  - 'status "Travel fit: Good fit" [ref=f40e355]': Good fit
+                - generic [ref=f40e356]:
+                  - generic [ref=f40e357]:
+                    - term [ref=f40e358]: How you'll travel
+                    - definition [ref=f40e359]: International flight + local transport
+                  - generic [ref=f40e360]:
+                    - term [ref=f40e361]: Travel time
+                    - definition [ref=f40e362]: About 28.7 hours each way
+                  - generic [ref=f40e363]:
+                    - term [ref=f40e364]: Time at destination
+                    - definition [ref=f40e365]: About 10 days
+              - list [ref=f40e366]:
+                - listitem [ref=f40e367]:
+                  - generic [ref=f40e368]: •
+                  - text: Great for history and culture, food, cities
+                - listitem [ref=f40e369]:
+                  - generic [ref=f40e370]: •
+                  - text: Enjoyable in your chosen month
+                - listitem [ref=f40e371]:
+                  - generic [ref=f40e372]: •
+                  - text: Fits your selected budget level
+              - generic [ref=f40e373]:
+                - generic [ref=f40e374]:
+                  - generic [ref=f40e378]: Trip length
+                  - generic [ref=f40e379]: 8–14d
+                - generic [ref=f40e380]:
+                  - generic [ref=f40e384]: Budget
+                  - generic [ref=f40e385]: Budget – Moderate
+                - generic [ref=f40e386]:
+                  - generic [ref=f40e390]: Climate
+                  - generic [ref=f40e391]: Warm, Mild
+              - generic [ref=f40e392]: "Main experiences: Halong Bay cruise · Hanoi old quarter · Hoi An lantern town · Mekong Delta"
+              - generic [ref=f40e393]: "Suited to: Solo, Couple, Friends, Family"
+              - button "See score breakdown" [ref=f40e394] [cursor=pointer]
+              - button "View My Trip" [ref=f40e395] [cursor=pointer]
+          - article [ref=f40e396]:
+            - generic [ref=f40e397]:
+              - img "Istanbul & Cappadocia, Türkiye, Türkiye" [ref=f40e399]
+              - generic [ref=f40e400]: 86/100
+              - generic [ref=f40e401]: Strong match
+              - generic [ref=f40e402]:
+                - heading "Istanbul & Cappadocia, Türkiye" [level=2] [ref=f40e403]
+                - paragraph [ref=f40e407]: Türkiye · Western Asia
+            - generic [ref=f40e408]:
+              - region "Travel fit" [ref=f40e409]:
+                - generic [ref=f40e410]:
+                  - heading "Travel fit" [level=3] [ref=f40e411]
+                  - 'status "Travel fit: Good fit" [ref=f40e412]': Good fit
+                - generic [ref=f40e413]:
+                  - generic [ref=f40e414]:
+                    - term [ref=f40e415]: How you'll travel
+                    - definition [ref=f40e416]: International flight + local transport
+                  - generic [ref=f40e417]:
+                    - term [ref=f40e418]: Travel time
+                    - definition [ref=f40e419]: About 18.3 hours each way
+                  - generic [ref=f40e420]:
+                    - term [ref=f40e421]: Time at destination
+                    - definition [ref=f40e422]: About 10 days
+              - list [ref=f40e423]:
+                - listitem [ref=f40e424]:
+                  - generic [ref=f40e425]: •
+                  - text: Great for history and culture, food, cities
+                - listitem [ref=f40e426]:
+                  - generic [ref=f40e427]: •
+                  - text: Enjoyable in your chosen month
+                - listitem [ref=f40e428]:
+                  - generic [ref=f40e429]: •
+                  - text: Fits your selected budget level
+              - generic [ref=f40e430]:
+                - generic [ref=f40e431]:
+                  - generic [ref=f40e435]: Trip length
+                  - generic [ref=f40e436]: 6–12d
+                - generic [ref=f40e437]:
+                  - generic [ref=f40e441]: Budget
+                  - generic [ref=f40e442]: Budget – Moderate – Comfortable
+                - generic [ref=f40e443]:
+                  - generic [ref=f40e447]: Climate
+                  - generic [ref=f40e448]: Mild, Cool
+              - generic [ref=f40e449]: "Main experiences: Hagia Sophia and Blue Mosque · Cappadocia hot air balloon · Grand Bazaar · Turkish bath (hammam)"
+              - generic [ref=f40e450]: "Suited to: Solo, Couple, Friends, Family"
+              - button "See score breakdown" [ref=f40e451] [cursor=pointer]
+              - button "View My Trip" [ref=f40e452] [cursor=pointer]
+    - contentinfo [ref=f40e61]:
+      - generic [ref=f40e62]:
+        - paragraph [ref=f40e63]: TravelUp
+        - paragraph [ref=f40e66]: Helping unsure travellers discover where to go next.
+        - paragraph [ref=f40e67]: All budgets, climates, seasons, itineraries and packing suggestions are indicative estimates, not live information. Always verify visa requirements, entry conditions, safety and travel advisories using official government sources for your citizenship.
+        - generic [ref=f40e68]:
+          - link "About & disclaimer" [ref=f40e69] [cursor=pointer]:
+            - /url: /about
+          - link "Home" [ref=f40e70] [cursor=pointer]:
+            - /url: /
+  - region "Notifications (F8)":
+    - list

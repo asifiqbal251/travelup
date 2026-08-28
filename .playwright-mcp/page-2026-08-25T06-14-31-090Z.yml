@@ -1,0 +1,115 @@
+- generic [ref=f111e4]:
+  - generic [ref=f111e5]:
+    - banner [ref=f111e6]:
+      - generic [ref=f111e7]:
+        - link "TravelUp" [ref=f111e8] [cursor=pointer]:
+          - /url: /
+        - navigation [ref=f111e12]:
+          - link "Home" [ref=f111e13] [cursor=pointer]:
+            - /url: /
+          - link "About" [ref=f111e14] [cursor=pointer]:
+            - /url: /about
+          - button "Clear My Data" [ref=f111e15] [cursor=pointer]
+    - main [ref=f111e16]:
+      - generic [ref=f111e916]:
+        - button "Back to recommendations" [ref=f111e917] [cursor=pointer]
+        - generic [ref=f111e918]:
+          - img "Las Vegas, United States" [ref=f111e920]
+          - generic [ref=f111e922]:
+            - heading "Las Vegas" [level=1] [ref=f111e923]
+            - paragraph [ref=f111e924]: United States · Mojave Desert, Nevada, United States
+        - generic [ref=f111e925]:
+          - tablist [ref=f111e926]:
+            - tab "Itinerary" [selected] [ref=f111e927] [cursor=pointer]
+            - tab "Packing" [ref=f111e928] [cursor=pointer]
+            - tab "Overview" [ref=f111e929] [cursor=pointer]
+          - tabpanel "Itinerary" [ref=f111e930]:
+            - generic [ref=f111e931]:
+              - paragraph [ref=f111e932]: A suggested 4-day plan including outbound and return travel. Indicative only — verify opening hours and tickets before you go.
+              - button "Day 1 Fremont Street & Old Vegas Las Vegas Light intensity Cities Food View details" [ref=f111e1015] [cursor=pointer]:
+                - generic [ref=f111e935]:
+                  - generic [ref=f111e936]:
+                    - generic [ref=f111e937]: Day 1
+                    - heading "Fremont Street & Old Vegas" [level=3] [ref=f111e938]
+                    - generic [ref=f111e939]: Las Vegas
+                  - generic [ref=f111e940]: Light intensity
+                - generic [ref=f111e941]:
+                  - generic [ref=f111e942]: Cities
+                  - generic [ref=f111e943]: Food
+                - generic [ref=f111e944]: View details
+              - button "Day 2 The Strip Las Vegas Light intensity Cities Photography View details" [ref=f111e978] [cursor=pointer]:
+                - generic [ref=f111e979]:
+                  - generic [ref=f111e980]:
+                    - generic [ref=f111e981]: Day 2
+                    - heading "The Strip" [level=3] [ref=f111e982]
+                    - generic [ref=f111e983]: Las Vegas
+                  - generic [ref=f111e984]: Light intensity
+                - generic [ref=f111e985]:
+                  - generic [ref=f111e986]: Cities
+                  - generic [ref=f111e987]: Photography
+                - generic [ref=f111e988]: View details
+              - button "Day 3 · Flexible Flexible day Las Vegas Light intensity Slow start Café and laundry Easy stroll View details" [ref=f111e990] [cursor=pointer]:
+                - generic [ref=f111e991]:
+                  - generic [ref=f111e992]:
+                    - generic [ref=f111e993]: Day 3 · Flexible
+                    - heading "Flexible day" [level=3] [ref=f111e994]
+                    - generic [ref=f111e995]: Las Vegas
+                  - generic [ref=f111e996]: Light intensity
+                - generic [ref=f111e997]:
+                  - generic [ref=f111e998]: Slow start
+                  - generic [ref=f111e999]: Café and laundry
+                  - generic [ref=f111e1000]: Easy stroll
+                - generic [ref=f111e1001]: View details
+              - generic [ref=f111e1002]:
+                - 'button "Day 4 Return: Las Vegas → Los Angeles Las Vegas Light intensity Breakfast Return Arrive home Hide details" [expanded] [active] [ref=f111e1016] [cursor=pointer]':
+                  - generic [ref=f111e1004]:
+                    - generic [ref=f111e1005]:
+                      - generic [ref=f111e1006]: Day 4
+                      - 'heading "Return: Las Vegas → Los Angeles" [level=3] [ref=f111e1007]'
+                      - generic [ref=f111e1008]: Las Vegas
+                    - generic [ref=f111e1009]: Light intensity
+                  - generic [ref=f111e1010]:
+                    - generic [ref=f111e1011]: Breakfast
+                    - generic [ref=f111e1012]: Return
+                    - generic [ref=f111e1013]: Arrive home
+                  - generic [ref=f111e1014]: Hide details
+                - generic [ref=f111e1017]:
+                  - list [ref=f111e1018]:
+                    - listitem [ref=f111e1019]:
+                      - generic [ref=f111e1020]: Morning
+                      - generic [ref=f111e1022]:
+                        - generic [ref=f111e1023]: Breakfast or a short walk
+                        - paragraph [ref=f111e1024]: A relaxed start before heading home.
+                    - listitem [ref=f111e1025]:
+                      - generic [ref=f111e1026]: Return begins
+                      - generic [ref=f111e1028]:
+                        - generic [ref=f111e1029]: Begin the return journey
+                        - paragraph [ref=f111e1030]: Check out and travel home.
+                    - listitem [ref=f111e1031]:
+                      - generic [ref=f111e1032]: Arrive home
+                      - generic [ref=f111e1034]:
+                        - generic [ref=f111e1035]: Arrive home
+                        - paragraph [ref=f111e1036]: Travel home to Los Angeles.
+                  - paragraph [ref=f111e1037]: "Estimated total journey: about 4.5 hours each way."
+                  - generic [ref=f111e1038]:
+                    - generic [ref=f111e1039]:
+                      - generic [ref=f111e1040]: Getting around
+                      - generic [ref=f111e1041]: Walking, monorail, taxi or rideshare.
+                    - generic [ref=f111e1042]:
+                      - generic [ref=f111e1043]: Plan ahead
+                      - generic [ref=f111e1044]: Confirm your departure time and any bookings.
+                    - generic [ref=f111e1045]:
+                      - generic [ref=f111e1046]: Overnight
+                      - generic [ref=f111e1047]: Home
+    - contentinfo [ref=f111e41]:
+      - generic [ref=f111e42]:
+        - paragraph [ref=f111e43]: TravelUp
+        - paragraph [ref=f111e46]: Helping unsure travellers discover where to go next.
+        - paragraph [ref=f111e47]: All budgets, climates, seasons, itineraries and packing suggestions are indicative estimates, not live information. Always verify visa requirements, entry conditions, safety and travel advisories using official government sources for your citizenship.
+        - generic [ref=f111e48]:
+          - link "About & disclaimer" [ref=f111e49] [cursor=pointer]:
+            - /url: /about
+          - link "Home" [ref=f111e50] [cursor=pointer]:
+            - /url: /
+  - region "Notifications (F8)":
+    - list

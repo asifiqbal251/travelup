@@ -1,0 +1,61 @@
+- generic [ref=f90e4]:
+  - generic [ref=f90e5]:
+    - banner [ref=f90e6]:
+      - generic [ref=f90e7]:
+        - link "TravelUp" [ref=f90e8] [cursor=pointer]:
+          - /url: /
+        - navigation [ref=f90e12]:
+          - link "Home" [ref=f90e13] [cursor=pointer]:
+            - /url: /
+          - link "About" [ref=f90e14] [cursor=pointer]:
+            - /url: /about
+          - button "Clear My Data" [ref=f90e15] [cursor=pointer]
+    - main [ref=f90e16]:
+      - generic [ref=f90e803]:
+        - generic [ref=f90e804]:
+          - generic [ref=f90e805]:
+            - generic [ref=f90e806]: Step 3 of 7
+            - generic [ref=f90e807]: Trip style
+          - progressbar [ref=f90e808]
+        - generic [ref=f90e810]:
+          - generic [ref=f90e857]:
+            - heading "Your trip style" [level=1] [ref=f90e858]
+            - paragraph [ref=f90e859]: Who you travel with and what you can spend.
+            - generic [ref=f90e860]:
+              - generic [ref=f90e861]:
+                - text: Travelling as
+                - radiogroup "Travelling as" [ref=f90e862]:
+                  - radio "Solo" [ref=f90e863] [cursor=pointer]
+                  - radio "Couple" [ref=f90e865] [cursor=pointer]
+                  - radio "Friends" [ref=f90e867] [cursor=pointer]
+                  - radio "Family" [checked] [ref=f90e869] [cursor=pointer]
+              - generic [ref=f90e871]:
+                - text: Budget per person (excluding international flights)
+                - radiogroup "Budget per person (excluding international flights)" [ref=f90e872]:
+                  - radio "Budget Lower-cost" [ref=f90e873] [cursor=pointer]:
+                    - generic [ref=f90e874]: Budget
+                    - generic [ref=f90e875]: Lower-cost
+                  - radio "Moderate Mid-range" [checked] [ref=f90e876] [cursor=pointer]:
+                    - generic [ref=f90e877]: Moderate
+                    - generic [ref=f90e878]: Mid-range
+                  - radio "Comfortable Higher comfort" [ref=f90e879] [cursor=pointer]:
+                    - generic [ref=f90e880]: Comfortable
+                    - generic [ref=f90e881]: Higher comfort
+                  - radio "Premium Top-end" [ref=f90e882] [cursor=pointer]:
+                    - generic [ref=f90e883]: Premium
+                    - generic [ref=f90e884]: Top-end
+          - generic [ref=f90e825]:
+            - button "Back" [ref=f90e856] [cursor=pointer]
+            - button "Next" [active] [ref=f90e826] [cursor=pointer]
+    - contentinfo [ref=f90e40]:
+      - generic [ref=f90e41]:
+        - paragraph [ref=f90e42]: TravelUp
+        - paragraph [ref=f90e45]: Helping unsure travellers discover where to go next.
+        - paragraph [ref=f90e46]: All budgets, climates, seasons, itineraries and packing suggestions are indicative estimates, not live information. Always verify visa requirements, entry conditions, safety and travel advisories using official government sources for your citizenship.
+        - generic [ref=f90e47]:
+          - link "About & disclaimer" [ref=f90e48] [cursor=pointer]:
+            - /url: /about
+          - link "Home" [ref=f90e49] [cursor=pointer]:
+            - /url: /
+  - region "Notifications (F8)":
+    - list

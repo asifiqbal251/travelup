@@ -1,0 +1,174 @@
+- generic [ref=f90e4]:
+  - generic [ref=f90e5]:
+    - banner [ref=f90e6]:
+      - generic [ref=f90e7]:
+        - link "TravelUp" [ref=f90e8] [cursor=pointer]:
+          - /url: /
+        - navigation [ref=f90e12]:
+          - link "Home" [ref=f90e13] [cursor=pointer]:
+            - /url: /
+          - link "About" [ref=f90e14] [cursor=pointer]:
+            - /url: /about
+          - button "Clear My Data" [ref=f90e15] [cursor=pointer]
+    - main [ref=f90e16]:
+      - generic [ref=f90e211]:
+        - generic [ref=f90e212]:
+          - generic [ref=f90e213]:
+            - heading "Your top 3 matches" [level=1] [ref=f90e214]
+            - paragraph [ref=f90e215]: Final scores combine your preference fit with travel practicality for your trip length. Estimates only.
+          - button "Revise" [ref=f90e216] [cursor=pointer]
+        - paragraph [ref=f90e220]: Scores are estimates based on your preferences and curated destination data, not live availability or flight schedules. Always verify visa and entry requirements through official government sources for your citizenship.
+        - generic [ref=f90e221]:
+          - article [ref=f90e222]:
+            - generic [ref=f90e223]:
+              - img "Paris, France" [ref=f90e225]
+              - generic [ref=f90e226]: 88/100
+              - generic [ref=f90e227]: Strong match
+              - generic [ref=f90e228]:
+                - heading "Paris" [level=2] [ref=f90e229]
+                - paragraph [ref=f90e233]: France · Île-de-France, France
+            - generic [ref=f90e234]:
+              - region "Travel fit" [ref=f90e235]:
+                - generic [ref=f90e236]:
+                  - heading "Travel fit" [level=3] [ref=f90e237]
+                  - 'status "Travel fit: Good fit" [ref=f90e238]': Good fit
+                - generic [ref=f90e239]:
+                  - generic [ref=f90e240]:
+                    - term [ref=f90e241]: How you'll travel
+                    - definition [ref=f90e242]: Direct Eurostar train
+                  - generic [ref=f90e243]:
+                    - term [ref=f90e244]: Travel time
+                    - definition [ref=f90e245]: About 3 hours each way
+                  - generic [ref=f90e246]:
+                    - term [ref=f90e247]: Time at destination
+                    - definition [ref=f90e248]: About 3 days
+              - list [ref=f90e249]:
+                - listitem [ref=f90e250]:
+                  - generic [ref=f90e251]: •
+                  - text: Great for cities, history and culture, food
+                - listitem [ref=f90e252]:
+                  - generic [ref=f90e253]: •
+                  - text: Enjoyable in your chosen month
+                - listitem [ref=f90e254]:
+                  - generic [ref=f90e255]: •
+                  - text: Fits your selected budget level
+              - generic [ref=f90e256]:
+                - generic [ref=f90e257]:
+                  - generic [ref=f90e261]: Trip length
+                  - generic [ref=f90e262]: 2–4d
+                - generic [ref=f90e263]:
+                  - generic [ref=f90e267]: Budget
+                  - generic [ref=f90e268]: Moderate – Comfortable – Premium
+                - generic [ref=f90e269]:
+                  - generic [ref=f90e273]: Climate
+                  - generic [ref=f90e274]: Mild, Warm, Cool
+              - generic [ref=f90e275]: "Main experiences: Louvre or Musée d'Orsay (deterministic choice) · Eiffel Tower & Seine walk · Montmartre · French bistro dinner"
+              - generic [ref=f90e276]: "Suited to: Solo, Couple, Friends, Family"
+              - button "See score breakdown" [ref=f90e277] [cursor=pointer]
+              - button "View My Trip" [ref=f90e278] [cursor=pointer]
+          - article [ref=f90e279]:
+            - generic [ref=f90e280]:
+              - img "Amsterdam, Netherlands" [ref=f90e282]
+              - generic [ref=f90e283]: 88/100
+              - generic [ref=f90e284]: Strong match
+              - generic [ref=f90e285]:
+                - heading "Amsterdam" [level=2] [ref=f90e286]
+                - paragraph [ref=f90e290]: Netherlands · North Holland, Netherlands
+            - generic [ref=f90e291]:
+              - region "Travel fit" [ref=f90e292]:
+                - generic [ref=f90e293]:
+                  - heading "Travel fit" [level=3] [ref=f90e294]
+                  - 'status "Travel fit: Good fit" [ref=f90e295]': Good fit
+                - generic [ref=f90e296]:
+                  - generic [ref=f90e297]:
+                    - term [ref=f90e298]: How you'll travel
+                    - definition [ref=f90e299]: Direct Eurostar train
+                  - generic [ref=f90e300]:
+                    - term [ref=f90e301]: Travel time
+                    - definition [ref=f90e302]: About 5 hours each way
+                  - generic [ref=f90e303]:
+                    - term [ref=f90e304]: Time at destination
+                    - definition [ref=f90e305]: About 2.5 days
+              - list [ref=f90e306]:
+                - listitem [ref=f90e307]:
+                  - generic [ref=f90e308]: •
+                  - text: Great for cities, history and culture, food
+                - listitem [ref=f90e309]:
+                  - generic [ref=f90e310]: •
+                  - text: Enjoyable in your chosen month
+                - listitem [ref=f90e311]:
+                  - generic [ref=f90e312]: •
+                  - text: Fits your selected budget level
+              - generic [ref=f90e313]:
+                - generic [ref=f90e314]:
+                  - generic [ref=f90e318]: Trip length
+                  - generic [ref=f90e319]: 2–4d
+                - generic [ref=f90e320]:
+                  - generic [ref=f90e324]: Budget
+                  - generic [ref=f90e325]: Moderate – Comfortable – Premium
+                - generic [ref=f90e326]:
+                  - generic [ref=f90e330]: Climate
+                  - generic [ref=f90e331]: Mild, Cool, Cold or snowy
+              - generic [ref=f90e332]: "Main experiences: Canal cruise · Rijksmuseum or Van Gogh Museum (alternative) · Jordaan neighborhood · Cycling (optional)"
+              - generic [ref=f90e333]: "Suited to: Solo, Couple, Friends, Family"
+              - button "See score breakdown" [ref=f90e334] [cursor=pointer]
+              - button "View My Trip" [ref=f90e335] [cursor=pointer]
+          - article [ref=f90e336]:
+            - generic [ref=f90e337]:
+              - img "Bath, United Kingdom" [ref=f90e339]
+              - generic [ref=f90e340]: 85/100
+              - generic [ref=f90e341]: Strong match
+              - generic [ref=f90e342]:
+                - heading "Bath" [level=2] [ref=f90e343]
+                - paragraph [ref=f90e347]: United Kingdom · Somerset, England, United Kingdom
+            - generic [ref=f90e348]:
+              - region "Travel fit" [ref=f90e349]:
+                - generic [ref=f90e350]:
+                  - heading "Travel fit" [level=3] [ref=f90e351]
+                  - 'status "Travel fit: Good fit" [ref=f90e352]': Good fit
+                - generic [ref=f90e353]:
+                  - generic [ref=f90e354]:
+                    - term [ref=f90e355]: How you'll travel
+                    - definition [ref=f90e356]: Direct train + local transfer
+                  - generic [ref=f90e357]:
+                    - term [ref=f90e358]: Travel time
+                    - definition [ref=f90e359]: About 2 hours each way
+                  - generic [ref=f90e360]:
+                    - term [ref=f90e361]: Time at destination
+                    - definition [ref=f90e362]: About 3 days
+              - list [ref=f90e363]:
+                - listitem [ref=f90e364]:
+                  - generic [ref=f90e365]: •
+                  - text: Great for history and culture, nature, relaxation
+                - listitem [ref=f90e366]:
+                  - generic [ref=f90e367]: •
+                  - text: Enjoyable in your chosen month
+                - listitem [ref=f90e368]:
+                  - generic [ref=f90e369]: •
+                  - text: Fits your selected budget level
+              - generic [ref=f90e370]:
+                - generic [ref=f90e371]:
+                  - generic [ref=f90e375]: Trip length
+                  - generic [ref=f90e376]: 2–3d
+                - generic [ref=f90e377]:
+                  - generic [ref=f90e381]: Budget
+                  - generic [ref=f90e382]: Moderate – Premium
+                - generic [ref=f90e383]:
+                  - generic [ref=f90e387]: Climate
+                  - generic [ref=f90e388]: Mild, Cool, Warm
+              - generic [ref=f90e389]: "Main experiences: Roman Baths (reserve ahead) · Bath Abbey · Georgian architecture walk · Optional Cotswolds village day"
+              - generic [ref=f90e390]: "Suited to: Solo, Couple, Friends, Family"
+              - button "See score breakdown" [ref=f90e391] [cursor=pointer]
+              - button "View My Trip" [ref=f90e392] [cursor=pointer]
+    - contentinfo [ref=f90e57]:
+      - generic [ref=f90e58]:
+        - paragraph [ref=f90e59]: TravelUp
+        - paragraph [ref=f90e62]: Helping unsure travellers discover where to go next.
+        - paragraph [ref=f90e63]: All budgets, climates, seasons, itineraries and packing suggestions are indicative estimates, not live information. Always verify visa requirements, entry conditions, safety and travel advisories using official government sources for your citizenship.
+        - generic [ref=f90e64]:
+          - link "About & disclaimer" [ref=f90e65] [cursor=pointer]:
+            - /url: /about
+          - link "Home" [ref=f90e66] [cursor=pointer]:
+            - /url: /
+  - region "Notifications (F8)":
+    - list

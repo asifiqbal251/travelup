@@ -1,0 +1,138 @@
+- generic [ref=f45e4]:
+  - generic [ref=f45e5]:
+    - banner [ref=f45e6]:
+      - generic [ref=f45e7]:
+        - link "TravelUp" [ref=f45e8] [cursor=pointer]:
+          - /url: /
+        - navigation [ref=f45e12]:
+          - link "Home" [ref=f45e13] [cursor=pointer]:
+            - /url: /
+          - link "About" [ref=f45e14] [cursor=pointer]:
+            - /url: /about
+          - button "Clear My Data" [ref=f45e15] [cursor=pointer]
+    - main [ref=f45e16]:
+      - generic [ref=f45e918]:
+        - button "Back to recommendations" [ref=f45e919] [cursor=pointer]
+        - generic [ref=f45e920]:
+          - img "Napa and Sonoma, United States" [ref=f45e922]
+          - generic [ref=f45e924]:
+            - heading "Napa and Sonoma" [level=1] [ref=f45e925]
+            - paragraph [ref=f45e926]: United States · North Bay, California, United States
+        - generic [ref=f45e927]:
+          - tablist [ref=f45e928]:
+            - tab "Itinerary" [selected] [ref=f45e929] [cursor=pointer]
+            - tab "Packing" [ref=f45e930] [cursor=pointer]
+            - tab "Overview" [ref=f45e931] [cursor=pointer]
+          - tabpanel "Itinerary" [ref=f45e932]:
+            - generic [ref=f45e933]:
+              - paragraph [ref=f45e934]: A suggested 4-day plan including outbound and return travel. Indicative only — verify opening hours and tickets before you go.
+              - button "Day 1 Napa Valley wine tasting Napa and Sonoma Light intensity Food Relaxation View details" [ref=f45e1024] [cursor=pointer]:
+                - generic [ref=f45e937]:
+                  - generic [ref=f45e938]:
+                    - generic [ref=f45e939]: Day 1
+                    - heading "Napa Valley wine tasting" [level=3] [ref=f45e940]
+                    - generic [ref=f45e941]: Napa and Sonoma
+                  - generic [ref=f45e942]: Light intensity
+                - generic [ref=f45e943]:
+                  - generic [ref=f45e944]: Food
+                  - generic [ref=f45e945]: Relaxation
+                - generic [ref=f45e946]: View details
+              - button "Day 2 Sonoma Plaza & countryside Napa and Sonoma Light intensity Food Nature View details" [ref=f45e1073] [cursor=pointer]:
+                - generic [ref=f45e989]:
+                  - generic [ref=f45e990]:
+                    - generic [ref=f45e991]: Day 2
+                    - heading "Sonoma Plaza & countryside" [level=3] [ref=f45e992]
+                    - generic [ref=f45e993]: Napa and Sonoma
+                  - generic [ref=f45e994]: Light intensity
+                - generic [ref=f45e995]:
+                  - generic [ref=f45e996]: Food
+                  - generic [ref=f45e997]: Nature
+                - generic [ref=f45e998]: View details
+              - generic [ref=f45e999]:
+                - button "Day 3 · Flexible Flexible day Napa and Sonoma Light intensity Slow start Café and laundry Easy stroll Hide details" [expanded] [active] [ref=f45e1074] [cursor=pointer]:
+                  - generic [ref=f45e1001]:
+                    - generic [ref=f45e1002]:
+                      - generic [ref=f45e1003]: Day 3 · Flexible
+                      - heading "Flexible day" [level=3] [ref=f45e1004]
+                      - generic [ref=f45e1005]: Napa and Sonoma
+                    - generic [ref=f45e1006]: Light intensity
+                  - generic [ref=f45e1007]:
+                    - generic [ref=f45e1008]: Slow start
+                    - generic [ref=f45e1009]: Café and laundry
+                    - generic [ref=f45e1010]: Easy stroll
+                  - generic [ref=f45e1011]: Hide details
+                - generic [ref=f45e1075]:
+                  - list [ref=f45e1076]:
+                    - listitem [ref=f45e1077]:
+                      - generic [ref=f45e1078]:
+                        - generic [ref=f45e1079]: 09:00–11:00
+                        - generic [ref=f45e1080]: ~2 hr
+                        - generic [ref=f45e1081]: Morning
+                      - generic [ref=f45e1082]:
+                        - generic [ref=f45e1083]: Slow start
+                        - paragraph [ref=f45e1084]: Sleep in or enjoy a relaxed breakfast.
+                    - listitem [ref=f45e1085]:
+                      - generic [ref=f45e1086]: Late morning
+                      - generic [ref=f45e1088]:
+                        - generic [ref=f45e1089]: Café and laundry
+                        - paragraph [ref=f45e1090]: Catch up on laundry and postcards.
+                    - listitem [ref=f45e1091]:
+                      - generic [ref=f45e1092]:
+                        - generic [ref=f45e1093]: 12:30–14:00
+                        - generic [ref=f45e1094]: ~1.5 hr
+                        - generic [ref=f45e1095]: Lunch
+                      - generic [ref=f45e1096]:
+                        - generic [ref=f45e1097]: Local bite
+                        - paragraph [ref=f45e1098]: An unhurried lunch at a spot you missed.
+                    - listitem [ref=f45e1099]:
+                      - generic [ref=f45e1100]:
+                        - generic [ref=f45e1101]: 14:00–17:00
+                        - generic [ref=f45e1102]: ~3 hr
+                        - generic [ref=f45e1103]: Afternoon
+                      - generic [ref=f45e1104]:
+                        - generic [ref=f45e1105]: Easy stroll
+                        - paragraph [ref=f45e1106]: A gentle walk to stretch your legs.
+                    - listitem [ref=f45e1107]:
+                      - generic [ref=f45e1108]:
+                        - generic [ref=f45e1109]: 18:30–21:00
+                        - generic [ref=f45e1110]: ~2.5 hr
+                        - generic [ref=f45e1111]: Evening
+                      - generic [ref=f45e1112]:
+                        - generic [ref=f45e1113]: Optional night out
+                        - paragraph [ref=f45e1114]: Rest, or revisit a favourite spot.
+                  - generic [ref=f45e1115]:
+                    - generic [ref=f45e1116]:
+                      - generic [ref=f45e1117]: Getting around
+                      - generic [ref=f45e1118]: Guided tour, designated driver or car when no tasting is involved.
+                    - generic [ref=f45e1119]:
+                      - generic [ref=f45e1120]: Plan ahead
+                      - generic [ref=f45e1121]: Use this day to recharge or revisit a favourite.
+                    - generic [ref=f45e1122]:
+                      - generic [ref=f45e1123]: Optional swap
+                      - generic [ref=f45e1124]: Add a short excursion if you feel rested.
+                    - generic [ref=f45e1125]:
+                      - generic [ref=f45e1126]: Overnight
+                      - generic [ref=f45e1127]: Overnight in Napa and Sonoma.
+              - button "Day 4 Hot air balloon or scenic drive Napa and Sonoma Light intensity Photography Relaxation View details" [ref=f45e1013] [cursor=pointer]:
+                - generic [ref=f45e1014]:
+                  - generic [ref=f45e1015]:
+                    - generic [ref=f45e1016]: Day 4
+                    - heading "Hot air balloon or scenic drive" [level=3] [ref=f45e1017]
+                    - generic [ref=f45e1018]: Napa and Sonoma
+                  - generic [ref=f45e1019]: Light intensity
+                - generic [ref=f45e1020]:
+                  - generic [ref=f45e1021]: Photography
+                  - generic [ref=f45e1022]: Relaxation
+                - generic [ref=f45e1023]: View details
+    - contentinfo [ref=f45e41]:
+      - generic [ref=f45e42]:
+        - paragraph [ref=f45e43]: TravelUp
+        - paragraph [ref=f45e46]: Helping unsure travellers discover where to go next.
+        - paragraph [ref=f45e47]: All budgets, climates, seasons, itineraries and packing suggestions are indicative estimates, not live information. Always verify visa requirements, entry conditions, safety and travel advisories using official government sources for your citizenship.
+        - generic [ref=f45e48]:
+          - link "About & disclaimer" [ref=f45e49] [cursor=pointer]:
+            - /url: /about
+          - link "Home" [ref=f45e50] [cursor=pointer]:
+            - /url: /
+  - region "Notifications (F8)":
+    - list

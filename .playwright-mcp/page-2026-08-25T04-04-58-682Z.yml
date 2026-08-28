@@ -1,0 +1,69 @@
+- generic [ref=f81e4]:
+  - generic [ref=f81e5]:
+    - banner [ref=f81e6]:
+      - generic [ref=f81e7]:
+        - link "TravelUp" [ref=f81e8] [cursor=pointer]:
+          - /url: /
+        - navigation [ref=f81e12]:
+          - link "Home" [ref=f81e13] [cursor=pointer]:
+            - /url: /
+          - link "About" [ref=f81e14] [cursor=pointer]:
+            - /url: /about
+          - button "Clear My Data" [ref=f81e15] [cursor=pointer]
+    - main [ref=f81e16]:
+      - generic [ref=f81e17]:
+        - generic [ref=f81e18]:
+          - generic [ref=f81e19]:
+            - generic [ref=f81e20]: Step 7 of 7
+            - generic [ref=f81e21]: Review
+          - progressbar [ref=f81e22]
+        - generic [ref=f81e24]:
+          - generic [ref=f81e698]:
+            - heading "Review your answers" [level=1] [ref=f81e699]
+            - paragraph [ref=f81e700]: Make any changes before we find your matches.
+            - generic [ref=f81e702]:
+              - generic [ref=f81e703]:
+                - term [ref=f81e704]: Residence / departure / citizenship
+                - definition [ref=f81e705]: Canada · Vancouver · Canada
+              - generic [ref=f81e706]:
+                - term [ref=f81e707]: When
+                - definition [ref=f81e708]: August
+              - generic [ref=f81e709]:
+                - term [ref=f81e710]: Total trip
+                - definition [ref=f81e711]: 7 days, including travel time
+              - generic [ref=f81e712]:
+                - term [ref=f81e713]: Domestic
+                - definition [ref=f81e714]: Domestic only
+              - generic [ref=f81e715]:
+                - term [ref=f81e716]: Traveller & budget
+                - definition [ref=f81e717]: Family · Moderate
+              - generic [ref=f81e718]:
+                - term [ref=f81e719]: Interests
+                - definition [ref=f81e720]: Nature, Relaxation
+              - generic [ref=f81e721]:
+                - term [ref=f81e722]: Climate / pace / activity
+                - definition [ref=f81e723]: Mild · Relaxed · Moderate
+              - generic [ref=f81e724]:
+                - term [ref=f81e725]: Dietary
+                - definition [ref=f81e726]: None
+              - generic [ref=f81e727]:
+                - term [ref=f81e728]: Visited
+                - definition [ref=f81e729]: None
+              - generic [ref=f81e730]:
+                - term [ref=f81e731]: Excluded
+                - definition [ref=f81e732]: Montreal, Quebec City, Whistler
+          - generic [ref=f81e39]:
+            - button "Back" [ref=f81e550] [cursor=pointer]
+            - button "See my recommendations" [active] [ref=f81e733] [cursor=pointer]
+    - contentinfo [ref=f81e41]:
+      - generic [ref=f81e42]:
+        - paragraph [ref=f81e43]: TravelUp
+        - paragraph [ref=f81e46]: Helping unsure travellers discover where to go next.
+        - paragraph [ref=f81e47]: All budgets, climates, seasons, itineraries and packing suggestions are indicative estimates, not live information. Always verify visa requirements, entry conditions, safety and travel advisories using official government sources for your citizenship.
+        - generic [ref=f81e48]:
+          - link "About & disclaimer" [ref=f81e49] [cursor=pointer]:
+            - /url: /about
+          - link "Home" [ref=f81e50] [cursor=pointer]:
+            - /url: /
+  - region "Notifications (F8)":
+    - list

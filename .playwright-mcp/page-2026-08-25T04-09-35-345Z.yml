@@ -1,0 +1,82 @@
+- generic [ref=f90e4]:
+  - generic [ref=f90e5]:
+    - banner [ref=f90e6]:
+      - generic [ref=f90e7]:
+        - link "TravelUp" [ref=f90e8] [cursor=pointer]:
+          - /url: /
+        - navigation [ref=f90e12]:
+          - link "Home" [ref=f90e13] [cursor=pointer]:
+            - /url: /
+          - link "About" [ref=f90e14] [cursor=pointer]:
+            - /url: /about
+          - button "Clear My Data" [ref=f90e15] [cursor=pointer]
+    - main [ref=f90e16]:
+      - generic [ref=f90e995]:
+        - generic [ref=f90e996]:
+          - generic [ref=f90e997]:
+            - heading "Your top 1 matches" [level=1] [ref=f90e998]
+            - paragraph [ref=f90e999]: Final scores combine your preference fit with travel practicality for your trip length. Estimates only.
+          - button "Revise" [ref=f90e1000] [cursor=pointer]
+        - paragraph [ref=f90e1004]: Scores are estimates based on your preferences and curated destination data, not live availability or flight schedules. Always verify visa and entry requirements through official government sources for your citizenship.
+        - generic [ref=f90e1005]:
+          - paragraph [ref=f90e1006]: We found only 1 practical match for a 7-day trip from your location.
+          - paragraph [ref=f90e1007]: The current destination catalogue has limited practical options for this trip length. Try a longer trip, broader preferences, or nearby and domestic destinations.
+        - article [ref=f90e1009]:
+          - generic [ref=f90e1010]:
+            - img "Canadian Rockies, Canada, Canada" [ref=f90e1012]
+            - generic [ref=f90e1013]: 98/100
+            - generic [ref=f90e1014]: Strong match
+            - generic [ref=f90e1015]:
+              - heading "Canadian Rockies, Canada" [level=2] [ref=f90e1016]
+              - paragraph [ref=f90e1020]: Canada · North America
+          - generic [ref=f90e1021]:
+            - region "Travel fit" [ref=f90e1022]:
+              - generic [ref=f90e1023]:
+                - heading "Travel fit" [level=3] [ref=f90e1024]
+                - 'status "Travel fit: Good fit" [ref=f90e1025]': Good fit
+              - generic [ref=f90e1026]:
+                - generic [ref=f90e1027]:
+                  - term [ref=f90e1028]: How you'll travel
+                  - definition [ref=f90e1029]: Domestic flight + domestic connection + rental car
+                - generic [ref=f90e1030]:
+                  - term [ref=f90e1031]: Travel time
+                  - definition [ref=f90e1032]: About 3.1 hours each way
+                - generic [ref=f90e1033]:
+                  - term [ref=f90e1034]: Time at destination
+                  - definition [ref=f90e1035]: About 7 days
+            - list [ref=f90e1036]:
+              - listitem [ref=f90e1037]:
+                - generic [ref=f90e1038]: •
+                - text: Great for wildlife
+              - listitem [ref=f90e1039]:
+                - generic [ref=f90e1040]: •
+                - text: Peak season in August
+              - listitem [ref=f90e1041]:
+                - generic [ref=f90e1042]: •
+                - text: Fits your selected budget level
+            - generic [ref=f90e1043]:
+              - generic [ref=f90e1044]:
+                - generic [ref=f90e1048]: Trip length
+                - generic [ref=f90e1049]: 6–12d
+              - generic [ref=f90e1050]:
+                - generic [ref=f90e1054]: Budget
+                - generic [ref=f90e1055]: Moderate – Comfortable – Premium
+              - generic [ref=f90e1056]:
+                - generic [ref=f90e1060]: Climate
+                - generic [ref=f90e1061]: Cool, Cold or snowy
+            - generic [ref=f90e1062]: "Main experiences: Lake Louise and Moraine Lake · Banff and Jasper towns · Columbia Icefield · Wildlife spotting"
+            - generic [ref=f90e1063]: "Suited to: Solo, Couple, Friends, Family"
+            - button "See score breakdown" [ref=f90e1064] [cursor=pointer]
+            - button "View My Trip" [ref=f90e1065] [cursor=pointer]
+    - contentinfo [ref=f90e40]:
+      - generic [ref=f90e41]:
+        - paragraph [ref=f90e42]: TravelUp
+        - paragraph [ref=f90e45]: Helping unsure travellers discover where to go next.
+        - paragraph [ref=f90e46]: All budgets, climates, seasons, itineraries and packing suggestions are indicative estimates, not live information. Always verify visa requirements, entry conditions, safety and travel advisories using official government sources for your citizenship.
+        - generic [ref=f90e47]:
+          - link "About & disclaimer" [ref=f90e48] [cursor=pointer]:
+            - /url: /about
+          - link "Home" [ref=f90e49] [cursor=pointer]:
+            - /url: /
+  - region "Notifications (F8)":
+    - list

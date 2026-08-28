@@ -1,0 +1,135 @@
+- generic [ref=f13e4]:
+  - generic [ref=f13e5]:
+    - banner [ref=f13e6]:
+      - generic [ref=f13e7]:
+        - link "TravelUp" [ref=f13e8] [cursor=pointer]:
+          - /url: /
+        - navigation [ref=f13e12]:
+          - link "Home" [ref=f13e13] [cursor=pointer]:
+            - /url: /
+          - link "About" [ref=f13e14] [cursor=pointer]:
+            - /url: /about
+          - button "Clear My Data" [ref=f13e15] [cursor=pointer]
+    - main [ref=f13e16]:
+      - generic [ref=f13e916]:
+        - button "Back to recommendations" [ref=f13e917] [cursor=pointer]
+        - generic [ref=f13e918]:
+          - img "Kelowna and the Okanagan Valley, Canada" [ref=f13e920]
+          - generic [ref=f13e922]:
+            - heading "Kelowna and the Okanagan Valley" [level=1] [ref=f13e923]
+            - paragraph [ref=f13e924]: Canada · Okanagan Valley, British Columbia, Canada
+        - generic [ref=f13e925]:
+          - tablist [ref=f13e926]:
+            - tab "Itinerary" [selected] [ref=f13e927] [cursor=pointer]
+            - tab "Packing" [ref=f13e928] [cursor=pointer]
+            - tab "Overview" [ref=f13e929] [cursor=pointer]
+          - tabpanel "Itinerary" [ref=f13e930]:
+            - generic [ref=f13e931]:
+              - paragraph [ref=f13e932]: A suggested 4-day plan including outbound and return travel. Indicative only — verify opening hours and tickets before you go.
+              - button "Day 1 Wine touring Kelowna and the Okanagan Valley Light intensity Food Relaxation View details" [ref=f13e1015] [cursor=pointer]:
+                - generic [ref=f13e935]:
+                  - generic [ref=f13e936]:
+                    - generic [ref=f13e937]: Day 1
+                    - heading "Wine touring" [level=3] [ref=f13e938]
+                    - generic [ref=f13e939]: Kelowna and the Okanagan Valley
+                  - generic [ref=f13e940]: Light intensity
+                - generic [ref=f13e941]:
+                  - generic [ref=f13e942]: Food
+                  - generic [ref=f13e943]: Relaxation
+                - generic [ref=f13e944]: View details
+              - generic [ref=f13e978]:
+                - button "Day 2 · Flexible Orchards & lake relaxation Kelowna and the Okanagan Valley Light intensity Food Nature Free time Hide details" [expanded] [active] [ref=f13e1048] [cursor=pointer]:
+                  - generic [ref=f13e980]:
+                    - generic [ref=f13e981]:
+                      - generic [ref=f13e982]: Day 2 · Flexible
+                      - heading "Orchards & lake relaxation" [level=3] [ref=f13e983]
+                      - generic [ref=f13e984]: Kelowna and the Okanagan Valley
+                    - generic [ref=f13e985]: Light intensity
+                  - generic [ref=f13e986]:
+                    - generic [ref=f13e987]: Food
+                    - generic [ref=f13e988]: Nature
+                    - generic [ref=f13e989]: Free time
+                  - generic [ref=f13e990]: Hide details
+                - generic [ref=f13e1049]:
+                  - list [ref=f13e1050]:
+                    - listitem [ref=f13e1051]:
+                      - generic [ref=f13e1052]:
+                        - generic [ref=f13e1053]: 08:00–11:00
+                        - generic [ref=f13e1054]: ~3 hr
+                        - generic [ref=f13e1055]: Morning
+                      - generic [ref=f13e1056]:
+                        - generic [ref=f13e1057]: Visit local orchard fruit stands
+                        - paragraph [ref=f13e1058]: Visit local orchard fruit stands.
+                    - listitem [ref=f13e1059]:
+                      - generic [ref=f13e1060]: Late morning
+                      - generic [ref=f13e1062]:
+                        - generic [ref=f13e1063]: Mid-morning break
+                        - paragraph [ref=f13e1064]: A short break or local transit between stops.
+                    - listitem [ref=f13e1065]:
+                      - generic [ref=f13e1066]:
+                        - generic [ref=f13e1067]: 12:30–14:00
+                        - generic [ref=f13e1068]: ~1.5 hr
+                        - generic [ref=f13e1069]: Lunch
+                      - generic [ref=f13e1070]:
+                        - generic [ref=f13e1071]: Local bite
+                        - paragraph [ref=f13e1072]: Fresh-picked fruit and a light meal.
+                    - listitem [ref=f13e1073]:
+                      - generic [ref=f13e1074]:
+                        - generic [ref=f13e1075]: 14:00–18:00
+                        - generic [ref=f13e1076]: ~4 hr
+                        - generic [ref=f13e1077]: Afternoon
+                      - generic [ref=f13e1078]:
+                        - generic [ref=f13e1079]: Free time at the lake…
+                        - paragraph [ref=f13e1080]: Free time at the lake or a favourite winery.
+                    - listitem [ref=f13e1081]:
+                      - generic [ref=f13e1082]:
+                        - generic [ref=f13e1083]: 18:30–21:30
+                        - generic [ref=f13e1084]: ~3 hr
+                        - generic [ref=f13e1085]: Evening
+                      - generic [ref=f13e1086]:
+                        - generic [ref=f13e1087]: Relaxed final dinner
+                        - paragraph [ref=f13e1088]: Relaxed final dinner.
+                  - generic [ref=f13e1089]:
+                    - generic [ref=f13e1090]:
+                      - generic [ref=f13e1091]: Getting around
+                      - generic [ref=f13e1092]: Car, designated-driver tour or local transportation.
+                    - generic [ref=f13e1093]:
+                      - generic [ref=f13e1094]: Plan ahead
+                      - generic [ref=f13e1095]: Confirm opening hours and book popular tickets before you travel.
+                    - generic [ref=f13e1096]:
+                      - generic [ref=f13e1097]: Overnight
+                      - generic [ref=f13e1098]: Overnight in Kelowna and the Okanagan Valley.
+              - button "Day 3 Kelowna waterfront Kelowna and the Okanagan Valley Light intensity Beaches Relaxation View details" [ref=f13e992] [cursor=pointer]:
+                - generic [ref=f13e993]:
+                  - generic [ref=f13e994]:
+                    - generic [ref=f13e995]: Day 3
+                    - heading "Kelowna waterfront" [level=3] [ref=f13e996]
+                    - generic [ref=f13e997]: Kelowna and the Okanagan Valley
+                  - generic [ref=f13e998]: Light intensity
+                - generic [ref=f13e999]:
+                  - generic [ref=f13e1000]: Beaches
+                  - generic [ref=f13e1001]: Relaxation
+                - generic [ref=f13e1002]: View details
+              - button "Day 4 Myra Canyon & Knox Mountain Kelowna and the Okanagan Valley Active intensity Nature Photography View details" [ref=f13e1099] [cursor=pointer]:
+                - generic [ref=f13e1005]:
+                  - generic [ref=f13e1006]:
+                    - generic [ref=f13e1007]: Day 4
+                    - heading "Myra Canyon & Knox Mountain" [level=3] [ref=f13e1008]
+                    - generic [ref=f13e1009]: Kelowna and the Okanagan Valley
+                  - generic [ref=f13e1010]: Active intensity
+                - generic [ref=f13e1011]:
+                  - generic [ref=f13e1012]: Nature
+                  - generic [ref=f13e1013]: Photography
+                - generic [ref=f13e1014]: View details
+    - contentinfo [ref=f13e41]:
+      - generic [ref=f13e42]:
+        - paragraph [ref=f13e43]: TravelUp
+        - paragraph [ref=f13e46]: Helping unsure travellers discover where to go next.
+        - paragraph [ref=f13e47]: All budgets, climates, seasons, itineraries and packing suggestions are indicative estimates, not live information. Always verify visa requirements, entry conditions, safety and travel advisories using official government sources for your citizenship.
+        - generic [ref=f13e48]:
+          - link "About & disclaimer" [ref=f13e49] [cursor=pointer]:
+            - /url: /about
+          - link "Home" [ref=f13e50] [cursor=pointer]:
+            - /url: /
+  - region "Notifications (F8)":
+    - list

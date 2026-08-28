@@ -1,0 +1,138 @@
+- generic [ref=f15e4]:
+  - generic [ref=f15e5]:
+    - banner [ref=f15e6]:
+      - generic [ref=f15e7]:
+        - link "TravelUp" [ref=f15e8] [cursor=pointer]:
+          - /url: /
+        - navigation [ref=f15e12]:
+          - link "Home" [ref=f15e13] [cursor=pointer]:
+            - /url: /
+          - link "About" [ref=f15e14] [cursor=pointer]:
+            - /url: /about
+          - button "Clear My Data" [ref=f15e15] [cursor=pointer]
+    - main [ref=f15e16]:
+      - generic [ref=f15e918]:
+        - button "Back to recommendations" [ref=f15e919] [cursor=pointer]
+        - generic [ref=f15e920]:
+          - img "Whistler, Canada" [ref=f15e922]
+          - generic [ref=f15e924]:
+            - heading "Whistler" [level=1] [ref=f15e925]
+            - paragraph [ref=f15e926]: Canada · Sea to Sky, British Columbia, Canada
+        - generic [ref=f15e927]:
+          - tablist [ref=f15e928]:
+            - tab "Itinerary" [selected] [ref=f15e929] [cursor=pointer]
+            - tab "Packing" [ref=f15e930] [cursor=pointer]
+            - tab "Overview" [ref=f15e931] [cursor=pointer]
+          - tabpanel "Itinerary" [ref=f15e932]:
+            - generic [ref=f15e933]:
+              - paragraph [ref=f15e934]: A suggested 4-day plan including outbound and return travel. Indicative only — verify opening hours and tickets before you go.
+              - 'button "Day 1 Mountain day: hiking or skiing Whistler Active intensity Adventure Hiking View details" [ref=f15e1030] [cursor=pointer]':
+                - generic [ref=f15e937]:
+                  - generic [ref=f15e938]:
+                    - generic [ref=f15e939]: Day 1
+                    - 'heading "Mountain day: hiking or skiing" [level=3] [ref=f15e940]'
+                    - generic [ref=f15e941]: Whistler
+                  - generic [ref=f15e942]: Active intensity
+                - generic [ref=f15e943]:
+                  - generic [ref=f15e944]: Adventure
+                  - generic [ref=f15e945]: Hiking
+                - generic [ref=f15e946]: View details
+              - button "Day 2 Whistler Village & Peak 2 Peak Whistler High intensity Adventure Photography View details" [ref=f15e1079] [cursor=pointer]:
+                - generic [ref=f15e995]:
+                  - generic [ref=f15e996]:
+                    - generic [ref=f15e997]: Day 2
+                    - heading "Whistler Village & Peak 2 Peak" [level=3] [ref=f15e998]
+                    - generic [ref=f15e999]: Whistler
+                  - generic [ref=f15e1000]: High intensity
+                - generic [ref=f15e1001]:
+                  - generic [ref=f15e1002]: Adventure
+                  - generic [ref=f15e1003]: Photography
+                - generic [ref=f15e1004]: View details
+              - generic [ref=f15e1005]:
+                - button "Day 3 · Flexible Flexible day Whistler Light intensity Slow start Café and laundry Easy stroll Hide details" [expanded] [active] [ref=f15e1080] [cursor=pointer]:
+                  - generic [ref=f15e1007]:
+                    - generic [ref=f15e1008]:
+                      - generic [ref=f15e1009]: Day 3 · Flexible
+                      - heading "Flexible day" [level=3] [ref=f15e1010]
+                      - generic [ref=f15e1011]: Whistler
+                    - generic [ref=f15e1012]: Light intensity
+                  - generic [ref=f15e1013]:
+                    - generic [ref=f15e1014]: Slow start
+                    - generic [ref=f15e1015]: Café and laundry
+                    - generic [ref=f15e1016]: Easy stroll
+                  - generic [ref=f15e1017]: Hide details
+                - generic [ref=f15e1081]:
+                  - list [ref=f15e1082]:
+                    - listitem [ref=f15e1083]:
+                      - generic [ref=f15e1084]:
+                        - generic [ref=f15e1085]: 09:00–11:00
+                        - generic [ref=f15e1086]: ~2 hr
+                        - generic [ref=f15e1087]: Morning
+                      - generic [ref=f15e1088]:
+                        - generic [ref=f15e1089]: Slow start
+                        - paragraph [ref=f15e1090]: Sleep in or enjoy a relaxed breakfast.
+                    - listitem [ref=f15e1091]:
+                      - generic [ref=f15e1092]: Late morning
+                      - generic [ref=f15e1094]:
+                        - generic [ref=f15e1095]: Café and laundry
+                        - paragraph [ref=f15e1096]: Catch up on laundry and postcards.
+                    - listitem [ref=f15e1097]:
+                      - generic [ref=f15e1098]:
+                        - generic [ref=f15e1099]: 12:30–14:00
+                        - generic [ref=f15e1100]: ~1.5 hr
+                        - generic [ref=f15e1101]: Lunch
+                      - generic [ref=f15e1102]:
+                        - generic [ref=f15e1103]: Local bite
+                        - paragraph [ref=f15e1104]: An unhurried lunch at a spot you missed.
+                    - listitem [ref=f15e1105]:
+                      - generic [ref=f15e1106]:
+                        - generic [ref=f15e1107]: 14:00–17:00
+                        - generic [ref=f15e1108]: ~3 hr
+                        - generic [ref=f15e1109]: Afternoon
+                      - generic [ref=f15e1110]:
+                        - generic [ref=f15e1111]: Easy stroll
+                        - paragraph [ref=f15e1112]: A gentle walk to stretch your legs.
+                    - listitem [ref=f15e1113]:
+                      - generic [ref=f15e1114]:
+                        - generic [ref=f15e1115]: 18:30–21:00
+                        - generic [ref=f15e1116]: ~2.5 hr
+                        - generic [ref=f15e1117]: Evening
+                      - generic [ref=f15e1118]:
+                        - generic [ref=f15e1119]: Optional night out
+                        - paragraph [ref=f15e1120]: Rest, or revisit a favourite spot.
+                  - generic [ref=f15e1121]:
+                    - generic [ref=f15e1122]:
+                      - generic [ref=f15e1123]: Getting around
+                      - generic [ref=f15e1124]: Walking, village transit and local shuttles.
+                    - generic [ref=f15e1125]:
+                      - generic [ref=f15e1126]: Plan ahead
+                      - generic [ref=f15e1127]: Use this day to recharge or revisit a favourite.
+                    - generic [ref=f15e1128]:
+                      - generic [ref=f15e1129]: Optional swap
+                      - generic [ref=f15e1130]: Add a short excursion if you feel rested.
+                    - generic [ref=f15e1131]:
+                      - generic [ref=f15e1132]: Overnight
+                      - generic [ref=f15e1133]: Overnight in Whistler.
+              - button "Day 4 Lost Lake & forest trails Whistler Moderate intensity Nature Relaxation View details" [ref=f15e1019] [cursor=pointer]:
+                - generic [ref=f15e1020]:
+                  - generic [ref=f15e1021]:
+                    - generic [ref=f15e1022]: Day 4
+                    - heading "Lost Lake & forest trails" [level=3] [ref=f15e1023]
+                    - generic [ref=f15e1024]: Whistler
+                  - generic [ref=f15e1025]: Moderate intensity
+                - generic [ref=f15e1026]:
+                  - generic [ref=f15e1027]: Nature
+                  - generic [ref=f15e1028]: Relaxation
+                - generic [ref=f15e1029]: View details
+    - contentinfo [ref=f15e41]:
+      - generic [ref=f15e42]:
+        - paragraph [ref=f15e43]: TravelUp
+        - paragraph [ref=f15e46]: Helping unsure travellers discover where to go next.
+        - paragraph [ref=f15e47]: All budgets, climates, seasons, itineraries and packing suggestions are indicative estimates, not live information. Always verify visa requirements, entry conditions, safety and travel advisories using official government sources for your citizenship.
+        - generic [ref=f15e48]:
+          - link "About & disclaimer" [ref=f15e49] [cursor=pointer]:
+            - /url: /about
+          - link "Home" [ref=f15e50] [cursor=pointer]:
+            - /url: /
+  - region "Notifications (F8)":
+    - list

@@ -1,0 +1,52 @@
+- generic [ref=f108e4]:
+  - generic [ref=f108e5]:
+    - banner [ref=f108e6]:
+      - generic [ref=f108e7]:
+        - link "TravelUp" [ref=f108e8] [cursor=pointer]:
+          - /url: /
+        - navigation [ref=f108e12]:
+          - link "Home" [ref=f108e13] [cursor=pointer]:
+            - /url: /
+          - link "About" [ref=f108e14] [cursor=pointer]:
+            - /url: /about
+          - button "Clear My Data" [ref=f108e15] [cursor=pointer]
+    - main [ref=f108e16]:
+      - generic [ref=f108e3182]:
+        - generic [ref=f108e3183]:
+          - generic [ref=f108e3184]:
+            - generic [ref=f108e3185]: Step 1 of 7
+            - generic [ref=f108e3186]: Your travel basics
+          - progressbar [ref=f108e3187]
+        - generic [ref=f108e3189]:
+          - generic [ref=f108e3190]:
+            - heading "Your travel basics" [level=1] [ref=f108e3191]
+            - paragraph [ref=f108e3192]: So we can tailor your travel recommendations.
+            - generic [ref=f108e3193]:
+              - generic [ref=f108e3194]:
+                - text: Country of residence
+                - combobox "Country of residence" [ref=f108e3195] [cursor=pointer]:
+                  - generic: United States
+              - generic [ref=f108e3198]:
+                - text: Departure city
+                - textbox "Departure city" [ref=f108e3199]:
+                  - /placeholder: e.g. London
+                  - text: Los Angeles
+              - generic [ref=f108e3200]:
+                - text: Citizenship
+                - combobox "Citizenship" [ref=f108e3201] [cursor=pointer]:
+                  - generic: United Kingdom
+          - generic [ref=f108e3204]:
+            - button "Back" [disabled]
+            - button "Next" [ref=f108e3205] [cursor=pointer]
+    - contentinfo [ref=f108e57]:
+      - generic [ref=f108e58]:
+        - paragraph [ref=f108e59]: TravelUp
+        - paragraph [ref=f108e62]: Helping unsure travellers discover where to go next.
+        - paragraph [ref=f108e63]: All budgets, climates, seasons, itineraries and packing suggestions are indicative estimates, not live information. Always verify visa requirements, entry conditions, safety and travel advisories using official government sources for your citizenship.
+        - generic [ref=f108e64]:
+          - link "About & disclaimer" [ref=f108e65] [cursor=pointer]:
+            - /url: /about
+          - link "Home" [ref=f108e66] [cursor=pointer]:
+            - /url: /
+  - region "Notifications (F8)":
+    - list

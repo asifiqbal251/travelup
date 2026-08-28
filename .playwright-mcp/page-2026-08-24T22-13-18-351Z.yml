@@ -1,0 +1,109 @@
+- generic [ref=f43e4]:
+  - generic [ref=f43e5]:
+    - banner [ref=f43e6]:
+      - generic [ref=f43e7]:
+        - link "TravelUp" [ref=f43e8] [cursor=pointer]:
+          - /url: /
+        - navigation [ref=f43e12]:
+          - link "Home" [ref=f43e13] [cursor=pointer]:
+            - /url: /
+          - link "About" [ref=f43e14] [cursor=pointer]:
+            - /url: /about
+          - button "Clear My Data" [ref=f43e15] [cursor=pointer]
+    - main [ref=f43e16]:
+      - generic [ref=f43e403]:
+        - button "Back to recommendations" [ref=f43e404] [cursor=pointer]
+        - generic [ref=f43e405]:
+          - img "Mexico City, Mexico" [ref=f43e407]
+          - generic [ref=f43e409]:
+            - heading "Mexico City" [level=1] [ref=f43e410]
+            - paragraph [ref=f43e411]: Mexico · Central Mexico
+        - generic [ref=f43e412]:
+          - tablist [ref=f43e413]:
+            - tab "Itinerary" [selected] [ref=f43e414] [cursor=pointer]
+            - tab "Packing" [ref=f43e415] [cursor=pointer]
+            - tab "Overview" [ref=f43e416] [cursor=pointer]
+          - tabpanel "Itinerary" [ref=f43e417]:
+            - generic [ref=f43e418]:
+              - paragraph [ref=f43e419]: A suggested 3-day plan including outbound and return travel. Indicative only — verify opening hours and tickets before you go.
+              - generic [ref=f43e420]:
+                - button "Day 1 Zócalo & centro Mexico City High intensity Cities History and culture Food Hide details" [expanded] [ref=f43e421] [cursor=pointer]:
+                  - generic [ref=f43e422]:
+                    - generic [ref=f43e423]:
+                      - generic [ref=f43e424]: Day 1
+                      - heading "Zócalo & centro" [level=3] [ref=f43e425]
+                      - generic [ref=f43e426]: Mexico City
+                    - generic [ref=f43e427]: High intensity
+                  - generic [ref=f43e428]:
+                    - generic [ref=f43e429]: Cities
+                    - generic [ref=f43e430]: History and culture
+                    - generic [ref=f43e431]: Food
+                  - generic [ref=f43e432]: Hide details
+                - generic [ref=f43e433]:
+                  - list [ref=f43e434]:
+                    - listitem [ref=f43e435]:
+                      - generic [ref=f43e436]: Departure
+                      - generic [ref=f43e438]:
+                        - generic [ref=f43e439]: Depart Los Angeles
+                        - paragraph [ref=f43e440]: Check in and travel to your destination; confirm your transport.
+                    - listitem [ref=f43e441]:
+                      - generic [ref=f43e442]: Arrival
+                      - generic [ref=f43e444]:
+                        - generic [ref=f43e445]: Arrive in Mexico City
+                        - paragraph [ref=f43e446]: Clear arrivals and transfer to your stay.
+                    - listitem [ref=f43e447]:
+                      - generic [ref=f43e448]:
+                        - generic [ref=f43e449]: 18:30–21:00
+                        - generic [ref=f43e450]: ~2.5 hr
+                        - generic [ref=f43e451]: Evening
+                      - generic [ref=f43e452]:
+                        - generic [ref=f43e453]: Dinner in the centre
+                        - paragraph [ref=f43e454]: Dinner in the centre.
+                  - paragraph [ref=f43e455]: "Estimated total journey: about 7.4 hours each way."
+                  - generic [ref=f43e456]:
+                    - generic [ref=f43e457]:
+                      - generic [ref=f43e458]: Getting around
+                      - generic [ref=f43e459]: Taxis, rideshares and local transit.
+                    - generic [ref=f43e460]:
+                      - generic [ref=f43e461]: Plan ahead
+                      - generic [ref=f43e462]: Confirm opening hours and book popular tickets before you travel.
+                    - generic [ref=f43e463]:
+                      - generic [ref=f43e464]: Optional swap
+                      - generic [ref=f43e465]: Swap for “Teotihuacán” if it suits your pace.
+                    - generic [ref=f43e466]:
+                      - generic [ref=f43e467]: Overnight
+                      - generic [ref=f43e468]: Overnight in Mexico City.
+              - button "Day 2 Coyoacán & Frida Kahlo Mexico City Moderate intensity Cities History and culture View details" [ref=f43e470] [cursor=pointer]:
+                - generic [ref=f43e471]:
+                  - generic [ref=f43e472]:
+                    - generic [ref=f43e473]: Day 2
+                    - heading "Coyoacán & Frida Kahlo" [level=3] [ref=f43e474]
+                    - generic [ref=f43e475]: Mexico City
+                  - generic [ref=f43e476]: Moderate intensity
+                - generic [ref=f43e477]:
+                  - generic [ref=f43e478]: Cities
+                  - generic [ref=f43e479]: History and culture
+                - generic [ref=f43e480]: View details
+              - button "Day 3 Chapultepec & anthropology Mexico City Moderate intensity Cities History and culture View details" [ref=f43e482] [cursor=pointer]:
+                - generic [ref=f43e483]:
+                  - generic [ref=f43e484]:
+                    - generic [ref=f43e485]: Day 3
+                    - heading "Chapultepec & anthropology" [level=3] [ref=f43e486]
+                    - generic [ref=f43e487]: Mexico City
+                  - generic [ref=f43e488]: Moderate intensity
+                - generic [ref=f43e489]:
+                  - generic [ref=f43e490]: Cities
+                  - generic [ref=f43e491]: History and culture
+                - generic [ref=f43e492]: View details
+    - contentinfo [ref=f43e41]:
+      - generic [ref=f43e42]:
+        - paragraph [ref=f43e43]: TravelUp
+        - paragraph [ref=f43e46]: Helping unsure travellers discover where to go next.
+        - paragraph [ref=f43e47]: All budgets, climates, seasons, itineraries and packing suggestions are indicative estimates, not live information. Always verify visa requirements, entry conditions, safety and travel advisories using official government sources for your citizenship.
+        - generic [ref=f43e48]:
+          - link "About & disclaimer" [ref=f43e49] [cursor=pointer]:
+            - /url: /about
+          - link "Home" [ref=f43e50] [cursor=pointer]:
+            - /url: /
+  - region "Notifications (F8)":
+    - list

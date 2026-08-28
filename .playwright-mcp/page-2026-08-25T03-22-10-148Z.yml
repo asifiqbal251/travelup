@@ -1,0 +1,135 @@
+- generic [ref=f9e4]:
+  - generic [ref=f9e5]:
+    - banner [ref=f9e6]:
+      - generic [ref=f9e7]:
+        - link "TravelUp" [ref=f9e8] [cursor=pointer]:
+          - /url: /
+        - navigation [ref=f9e12]:
+          - link "Home" [ref=f9e13] [cursor=pointer]:
+            - /url: /
+          - link "About" [ref=f9e14] [cursor=pointer]:
+            - /url: /about
+          - button "Clear My Data" [ref=f9e15] [cursor=pointer]
+    - main [ref=f9e16]:
+      - generic [ref=f9e1298]:
+        - button "Back to recommendations" [ref=f9e1299] [cursor=pointer]
+        - generic [ref=f9e1300]:
+          - img "Victoria, Canada" [ref=f9e1302]
+          - generic [ref=f9e1304]:
+            - heading "Victoria" [level=1] [ref=f9e1305]
+            - paragraph [ref=f9e1306]: Canada · Vancouver Island, British Columbia, Canada
+        - generic [ref=f9e1307]:
+          - tablist [ref=f9e1308]:
+            - tab "Itinerary" [selected] [ref=f9e1309] [cursor=pointer]
+            - tab "Packing" [ref=f9e1310] [cursor=pointer]
+            - tab "Overview" [ref=f9e1311] [cursor=pointer]
+          - tabpanel "Itinerary" [ref=f9e1312]:
+            - generic [ref=f9e1313]:
+              - paragraph [ref=f9e1314]: A suggested 4-day plan including outbound and return travel. Indicative only — verify opening hours and tickets before you go.
+              - button "Day 1 Inner Harbour & Old Town Victoria Light intensity Cities History and culture View details" [ref=f9e1408] [cursor=pointer]:
+                - generic [ref=f9e1317]:
+                  - generic [ref=f9e1318]:
+                    - generic [ref=f9e1319]: Day 1
+                    - heading "Inner Harbour & Old Town" [level=3] [ref=f9e1320]
+                    - generic [ref=f9e1321]: Victoria
+                  - generic [ref=f9e1322]: Light intensity
+                - generic [ref=f9e1323]:
+                  - generic [ref=f9e1324]: Cities
+                  - generic [ref=f9e1325]: History and culture
+                - generic [ref=f9e1326]: View details
+              - generic [ref=f9e1371]:
+                - button "Day 2 Butchart Gardens Victoria Light intensity Nature Relaxation Hide details" [expanded] [active] [ref=f9e1409] [cursor=pointer]:
+                  - generic [ref=f9e1373]:
+                    - generic [ref=f9e1374]:
+                      - generic [ref=f9e1375]: Day 2
+                      - heading "Butchart Gardens" [level=3] [ref=f9e1376]
+                      - generic [ref=f9e1377]: Victoria
+                    - generic [ref=f9e1378]: Light intensity
+                  - generic [ref=f9e1379]:
+                    - generic [ref=f9e1380]: Nature
+                    - generic [ref=f9e1381]: Relaxation
+                  - generic [ref=f9e1382]: Hide details
+                - generic [ref=f9e1410]:
+                  - list [ref=f9e1411]:
+                    - listitem [ref=f9e1412]:
+                      - generic [ref=f9e1413]:
+                        - generic [ref=f9e1414]: 08:00–11:00
+                        - generic [ref=f9e1415]: ~3 hr
+                        - generic [ref=f9e1416]: Morning
+                      - generic [ref=f9e1417]:
+                        - generic [ref=f9e1418]: Travel north to Butchart Gardens by car, bus or organized tour (about 30-45 minutes each way).
+                        - paragraph
+                    - listitem [ref=f9e1419]:
+                      - generic [ref=f9e1420]: Late morning
+                      - generic [ref=f9e1422]:
+                        - generic [ref=f9e1423]: Mid-morning break
+                        - paragraph [ref=f9e1424]: A short break or local transit between stops.
+                    - listitem [ref=f9e1425]:
+                      - generic [ref=f9e1426]:
+                        - generic [ref=f9e1427]: 12:30–14:00
+                        - generic [ref=f9e1428]: ~1.5 hr
+                        - generic [ref=f9e1429]: Lunch
+                      - generic [ref=f9e1430]:
+                        - generic [ref=f9e1431]: Local bite
+                        - paragraph [ref=f9e1432]: Afternoon tea service at the gardens, if timed right.
+                    - listitem [ref=f9e1433]:
+                      - generic [ref=f9e1434]:
+                        - generic [ref=f9e1435]: 14:00–18:00
+                        - generic [ref=f9e1436]: ~4 hr
+                        - generic [ref=f9e1437]: Afternoon
+                      - generic [ref=f9e1438]:
+                        - generic [ref=f9e1439]: Wander the sunken garden, rose garden, and Japanese garden.
+                        - paragraph
+                    - listitem [ref=f9e1440]:
+                      - generic [ref=f9e1441]:
+                        - generic [ref=f9e1442]: 18:30–21:30
+                        - generic [ref=f9e1443]: ~3 hr
+                        - generic [ref=f9e1444]: Evening
+                      - generic [ref=f9e1445]:
+                        - generic [ref=f9e1446]: Return to the city for a relaxed dinner.
+                        - paragraph
+                  - generic [ref=f9e1447]:
+                    - generic [ref=f9e1448]:
+                      - generic [ref=f9e1449]: Getting around
+                      - generic [ref=f9e1450]: Walking, local buses, taxis and harbour transport where useful.
+                    - generic [ref=f9e1451]:
+                      - generic [ref=f9e1452]: Plan ahead
+                      - generic [ref=f9e1453]: Confirm opening hours and book popular tickets before you travel.
+                    - generic [ref=f9e1454]:
+                      - generic [ref=f9e1455]: Overnight
+                      - generic [ref=f9e1456]: Overnight in Victoria.
+              - button "Day 3 Fisherman's Wharf & Dallas Road waterfront Victoria Light intensity Nature Food View details" [ref=f9e1384] [cursor=pointer]:
+                - generic [ref=f9e1385]:
+                  - generic [ref=f9e1386]:
+                    - generic [ref=f9e1387]: Day 3
+                    - heading "Fisherman's Wharf & Dallas Road waterfront" [level=3] [ref=f9e1388]
+                    - generic [ref=f9e1389]: Victoria
+                  - generic [ref=f9e1390]: Light intensity
+                - generic [ref=f9e1391]:
+                  - generic [ref=f9e1392]: Nature
+                  - generic [ref=f9e1393]: Food
+                - generic [ref=f9e1394]: View details
+              - 'button "Day 4 Return: Victoria → Vancouver Victoria Moderate intensity Breakfast Return Arrive home View details" [ref=f9e1396] [cursor=pointer]':
+                - generic [ref=f9e1397]:
+                  - generic [ref=f9e1398]:
+                    - generic [ref=f9e1399]: Day 4
+                    - 'heading "Return: Victoria → Vancouver" [level=3] [ref=f9e1400]'
+                    - generic [ref=f9e1401]: Victoria
+                  - generic [ref=f9e1402]: Moderate intensity
+                - generic [ref=f9e1403]:
+                  - generic [ref=f9e1404]: Breakfast
+                  - generic [ref=f9e1405]: Return
+                  - generic [ref=f9e1406]: Arrive home
+                - generic [ref=f9e1407]: View details
+    - contentinfo [ref=f9e41]:
+      - generic [ref=f9e42]:
+        - paragraph [ref=f9e43]: TravelUp
+        - paragraph [ref=f9e46]: Helping unsure travellers discover where to go next.
+        - paragraph [ref=f9e47]: All budgets, climates, seasons, itineraries and packing suggestions are indicative estimates, not live information. Always verify visa requirements, entry conditions, safety and travel advisories using official government sources for your citizenship.
+        - generic [ref=f9e48]:
+          - link "About & disclaimer" [ref=f9e49] [cursor=pointer]:
+            - /url: /about
+          - link "Home" [ref=f9e50] [cursor=pointer]:
+            - /url: /
+  - region "Notifications (F8)":
+    - list

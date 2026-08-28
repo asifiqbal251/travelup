@@ -1,0 +1,174 @@
+- generic [ref=f33e4]:
+  - generic [ref=f33e5]:
+    - banner [ref=f33e6]:
+      - generic [ref=f33e7]:
+        - link "TravelUp" [ref=f33e8] [cursor=pointer]:
+          - /url: /
+        - navigation [ref=f33e12]:
+          - link "Home" [ref=f33e13] [cursor=pointer]:
+            - /url: /
+          - link "About" [ref=f33e14] [cursor=pointer]:
+            - /url: /about
+          - button "Clear My Data" [ref=f33e15] [cursor=pointer]
+    - main [ref=f33e16]:
+      - generic [ref=f33e737]:
+        - generic [ref=f33e738]:
+          - generic [ref=f33e739]:
+            - heading "Your top 3 matches" [level=1] [ref=f33e740]
+            - paragraph [ref=f33e741]: Final scores combine your preference fit with travel practicality for your trip length. Estimates only.
+          - button "Revise" [ref=f33e742] [cursor=pointer]
+        - paragraph [ref=f33e746]: Scores are estimates based on your preferences and curated destination data, not live availability or flight schedules. Always verify visa and entry requirements through official government sources for your citizenship.
+        - generic [ref=f33e747]:
+          - article [ref=f33e748]:
+            - generic [ref=f33e749]:
+              - img "San Diego, United States" [ref=f33e751]
+              - generic [ref=f33e752]: 95/100
+              - generic [ref=f33e753]: Strong match
+              - generic [ref=f33e754]:
+                - heading "San Diego" [level=2] [ref=f33e755]
+                - paragraph [ref=f33e759]: United States · Southern California, United States
+            - generic [ref=f33e760]:
+              - region "Travel fit" [ref=f33e761]:
+                - generic [ref=f33e762]:
+                  - heading "Travel fit" [level=3] [ref=f33e763]
+                  - 'status "Travel fit: Good fit" [ref=f33e764]': Good fit
+                - generic [ref=f33e765]:
+                  - generic [ref=f33e766]:
+                    - term [ref=f33e767]: How you'll travel
+                    - definition [ref=f33e768]: Drive or train
+                  - generic [ref=f33e769]:
+                    - term [ref=f33e770]: Travel time
+                    - definition [ref=f33e771]: About 2.5 hours each way
+                  - generic [ref=f33e772]:
+                    - term [ref=f33e773]: Time at destination
+                    - definition [ref=f33e774]: About 4 days
+              - list [ref=f33e775]:
+                - listitem [ref=f33e776]:
+                  - generic [ref=f33e777]: •
+                  - text: Great for beaches, cities, food
+                - listitem [ref=f33e778]:
+                  - generic [ref=f33e779]: •
+                  - text: Enjoyable in your chosen month
+                - listitem [ref=f33e780]:
+                  - generic [ref=f33e781]: •
+                  - text: Fits your selected budget level
+              - generic [ref=f33e782]:
+                - generic [ref=f33e783]:
+                  - generic [ref=f33e787]: Trip length
+                  - generic [ref=f33e788]: 2–5d
+                - generic [ref=f33e789]:
+                  - generic [ref=f33e793]: Budget
+                  - generic [ref=f33e794]: Moderate – Comfortable – Premium
+                - generic [ref=f33e795]:
+                  - generic [ref=f33e799]: Climate
+                  - generic [ref=f33e800]: Warm, Mild
+              - generic [ref=f33e801]: "Main experiences: Balboa Park and San Diego Zoo · La Jolla Cove · Gaslamp Quarter · Coronado Beach"
+              - generic [ref=f33e802]: "Suited to: Solo, Couple, Friends, Family"
+              - button "See score breakdown" [ref=f33e803] [cursor=pointer]
+              - button "View My Trip" [ref=f33e804] [cursor=pointer]
+          - article [ref=f33e805]:
+            - generic [ref=f33e806]:
+              - img "Las Vegas, United States" [ref=f33e808]
+              - generic [ref=f33e809]: 87/100
+              - generic [ref=f33e810]: Strong match
+              - generic [ref=f33e811]:
+                - heading "Las Vegas" [level=2] [ref=f33e812]
+                - paragraph [ref=f33e816]: United States · Mojave Desert, Nevada, United States
+            - generic [ref=f33e817]:
+              - region "Travel fit" [ref=f33e818]:
+                - generic [ref=f33e819]:
+                  - heading "Travel fit" [level=3] [ref=f33e820]
+                  - 'status "Travel fit: Good fit" [ref=f33e821]': Good fit
+                - generic [ref=f33e822]:
+                  - generic [ref=f33e823]:
+                    - term [ref=f33e824]: How you'll travel
+                    - definition [ref=f33e825]: Flight or drive
+                  - generic [ref=f33e826]:
+                    - term [ref=f33e827]: Travel time
+                    - definition [ref=f33e828]: About 4.5 hours each way
+                  - generic [ref=f33e829]:
+                    - term [ref=f33e830]: Time at destination
+                    - definition [ref=f33e831]: About 3.5 days
+              - list [ref=f33e832]:
+                - listitem [ref=f33e833]:
+                  - generic [ref=f33e834]: •
+                  - text: Great for cities, food
+                - listitem [ref=f33e835]:
+                  - generic [ref=f33e836]: •
+                  - text: Enjoyable in your chosen month
+                - listitem [ref=f33e837]:
+                  - generic [ref=f33e838]: •
+                  - text: Fits your selected budget level
+              - generic [ref=f33e839]:
+                - generic [ref=f33e840]:
+                  - generic [ref=f33e844]: Trip length
+                  - generic [ref=f33e845]: 2–4d
+                - generic [ref=f33e846]:
+                  - generic [ref=f33e850]: Budget
+                  - generic [ref=f33e851]: Budget – Moderate – Comfortable – Premium
+                - generic [ref=f33e852]:
+                  - generic [ref=f33e856]: Climate
+                  - generic [ref=f33e857]: Warm, Mild
+              - generic [ref=f33e858]: "Main experiences: The Strip at night · Bellagio Fountains · Red Rock Canyon · A headline show"
+              - generic [ref=f33e859]: "Suited to: Solo, Couple, Friends"
+              - button "See score breakdown" [ref=f33e860] [cursor=pointer]
+              - button "View My Trip" [ref=f33e861] [cursor=pointer]
+          - article [ref=f33e862]:
+            - generic [ref=f33e863]:
+              - img "Kelowna and the Okanagan Valley, Canada" [ref=f33e865]
+              - generic [ref=f33e866]: 83/100
+              - generic [ref=f33e867]: Strong match
+              - generic [ref=f33e868]:
+                - heading "Kelowna and the Okanagan Valley" [level=2] [ref=f33e869]
+                - paragraph [ref=f33e873]: Canada · Okanagan Valley, British Columbia, Canada
+            - generic [ref=f33e874]:
+              - region "Travel fit" [ref=f33e875]:
+                - generic [ref=f33e876]:
+                  - heading "Travel fit" [level=3] [ref=f33e877]
+                  - 'status "Travel fit: Good fit" [ref=f33e878]': Good fit
+                - generic [ref=f33e879]:
+                  - generic [ref=f33e880]:
+                    - term [ref=f33e881]: How you'll travel
+                    - definition [ref=f33e882]: Drive or regional flight
+                  - generic [ref=f33e883]:
+                    - term [ref=f33e884]: Travel time
+                    - definition [ref=f33e885]: About 5.5 hours each way
+                  - generic [ref=f33e886]:
+                    - term [ref=f33e887]: Time at destination
+                    - definition [ref=f33e888]: About 3 days
+              - list [ref=f33e889]:
+                - listitem [ref=f33e890]:
+                  - generic [ref=f33e891]: •
+                  - text: Great for beaches, food
+                - listitem [ref=f33e892]:
+                  - generic [ref=f33e893]: •
+                  - text: Enjoyable in your chosen month
+                - listitem [ref=f33e894]:
+                  - generic [ref=f33e895]: •
+                  - text: Fits your selected budget level
+              - generic [ref=f33e896]:
+                - generic [ref=f33e897]:
+                  - generic [ref=f33e901]: Trip length
+                  - generic [ref=f33e902]: 2–5d
+                - generic [ref=f33e903]:
+                  - generic [ref=f33e907]: Budget
+                  - generic [ref=f33e908]: Moderate – Comfortable – Premium
+                - generic [ref=f33e909]:
+                  - generic [ref=f33e913]: Climate
+                  - generic [ref=f33e914]: Warm, Mild
+              - generic [ref=f33e915]: "Main experiences: Okanagan wine tours · Kelowna waterfront beaches · Knox Mountain hike · Orchard fruit stands"
+              - generic [ref=f33e916]: "Suited to: Solo, Couple, Friends, Family"
+              - button "See score breakdown" [ref=f33e917] [cursor=pointer]
+              - button "View My Trip" [ref=f33e918] [cursor=pointer]
+    - contentinfo [ref=f33e41]:
+      - generic [ref=f33e42]:
+        - paragraph [ref=f33e43]: TravelUp
+        - paragraph [ref=f33e46]: Helping unsure travellers discover where to go next.
+        - paragraph [ref=f33e47]: All budgets, climates, seasons, itineraries and packing suggestions are indicative estimates, not live information. Always verify visa requirements, entry conditions, safety and travel advisories using official government sources for your citizenship.
+        - generic [ref=f33e48]:
+          - link "About & disclaimer" [ref=f33e49] [cursor=pointer]:
+            - /url: /about
+          - link "Home" [ref=f33e50] [cursor=pointer]:
+            - /url: /
+  - region "Notifications (F8)":
+    - list

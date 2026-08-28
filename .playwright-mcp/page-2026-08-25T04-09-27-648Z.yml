@@ -1,0 +1,69 @@
+- generic [ref=f90e4]:
+  - generic [ref=f90e5]:
+    - banner [ref=f90e6]:
+      - generic [ref=f90e7]:
+        - link "TravelUp" [ref=f90e8] [cursor=pointer]:
+          - /url: /
+        - navigation [ref=f90e12]:
+          - link "Home" [ref=f90e13] [cursor=pointer]:
+            - /url: /
+          - link "About" [ref=f90e14] [cursor=pointer]:
+            - /url: /about
+          - button "Clear My Data" [ref=f90e15] [cursor=pointer]
+    - main [ref=f90e16]:
+      - generic [ref=f90e803]:
+        - generic [ref=f90e804]:
+          - generic [ref=f90e805]:
+            - generic [ref=f90e806]: Step 7 of 7
+            - generic [ref=f90e807]: Review
+          - progressbar [ref=f90e808]
+        - generic [ref=f90e810]:
+          - generic [ref=f90e959]:
+            - heading "Review your answers" [level=1] [ref=f90e960]
+            - paragraph [ref=f90e961]: Make any changes before we find your matches.
+            - generic [ref=f90e963]:
+              - generic [ref=f90e964]:
+                - term [ref=f90e965]: Residence / departure / citizenship
+                - definition [ref=f90e966]: Canada · Vancouver · Canada
+              - generic [ref=f90e967]:
+                - term [ref=f90e968]: When
+                - definition [ref=f90e969]: August
+              - generic [ref=f90e970]:
+                - term [ref=f90e971]: Total trip
+                - definition [ref=f90e972]: 7 days, including travel time
+              - generic [ref=f90e973]:
+                - term [ref=f90e974]: Domestic
+                - definition [ref=f90e975]: Domestic only
+              - generic [ref=f90e976]:
+                - term [ref=f90e977]: Traveller & budget
+                - definition [ref=f90e978]: Family · Moderate
+              - generic [ref=f90e979]:
+                - term [ref=f90e980]: Interests
+                - definition [ref=f90e981]: Wildlife
+              - generic [ref=f90e982]:
+                - term [ref=f90e983]: Climate / pace / activity
+                - definition [ref=f90e984]: Cold or snowy · Relaxed · Highly active
+              - generic [ref=f90e985]:
+                - term [ref=f90e986]: Dietary
+                - definition [ref=f90e987]: None
+              - generic [ref=f90e988]:
+                - term [ref=f90e989]: Visited
+                - definition [ref=f90e990]: None
+              - generic [ref=f90e991]:
+                - term [ref=f90e992]: Excluded
+                - definition [ref=f90e993]: Tofino, Montreal, Quebec City, Whistler, Kelowna, Victoria
+          - generic [ref=f90e825]:
+            - button "Back" [ref=f90e856] [cursor=pointer]
+            - button "See my recommendations" [active] [ref=f90e994] [cursor=pointer]
+    - contentinfo [ref=f90e40]:
+      - generic [ref=f90e41]:
+        - paragraph [ref=f90e42]: TravelUp
+        - paragraph [ref=f90e45]: Helping unsure travellers discover where to go next.
+        - paragraph [ref=f90e46]: All budgets, climates, seasons, itineraries and packing suggestions are indicative estimates, not live information. Always verify visa requirements, entry conditions, safety and travel advisories using official government sources for your citizenship.
+        - generic [ref=f90e47]:
+          - link "About & disclaimer" [ref=f90e48] [cursor=pointer]:
+            - /url: /about
+          - link "Home" [ref=f90e49] [cursor=pointer]:
+            - /url: /
+  - region "Notifications (F8)":
+    - list

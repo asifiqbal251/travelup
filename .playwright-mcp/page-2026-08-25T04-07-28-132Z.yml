@@ -1,0 +1,174 @@
+- generic [ref=f90e4]:
+  - generic [ref=f90e5]:
+    - banner [ref=f90e6]:
+      - generic [ref=f90e7]:
+        - link "TravelUp" [ref=f90e8] [cursor=pointer]:
+          - /url: /
+        - navigation [ref=f90e12]:
+          - link "Home" [ref=f90e13] [cursor=pointer]:
+            - /url: /
+          - link "About" [ref=f90e14] [cursor=pointer]:
+            - /url: /about
+          - button "Clear My Data" [ref=f90e15] [cursor=pointer]
+    - main [ref=f90e16]:
+      - generic [ref=f90e247]:
+        - generic [ref=f90e248]:
+          - generic [ref=f90e249]:
+            - heading "Your top 3 matches" [level=1] [ref=f90e250]
+            - paragraph [ref=f90e251]: Final scores combine your preference fit with travel practicality for your trip length. Estimates only.
+          - button "Revise" [ref=f90e252] [cursor=pointer]
+        - paragraph [ref=f90e256]: Scores are estimates based on your preferences and curated destination data, not live availability or flight schedules. Always verify visa and entry requirements through official government sources for your citizenship.
+        - generic [ref=f90e257]:
+          - article [ref=f90e258]:
+            - generic [ref=f90e259]:
+              - img "Canadian Rockies, Canada, Canada" [ref=f90e261]
+              - generic [ref=f90e262]: 98/100
+              - generic [ref=f90e263]: Strong match
+              - generic [ref=f90e264]:
+                - heading "Canadian Rockies, Canada" [level=2] [ref=f90e265]
+                - paragraph [ref=f90e269]: Canada · North America
+            - generic [ref=f90e270]:
+              - region "Travel fit" [ref=f90e271]:
+                - generic [ref=f90e272]:
+                  - heading "Travel fit" [level=3] [ref=f90e273]
+                  - 'status "Travel fit: Good fit" [ref=f90e274]': Good fit
+                - generic [ref=f90e275]:
+                  - generic [ref=f90e276]:
+                    - term [ref=f90e277]: How you'll travel
+                    - definition [ref=f90e278]: Domestic flight + domestic connection + rental car
+                  - generic [ref=f90e279]:
+                    - term [ref=f90e280]: Travel time
+                    - definition [ref=f90e281]: About 3.1 hours each way
+                  - generic [ref=f90e282]:
+                    - term [ref=f90e283]: Time at destination
+                    - definition [ref=f90e284]: About 7 days
+              - list [ref=f90e285]:
+                - listitem [ref=f90e286]:
+                  - generic [ref=f90e287]: •
+                  - text: Great for wildlife
+                - listitem [ref=f90e288]:
+                  - generic [ref=f90e289]: •
+                  - text: Peak season in August
+                - listitem [ref=f90e290]:
+                  - generic [ref=f90e291]: •
+                  - text: Fits your selected budget level
+              - generic [ref=f90e292]:
+                - generic [ref=f90e293]:
+                  - generic [ref=f90e297]: Trip length
+                  - generic [ref=f90e298]: 6–12d
+                - generic [ref=f90e299]:
+                  - generic [ref=f90e303]: Budget
+                  - generic [ref=f90e304]: Moderate – Comfortable – Premium
+                - generic [ref=f90e305]:
+                  - generic [ref=f90e309]: Climate
+                  - generic [ref=f90e310]: Cool, Cold or snowy
+              - generic [ref=f90e311]: "Main experiences: Lake Louise and Moraine Lake · Banff and Jasper towns · Columbia Icefield · Wildlife spotting"
+              - generic [ref=f90e312]: "Suited to: Solo, Couple, Friends, Family"
+              - button "See score breakdown" [ref=f90e313] [cursor=pointer]
+              - button "View My Trip" [ref=f90e314] [cursor=pointer]
+          - article [ref=f90e315]:
+            - generic [ref=f90e316]:
+              - img "Tofino, Canada" [ref=f90e318]
+              - generic [ref=f90e319]: 86/100
+              - generic [ref=f90e320]: Strong match
+              - generic [ref=f90e321]:
+                - heading "Tofino" [level=2] [ref=f90e322]
+                - paragraph [ref=f90e326]: Canada · West Coast Vancouver Island, British Columbia, Canada
+            - generic [ref=f90e327]:
+              - region "Travel fit" [ref=f90e328]:
+                - generic [ref=f90e329]:
+                  - heading "Travel fit" [level=3] [ref=f90e330]
+                  - 'status "Travel fit: Good fit" [ref=f90e331]': Good fit
+                - generic [ref=f90e332]:
+                  - generic [ref=f90e333]:
+                    - term [ref=f90e334]: How you'll travel
+                    - definition [ref=f90e335]: Ferry + drive
+                  - generic [ref=f90e336]:
+                    - term [ref=f90e337]: Travel time
+                    - definition [ref=f90e338]: About 6 hours each way
+                  - generic [ref=f90e339]:
+                    - term [ref=f90e340]: Time at destination
+                    - definition [ref=f90e341]: About 6.5 days
+              - list [ref=f90e342]:
+                - listitem [ref=f90e343]:
+                  - generic [ref=f90e344]: •
+                  - text: Great for wildlife
+                - listitem [ref=f90e345]:
+                  - generic [ref=f90e346]: •
+                  - text: Peak season in August
+                - listitem [ref=f90e347]:
+                  - generic [ref=f90e348]: •
+                  - text: Fits your selected budget level
+              - generic [ref=f90e349]:
+                - generic [ref=f90e350]:
+                  - generic [ref=f90e354]: Trip length
+                  - generic [ref=f90e355]: 3–5d
+                - generic [ref=f90e356]:
+                  - generic [ref=f90e360]: Budget
+                  - generic [ref=f90e361]: Moderate – Comfortable – Premium
+                - generic [ref=f90e362]:
+                  - generic [ref=f90e366]: Climate
+                  - generic [ref=f90e367]: Mild, Cool
+              - generic [ref=f90e368]: "Main experiences: Long Beach · Pacific Rim National Park trails · Surfing lessons · Storm watching"
+              - generic [ref=f90e369]: "Suited to: Solo, Couple, Friends, Family"
+              - button "See score breakdown" [ref=f90e370] [cursor=pointer]
+              - button "View My Trip" [ref=f90e371] [cursor=pointer]
+          - article [ref=f90e372]:
+            - generic [ref=f90e373]:
+              - img "Montréal and Québec City, Canada" [ref=f90e375]
+              - generic [ref=f90e376]: 73/100
+              - generic [ref=f90e377]: Strong match
+              - generic [ref=f90e378]:
+                - heading "Montréal and Québec City" [level=2] [ref=f90e379]
+                - paragraph [ref=f90e383]: Canada · Québec, Canada
+            - generic [ref=f90e384]:
+              - region "Travel fit" [ref=f90e385]:
+                - generic [ref=f90e386]:
+                  - heading "Travel fit" [level=3] [ref=f90e387]
+                  - 'status "Travel fit: Good fit" [ref=f90e388]': Good fit
+                - generic [ref=f90e389]:
+                  - generic [ref=f90e390]:
+                    - term [ref=f90e391]: How you'll travel
+                    - definition [ref=f90e392]: Domestic flight + train/transfer
+                  - generic [ref=f90e393]:
+                    - term [ref=f90e394]: Travel time
+                    - definition [ref=f90e395]: About 6.8 hours each way
+                  - generic [ref=f90e396]:
+                    - term [ref=f90e397]: Time at destination
+                    - definition [ref=f90e398]: About 6 days
+              - list [ref=f90e399]:
+                - listitem [ref=f90e400]:
+                  - generic [ref=f90e401]: •
+                  - text: Peak season in August
+                - listitem [ref=f90e402]:
+                  - generic [ref=f90e403]: •
+                  - text: Fits your selected budget level
+                - listitem [ref=f90e404]:
+                  - generic [ref=f90e405]: •
+                  - text: Ideal for 7 total days
+              - generic [ref=f90e406]:
+                - generic [ref=f90e407]:
+                  - generic [ref=f90e411]: Trip length
+                  - generic [ref=f90e412]: 3–10d
+                - generic [ref=f90e413]:
+                  - generic [ref=f90e417]: Budget
+                  - generic [ref=f90e418]: Comfortable – Moderate
+                - generic [ref=f90e419]:
+                  - generic [ref=f90e423]: Climate
+                  - generic [ref=f90e424]: Cool, Cold or snowy, Mild
+              - generic [ref=f90e425]: "Main experiences: Old Montréal · Mont-Royal · Notre-Dame Basilica · Québec City old town"
+              - generic [ref=f90e426]: "Suited to: Couple, Family, Friends"
+              - button "See score breakdown" [ref=f90e427] [cursor=pointer]
+              - button "View My Trip" [ref=f90e428] [cursor=pointer]
+    - contentinfo [ref=f90e40]:
+      - generic [ref=f90e41]:
+        - paragraph [ref=f90e42]: TravelUp
+        - paragraph [ref=f90e45]: Helping unsure travellers discover where to go next.
+        - paragraph [ref=f90e46]: All budgets, climates, seasons, itineraries and packing suggestions are indicative estimates, not live information. Always verify visa requirements, entry conditions, safety and travel advisories using official government sources for your citizenship.
+        - generic [ref=f90e47]:
+          - link "About & disclaimer" [ref=f90e48] [cursor=pointer]:
+            - /url: /about
+          - link "Home" [ref=f90e49] [cursor=pointer]:
+            - /url: /
+  - region "Notifications (F8)":
+    - list

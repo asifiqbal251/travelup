@@ -1,0 +1,69 @@
+- generic [ref=f3e4]:
+  - generic [ref=f3e5]:
+    - banner [ref=f3e6]:
+      - generic [ref=f3e7]:
+        - link "TravelUp" [ref=f3e8] [cursor=pointer]:
+          - /url: /
+        - navigation [ref=f3e12]:
+          - link "Home" [ref=f3e13] [cursor=pointer]:
+            - /url: /
+          - link "About" [ref=f3e14] [cursor=pointer]:
+            - /url: /about
+          - button "Clear My Data" [ref=f3e15] [cursor=pointer]
+    - main [ref=f3e16]:
+      - generic [ref=f3e17]:
+        - generic [ref=f3e18]:
+          - generic [ref=f3e19]:
+            - generic [ref=f3e20]: Step 7 of 7
+            - generic [ref=f3e21]: Review
+          - progressbar [ref=f3e22]
+        - generic [ref=f3e24]:
+          - generic [ref=f3e695]:
+            - heading "Review your answers" [level=1] [ref=f3e696]
+            - paragraph [ref=f3e697]: Make any changes before we find your matches.
+            - generic [ref=f3e699]:
+              - generic [ref=f3e700]:
+                - term [ref=f3e701]: Residence / departure / citizenship
+                - definition [ref=f3e702]: United States · New York · United States
+              - generic [ref=f3e703]:
+                - term [ref=f3e704]: When
+                - definition [ref=f3e705]: Flexible
+              - generic [ref=f3e706]:
+                - term [ref=f3e707]: Total trip
+                - definition [ref=f3e708]: 3 days, including travel time
+              - generic [ref=f3e709]:
+                - term [ref=f3e710]: Domestic
+                - definition [ref=f3e711]: International only
+              - generic [ref=f3e712]:
+                - term [ref=f3e713]: Traveller & budget
+                - definition [ref=f3e714]: Solo · Premium
+              - generic [ref=f3e715]:
+                - term [ref=f3e716]: Interests
+                - definition [ref=f3e717]: Photography
+              - generic [ref=f3e718]:
+                - term [ref=f3e719]: Climate / pace / activity
+                - definition [ref=f3e720]: Cold or snowy · Fast-paced · Highly active
+              - generic [ref=f3e721]:
+                - term [ref=f3e722]: Dietary
+                - definition [ref=f3e723]: None
+              - generic [ref=f3e724]:
+                - term [ref=f3e725]: Visited
+                - definition [ref=f3e726]: None
+              - generic [ref=f3e727]:
+                - term [ref=f3e728]: Excluded
+                - definition [ref=f3e729]: Kelowna and the Okanagan Valley, Montreal, Quebec City
+          - generic [ref=f3e39]:
+            - button "Back" [ref=f3e548] [cursor=pointer]
+            - button "See my recommendations" [active] [ref=f3e730] [cursor=pointer]
+    - contentinfo [ref=f3e41]:
+      - generic [ref=f3e42]:
+        - paragraph [ref=f3e43]: TravelUp
+        - paragraph [ref=f3e46]: Helping unsure travellers discover where to go next.
+        - paragraph [ref=f3e47]: All budgets, climates, seasons, itineraries and packing suggestions are indicative estimates, not live information. Always verify visa requirements, entry conditions, safety and travel advisories using official government sources for your citizenship.
+        - generic [ref=f3e48]:
+          - link "About & disclaimer" [ref=f3e49] [cursor=pointer]:
+            - /url: /about
+          - link "Home" [ref=f3e50] [cursor=pointer]:
+            - /url: /
+  - region "Notifications (F8)":
+    - list

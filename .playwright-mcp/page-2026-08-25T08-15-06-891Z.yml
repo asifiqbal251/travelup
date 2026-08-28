@@ -1,0 +1,124 @@
+- generic [ref=f3e4]:
+  - generic [ref=f3e5]:
+    - banner [ref=f3e6]:
+      - generic [ref=f3e7]:
+        - link "TravelUp" [ref=f3e8] [cursor=pointer]:
+          - /url: /
+        - navigation [ref=f3e12]:
+          - link "Home" [ref=f3e13] [cursor=pointer]:
+            - /url: /
+          - link "About" [ref=f3e14] [cursor=pointer]:
+            - /url: /about
+          - button "Clear My Data" [ref=f3e15] [cursor=pointer]
+    - main [ref=f3e16]:
+      - generic [ref=f3e918]:
+        - button "Back to recommendations" [ref=f3e919] [cursor=pointer]
+        - generic [ref=f3e920]:
+          - img "Paris, France" [ref=f3e922]
+          - generic [ref=f3e924]:
+            - heading "Paris" [level=1] [ref=f3e925]
+            - paragraph [ref=f3e926]: France · Île-de-France, France
+        - generic [ref=f3e927]:
+          - tablist [ref=f3e928]:
+            - tab "Itinerary" [selected] [ref=f3e929] [cursor=pointer]
+            - tab "Packing" [ref=f3e930] [cursor=pointer]
+            - tab "Overview" [ref=f3e931] [cursor=pointer]
+          - tabpanel "Itinerary" [ref=f3e932]:
+            - generic [ref=f3e933]:
+              - paragraph [ref=f3e934]: A suggested 4-day plan including outbound and return travel. Indicative only — verify opening hours and tickets before you go.
+              - button "Day 1 Marais & Latin Quarter Paris Light intensity Cities Food History and culture View details" [ref=f3e1032] [cursor=pointer]:
+                - generic [ref=f3e937]:
+                  - generic [ref=f3e938]:
+                    - generic [ref=f3e939]: Day 1
+                    - heading "Marais & Latin Quarter" [level=3] [ref=f3e940]
+                    - generic [ref=f3e941]: Paris
+                  - generic [ref=f3e942]: Light intensity
+                - generic [ref=f3e943]:
+                  - generic [ref=f3e944]: Cities
+                  - generic [ref=f3e945]: Food
+                  - generic [ref=f3e946]: History and culture
+                - generic [ref=f3e947]: View details
+              - button "Day 2 Major museum & the Seine Paris Moderate intensity History and culture Cities View details" [ref=f3e1081] [cursor=pointer]:
+                - generic [ref=f3e996]:
+                  - generic [ref=f3e997]:
+                    - generic [ref=f3e998]: Day 2
+                    - heading "Major museum & the Seine" [level=3] [ref=f3e999]
+                    - generic [ref=f3e1000]: Paris
+                  - generic [ref=f3e1001]: Moderate intensity
+                - generic [ref=f3e1002]:
+                  - generic [ref=f3e1003]: History and culture
+                  - generic [ref=f3e1004]: Cities
+                - generic [ref=f3e1005]: View details
+              - button "Day 3 Montmartre & Sacré-Cœur Paris Moderate intensity Cities Photography History and culture View details" [ref=f3e1130] [cursor=pointer]:
+                - generic [ref=f3e1008]:
+                  - generic [ref=f3e1009]:
+                    - generic [ref=f3e1010]: Day 3
+                    - heading "Montmartre & Sacré-Cœur" [level=3] [ref=f3e1011]
+                    - generic [ref=f3e1012]: Paris
+                  - generic [ref=f3e1013]: Moderate intensity
+                - generic [ref=f3e1014]:
+                  - generic [ref=f3e1015]: Cities
+                  - generic [ref=f3e1016]: Photography
+                  - generic [ref=f3e1017]: History and culture
+                - generic [ref=f3e1018]: View details
+              - generic [ref=f3e1019]:
+                - button "Day 4 · Flexible Versailles day trip (optional) Paris Moderate intensity History and culture Photography Free time Hide details" [expanded] [active] [ref=f3e1131] [cursor=pointer]:
+                  - generic [ref=f3e1021]:
+                    - generic [ref=f3e1022]:
+                      - generic [ref=f3e1023]: Day 4 · Flexible
+                      - heading "Versailles day trip (optional)" [level=3] [ref=f3e1024]
+                      - generic [ref=f3e1025]: Paris
+                    - generic [ref=f3e1026]: Moderate intensity
+                  - generic [ref=f3e1027]:
+                    - generic [ref=f3e1028]: History and culture
+                    - generic [ref=f3e1029]: Photography
+                    - generic [ref=f3e1030]: Free time
+                  - generic [ref=f3e1031]: Hide details
+                - generic [ref=f3e1132]:
+                  - list [ref=f3e1133]:
+                    - listitem [ref=f3e1134]:
+                      - generic [ref=f3e1135]:
+                        - generic [ref=f3e1136]: 08:00–11:00
+                        - generic [ref=f3e1137]: ~3 hr
+                        - generic [ref=f3e1138]: Morning
+                      - generic [ref=f3e1139]:
+                        - generic [ref=f3e1140]: Train to Versailles; tour the palace (book ahead).
+                        - paragraph
+                    - listitem [ref=f3e1141]:
+                      - generic [ref=f3e1142]: Return begins
+                      - generic [ref=f3e1144]:
+                        - generic [ref=f3e1145]: Reach the station
+                        - paragraph [ref=f3e1146]: Allow time before departure.
+                    - listitem [ref=f3e1147]:
+                      - generic [ref=f3e1148]: Train
+                      - generic [ref=f3e1150]:
+                        - generic [ref=f3e1151]: Board the train
+                        - paragraph [ref=f3e1152]: Travel home.
+                    - listitem [ref=f3e1153]:
+                      - generic [ref=f3e1154]: Arrive home
+                      - generic [ref=f3e1156]:
+                        - generic [ref=f3e1157]: Arrive home
+                        - paragraph [ref=f3e1158]: Travel home to London.
+                  - paragraph [ref=f3e1159]: "Estimated total journey: about 3 hours each way."
+                  - generic [ref=f3e1160]:
+                    - generic [ref=f3e1161]:
+                      - generic [ref=f3e1162]: Getting around
+                      - generic [ref=f3e1163]: Walking and the metro; taxis for longer hops.
+                    - generic [ref=f3e1164]:
+                      - generic [ref=f3e1165]: Plan ahead
+                      - generic [ref=f3e1166]: Confirm your departure time and any bookings.
+                    - generic [ref=f3e1167]:
+                      - generic [ref=f3e1168]: Overnight
+                      - generic [ref=f3e1169]: Home
+    - contentinfo [ref=f3e41]:
+      - generic [ref=f3e42]:
+        - paragraph [ref=f3e43]: TravelUp
+        - paragraph [ref=f3e46]: Helping unsure travellers discover where to go next.
+        - paragraph [ref=f3e47]: All budgets, climates, seasons, itineraries and packing suggestions are indicative estimates, not live information. Always verify visa requirements, entry conditions, safety and travel advisories using official government sources for your citizenship.
+        - generic [ref=f3e48]:
+          - link "About & disclaimer" [ref=f3e49] [cursor=pointer]:
+            - /url: /about
+          - link "Home" [ref=f3e50] [cursor=pointer]:
+            - /url: /
+  - region "Notifications (F8)":
+    - list

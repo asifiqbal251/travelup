@@ -1,0 +1,174 @@
+- generic [ref=f93e4]:
+  - generic [ref=f93e5]:
+    - banner [ref=f93e6]:
+      - generic [ref=f93e7]:
+        - link "TravelUp" [ref=f93e8] [cursor=pointer]:
+          - /url: /
+        - navigation [ref=f93e12]:
+          - link "Home" [ref=f93e13] [cursor=pointer]:
+            - /url: /
+          - link "About" [ref=f93e14] [cursor=pointer]:
+            - /url: /about
+          - button "Clear My Data" [ref=f93e15] [cursor=pointer]
+    - main [ref=f93e16]:
+      - generic [ref=f93e592]:
+        - generic [ref=f93e593]:
+          - generic [ref=f93e594]:
+            - heading "Your top 3 matches" [level=1] [ref=f93e595]
+            - paragraph [ref=f93e596]: Final scores combine your preference fit with travel practicality for your trip length. Estimates only.
+          - button "Revise" [ref=f93e597] [cursor=pointer]
+        - paragraph [ref=f93e601]: Scores are estimates based on your preferences and curated destination data, not live availability or flight schedules. Always verify visa and entry requirements through official government sources for your citizenship.
+        - generic [ref=f93e602]:
+          - article [ref=f93e603]:
+            - generic [ref=f93e604]:
+              - img "Lake District, United Kingdom" [ref=f93e606]
+              - generic [ref=f93e607]: 95/100
+              - generic [ref=f93e608]: Strong match
+              - generic [ref=f93e609]:
+                - heading "Lake District" [level=2] [ref=f93e610]
+                - paragraph [ref=f93e614]: United Kingdom · Cumbria, England, United Kingdom
+            - generic [ref=f93e615]:
+              - region "Travel fit" [ref=f93e616]:
+                - generic [ref=f93e617]:
+                  - heading "Travel fit" [level=3] [ref=f93e618]
+                  - 'status "Travel fit: Good fit" [ref=f93e619]': Good fit
+                - generic [ref=f93e620]:
+                  - generic [ref=f93e621]:
+                    - term [ref=f93e622]: How you'll travel
+                    - definition [ref=f93e623]: Train + onward local transfer
+                  - generic [ref=f93e624]:
+                    - term [ref=f93e625]: Travel time
+                    - definition [ref=f93e626]: About 4 hours each way
+                  - generic [ref=f93e627]:
+                    - term [ref=f93e628]: Time at destination
+                    - definition [ref=f93e629]: About 3.5 days
+              - list [ref=f93e630]:
+                - listitem [ref=f93e631]:
+                  - generic [ref=f93e632]: •
+                  - text: Great for nature, hiking, adventure
+                - listitem [ref=f93e633]:
+                  - generic [ref=f93e634]: •
+                  - text: Enjoyable in your chosen month
+                - listitem [ref=f93e635]:
+                  - generic [ref=f93e636]: •
+                  - text: Fits your selected budget level
+              - generic [ref=f93e637]:
+                - generic [ref=f93e638]:
+                  - generic [ref=f93e642]: Trip length
+                  - generic [ref=f93e643]: 3–5d
+                - generic [ref=f93e644]:
+                  - generic [ref=f93e648]: Budget
+                  - generic [ref=f93e649]: Budget – Moderate – Comfortable
+                - generic [ref=f93e650]:
+                  - generic [ref=f93e654]: Climate
+                  - generic [ref=f93e655]: Cool, Mild, Cold or snowy
+              - generic [ref=f93e656]: "Main experiences: Windermere lake · Gentler fell walk (primary) / Scafell Pike (optional, highly active) · Beatrix Potter sites · Ambleside/Grasmere villages"
+              - generic [ref=f93e657]: "Suited to: Solo, Couple, Friends, Family"
+              - button "See score breakdown" [ref=f93e658] [cursor=pointer]
+              - button "View My Trip" [ref=f93e659] [cursor=pointer]
+          - article [ref=f93e660]:
+            - generic [ref=f93e661]:
+              - img "Isle of Skye, United Kingdom" [ref=f93e663]
+              - generic [ref=f93e664]: 92/100
+              - generic [ref=f93e665]: Strong match
+              - generic [ref=f93e666]:
+                - heading "Isle of Skye" [level=2] [ref=f93e667]
+                - paragraph [ref=f93e671]: United Kingdom · Scottish Highlands, Scotland, United Kingdom
+            - generic [ref=f93e672]:
+              - region "Travel fit" [ref=f93e673]:
+                - generic [ref=f93e674]:
+                  - heading "Travel fit" [level=3] [ref=f93e675]
+                  - 'status "Travel fit: Good fit" [ref=f93e676]': Good fit
+                - generic [ref=f93e677]:
+                  - generic [ref=f93e678]:
+                    - term [ref=f93e679]: How you'll travel
+                    - definition [ref=f93e680]: Flight to Inverness + road transfer
+                  - generic [ref=f93e681]:
+                    - term [ref=f93e682]: Travel time
+                    - definition [ref=f93e683]: About 8 hours each way
+                  - generic [ref=f93e684]:
+                    - term [ref=f93e685]: Time at destination
+                    - definition [ref=f93e686]: About 3.5 days
+              - list [ref=f93e687]:
+                - listitem [ref=f93e688]:
+                  - generic [ref=f93e689]: •
+                  - text: Great for nature, hiking, adventure
+                - listitem [ref=f93e690]:
+                  - generic [ref=f93e691]: •
+                  - text: Enjoyable in your chosen month
+                - listitem [ref=f93e692]:
+                  - generic [ref=f93e693]: •
+                  - text: Fits your selected budget level
+              - generic [ref=f93e694]:
+                - generic [ref=f93e695]:
+                  - generic [ref=f93e699]: Trip length
+                  - generic [ref=f93e700]: 4–6d
+                - generic [ref=f93e701]:
+                  - generic [ref=f93e705]: Budget
+                  - generic [ref=f93e706]: Moderate – Comfortable – Premium
+                - generic [ref=f93e707]:
+                  - generic [ref=f93e711]: Climate
+                  - generic [ref=f93e712]: Cool, Cold or snowy, Mild
+              - generic [ref=f93e713]: "Main experiences: Old Man of Storr (weather-dependent) · Fairy Pools (weather-dependent) · Quiraing ridge walk (weather-dependent) · Portree village (fallback anchor)"
+              - generic [ref=f93e714]: "Suited to: Solo, Couple, Friends"
+              - button "See score breakdown" [ref=f93e715] [cursor=pointer]
+              - button "View My Trip" [ref=f93e716] [cursor=pointer]
+          - article [ref=f93e717]:
+            - generic [ref=f93e718]:
+              - img "Edinburgh, United Kingdom" [ref=f93e720]
+              - generic [ref=f93e721]: 83/100
+              - generic [ref=f93e722]: Strong match
+              - generic [ref=f93e723]:
+                - heading "Edinburgh" [level=2] [ref=f93e724]
+                - paragraph [ref=f93e728]: United Kingdom · Lothian, Scotland, United Kingdom
+            - generic [ref=f93e729]:
+              - region "Travel fit" [ref=f93e730]:
+                - generic [ref=f93e731]:
+                  - heading "Travel fit" [level=3] [ref=f93e732]
+                  - 'status "Travel fit: Good fit" [ref=f93e733]': Good fit
+                - generic [ref=f93e734]:
+                  - generic [ref=f93e735]:
+                    - term [ref=f93e736]: How you'll travel
+                    - definition [ref=f93e737]: Direct train
+                  - generic [ref=f93e738]:
+                    - term [ref=f93e739]: Travel time
+                    - definition [ref=f93e740]: About 4.5 hours each way
+                  - generic [ref=f93e741]:
+                    - term [ref=f93e742]: Time at destination
+                    - definition [ref=f93e743]: About 3.5 days
+              - list [ref=f93e744]:
+                - listitem [ref=f93e745]:
+                  - generic [ref=f93e746]: •
+                  - text: Great for nature, hiking
+                - listitem [ref=f93e747]:
+                  - generic [ref=f93e748]: •
+                  - text: Enjoyable in your chosen month
+                - listitem [ref=f93e749]:
+                  - generic [ref=f93e750]: •
+                  - text: Fits your selected budget level
+              - generic [ref=f93e751]:
+                - generic [ref=f93e752]:
+                  - generic [ref=f93e756]: Trip length
+                  - generic [ref=f93e757]: 2–4d
+                - generic [ref=f93e758]:
+                  - generic [ref=f93e762]: Budget
+                  - generic [ref=f93e763]: Budget – Moderate – Comfortable
+                - generic [ref=f93e764]:
+                  - generic [ref=f93e768]: Climate
+                  - generic [ref=f93e769]: Cool, Mild, Cold or snowy
+              - generic [ref=f93e770]: "Main experiences: Edinburgh Castle · Royal Mile · Arthur's Seat hike (weather-dependent) · Holyrood Palace"
+              - generic [ref=f93e771]: "Suited to: Solo, Couple, Friends, Family"
+              - button "See score breakdown" [ref=f93e772] [cursor=pointer]
+              - button "View My Trip" [ref=f93e773] [cursor=pointer]
+    - contentinfo [ref=f93e56]:
+      - generic [ref=f93e57]:
+        - paragraph [ref=f93e58]: TravelUp
+        - paragraph [ref=f93e61]: Helping unsure travellers discover where to go next.
+        - paragraph [ref=f93e62]: All budgets, climates, seasons, itineraries and packing suggestions are indicative estimates, not live information. Always verify visa requirements, entry conditions, safety and travel advisories using official government sources for your citizenship.
+        - generic [ref=f93e63]:
+          - link "About & disclaimer" [ref=f93e64] [cursor=pointer]:
+            - /url: /about
+          - link "Home" [ref=f93e65] [cursor=pointer]:
+            - /url: /
+  - region "Notifications (F8)":
+    - list

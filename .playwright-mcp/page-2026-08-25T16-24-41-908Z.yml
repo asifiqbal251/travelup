@@ -1,0 +1,112 @@
+- generic [ref=f12e4]:
+  - generic [ref=f12e5]:
+    - banner [ref=f12e6]:
+      - generic [ref=f12e7]:
+        - link "TravelUp" [ref=f12e8] [cursor=pointer]:
+          - /url: /
+        - navigation [ref=f12e12]:
+          - link "Home" [ref=f12e13] [cursor=pointer]:
+            - /url: /
+          - link "About" [ref=f12e14] [cursor=pointer]:
+            - /url: /about
+          - button "Clear My Data" [ref=f12e15] [cursor=pointer]
+    - main [ref=f12e16]:
+      - generic [ref=f12e963]:
+        - button "Back to recommendations" [ref=f12e964] [cursor=pointer]
+        - generic [ref=f12e965]:
+          - img "Paris, France" [ref=f12e967]
+          - generic [ref=f12e969]:
+            - heading "Paris" [level=1] [ref=f12e970]
+            - paragraph [ref=f12e971]: France · Île-de-France, France
+        - generic [ref=f12e972]:
+          - tablist [ref=f12e973]:
+            - tab "Itinerary" [selected] [ref=f12e974] [cursor=pointer]
+            - tab "Packing" [ref=f12e975] [cursor=pointer]
+            - tab "Overview" [ref=f12e976] [cursor=pointer]
+          - tabpanel "Itinerary" [ref=f12e977]:
+            - generic [ref=f12e978]:
+              - paragraph [ref=f12e979]: A suggested 3-day plan including outbound and return travel. Indicative only — verify opening hours and tickets before you go.
+              - button "Day 1 Marais & Latin Quarter Paris Light intensity Cities Food History and culture View details" [ref=f12e1067] [cursor=pointer]:
+                - generic [ref=f12e982]:
+                  - generic [ref=f12e983]:
+                    - generic [ref=f12e984]: Day 1
+                    - heading "Marais & Latin Quarter" [level=3] [ref=f12e985]
+                    - generic [ref=f12e986]: Paris
+                  - generic [ref=f12e987]: Light intensity
+                - generic [ref=f12e988]:
+                  - generic [ref=f12e989]: Cities
+                  - generic [ref=f12e990]: Food
+                  - generic [ref=f12e991]: History and culture
+                - generic [ref=f12e992]: View details
+              - button "Day 2 Major museum & the Seine Paris Moderate intensity History and culture Cities View details" [ref=f12e1119] [cursor=pointer]:
+                - generic [ref=f12e1044]:
+                  - generic [ref=f12e1045]:
+                    - generic [ref=f12e1046]: Day 2
+                    - heading "Major museum & the Seine" [level=3] [ref=f12e1047]
+                    - generic [ref=f12e1048]: Paris
+                  - generic [ref=f12e1049]: Moderate intensity
+                - generic [ref=f12e1050]:
+                  - generic [ref=f12e1051]: History and culture
+                  - generic [ref=f12e1052]: Cities
+                - generic [ref=f12e1053]: View details
+              - generic [ref=f12e1054]:
+                - button "Day 3 Montmartre & Sacré-Cœur Paris Moderate intensity Cities Photography History and culture Hide details" [expanded] [active] [ref=f12e1120] [cursor=pointer]:
+                  - generic [ref=f12e1056]:
+                    - generic [ref=f12e1057]:
+                      - generic [ref=f12e1058]: Day 3
+                      - heading "Montmartre & Sacré-Cœur" [level=3] [ref=f12e1059]
+                      - generic [ref=f12e1060]: Paris
+                    - generic [ref=f12e1061]: Moderate intensity
+                  - generic [ref=f12e1062]:
+                    - generic [ref=f12e1063]: Cities
+                    - generic [ref=f12e1064]: Photography
+                    - generic [ref=f12e1065]: History and culture
+                  - generic [ref=f12e1066]: Hide details
+                - generic [ref=f12e1121]:
+                  - list [ref=f12e1122]:
+                    - listitem [ref=f12e1123]:
+                      - generic [ref=f12e1124]:
+                        - generic [ref=f12e1125]: 08:00–11:00
+                        - generic [ref=f12e1126]: ~3 hr
+                        - generic [ref=f12e1127]: Morning
+                      - generic [ref=f12e1128]:
+                        - generic [ref=f12e1129]: Climb to Sacré-Cœur and explore Montmartre's village lanes.
+                        - paragraph
+                    - listitem [ref=f12e1130]:
+                      - generic [ref=f12e1131]: Return begins
+                      - generic [ref=f12e1133]:
+                        - generic [ref=f12e1134]: Reach the station
+                        - paragraph [ref=f12e1135]: Allow time before departure.
+                    - listitem [ref=f12e1136]:
+                      - generic [ref=f12e1137]: Train
+                      - generic [ref=f12e1139]:
+                        - generic [ref=f12e1140]: Board the train
+                        - paragraph [ref=f12e1141]: Travel home.
+                    - listitem [ref=f12e1142]:
+                      - generic [ref=f12e1143]: Arrive home
+                      - generic [ref=f12e1145]:
+                        - generic [ref=f12e1146]: Arrive home
+                        - paragraph [ref=f12e1147]: Travel home to London.
+                  - paragraph [ref=f12e1148]: "Estimated total journey: about 3 hours each way."
+                  - generic [ref=f12e1149]:
+                    - generic [ref=f12e1150]:
+                      - generic [ref=f12e1151]: Getting around
+                      - generic [ref=f12e1152]: Walking and the metro; taxis for longer hops.
+                    - generic [ref=f12e1153]:
+                      - generic [ref=f12e1154]: Plan ahead
+                      - generic [ref=f12e1155]: Confirm your departure time and any bookings.
+                    - generic [ref=f12e1156]:
+                      - generic [ref=f12e1157]: Overnight
+                      - generic [ref=f12e1158]: Home
+    - contentinfo [ref=f12e61]:
+      - generic [ref=f12e62]:
+        - paragraph [ref=f12e63]: TravelUp
+        - paragraph [ref=f12e66]: Helping unsure travellers discover where to go next.
+        - paragraph [ref=f12e67]: All budgets, climates, seasons, itineraries and packing suggestions are indicative estimates, not live information. Always verify visa requirements, entry conditions, safety and travel advisories using official government sources for your citizenship.
+        - generic [ref=f12e68]:
+          - link "About & disclaimer" [ref=f12e69] [cursor=pointer]:
+            - /url: /about
+          - link "Home" [ref=f12e70] [cursor=pointer]:
+            - /url: /
+  - region "Notifications (F8)":
+    - list

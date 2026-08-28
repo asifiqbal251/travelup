@@ -1,0 +1,69 @@
+- generic [ref=f108e4]:
+  - generic [ref=f108e5]:
+    - banner [ref=f108e6]:
+      - generic [ref=f108e7]:
+        - link "TravelUp" [ref=f108e8] [cursor=pointer]:
+          - /url: /
+        - navigation [ref=f108e12]:
+          - link "Home" [ref=f108e13] [cursor=pointer]:
+            - /url: /
+          - link "About" [ref=f108e14] [cursor=pointer]:
+            - /url: /about
+          - button "Clear My Data" [ref=f108e15] [cursor=pointer]
+    - main [ref=f108e16]:
+      - generic [ref=f108e17]:
+        - generic [ref=f108e18]:
+          - generic [ref=f108e19]:
+            - generic [ref=f108e20]: Step 7 of 7
+            - generic [ref=f108e21]: Review
+          - progressbar [ref=f108e22]
+        - generic [ref=f108e24]:
+          - generic [ref=f108e696]:
+            - heading "Review your answers" [level=1] [ref=f108e697]
+            - paragraph [ref=f108e698]: Make any changes before we find your matches.
+            - generic [ref=f108e700]:
+              - generic [ref=f108e701]:
+                - term [ref=f108e702]: Residence / departure / citizenship
+                - definition [ref=f108e703]: Canada · Vancouver · Canada
+              - generic [ref=f108e704]:
+                - term [ref=f108e705]: When
+                - definition [ref=f108e706]: Flexible
+              - generic [ref=f108e707]:
+                - term [ref=f108e708]: Total trip
+                - definition [ref=f108e709]: 7 days, including travel time
+              - generic [ref=f108e710]:
+                - term [ref=f108e711]: Domestic
+                - definition [ref=f108e712]: Domestic only
+              - generic [ref=f108e713]:
+                - term [ref=f108e714]: Traveller & budget
+                - definition [ref=f108e715]: Family · Moderate
+              - generic [ref=f108e716]:
+                - term [ref=f108e717]: Interests
+                - definition [ref=f108e718]: Wildlife
+              - generic [ref=f108e719]:
+                - term [ref=f108e720]: Climate / pace / activity
+                - definition [ref=f108e721]: Cold or snowy · Relaxed · Light
+              - generic [ref=f108e722]:
+                - term [ref=f108e723]: Dietary
+                - definition [ref=f108e724]: None
+              - generic [ref=f108e725]:
+                - term [ref=f108e726]: Visited
+                - definition [ref=f108e727]: None
+              - generic [ref=f108e728]:
+                - term [ref=f108e729]: Excluded
+                - definition [ref=f108e730]: Kelowna and the Okanagan Valley, Montreal, Quebec City, Whistler, Victoria, Napa and Sonoma
+          - generic [ref=f108e39]:
+            - button "Back" [ref=f108e550] [cursor=pointer]
+            - button "See my recommendations" [active] [ref=f108e731] [cursor=pointer]
+    - contentinfo [ref=f108e41]:
+      - generic [ref=f108e42]:
+        - paragraph [ref=f108e43]: TravelUp
+        - paragraph [ref=f108e46]: Helping unsure travellers discover where to go next.
+        - paragraph [ref=f108e47]: All budgets, climates, seasons, itineraries and packing suggestions are indicative estimates, not live information. Always verify visa requirements, entry conditions, safety and travel advisories using official government sources for your citizenship.
+        - generic [ref=f108e48]:
+          - link "About & disclaimer" [ref=f108e49] [cursor=pointer]:
+            - /url: /about
+          - link "Home" [ref=f108e50] [cursor=pointer]:
+            - /url: /
+  - region "Notifications (F8)":
+    - list

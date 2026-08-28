@@ -1,0 +1,8 @@
+- generic [ref=f47e3]:
+  - generic:
+    - region "Notifications (F8)":
+      - list
+  - generic:
+    - region "Notifications alt+T"
+  - status "Loading app data..." [ref=f47e6]:
+    - complementary [ref=f47e7]

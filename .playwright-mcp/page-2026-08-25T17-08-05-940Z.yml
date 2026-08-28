@@ -1,0 +1,174 @@
+- generic [ref=f108e4]:
+  - generic [ref=f108e5]:
+    - banner [ref=f108e6]:
+      - generic [ref=f108e7]:
+        - link "TravelUp" [ref=f108e8] [cursor=pointer]:
+          - /url: /
+        - navigation [ref=f108e12]:
+          - link "Home" [ref=f108e13] [cursor=pointer]:
+            - /url: /
+          - link "About" [ref=f108e14] [cursor=pointer]:
+            - /url: /about
+          - button "Clear My Data" [ref=f108e15] [cursor=pointer]
+    - main [ref=f108e16]:
+      - generic [ref=f108e1206]:
+        - generic [ref=f108e1207]:
+          - generic [ref=f108e1208]:
+            - heading "Your top 3 matches" [level=1] [ref=f108e1209]
+            - paragraph [ref=f108e1210]: Final scores combine your preference fit with travel practicality for your trip length. Estimates only.
+          - button "Revise" [ref=f108e1211] [cursor=pointer]
+        - paragraph [ref=f108e1215]: Scores are estimates based on your preferences and curated destination data, not live availability or flight schedules. Always verify visa and entry requirements through official government sources for your citizenship.
+        - generic [ref=f108e1216]:
+          - article [ref=f108e1217]:
+            - generic [ref=f108e1218]:
+              - img "Victoria, Canada" [ref=f108e1220]
+              - generic [ref=f108e1221]: 97/100
+              - generic [ref=f108e1222]: Strong match
+              - generic [ref=f108e1223]:
+                - heading "Victoria" [level=2] [ref=f108e1224]
+                - paragraph [ref=f108e1228]: Canada · Vancouver Island, British Columbia, Canada
+            - generic [ref=f108e1229]:
+              - region "Travel fit" [ref=f108e1230]:
+                - generic [ref=f108e1231]:
+                  - heading "Travel fit" [level=3] [ref=f108e1232]
+                  - 'status "Travel fit: Good fit" [ref=f108e1233]': Good fit
+                - generic [ref=f108e1234]:
+                  - generic [ref=f108e1235]:
+                    - term [ref=f108e1236]: How you'll travel
+                    - definition [ref=f108e1237]: Ferry + ground transfer
+                  - generic [ref=f108e1238]:
+                    - term [ref=f108e1239]: Travel time
+                    - definition [ref=f108e1240]: About 4 hours each way
+                  - generic [ref=f108e1241]:
+                    - term [ref=f108e1242]: Time at destination
+                    - definition [ref=f108e1243]: About 2.5 days
+              - list [ref=f108e1244]:
+                - listitem [ref=f108e1245]:
+                  - generic [ref=f108e1246]: •
+                  - text: Great for nature, history and culture, relaxation
+                - listitem [ref=f108e1247]:
+                  - generic [ref=f108e1248]: •
+                  - text: Peak season in May
+                - listitem [ref=f108e1249]:
+                  - generic [ref=f108e1250]: •
+                  - text: Fits your selected budget level
+              - generic [ref=f108e1251]:
+                - generic [ref=f108e1252]:
+                  - generic [ref=f108e1256]: Trip length
+                  - generic [ref=f108e1257]: 2–4d
+                - generic [ref=f108e1258]:
+                  - generic [ref=f108e1262]: Budget
+                  - generic [ref=f108e1263]: Moderate – Comfortable
+                - generic [ref=f108e1264]:
+                  - generic [ref=f108e1268]: Climate
+                  - generic [ref=f108e1269]: Mild, Cool
+              - generic [ref=f108e1270]: "Main experiences: Butchart Gardens · Inner Harbour · Fisherman's Wharf · Royal BC Museum"
+              - generic [ref=f108e1271]: "Suited to: Solo, Couple, Friends, Family"
+              - button "See score breakdown" [ref=f108e1272] [cursor=pointer]
+              - button "View My Trip" [ref=f108e1273] [cursor=pointer]
+          - article [ref=f108e1274]:
+            - generic [ref=f108e1275]:
+              - img "Napa and Sonoma, United States" [ref=f108e1277]
+              - generic [ref=f108e1278]: 90/100
+              - generic [ref=f108e1279]: Strong match
+              - generic [ref=f108e1280]:
+                - heading "Napa and Sonoma" [level=2] [ref=f108e1281]
+                - paragraph [ref=f108e1285]: United States · North Bay, California, United States
+            - generic [ref=f108e1286]:
+              - region "Travel fit" [ref=f108e1287]:
+                - generic [ref=f108e1288]:
+                  - heading "Travel fit" [level=3] [ref=f108e1289]
+                  - 'status "Travel fit: Good fit" [ref=f108e1290]': Good fit
+                - generic [ref=f108e1291]:
+                  - generic [ref=f108e1292]:
+                    - term [ref=f108e1293]: How you'll travel
+                    - definition [ref=f108e1294]: Drive or transfer from a Bay Area gateway
+                  - generic [ref=f108e1295]:
+                    - term [ref=f108e1296]: Travel time
+                    - definition [ref=f108e1297]: About 6.3 hours each way
+                  - generic [ref=f108e1298]:
+                    - term [ref=f108e1299]: Time at destination
+                    - definition [ref=f108e1300]: About 2 days
+              - list [ref=f108e1301]:
+                - listitem [ref=f108e1302]:
+                  - generic [ref=f108e1303]: •
+                  - text: Great for nature, history and culture, relaxation
+                - listitem [ref=f108e1304]:
+                  - generic [ref=f108e1305]: •
+                  - text: Peak season in May
+                - listitem [ref=f108e1306]:
+                  - generic [ref=f108e1307]: •
+                  - text: Close to your moderate budget
+              - generic [ref=f108e1308]:
+                - generic [ref=f108e1309]:
+                  - generic [ref=f108e1313]: Trip length
+                  - generic [ref=f108e1314]: 2–4d
+                - generic [ref=f108e1315]:
+                  - generic [ref=f108e1319]: Budget
+                  - generic [ref=f108e1320]: Comfortable – Premium
+                - generic [ref=f108e1321]:
+                  - generic [ref=f108e1325]: Climate
+                  - generic [ref=f108e1326]: Warm, Mild
+              - generic [ref=f108e1327]: "Main experiences: Napa Valley wine tasting · Sonoma Plaza · Hot air balloon ride · Culinary walking tour"
+              - generic [ref=f108e1328]: "Suited to: Solo, Couple, Friends"
+              - button "See score breakdown" [ref=f108e1329] [cursor=pointer]
+              - button "View My Trip" [ref=f108e1330] [cursor=pointer]
+          - article [ref=f108e1331]:
+            - generic [ref=f108e1332]:
+              - img "Montréal and Québec City, Canada" [ref=f108e1334]
+              - generic [ref=f108e1335]: 80/100
+              - generic [ref=f108e1336]: Strong match
+              - generic [ref=f108e1337]:
+                - heading "Montréal and Québec City" [level=2] [ref=f108e1338]
+                - paragraph [ref=f108e1342]: Canada · Québec, Canada
+            - generic [ref=f108e1343]:
+              - region "Travel fit" [ref=f108e1344]:
+                - generic [ref=f108e1345]:
+                  - heading "Travel fit" [level=3] [ref=f108e1346]
+                  - 'status "Travel fit: Good fit" [ref=f108e1347]': Good fit
+                - generic [ref=f108e1348]:
+                  - generic [ref=f108e1349]:
+                    - term [ref=f108e1350]: How you'll travel
+                    - definition [ref=f108e1351]: Domestic flight + train/transfer
+                  - generic [ref=f108e1352]:
+                    - term [ref=f108e1353]: Travel time
+                    - definition [ref=f108e1354]: About 6.8 hours each way
+                  - generic [ref=f108e1355]:
+                    - term [ref=f108e1356]: Time at destination
+                    - definition [ref=f108e1357]: About 2 days
+              - list [ref=f108e1358]:
+                - listitem [ref=f108e1359]:
+                  - generic [ref=f108e1360]: •
+                  - text: Great for nature, history and culture, relaxation
+                - listitem [ref=f108e1361]:
+                  - generic [ref=f108e1362]: •
+                  - text: Enjoyable in your chosen month
+                - listitem [ref=f108e1363]:
+                  - generic [ref=f108e1364]: •
+                  - text: Fits your selected budget level
+              - generic [ref=f108e1365]:
+                - generic [ref=f108e1366]:
+                  - generic [ref=f108e1370]: Trip length
+                  - generic [ref=f108e1371]: 3–10d
+                - generic [ref=f108e1372]:
+                  - generic [ref=f108e1376]: Budget
+                  - generic [ref=f108e1377]: Comfortable – Moderate
+                - generic [ref=f108e1378]:
+                  - generic [ref=f108e1382]: Climate
+                  - generic [ref=f108e1383]: Cool, Cold or snowy, Mild
+              - generic [ref=f108e1384]: "Main experiences: Old Montréal · Mont-Royal · Notre-Dame Basilica · Québec City old town"
+              - generic [ref=f108e1385]: "Suited to: Couple, Family, Friends"
+              - button "See score breakdown" [ref=f108e1386] [cursor=pointer]
+              - button "View My Trip" [ref=f108e1387] [cursor=pointer]
+    - contentinfo [ref=f108e57]:
+      - generic [ref=f108e58]:
+        - paragraph [ref=f108e59]: TravelUp
+        - paragraph [ref=f108e62]: Helping unsure travellers discover where to go next.
+        - paragraph [ref=f108e63]: All budgets, climates, seasons, itineraries and packing suggestions are indicative estimates, not live information. Always verify visa requirements, entry conditions, safety and travel advisories using official government sources for your citizenship.
+        - generic [ref=f108e64]:
+          - link "About & disclaimer" [ref=f108e65] [cursor=pointer]:
+            - /url: /about
+          - link "Home" [ref=f108e66] [cursor=pointer]:
+            - /url: /
+  - region "Notifications (F8)":
+    - list

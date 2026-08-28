@@ -1,0 +1,174 @@
+- generic [ref=f51e4]:
+  - generic [ref=f51e5]:
+    - banner [ref=f51e6]:
+      - generic [ref=f51e7]:
+        - link "TravelUp" [ref=f51e8] [cursor=pointer]:
+          - /url: /
+        - navigation [ref=f51e12]:
+          - link "Home" [ref=f51e13] [cursor=pointer]:
+            - /url: /
+          - link "About" [ref=f51e14] [cursor=pointer]:
+            - /url: /about
+          - button "Clear My Data" [ref=f51e15] [cursor=pointer]
+    - main [ref=f51e16]:
+      - generic [ref=f51e736]:
+        - generic [ref=f51e737]:
+          - generic [ref=f51e738]:
+            - heading "Your top 3 matches" [level=1] [ref=f51e739]
+            - paragraph [ref=f51e740]: Final scores combine your preference fit with travel practicality for your trip length. Estimates only.
+          - button "Revise" [ref=f51e741] [cursor=pointer]
+        - paragraph [ref=f51e745]: Scores are estimates based on your preferences and curated destination data, not live availability or flight schedules. Always verify visa and entry requirements through official government sources for your citizenship.
+        - generic [ref=f51e746]:
+          - article [ref=f51e747]:
+            - generic [ref=f51e748]:
+              - img "Whistler, Canada" [ref=f51e750]
+              - generic [ref=f51e751]: 95/100
+              - generic [ref=f51e752]: Strong match
+              - generic [ref=f51e753]:
+                - heading "Whistler" [level=2] [ref=f51e754]
+                - paragraph [ref=f51e758]: Canada · Sea to Sky, British Columbia, Canada
+            - generic [ref=f51e759]:
+              - region "Travel fit" [ref=f51e760]:
+                - generic [ref=f51e761]:
+                  - heading "Travel fit" [level=3] [ref=f51e762]
+                  - 'status "Travel fit: Good fit" [ref=f51e763]': Good fit
+                - generic [ref=f51e764]:
+                  - generic [ref=f51e765]:
+                    - term [ref=f51e766]: How you'll travel
+                    - definition [ref=f51e767]: Drive or scheduled shuttle
+                  - generic [ref=f51e768]:
+                    - term [ref=f51e769]: Travel time
+                    - definition [ref=f51e770]: About 7 hours each way
+                  - generic [ref=f51e771]:
+                    - term [ref=f51e772]: Time at destination
+                    - definition [ref=f51e773]: About 3 days
+              - list [ref=f51e774]:
+                - listitem [ref=f51e775]:
+                  - generic [ref=f51e776]: •
+                  - text: Great for nature, hiking, adventure
+                - listitem [ref=f51e777]:
+                  - generic [ref=f51e778]: •
+                  - text: Enjoyable in your chosen month
+                - listitem [ref=f51e779]:
+                  - generic [ref=f51e780]: •
+                  - text: Fits your selected budget level
+              - generic [ref=f51e781]:
+                - generic [ref=f51e782]:
+                  - generic [ref=f51e786]: Trip length
+                  - generic [ref=f51e787]: 2–5d
+                - generic [ref=f51e788]:
+                  - generic [ref=f51e792]: Budget
+                  - generic [ref=f51e793]: Moderate – Comfortable – Premium
+                - generic [ref=f51e794]:
+                  - generic [ref=f51e798]: Climate
+                  - generic [ref=f51e799]: Cold or snowy, Cool, Mild
+              - generic [ref=f51e800]: "Main experiences: Peak 2 Peak Gondola (when operating) · Skiing and snowboarding · Lost Lake · Whistler Village"
+              - generic [ref=f51e801]: "Suited to: Solo, Couple, Friends, Family"
+              - button "See score breakdown" [ref=f51e802] [cursor=pointer]
+              - button "View My Trip" [ref=f51e803] [cursor=pointer]
+          - article [ref=f51e804]:
+            - generic [ref=f51e805]:
+              - img "Yosemite National Park, United States" [ref=f51e807]
+              - generic [ref=f51e808]: 92/100
+              - generic [ref=f51e809]: Strong match
+              - generic [ref=f51e810]:
+                - heading "Yosemite National Park" [level=2] [ref=f51e811]
+                - paragraph [ref=f51e815]: United States · Sierra Nevada, California, United States
+            - generic [ref=f51e816]:
+              - region "Travel fit" [ref=f51e817]:
+                - generic [ref=f51e818]:
+                  - heading "Travel fit" [level=3] [ref=f51e819]
+                  - 'status "Travel fit: Good fit" [ref=f51e820]': Good fit
+                - generic [ref=f51e821]:
+                  - generic [ref=f51e822]:
+                    - term [ref=f51e823]: How you'll travel
+                    - definition [ref=f51e824]: Drive
+                  - generic [ref=f51e825]:
+                    - term [ref=f51e826]: Travel time
+                    - definition [ref=f51e827]: About 4.5 hours each way
+                  - generic [ref=f51e828]:
+                    - term [ref=f51e829]: Time at destination
+                    - definition [ref=f51e830]: About 3.5 days
+              - list [ref=f51e831]:
+                - listitem [ref=f51e832]:
+                  - generic [ref=f51e833]: •
+                  - text: Great for nature, hiking, adventure
+                - listitem [ref=f51e834]:
+                  - generic [ref=f51e835]: •
+                  - text: Enjoyable in your chosen month
+                - listitem [ref=f51e836]:
+                  - generic [ref=f51e837]: •
+                  - text: Fits your selected budget level
+              - generic [ref=f51e838]:
+                - generic [ref=f51e839]:
+                  - generic [ref=f51e843]: Trip length
+                  - generic [ref=f51e844]: 3–5d
+                - generic [ref=f51e845]:
+                  - generic [ref=f51e849]: Budget
+                  - generic [ref=f51e850]: Budget – Moderate – Comfortable
+                - generic [ref=f51e851]:
+                  - generic [ref=f51e855]: Climate
+                  - generic [ref=f51e856]: Cool, Mild, Cold or snowy
+              - generic [ref=f51e857]: "Main experiences: Yosemite Valley viewpoints · Glacier Point (seasonal) · Lower Yosemite Fall Trail · Mariposa Grove of giant sequoias"
+              - generic [ref=f51e858]: "Suited to: Solo, Couple, Friends, Family"
+              - button "See score breakdown" [ref=f51e859] [cursor=pointer]
+              - button "View My Trip" [ref=f51e860] [cursor=pointer]
+          - article [ref=f51e861]:
+            - generic [ref=f51e862]:
+              - img "Canadian Rockies, Canada, Canada" [ref=f51e864]
+              - generic [ref=f51e865]: 85/100
+              - generic [ref=f51e866]: Strong match
+              - generic [ref=f51e867]:
+                - heading "Canadian Rockies, Canada" [level=2] [ref=f51e868]
+                - paragraph [ref=f51e872]: Canada · North America
+            - generic [ref=f51e873]:
+              - region "Travel fit" [ref=f51e874]:
+                - generic [ref=f51e875]:
+                  - heading "Travel fit" [level=3] [ref=f51e876]
+                  - 'status "Travel fit: Good fit" [ref=f51e877]': Good fit
+                - generic [ref=f51e878]:
+                  - generic [ref=f51e879]:
+                    - term [ref=f51e880]: How you'll travel
+                    - definition [ref=f51e881]: International flight + domestic connection + rental car
+                  - generic [ref=f51e882]:
+                    - term [ref=f51e883]: Travel time
+                    - definition [ref=f51e884]: About 9.3 hours each way
+                  - generic [ref=f51e885]:
+                    - term [ref=f51e886]: Time at destination
+                    - definition [ref=f51e887]: About 2 days
+              - list [ref=f51e888]:
+                - listitem [ref=f51e889]:
+                  - generic [ref=f51e890]: •
+                  - text: Great for nature, hiking, adventure
+                - listitem [ref=f51e891]:
+                  - generic [ref=f51e892]: •
+                  - text: Enjoyable in your chosen month
+                - listitem [ref=f51e893]:
+                  - generic [ref=f51e894]: •
+                  - text: Fits your selected budget level
+              - generic [ref=f51e895]:
+                - generic [ref=f51e896]:
+                  - generic [ref=f51e900]: Trip length
+                  - generic [ref=f51e901]: 6–12d
+                - generic [ref=f51e902]:
+                  - generic [ref=f51e906]: Budget
+                  - generic [ref=f51e907]: Moderate – Comfortable – Premium
+                - generic [ref=f51e908]:
+                  - generic [ref=f51e912]: Climate
+                  - generic [ref=f51e913]: Cool, Cold or snowy
+              - generic [ref=f51e914]: "Main experiences: Lake Louise and Moraine Lake · Banff and Jasper towns · Columbia Icefield · Wildlife spotting"
+              - generic [ref=f51e915]: "Suited to: Solo, Couple, Friends, Family"
+              - button "See score breakdown" [ref=f51e916] [cursor=pointer]
+              - button "View My Trip" [ref=f51e917] [cursor=pointer]
+    - contentinfo [ref=f51e41]:
+      - generic [ref=f51e42]:
+        - paragraph [ref=f51e43]: TravelUp
+        - paragraph [ref=f51e46]: Helping unsure travellers discover where to go next.
+        - paragraph [ref=f51e47]: All budgets, climates, seasons, itineraries and packing suggestions are indicative estimates, not live information. Always verify visa requirements, entry conditions, safety and travel advisories using official government sources for your citizenship.
+        - generic [ref=f51e48]:
+          - link "About & disclaimer" [ref=f51e49] [cursor=pointer]:
+            - /url: /about
+          - link "Home" [ref=f51e50] [cursor=pointer]:
+            - /url: /
+  - region "Notifications (F8)":
+    - list

@@ -1,0 +1,174 @@
+- generic [ref=f81e4]:
+  - generic [ref=f81e5]:
+    - banner [ref=f81e6]:
+      - generic [ref=f81e7]:
+        - link "TravelUp" [ref=f81e8] [cursor=pointer]:
+          - /url: /
+        - navigation [ref=f81e12]:
+          - link "Home" [ref=f81e13] [cursor=pointer]:
+            - /url: /
+          - link "About" [ref=f81e14] [cursor=pointer]:
+            - /url: /about
+          - button "Clear My Data" [ref=f81e15] [cursor=pointer]
+    - main [ref=f81e16]:
+      - generic [ref=f81e224]:
+        - generic [ref=f81e225]:
+          - generic [ref=f81e226]:
+            - heading "Your top 3 matches" [level=1] [ref=f81e227]
+            - paragraph [ref=f81e228]: Final scores combine your preference fit with travel practicality for your trip length. Estimates only.
+          - button "Revise" [ref=f81e229] [cursor=pointer]
+        - paragraph [ref=f81e233]: Scores are estimates based on your preferences and curated destination data, not live availability or flight schedules. Always verify visa and entry requirements through official government sources for your citizenship.
+        - generic [ref=f81e234]:
+          - article [ref=f81e235]:
+            - generic [ref=f81e236]:
+              - img "Edinburgh, United Kingdom" [ref=f81e238]
+              - generic [ref=f81e239]: 95/100
+              - generic [ref=f81e240]: Strong match
+              - generic [ref=f81e241]:
+                - heading "Edinburgh" [level=2] [ref=f81e242]
+                - paragraph [ref=f81e246]: United Kingdom · Lothian, Scotland, United Kingdom
+            - generic [ref=f81e247]:
+              - region "Travel fit" [ref=f81e248]:
+                - generic [ref=f81e249]:
+                  - heading "Travel fit" [level=3] [ref=f81e250]
+                  - 'status "Travel fit: Good fit" [ref=f81e251]': Good fit
+                - generic [ref=f81e252]:
+                  - generic [ref=f81e253]:
+                    - term [ref=f81e254]: How you'll travel
+                    - definition [ref=f81e255]: Direct train
+                  - generic [ref=f81e256]:
+                    - term [ref=f81e257]: Travel time
+                    - definition [ref=f81e258]: About 4.5 hours each way
+                  - generic [ref=f81e259]:
+                    - term [ref=f81e260]: Time at destination
+                    - definition [ref=f81e261]: About 2.5 days
+              - list [ref=f81e262]:
+                - listitem [ref=f81e263]:
+                  - generic [ref=f81e264]: •
+                  - text: Great for cities, history and culture, nature
+                - listitem [ref=f81e265]:
+                  - generic [ref=f81e266]: •
+                  - text: Enjoyable in your chosen month
+                - listitem [ref=f81e267]:
+                  - generic [ref=f81e268]: •
+                  - text: Fits your selected budget level
+              - generic [ref=f81e269]:
+                - generic [ref=f81e270]:
+                  - generic [ref=f81e274]: Trip length
+                  - generic [ref=f81e275]: 2–4d
+                - generic [ref=f81e276]:
+                  - generic [ref=f81e280]: Budget
+                  - generic [ref=f81e281]: Budget – Moderate – Comfortable
+                - generic [ref=f81e282]:
+                  - generic [ref=f81e286]: Climate
+                  - generic [ref=f81e287]: Cool, Mild, Cold or snowy
+              - generic [ref=f81e288]: "Main experiences: Edinburgh Castle · Royal Mile · Arthur's Seat hike (weather-dependent) · Holyrood Palace"
+              - generic [ref=f81e289]: "Suited to: Solo, Couple, Friends, Family"
+              - button "See score breakdown" [ref=f81e290] [cursor=pointer]
+              - button "View My Trip" [ref=f81e291] [cursor=pointer]
+          - article [ref=f81e292]:
+            - generic [ref=f81e293]:
+              - img "Bath, United Kingdom" [ref=f81e295]
+              - generic [ref=f81e296]: 87/100
+              - generic [ref=f81e297]: Strong match
+              - generic [ref=f81e298]:
+                - heading "Bath" [level=2] [ref=f81e299]
+                - paragraph [ref=f81e303]: United Kingdom · Somerset, England, United Kingdom
+            - generic [ref=f81e304]:
+              - region "Travel fit" [ref=f81e305]:
+                - generic [ref=f81e306]:
+                  - heading "Travel fit" [level=3] [ref=f81e307]
+                  - 'status "Travel fit: Good fit" [ref=f81e308]': Good fit
+                - generic [ref=f81e309]:
+                  - generic [ref=f81e310]:
+                    - term [ref=f81e311]: How you'll travel
+                    - definition [ref=f81e312]: Direct train + local transfer
+                  - generic [ref=f81e313]:
+                    - term [ref=f81e314]: Travel time
+                    - definition [ref=f81e315]: About 2 hours each way
+                  - generic [ref=f81e316]:
+                    - term [ref=f81e317]: Time at destination
+                    - definition [ref=f81e318]: About 3 days
+              - list [ref=f81e319]:
+                - listitem [ref=f81e320]:
+                  - generic [ref=f81e321]: •
+                  - text: Great for history and culture, nature
+                - listitem [ref=f81e322]:
+                  - generic [ref=f81e323]: •
+                  - text: Enjoyable in your chosen month
+                - listitem [ref=f81e324]:
+                  - generic [ref=f81e325]: •
+                  - text: Fits your selected budget level
+              - generic [ref=f81e326]:
+                - generic [ref=f81e327]:
+                  - generic [ref=f81e331]: Trip length
+                  - generic [ref=f81e332]: 2–3d
+                - generic [ref=f81e333]:
+                  - generic [ref=f81e337]: Budget
+                  - generic [ref=f81e338]: Moderate – Premium
+                - generic [ref=f81e339]:
+                  - generic [ref=f81e343]: Climate
+                  - generic [ref=f81e344]: Mild, Cool, Warm
+              - generic [ref=f81e345]: "Main experiences: Roman Baths (reserve ahead) · Bath Abbey · Georgian architecture walk · Optional Cotswolds village day"
+              - generic [ref=f81e346]: "Suited to: Solo, Couple, Friends, Family"
+              - button "See score breakdown" [ref=f81e347] [cursor=pointer]
+              - button "View My Trip" [ref=f81e348] [cursor=pointer]
+          - article [ref=f81e349]:
+            - generic [ref=f81e350]:
+              - img "Paris, France" [ref=f81e352]
+              - generic [ref=f81e353]: 87/100
+              - generic [ref=f81e354]: Strong match
+              - generic [ref=f81e355]:
+                - heading "Paris" [level=2] [ref=f81e356]
+                - paragraph [ref=f81e360]: France · Île-de-France, France
+            - generic [ref=f81e361]:
+              - region "Travel fit" [ref=f81e362]:
+                - generic [ref=f81e363]:
+                  - heading "Travel fit" [level=3] [ref=f81e364]
+                  - 'status "Travel fit: Good fit" [ref=f81e365]': Good fit
+                - generic [ref=f81e366]:
+                  - generic [ref=f81e367]:
+                    - term [ref=f81e368]: How you'll travel
+                    - definition [ref=f81e369]: Direct Eurostar train
+                  - generic [ref=f81e370]:
+                    - term [ref=f81e371]: Travel time
+                    - definition [ref=f81e372]: About 3 hours each way
+                  - generic [ref=f81e373]:
+                    - term [ref=f81e374]: Time at destination
+                    - definition [ref=f81e375]: About 3 days
+              - list [ref=f81e376]:
+                - listitem [ref=f81e377]:
+                  - generic [ref=f81e378]: •
+                  - text: Great for cities, history and culture
+                - listitem [ref=f81e379]:
+                  - generic [ref=f81e380]: •
+                  - text: Enjoyable in your chosen month
+                - listitem [ref=f81e381]:
+                  - generic [ref=f81e382]: •
+                  - text: Fits your selected budget level
+              - generic [ref=f81e383]:
+                - generic [ref=f81e384]:
+                  - generic [ref=f81e388]: Trip length
+                  - generic [ref=f81e389]: 2–4d
+                - generic [ref=f81e390]:
+                  - generic [ref=f81e394]: Budget
+                  - generic [ref=f81e395]: Moderate – Comfortable – Premium
+                - generic [ref=f81e396]:
+                  - generic [ref=f81e400]: Climate
+                  - generic [ref=f81e401]: Mild, Warm, Cool
+              - generic [ref=f81e402]: "Main experiences: Louvre or Musée d'Orsay (deterministic choice) · Eiffel Tower & Seine walk · Montmartre · French bistro dinner"
+              - generic [ref=f81e403]: "Suited to: Solo, Couple, Friends, Family"
+              - button "See score breakdown" [ref=f81e404] [cursor=pointer]
+              - button "View My Trip" [ref=f81e405] [cursor=pointer]
+    - contentinfo [ref=f81e41]:
+      - generic [ref=f81e42]:
+        - paragraph [ref=f81e43]: TravelUp
+        - paragraph [ref=f81e46]: Helping unsure travellers discover where to go next.
+        - paragraph [ref=f81e47]: All budgets, climates, seasons, itineraries and packing suggestions are indicative estimates, not live information. Always verify visa requirements, entry conditions, safety and travel advisories using official government sources for your citizenship.
+        - generic [ref=f81e48]:
+          - link "About & disclaimer" [ref=f81e49] [cursor=pointer]:
+            - /url: /about
+          - link "Home" [ref=f81e50] [cursor=pointer]:
+            - /url: /
+  - region "Notifications (F8)":
+    - list

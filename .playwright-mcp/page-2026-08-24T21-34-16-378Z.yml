@@ -1,0 +1,109 @@
+- generic [ref=e4]:
+  - generic [ref=e5]:
+    - banner [ref=e6]:
+      - generic [ref=e7]:
+        - link "TravelUp" [ref=e8] [cursor=pointer]:
+          - /url: /
+        - navigation [ref=e12]:
+          - link "Home" [ref=e13] [cursor=pointer]:
+            - /url: /
+          - link "About" [ref=e14] [cursor=pointer]:
+            - /url: /about
+          - button "Clear My Data" [ref=e15] [cursor=pointer]
+    - main [ref=e16]:
+      - generic [ref=e962]:
+        - button "Back to recommendations" [ref=e963] [cursor=pointer]
+        - generic [ref=e964]:
+          - img "Kelowna and the Okanagan Valley, Canada" [ref=e966]
+          - generic [ref=e968]:
+            - heading "Kelowna and the Okanagan Valley" [level=1] [ref=e969]
+            - paragraph [ref=e970]: Canada · Okanagan Valley, British Columbia, Canada
+        - generic [ref=e971]:
+          - tablist [ref=e972]:
+            - tab "Itinerary" [selected] [ref=e973] [cursor=pointer]
+            - tab "Packing" [ref=e974] [cursor=pointer]
+            - tab "Overview" [ref=e975] [cursor=pointer]
+          - tabpanel "Itinerary" [ref=e976]:
+            - generic [ref=e977]:
+              - paragraph [ref=e978]: A suggested 3-day plan including outbound and return travel. Indicative only — verify opening hours and tickets before you go.
+              - generic [ref=e979]:
+                - button "Day 1 Wine touring Kelowna and the Okanagan Valley Light intensity Food Relaxation Hide details" [expanded] [ref=e980] [cursor=pointer]:
+                  - generic [ref=e981]:
+                    - generic [ref=e982]:
+                      - generic [ref=e983]: Day 1
+                      - heading "Wine touring" [level=3] [ref=e984]
+                      - generic [ref=e985]: Kelowna and the Okanagan Valley
+                    - generic [ref=e986]: Light intensity
+                  - generic [ref=e987]:
+                    - generic [ref=e988]: Food
+                    - generic [ref=e989]: Relaxation
+                  - generic [ref=e990]: Hide details
+                - generic [ref=e991]:
+                  - list [ref=e992]:
+                    - listitem [ref=e993]:
+                      - generic [ref=e994]: Departure
+                      - generic [ref=e996]:
+                        - generic [ref=e997]: Begin the drive
+                        - paragraph [ref=e998]: Head out from your origin with rest stops along the way.
+                    - listitem [ref=e999]:
+                      - generic [ref=e1000]: Arrival
+                      - generic [ref=e1002]:
+                        - generic [ref=e1003]: Arrive and check in
+                        - paragraph [ref=e1004]: Reach your destination and settle into your stay.
+                    - listitem [ref=e1005]:
+                      - generic [ref=e1006]:
+                        - generic [ref=e1007]: 18:30–21:00
+                        - generic [ref=e1008]: ~2.5 hr
+                        - generic [ref=e1009]: Evening
+                      - generic [ref=e1010]:
+                        - generic [ref=e1011]: Dinner at a winery restaurant
+                        - paragraph [ref=e1012]: Dinner at a winery restaurant.
+                  - paragraph [ref=e1013]: "Estimated total journey: about 4.5 hours each way."
+                  - generic [ref=e1014]:
+                    - generic [ref=e1015]:
+                      - generic [ref=e1016]: Getting around
+                      - generic [ref=e1017]: Car, designated-driver tour or local transportation.
+                    - generic [ref=e1018]:
+                      - generic [ref=e1019]: Plan ahead
+                      - generic [ref=e1020]: Confirm opening hours and book popular tickets before you travel.
+                    - generic [ref=e1021]:
+                      - generic [ref=e1022]: Optional swap
+                      - generic [ref=e1023]: Swap for “Kelowna waterfront” if it suits your pace.
+                    - generic [ref=e1024]:
+                      - generic [ref=e1025]: Overnight
+                      - generic [ref=e1026]: Overnight in Kelowna and the Okanagan Valley.
+              - button "Day 2 · Flexible Orchards & lake relaxation Kelowna and the Okanagan Valley Light intensity Food Nature Free time View details" [ref=e1028] [cursor=pointer]:
+                - generic [ref=e1029]:
+                  - generic [ref=e1030]:
+                    - generic [ref=e1031]: Day 2 · Flexible
+                    - heading "Orchards & lake relaxation" [level=3] [ref=e1032]
+                    - generic [ref=e1033]: Kelowna and the Okanagan Valley
+                  - generic [ref=e1034]: Light intensity
+                - generic [ref=e1035]:
+                  - generic [ref=e1036]: Food
+                  - generic [ref=e1037]: Nature
+                  - generic [ref=e1038]: Free time
+                - generic [ref=e1039]: View details
+              - button "Day 3 Myra Canyon & Knox Mountain Kelowna and the Okanagan Valley Active intensity Nature Photography View details" [ref=e1041] [cursor=pointer]:
+                - generic [ref=e1042]:
+                  - generic [ref=e1043]:
+                    - generic [ref=e1044]: Day 3
+                    - heading "Myra Canyon & Knox Mountain" [level=3] [ref=e1045]
+                    - generic [ref=e1046]: Kelowna and the Okanagan Valley
+                  - generic [ref=e1047]: Active intensity
+                - generic [ref=e1048]:
+                  - generic [ref=e1049]: Nature
+                  - generic [ref=e1050]: Photography
+                - generic [ref=e1051]: View details
+    - contentinfo [ref=e61]:
+      - generic [ref=e62]:
+        - paragraph [ref=e63]: TravelUp
+        - paragraph [ref=e66]: Helping unsure travellers discover where to go next.
+        - paragraph [ref=e67]: All budgets, climates, seasons, itineraries and packing suggestions are indicative estimates, not live information. Always verify visa requirements, entry conditions, safety and travel advisories using official government sources for your citizenship.
+        - generic [ref=e68]:
+          - link "About & disclaimer" [ref=e69] [cursor=pointer]:
+            - /url: /about
+          - link "Home" [ref=e70] [cursor=pointer]:
+            - /url: /
+  - region "Notifications (F8)":
+    - list

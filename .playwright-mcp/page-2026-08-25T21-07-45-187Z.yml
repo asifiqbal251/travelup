@@ -1,0 +1,174 @@
+- generic [ref=f33e4]:
+  - generic [ref=f33e5]:
+    - banner [ref=f33e6]:
+      - generic [ref=f33e7]:
+        - link "TravelUp" [ref=f33e8] [cursor=pointer]:
+          - /url: /
+        - navigation [ref=f33e12]:
+          - link "Home" [ref=f33e13] [cursor=pointer]:
+            - /url: /
+          - link "About" [ref=f33e14] [cursor=pointer]:
+            - /url: /about
+          - button "Clear My Data" [ref=f33e15] [cursor=pointer]
+    - main [ref=f33e16]:
+      - generic [ref=f33e107]:
+        - generic [ref=f33e108]:
+          - generic [ref=f33e109]:
+            - heading "Your top 3 matches" [level=1] [ref=f33e110]
+            - paragraph [ref=f33e111]: Final scores combine your preference fit with travel practicality for your trip length. Estimates only.
+          - button "Revise" [ref=f33e112] [cursor=pointer]
+        - paragraph [ref=f33e116]: Scores are estimates based on your preferences and curated destination data, not live availability or flight schedules. Always verify visa and entry requirements through official government sources for your citizenship.
+        - generic [ref=f33e117]:
+          - article [ref=f33e118]:
+            - generic [ref=f33e119]:
+              - img "Istanbul & Cappadocia, Türkiye, Türkiye" [ref=f33e121]
+              - generic [ref=f33e122]: 92/100
+              - generic [ref=f33e123]: Strong match
+              - generic [ref=f33e124]:
+                - heading "Istanbul & Cappadocia, Türkiye" [level=2] [ref=f33e125]
+                - paragraph [ref=f33e129]: Türkiye · Western Asia
+            - generic [ref=f33e130]:
+              - region "Travel fit" [ref=f33e131]:
+                - generic [ref=f33e132]:
+                  - heading "Travel fit" [level=3] [ref=f33e133]
+                  - 'status "Travel fit: Good fit" [ref=f33e134]': Good fit
+                - generic [ref=f33e135]:
+                  - generic [ref=f33e136]:
+                    - term [ref=f33e137]: How you'll travel
+                    - definition [ref=f33e138]: International flight + domestic transfer
+                  - generic [ref=f33e139]:
+                    - term [ref=f33e140]: Travel time
+                    - definition [ref=f33e141]: About 7.9 hours each way
+                  - generic [ref=f33e142]:
+                    - term [ref=f33e143]: Time at destination
+                    - definition [ref=f33e144]: About 5 days
+              - list [ref=f33e145]:
+                - listitem [ref=f33e146]:
+                  - generic [ref=f33e147]: •
+                  - text: Great for cities, photography, food
+                - listitem [ref=f33e148]:
+                  - generic [ref=f33e149]: •
+                  - text: Enjoyable in your chosen month
+                - listitem [ref=f33e150]:
+                  - generic [ref=f33e151]: •
+                  - text: Fits your selected budget level
+              - generic [ref=f33e152]:
+                - generic [ref=f33e153]:
+                  - generic [ref=f33e157]: Trip length
+                  - generic [ref=f33e158]: 5–7d
+                - generic [ref=f33e159]:
+                  - generic [ref=f33e163]: Budget
+                  - generic [ref=f33e164]: Budget – Moderate – Comfortable – Premium
+                - generic [ref=f33e165]:
+                  - generic [ref=f33e169]: Climate
+                  - generic [ref=f33e170]: Mild, Warm, Cool
+              - generic [ref=f33e171]: "Main experiences: Hagia Sophia & Sultanahmet · Grand Bazaar & Bosphorus cruise · Cappadocia fairy chimneys · Hot-air balloon at sunrise (weather-dependent)"
+              - generic [ref=f33e172]: "Suited to: Solo, Couple, Friends, Family"
+              - button "See score breakdown" [ref=f33e173] [cursor=pointer]
+              - button "View My Trip" [ref=f33e174] [cursor=pointer]
+          - article [ref=f33e175]:
+            - generic [ref=f33e176]:
+              - img "New York City, United States" [ref=f33e178]
+              - generic [ref=f33e179]: 92/100
+              - generic [ref=f33e180]: Strong match
+              - generic [ref=f33e181]:
+                - heading "New York City" [level=2] [ref=f33e182]
+                - paragraph [ref=f33e186]: United States · Northeast, United States
+            - generic [ref=f33e187]:
+              - region "Travel fit" [ref=f33e188]:
+                - generic [ref=f33e189]:
+                  - heading "Travel fit" [level=3] [ref=f33e190]
+                  - 'status "Travel fit: Good fit" [ref=f33e191]': Good fit
+                - generic [ref=f33e192]:
+                  - generic [ref=f33e193]:
+                    - term [ref=f33e194]: How you'll travel
+                    - definition [ref=f33e195]: International flight + local public transportation
+                  - generic [ref=f33e196]:
+                    - term [ref=f33e197]: Travel time
+                    - definition [ref=f33e198]: About 13.2 hours each way
+                  - generic [ref=f33e199]:
+                    - term [ref=f33e200]: Time at destination
+                    - definition [ref=f33e201]: About 4 days
+              - list [ref=f33e202]:
+                - listitem [ref=f33e203]:
+                  - generic [ref=f33e204]: •
+                  - text: Great for cities, photography, food
+                - listitem [ref=f33e205]:
+                  - generic [ref=f33e206]: •
+                  - text: Enjoyable in your chosen month
+                - listitem [ref=f33e207]:
+                  - generic [ref=f33e208]: •
+                  - text: Fits your selected budget level
+              - generic [ref=f33e209]:
+                - generic [ref=f33e210]:
+                  - generic [ref=f33e214]: Trip length
+                  - generic [ref=f33e215]: 3–9d
+                - generic [ref=f33e216]:
+                  - generic [ref=f33e220]: Budget
+                  - generic [ref=f33e221]: Premium – Comfortable
+                - generic [ref=f33e222]:
+                  - generic [ref=f33e226]: Climate
+                  - generic [ref=f33e227]: Mild, Cool, Cold or snowy
+              - generic [ref=f33e228]: "Main experiences: Central Park · Times Square · Statue of Liberty · the MET"
+              - generic [ref=f33e229]: "Suited to: Solo, Couple, Friends, Family"
+              - button "See score breakdown" [ref=f33e230] [cursor=pointer]
+              - button "View My Trip" [ref=f33e231] [cursor=pointer]
+          - article [ref=f33e232]:
+            - generic [ref=f33e233]:
+              - img "Shanghai, China" [ref=f33e235]
+              - generic [ref=f33e236]: 89/100
+              - generic [ref=f33e237]: Strong match
+              - generic [ref=f33e238]:
+                - heading "Shanghai" [level=2] [ref=f33e239]
+                - paragraph [ref=f33e243]: China · Eastern China, China
+            - generic [ref=f33e244]:
+              - region "Travel fit" [ref=f33e245]:
+                - generic [ref=f33e246]:
+                  - heading "Travel fit" [level=3] [ref=f33e247]
+                  - 'status "Travel fit: Manageable" [ref=f33e248]': Manageable
+                - generic [ref=f33e249]:
+                  - generic [ref=f33e250]:
+                    - term [ref=f33e251]: How you'll travel
+                    - definition [ref=f33e252]: International flight + metro and taxis
+                  - generic [ref=f33e253]:
+                    - term [ref=f33e254]: Travel time
+                    - definition [ref=f33e255]: About 18.7 hours each way
+                  - generic [ref=f33e256]:
+                    - term [ref=f33e257]: Time at destination
+                    - definition [ref=f33e258]: About 2 days
+              - list [ref=f33e259]:
+                - listitem [ref=f33e260]:
+                  - generic [ref=f33e261]: •
+                  - text: Great for cities, photography, food
+                - listitem [ref=f33e262]:
+                  - generic [ref=f33e263]: •
+                  - text: Enjoyable in your chosen month
+                - listitem [ref=f33e264]:
+                  - generic [ref=f33e265]: •
+                  - text: Fits your selected budget level
+              - generic [ref=f33e266]:
+                - generic [ref=f33e267]:
+                  - generic [ref=f33e271]: Trip length
+                  - generic [ref=f33e272]: 6–7d
+                - generic [ref=f33e273]:
+                  - generic [ref=f33e277]: Budget
+                  - generic [ref=f33e278]: Moderate – Comfortable – Premium
+                - generic [ref=f33e279]:
+                  - generic [ref=f33e283]: Climate
+                  - generic [ref=f33e284]: Mild, Warm, Cool, Cold or snowy
+              - generic [ref=f33e285]: "Main experiences: The Bund waterfront · Yu Garden · Former French Concession neighbourhoods · Shanghai Museum or water-town day (optional)"
+              - generic [ref=f33e286]: "Suited to: Solo, Couple, Friends, Family"
+              - button "See score breakdown" [ref=f33e287] [cursor=pointer]
+              - button "View My Trip" [ref=f33e288] [cursor=pointer]
+    - contentinfo [ref=f33e57]:
+      - generic [ref=f33e58]:
+        - paragraph [ref=f33e59]: TravelUp
+        - paragraph [ref=f33e62]: Helping unsure travellers discover where to go next.
+        - paragraph [ref=f33e63]: All budgets, climates, seasons, itineraries and packing suggestions are indicative estimates, not live information. Always verify visa requirements, entry conditions, safety and travel advisories using official government sources for your citizenship.
+        - generic [ref=f33e64]:
+          - link "About & disclaimer" [ref=f33e65] [cursor=pointer]:
+            - /url: /about
+          - link "Home" [ref=f33e66] [cursor=pointer]:
+            - /url: /
+  - region "Notifications (F8)":
+    - list

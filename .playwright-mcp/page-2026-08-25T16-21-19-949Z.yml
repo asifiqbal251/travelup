@@ -1,0 +1,51 @@
+- generic [ref=f12e4]:
+  - generic [ref=f12e5]:
+    - banner [ref=f12e6]:
+      - generic [ref=f12e7]:
+        - link "TravelUp" [ref=f12e8] [cursor=pointer]:
+          - /url: /
+        - navigation [ref=f12e12]:
+          - link "Home" [ref=f12e13] [cursor=pointer]:
+            - /url: /
+          - link "About" [ref=f12e14] [cursor=pointer]:
+            - /url: /about
+          - button "Clear My Data" [ref=f12e15] [cursor=pointer]
+    - main [ref=f12e16]:
+      - generic [ref=f12e71]:
+        - generic [ref=f12e72]:
+          - generic [ref=f12e73]:
+            - generic [ref=f12e74]: Step 1 of 7
+            - generic [ref=f12e75]: Your travel basics
+          - progressbar [ref=f12e76]
+        - generic [ref=f12e78]:
+          - generic [ref=f12e79]:
+            - heading "Your travel basics" [level=1] [ref=f12e80]
+            - paragraph [ref=f12e81]: So we can tailor your travel recommendations.
+            - generic [ref=f12e82]:
+              - generic [ref=f12e83]:
+                - text: Country of residence
+                - combobox "Country of residence" [ref=f12e84] [cursor=pointer]:
+                  - generic: Select country
+              - generic [ref=f12e87]:
+                - text: Departure city
+                - textbox "Departure city" [ref=f12e88]:
+                  - /placeholder: e.g. London
+              - generic [ref=f12e89]:
+                - text: Citizenship
+                - combobox "Citizenship" [ref=f12e90] [cursor=pointer]:
+                  - generic: Select citizenship
+          - generic [ref=f12e93]:
+            - button "Back" [disabled]
+            - button "Next" [ref=f12e94] [cursor=pointer]
+    - contentinfo [ref=f12e61]:
+      - generic [ref=f12e62]:
+        - paragraph [ref=f12e63]: TravelUp
+        - paragraph [ref=f12e66]: Helping unsure travellers discover where to go next.
+        - paragraph [ref=f12e67]: All budgets, climates, seasons, itineraries and packing suggestions are indicative estimates, not live information. Always verify visa requirements, entry conditions, safety and travel advisories using official government sources for your citizenship.
+        - generic [ref=f12e68]:
+          - link "About & disclaimer" [ref=f12e69] [cursor=pointer]:
+            - /url: /about
+          - link "Home" [ref=f12e70] [cursor=pointer]:
+            - /url: /
+  - region "Notifications (F8)":
+    - list

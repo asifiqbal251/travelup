@@ -1,0 +1,174 @@
+- generic [ref=f12e4]:
+  - generic [ref=f12e5]:
+    - banner [ref=f12e6]:
+      - generic [ref=f12e7]:
+        - link "TravelUp" [ref=f12e8] [cursor=pointer]:
+          - /url: /
+        - navigation [ref=f12e12]:
+          - link "Home" [ref=f12e13] [cursor=pointer]:
+            - /url: /
+          - link "About" [ref=f12e14] [cursor=pointer]:
+            - /url: /about
+          - button "Clear My Data" [ref=f12e15] [cursor=pointer]
+    - main [ref=f12e16]:
+      - generic [ref=f12e781]:
+        - generic [ref=f12e782]:
+          - generic [ref=f12e783]:
+            - heading "Your top 3 matches" [level=1] [ref=f12e784]
+            - paragraph [ref=f12e785]: Final scores combine your preference fit with travel practicality for your trip length. Estimates only.
+          - button "Revise" [ref=f12e786] [cursor=pointer]
+        - paragraph [ref=f12e790]: Scores are estimates based on your preferences and curated destination data, not live availability or flight schedules. Always verify visa and entry requirements through official government sources for your citizenship.
+        - generic [ref=f12e791]:
+          - article [ref=f12e792]:
+            - generic [ref=f12e793]:
+              - img "Paris, France" [ref=f12e795]
+              - generic [ref=f12e796]: 95/100
+              - generic [ref=f12e797]: Strong match
+              - generic [ref=f12e798]:
+                - heading "Paris" [level=2] [ref=f12e799]
+                - paragraph [ref=f12e803]: France · Île-de-France, France
+            - generic [ref=f12e804]:
+              - region "Travel fit" [ref=f12e805]:
+                - generic [ref=f12e806]:
+                  - heading "Travel fit" [level=3] [ref=f12e807]
+                  - 'status "Travel fit: Good fit" [ref=f12e808]': Good fit
+                - generic [ref=f12e809]:
+                  - generic [ref=f12e810]:
+                    - term [ref=f12e811]: How you'll travel
+                    - definition [ref=f12e812]: Direct Eurostar train
+                  - generic [ref=f12e813]:
+                    - term [ref=f12e814]: Travel time
+                    - definition [ref=f12e815]: About 3 hours each way
+                  - generic [ref=f12e816]:
+                    - term [ref=f12e817]: Time at destination
+                    - definition [ref=f12e818]: About 3 days
+              - list [ref=f12e819]:
+                - listitem [ref=f12e820]:
+                  - generic [ref=f12e821]: •
+                  - text: Great for cities, history and culture, food
+                - listitem [ref=f12e822]:
+                  - generic [ref=f12e823]: •
+                  - text: Enjoyable in your chosen month
+                - listitem [ref=f12e824]:
+                  - generic [ref=f12e825]: •
+                  - text: Fits your selected budget level
+              - generic [ref=f12e826]:
+                - generic [ref=f12e827]:
+                  - generic [ref=f12e831]: Trip length
+                  - generic [ref=f12e832]: 2–4d
+                - generic [ref=f12e833]:
+                  - generic [ref=f12e837]: Budget
+                  - generic [ref=f12e838]: Moderate – Comfortable – Premium
+                - generic [ref=f12e839]:
+                  - generic [ref=f12e843]: Climate
+                  - generic [ref=f12e844]: Mild, Warm, Cool
+              - generic [ref=f12e845]: "Main experiences: Louvre or Musée d'Orsay (deterministic choice) · Eiffel Tower & Seine walk · Montmartre · French bistro dinner"
+              - generic [ref=f12e846]: "Suited to: Solo, Couple, Friends, Family"
+              - button "See score breakdown" [ref=f12e847] [cursor=pointer]
+              - button "View My Trip" [ref=f12e848] [cursor=pointer]
+          - article [ref=f12e849]:
+            - generic [ref=f12e850]:
+              - img "Brussels & Bruges, Belgium" [ref=f12e852]
+              - generic [ref=f12e853]: 95/100
+              - generic [ref=f12e854]: Strong match
+              - generic [ref=f12e855]:
+                - heading "Brussels & Bruges" [level=2] [ref=f12e856]
+                - paragraph [ref=f12e860]: Belgium · Flanders, Belgium
+            - generic [ref=f12e861]:
+              - region "Travel fit" [ref=f12e862]:
+                - generic [ref=f12e863]:
+                  - heading "Travel fit" [level=3] [ref=f12e864]
+                  - 'status "Travel fit: Good fit" [ref=f12e865]': Good fit
+                - generic [ref=f12e866]:
+                  - generic [ref=f12e867]:
+                    - term [ref=f12e868]: How you'll travel
+                    - definition [ref=f12e869]: Eurostar + onward Belgian train
+                  - generic [ref=f12e870]:
+                    - term [ref=f12e871]: Travel time
+                    - definition [ref=f12e872]: About 3.5 hours each way
+                  - generic [ref=f12e873]:
+                    - term [ref=f12e874]: Time at destination
+                    - definition [ref=f12e875]: About 2.5 days
+              - list [ref=f12e876]:
+                - listitem [ref=f12e877]:
+                  - generic [ref=f12e878]: •
+                  - text: Great for cities, history and culture, food
+                - listitem [ref=f12e879]:
+                  - generic [ref=f12e880]: •
+                  - text: Enjoyable in your chosen month
+                - listitem [ref=f12e881]:
+                  - generic [ref=f12e882]: •
+                  - text: Fits your selected budget level
+              - generic [ref=f12e883]:
+                - generic [ref=f12e884]:
+                  - generic [ref=f12e888]: Trip length
+                  - generic [ref=f12e889]: 2–3d
+                - generic [ref=f12e890]:
+                  - generic [ref=f12e894]: Budget
+                  - generic [ref=f12e895]: Moderate – Comfortable
+                - generic [ref=f12e896]:
+                  - generic [ref=f12e900]: Climate
+                  - generic [ref=f12e901]: Mild, Cool, Cold or snowy
+              - generic [ref=f12e902]: "Main experiences: Grand Place (Brussels) · Belgian chocolate/waffle tasting · Bruges canal walk and old town (canal rides when operating)"
+              - generic [ref=f12e903]: "Suited to: Solo, Couple, Friends, Family"
+              - button "See score breakdown" [ref=f12e904] [cursor=pointer]
+              - button "View My Trip" [ref=f12e905] [cursor=pointer]
+          - article [ref=f12e906]:
+            - generic [ref=f12e907]:
+              - img "Dublin, Ireland" [ref=f12e909]
+              - generic [ref=f12e910]: 95/100
+              - generic [ref=f12e911]: Strong match
+              - generic [ref=f12e912]:
+                - heading "Dublin" [level=2] [ref=f12e913]
+                - paragraph [ref=f12e917]: Ireland · Leinster, Ireland
+            - generic [ref=f12e918]:
+              - region "Travel fit" [ref=f12e919]:
+                - generic [ref=f12e920]:
+                  - heading "Travel fit" [level=3] [ref=f12e921]
+                  - 'status "Travel fit: Good fit" [ref=f12e922]': Good fit
+                - generic [ref=f12e923]:
+                  - generic [ref=f12e924]:
+                    - term [ref=f12e925]: How you'll travel
+                    - definition [ref=f12e926]: Short flight + local transport
+                  - generic [ref=f12e927]:
+                    - term [ref=f12e928]: Travel time
+                    - definition [ref=f12e929]: About 4.3 hours each way
+                  - generic [ref=f12e930]:
+                    - term [ref=f12e931]: Time at destination
+                    - definition [ref=f12e932]: About 3 days
+              - list [ref=f12e933]:
+                - listitem [ref=f12e934]:
+                  - generic [ref=f12e935]: •
+                  - text: Great for cities, history and culture, food
+                - listitem [ref=f12e936]:
+                  - generic [ref=f12e937]: •
+                  - text: Enjoyable in your chosen month
+                - listitem [ref=f12e938]:
+                  - generic [ref=f12e939]: •
+                  - text: Fits your selected budget level
+              - generic [ref=f12e940]:
+                - generic [ref=f12e941]:
+                  - generic [ref=f12e945]: Trip length
+                  - generic [ref=f12e946]: 2–3d
+                - generic [ref=f12e947]:
+                  - generic [ref=f12e951]: Budget
+                  - generic [ref=f12e952]: Budget – Moderate – Comfortable
+                - generic [ref=f12e953]:
+                  - generic [ref=f12e957]: Climate
+                  - generic [ref=f12e958]: Mild, Cool, Cold or snowy
+              - generic [ref=f12e959]: "Main experiences: Trinity College/Book of Kells · Temple Bar · Guinness Storehouse · Dublin Castle"
+              - generic [ref=f12e960]: "Suited to: Solo, Couple, Friends, Family"
+              - button "See score breakdown" [ref=f12e961] [cursor=pointer]
+              - button "View My Trip" [ref=f12e962] [cursor=pointer]
+    - contentinfo [ref=f12e61]:
+      - generic [ref=f12e62]:
+        - paragraph [ref=f12e63]: TravelUp
+        - paragraph [ref=f12e66]: Helping unsure travellers discover where to go next.
+        - paragraph [ref=f12e67]: All budgets, climates, seasons, itineraries and packing suggestions are indicative estimates, not live information. Always verify visa requirements, entry conditions, safety and travel advisories using official government sources for your citizenship.
+        - generic [ref=f12e68]:
+          - link "About & disclaimer" [ref=f12e69] [cursor=pointer]:
+            - /url: /about
+          - link "Home" [ref=f12e70] [cursor=pointer]:
+            - /url: /
+  - region "Notifications (F8)":
+    - list

@@ -1,0 +1,125 @@
+- generic [ref=f31e4]:
+  - generic [ref=f31e5]:
+    - banner [ref=f31e6]:
+      - generic [ref=f31e7]:
+        - link "TravelUp" [ref=f31e8] [cursor=pointer]:
+          - /url: /
+        - navigation [ref=f31e12]:
+          - link "Home" [ref=f31e13] [cursor=pointer]:
+            - /url: /
+          - link "About" [ref=f31e14] [cursor=pointer]:
+            - /url: /about
+          - button "Clear My Data" [ref=f31e15] [cursor=pointer]
+    - main [ref=f31e16]:
+      - generic [ref=f31e916]:
+        - button "Back to recommendations" [ref=f31e917] [cursor=pointer]
+        - generic [ref=f31e918]:
+          - img "Napa and Sonoma, United States" [ref=f31e920]
+          - generic [ref=f31e922]:
+            - heading "Napa and Sonoma" [level=1] [ref=f31e923]
+            - paragraph [ref=f31e924]: United States · North Bay, California, United States
+        - generic [ref=f31e925]:
+          - tablist [ref=f31e926]:
+            - tab "Itinerary" [selected] [ref=f31e927] [cursor=pointer]
+            - tab "Packing" [ref=f31e928] [cursor=pointer]
+            - tab "Overview" [ref=f31e929] [cursor=pointer]
+          - tabpanel "Itinerary" [ref=f31e930]:
+            - generic [ref=f31e931]:
+              - paragraph [ref=f31e932]: A suggested 4-day plan including outbound and return travel. Indicative only — verify opening hours and tickets before you go.
+              - generic [ref=f31e933]:
+                - button "Day 1 Napa Valley wine tasting Napa and Sonoma Light intensity Food Relaxation Hide details" [expanded] [ref=f31e934] [cursor=pointer]:
+                  - generic [ref=f31e935]:
+                    - generic [ref=f31e936]:
+                      - generic [ref=f31e937]: Day 1
+                      - heading "Napa Valley wine tasting" [level=3] [ref=f31e938]
+                      - generic [ref=f31e939]: Napa and Sonoma
+                    - generic [ref=f31e940]: Light intensity
+                  - generic [ref=f31e941]:
+                    - generic [ref=f31e942]: Food
+                    - generic [ref=f31e943]: Relaxation
+                  - generic [ref=f31e944]: Hide details
+                - generic [ref=f31e945]:
+                  - list [ref=f31e946]:
+                    - listitem [ref=f31e947]:
+                      - generic [ref=f31e948]: Departure
+                      - generic [ref=f31e950]:
+                        - generic [ref=f31e951]: Begin the drive
+                        - paragraph [ref=f31e952]: Head out from your origin with rest stops along the way.
+                    - listitem [ref=f31e953]:
+                      - generic [ref=f31e954]: Arrival
+                      - generic [ref=f31e956]:
+                        - generic [ref=f31e957]: Arrive and check in
+                        - paragraph [ref=f31e958]: Reach your destination and settle into your stay.
+                    - listitem [ref=f31e959]:
+                      - generic [ref=f31e960]:
+                        - generic [ref=f31e961]: 14:00–17:00
+                        - generic [ref=f31e962]: ~3 hr
+                        - generic [ref=f31e963]: Afternoon
+                      - generic [ref=f31e964]:
+                        - generic [ref=f31e965]: Reserved tastings at two or three…
+                        - paragraph [ref=f31e966]: Reserved tastings at two or three wineries.
+                    - listitem [ref=f31e967]:
+                      - generic [ref=f31e968]:
+                        - generic [ref=f31e969]: 18:30–20:30
+                        - generic [ref=f31e970]: ~2 hr
+                        - generic [ref=f31e971]: Evening
+                      - generic [ref=f31e972]:
+                        - generic [ref=f31e973]: Dinner and rest
+                        - paragraph [ref=f31e974]: A relaxed dinner near your stay after the day's travel.
+                  - paragraph [ref=f31e975]: "Estimated total journey: about 1.5 hours each way."
+                  - generic [ref=f31e976]:
+                    - generic [ref=f31e977]:
+                      - generic [ref=f31e978]: Getting around
+                      - generic [ref=f31e979]: Guided tour, designated driver or car when no tasting is involved.
+                    - generic [ref=f31e980]:
+                      - generic [ref=f31e981]: Plan ahead
+                      - generic [ref=f31e982]: Confirm opening hours and book popular tickets before you travel.
+                    - generic [ref=f31e983]:
+                      - generic [ref=f31e984]: Overnight
+                      - generic [ref=f31e985]: Overnight in Napa and Sonoma.
+              - button "Day 2 Sonoma Plaza & countryside Napa and Sonoma Light intensity Food Nature View details" [ref=f31e987] [cursor=pointer]:
+                - generic [ref=f31e988]:
+                  - generic [ref=f31e989]:
+                    - generic [ref=f31e990]: Day 2
+                    - heading "Sonoma Plaza & countryside" [level=3] [ref=f31e991]
+                    - generic [ref=f31e992]: Napa and Sonoma
+                  - generic [ref=f31e993]: Light intensity
+                - generic [ref=f31e994]:
+                  - generic [ref=f31e995]: Food
+                  - generic [ref=f31e996]: Nature
+                - generic [ref=f31e997]: View details
+              - button "Day 3 Hot air balloon or scenic drive Napa and Sonoma Light intensity Photography Relaxation View details" [ref=f31e999] [cursor=pointer]:
+                - generic [ref=f31e1000]:
+                  - generic [ref=f31e1001]:
+                    - generic [ref=f31e1002]: Day 3
+                    - heading "Hot air balloon or scenic drive" [level=3] [ref=f31e1003]
+                    - generic [ref=f31e1004]: Napa and Sonoma
+                  - generic [ref=f31e1005]: Light intensity
+                - generic [ref=f31e1006]:
+                  - generic [ref=f31e1007]: Photography
+                  - generic [ref=f31e1008]: Relaxation
+                - generic [ref=f31e1009]: View details
+              - button "Day 4 · Flexible Flexible day Napa and Sonoma Light intensity Slow start Café and laundry Easy stroll View details" [ref=f31e1011] [cursor=pointer]:
+                - generic [ref=f31e1012]:
+                  - generic [ref=f31e1013]:
+                    - generic [ref=f31e1014]: Day 4 · Flexible
+                    - heading "Flexible day" [level=3] [ref=f31e1015]
+                    - generic [ref=f31e1016]: Napa and Sonoma
+                  - generic [ref=f31e1017]: Light intensity
+                - generic [ref=f31e1018]:
+                  - generic [ref=f31e1019]: Slow start
+                  - generic [ref=f31e1020]: Café and laundry
+                  - generic [ref=f31e1021]: Easy stroll
+                - generic [ref=f31e1022]: View details
+    - contentinfo [ref=f31e41]:
+      - generic [ref=f31e42]:
+        - paragraph [ref=f31e43]: TravelUp
+        - paragraph [ref=f31e46]: Helping unsure travellers discover where to go next.
+        - paragraph [ref=f31e47]: All budgets, climates, seasons, itineraries and packing suggestions are indicative estimates, not live information. Always verify visa requirements, entry conditions, safety and travel advisories using official government sources for your citizenship.
+        - generic [ref=f31e48]:
+          - link "About & disclaimer" [ref=f31e49] [cursor=pointer]:
+            - /url: /about
+          - link "Home" [ref=f31e50] [cursor=pointer]:
+            - /url: /
+  - region "Notifications (F8)":
+    - list

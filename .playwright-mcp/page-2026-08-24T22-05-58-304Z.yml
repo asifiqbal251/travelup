@@ -1,0 +1,114 @@
+- generic [ref=f37e4]:
+  - generic [ref=f37e5]:
+    - banner [ref=f37e6]:
+      - generic [ref=f37e7]:
+        - link "TravelUp" [ref=f37e8] [cursor=pointer]:
+          - /url: /
+        - navigation [ref=f37e12]:
+          - link "Home" [ref=f37e13] [cursor=pointer]:
+            - /url: /
+          - link "About" [ref=f37e14] [cursor=pointer]:
+            - /url: /about
+          - button "Clear My Data" [ref=f37e15] [cursor=pointer]
+    - main [ref=f37e16]:
+      - generic [ref=f37e916]:
+        - button "Back to recommendations" [ref=f37e917] [cursor=pointer]
+        - generic [ref=f37e918]:
+          - img "Yosemite National Park, United States" [ref=f37e920]
+          - generic [ref=f37e922]:
+            - heading "Yosemite National Park" [level=1] [ref=f37e923]
+            - paragraph [ref=f37e924]: United States · Sierra Nevada, California, United States
+        - generic [ref=f37e925]:
+          - tablist [ref=f37e926]:
+            - tab "Itinerary" [selected] [ref=f37e927] [cursor=pointer]
+            - tab "Packing" [ref=f37e928] [cursor=pointer]
+            - tab "Overview" [ref=f37e929] [cursor=pointer]
+          - tabpanel "Itinerary" [ref=f37e930]:
+            - generic [ref=f37e931]:
+              - paragraph [ref=f37e932]: A suggested 4-day plan including outbound and return travel. Indicative only — verify opening hours and tickets before you go.
+              - button "Day 1 Yosemite Valley highlights Yosemite National Park High intensity Nature Photography View details" [ref=f37e1015] [cursor=pointer]:
+                - generic [ref=f37e935]:
+                  - generic [ref=f37e936]:
+                    - generic [ref=f37e937]: Day 1
+                    - heading "Yosemite Valley highlights" [level=3] [ref=f37e938]
+                    - generic [ref=f37e939]: Yosemite National Park
+                  - generic [ref=f37e940]: High intensity
+                - generic [ref=f37e941]:
+                  - generic [ref=f37e942]: Nature
+                  - generic [ref=f37e943]: Photography
+                - generic [ref=f37e944]: View details
+              - button "Day 2 Glacier Point Yosemite National Park High intensity Photography Nature View details" [ref=f37e1067] [cursor=pointer]:
+                - generic [ref=f37e980]:
+                  - generic [ref=f37e981]:
+                    - generic [ref=f37e982]: Day 2
+                    - heading "Glacier Point" [level=3] [ref=f37e983]
+                    - generic [ref=f37e984]: Yosemite National Park
+                  - generic [ref=f37e985]: High intensity
+                - generic [ref=f37e986]:
+                  - generic [ref=f37e987]: Photography
+                  - generic [ref=f37e988]: Nature
+                - generic [ref=f37e989]: View details
+              - generic [ref=f37e990]:
+                - button "Day 3 Mariposa Grove sequoias Yosemite National Park High intensity Nature Wildlife Hide details" [expanded] [active] [ref=f37e1068] [cursor=pointer]:
+                  - generic [ref=f37e992]:
+                    - generic [ref=f37e993]:
+                      - generic [ref=f37e994]: Day 3
+                      - heading "Mariposa Grove sequoias" [level=3] [ref=f37e995]
+                      - generic [ref=f37e996]: Yosemite National Park
+                    - generic [ref=f37e997]: High intensity
+                  - generic [ref=f37e998]:
+                    - generic [ref=f37e999]: Nature
+                    - generic [ref=f37e1000]: Wildlife
+                  - generic [ref=f37e1001]: Hide details
+                - generic [ref=f37e1069]:
+                  - list [ref=f37e1070]:
+                    - listitem [ref=f37e1071]:
+                      - generic [ref=f37e1072]: Morning
+                      - generic [ref=f37e1074]:
+                        - generic [ref=f37e1075]: Breakfast or a short walk
+                        - paragraph [ref=f37e1076]: A relaxed start before heading home.
+                    - listitem [ref=f37e1077]:
+                      - generic [ref=f37e1078]: Return begins
+                      - generic [ref=f37e1080]:
+                        - generic [ref=f37e1081]: Begin the return drive
+                        - paragraph [ref=f37e1082]: Check out and drive home with rest stops along the way.
+                    - listitem [ref=f37e1083]:
+                      - generic [ref=f37e1084]: Arrive home
+                      - generic [ref=f37e1086]:
+                        - generic [ref=f37e1087]: Arrive home
+                        - paragraph [ref=f37e1088]: Travel home to San Francisco.
+                  - paragraph [ref=f37e1089]: "Estimated total journey: about 4.5 hours each way."
+                  - generic [ref=f37e1090]:
+                    - generic [ref=f37e1091]:
+                      - generic [ref=f37e1092]: Getting around
+                      - generic [ref=f37e1093]: Park shuttle when operating, car and walking trails.
+                    - generic [ref=f37e1094]:
+                      - generic [ref=f37e1095]: Plan ahead
+                      - generic [ref=f37e1096]: Confirm your departure time and any bookings.
+                    - generic [ref=f37e1097]:
+                      - generic [ref=f37e1098]: Overnight
+                      - generic [ref=f37e1099]: Home
+              - button "Day 4 · Flexible Flexible day Yosemite National Park Light intensity Slow start Café and laundry Easy stroll View details" [ref=f37e1003] [cursor=pointer]:
+                - generic [ref=f37e1004]:
+                  - generic [ref=f37e1005]:
+                    - generic [ref=f37e1006]: Day 4 · Flexible
+                    - heading "Flexible day" [level=3] [ref=f37e1007]
+                    - generic [ref=f37e1008]: Yosemite National Park
+                  - generic [ref=f37e1009]: Light intensity
+                - generic [ref=f37e1010]:
+                  - generic [ref=f37e1011]: Slow start
+                  - generic [ref=f37e1012]: Café and laundry
+                  - generic [ref=f37e1013]: Easy stroll
+                - generic [ref=f37e1014]: View details
+    - contentinfo [ref=f37e41]:
+      - generic [ref=f37e42]:
+        - paragraph [ref=f37e43]: TravelUp
+        - paragraph [ref=f37e46]: Helping unsure travellers discover where to go next.
+        - paragraph [ref=f37e47]: All budgets, climates, seasons, itineraries and packing suggestions are indicative estimates, not live information. Always verify visa requirements, entry conditions, safety and travel advisories using official government sources for your citizenship.
+        - generic [ref=f37e48]:
+          - link "About & disclaimer" [ref=f37e49] [cursor=pointer]:
+            - /url: /about
+          - link "Home" [ref=f37e50] [cursor=pointer]:
+            - /url: /
+  - region "Notifications (F8)":
+    - list

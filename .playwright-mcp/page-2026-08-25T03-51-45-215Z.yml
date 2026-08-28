@@ -1,0 +1,174 @@
+- generic [ref=f51e4]:
+  - generic [ref=f51e5]:
+    - banner [ref=f51e6]:
+      - generic [ref=f51e7]:
+        - link "TravelUp" [ref=f51e8] [cursor=pointer]:
+          - /url: /
+        - navigation [ref=f51e12]:
+          - link "Home" [ref=f51e13] [cursor=pointer]:
+            - /url: /
+          - link "About" [ref=f51e14] [cursor=pointer]:
+            - /url: /about
+          - button "Clear My Data" [ref=f51e15] [cursor=pointer]
+    - main [ref=f51e16]:
+      - generic [ref=f51e1907]:
+        - generic [ref=f51e1908]:
+          - generic [ref=f51e1909]:
+            - heading "Your top 3 matches" [level=1] [ref=f51e1910]
+            - paragraph [ref=f51e1911]: Final scores combine your preference fit with travel practicality for your trip length. Estimates only.
+          - button "Revise" [ref=f51e1912] [cursor=pointer]
+        - paragraph [ref=f51e1916]: Scores are estimates based on your preferences and curated destination data, not live availability or flight schedules. Always verify visa and entry requirements through official government sources for your citizenship.
+        - generic [ref=f51e1917]:
+          - article [ref=f51e1918]:
+            - generic [ref=f51e1919]:
+              - img "Istanbul & Cappadocia, Türkiye, Türkiye" [ref=f51e1921]
+              - generic [ref=f51e1922]: 93/100
+              - generic [ref=f51e1923]: Strong match
+              - generic [ref=f51e1924]:
+                - heading "Istanbul & Cappadocia, Türkiye" [level=2] [ref=f51e1925]
+                - paragraph [ref=f51e1929]: Türkiye · Western Asia
+            - generic [ref=f51e1930]:
+              - region "Travel fit" [ref=f51e1931]:
+                - generic [ref=f51e1932]:
+                  - heading "Travel fit" [level=3] [ref=f51e1933]
+                  - 'status "Travel fit: Good fit" [ref=f51e1934]': Good fit
+                - generic [ref=f51e1935]:
+                  - generic [ref=f51e1936]:
+                    - term [ref=f51e1937]: How you'll travel
+                    - definition [ref=f51e1938]: International flight + local transport
+                  - generic [ref=f51e1939]:
+                    - term [ref=f51e1940]: Travel time
+                    - definition [ref=f51e1941]: About 18.3 hours each way
+                  - generic [ref=f51e1942]:
+                    - term [ref=f51e1943]: Time at destination
+                    - definition [ref=f51e1944]: About 10 days
+              - list [ref=f51e1945]:
+                - listitem [ref=f51e1946]:
+                  - generic [ref=f51e1947]: •
+                  - text: Great for history and culture, food, cities
+                - listitem [ref=f51e1948]:
+                  - generic [ref=f51e1949]: •
+                  - text: Peak season in September
+                - listitem [ref=f51e1950]:
+                  - generic [ref=f51e1951]: •
+                  - text: Fits your selected budget level
+              - generic [ref=f51e1952]:
+                - generic [ref=f51e1953]:
+                  - generic [ref=f51e1957]: Trip length
+                  - generic [ref=f51e1958]: 6–12d
+                - generic [ref=f51e1959]:
+                  - generic [ref=f51e1963]: Budget
+                  - generic [ref=f51e1964]: Budget – Moderate – Comfortable
+                - generic [ref=f51e1965]:
+                  - generic [ref=f51e1969]: Climate
+                  - generic [ref=f51e1970]: Mild, Cool
+              - generic [ref=f51e1971]: "Main experiences: Hagia Sophia and Blue Mosque · Cappadocia hot air balloon · Grand Bazaar · Turkish bath (hammam)"
+              - generic [ref=f51e1972]: "Suited to: Solo, Couple, Friends, Family"
+              - button "See score breakdown" [ref=f51e1973] [cursor=pointer]
+              - button "View My Trip" [ref=f51e1974] [cursor=pointer]
+          - article [ref=f51e1975]:
+            - generic [ref=f51e1976]:
+              - img "Lisbon & Porto, Portugal, Portugal" [ref=f51e1978]
+              - generic [ref=f51e1979]: 90/100
+              - generic [ref=f51e1980]: Strong match
+              - generic [ref=f51e1981]:
+                - heading "Lisbon & Porto, Portugal" [level=2] [ref=f51e1982]
+                - paragraph [ref=f51e1986]: Portugal · Southern Europe
+            - generic [ref=f51e1987]:
+              - region "Travel fit" [ref=f51e1988]:
+                - generic [ref=f51e1989]:
+                  - heading "Travel fit" [level=3] [ref=f51e1990]
+                  - 'status "Travel fit: Good fit" [ref=f51e1991]': Good fit
+                - generic [ref=f51e1992]:
+                  - generic [ref=f51e1993]:
+                    - term [ref=f51e1994]: How you'll travel
+                    - definition [ref=f51e1995]: International flight + local transport
+                  - generic [ref=f51e1996]:
+                    - term [ref=f51e1997]: Travel time
+                    - definition [ref=f51e1998]: About 13 hours each way
+                  - generic [ref=f51e1999]:
+                    - term [ref=f51e2000]: Time at destination
+                    - definition [ref=f51e2001]: About 12 days
+              - list [ref=f51e2002]:
+                - listitem [ref=f51e2003]:
+                  - generic [ref=f51e2004]: •
+                  - text: Great for history and culture, food, cities
+                - listitem [ref=f51e2005]:
+                  - generic [ref=f51e2006]: •
+                  - text: Peak season in September
+                - listitem [ref=f51e2007]:
+                  - generic [ref=f51e2008]: •
+                  - text: Fits your selected budget level
+              - generic [ref=f51e2009]:
+                - generic [ref=f51e2010]:
+                  - generic [ref=f51e2014]: Trip length
+                  - generic [ref=f51e2015]: 5–12d
+                - generic [ref=f51e2016]:
+                  - generic [ref=f51e2020]: Budget
+                  - generic [ref=f51e2021]: Budget – Moderate – Comfortable
+                - generic [ref=f51e2022]:
+                  - generic [ref=f51e2026]: Climate
+                  - generic [ref=f51e2027]: Mild, Warm
+              - generic [ref=f51e2028]: "Main experiences: Tram 28 through Alfama · Pastel de nata and port wine · Douro Valley · Belem and Lisbon waterfront"
+              - generic [ref=f51e2029]: "Suited to: Solo, Couple, Friends, Family"
+              - button "See score breakdown" [ref=f51e2030] [cursor=pointer]
+              - button "View My Trip" [ref=f51e2031] [cursor=pointer]
+          - article [ref=f51e2032]:
+            - generic [ref=f51e2033]:
+              - img "Montréal and Québec City, Canada" [ref=f51e2035]
+              - generic [ref=f51e2036]: 85/100
+              - generic [ref=f51e2037]: Strong match
+              - generic [ref=f51e2038]:
+                - heading "Montréal and Québec City" [level=2] [ref=f51e2039]
+                - paragraph [ref=f51e2043]: Canada · Québec, Canada
+            - generic [ref=f51e2044]:
+              - region "Travel fit" [ref=f51e2045]:
+                - generic [ref=f51e2046]:
+                  - heading "Travel fit" [level=3] [ref=f51e2047]
+                  - 'status "Travel fit: Good fit" [ref=f51e2048]': Good fit
+                - generic [ref=f51e2049]:
+                  - generic [ref=f51e2050]:
+                    - term [ref=f51e2051]: How you'll travel
+                    - definition [ref=f51e2052]: International flight + train/transfer
+                  - generic [ref=f51e2053]:
+                    - term [ref=f51e2054]: Travel time
+                    - definition [ref=f51e2055]: About 7.4 hours each way
+                  - generic [ref=f51e2056]:
+                    - term [ref=f51e2057]: Time at destination
+                    - definition [ref=f51e2058]: About 13 days
+              - list [ref=f51e2059]:
+                - listitem [ref=f51e2060]:
+                  - generic [ref=f51e2061]: •
+                  - text: Great for history and culture, food, cities
+                - listitem [ref=f51e2062]:
+                  - generic [ref=f51e2063]: •
+                  - text: Peak season in September
+                - listitem [ref=f51e2064]:
+                  - generic [ref=f51e2065]: •
+                  - text: Fits your selected budget level
+              - generic [ref=f51e2066]:
+                - generic [ref=f51e2067]:
+                  - generic [ref=f51e2071]: Trip length
+                  - generic [ref=f51e2072]: 3–10d
+                - generic [ref=f51e2073]:
+                  - generic [ref=f51e2077]: Budget
+                  - generic [ref=f51e2078]: Comfortable – Moderate
+                - generic [ref=f51e2079]:
+                  - generic [ref=f51e2083]: Climate
+                  - generic [ref=f51e2084]: Cool, Cold or snowy, Mild
+              - generic [ref=f51e2085]: "Main experiences: Old Montréal · Mont-Royal · Notre-Dame Basilica · Québec City old town"
+              - generic [ref=f51e2086]: "Suited to: Couple, Family, Friends"
+              - button "See score breakdown" [ref=f51e2087] [cursor=pointer]
+              - button "View My Trip" [ref=f51e2088] [cursor=pointer]
+    - contentinfo [ref=f51e41]:
+      - generic [ref=f51e42]:
+        - paragraph [ref=f51e43]: TravelUp
+        - paragraph [ref=f51e46]: Helping unsure travellers discover where to go next.
+        - paragraph [ref=f51e47]: All budgets, climates, seasons, itineraries and packing suggestions are indicative estimates, not live information. Always verify visa requirements, entry conditions, safety and travel advisories using official government sources for your citizenship.
+        - generic [ref=f51e48]:
+          - link "About & disclaimer" [ref=f51e49] [cursor=pointer]:
+            - /url: /about
+          - link "Home" [ref=f51e50] [cursor=pointer]:
+            - /url: /
+  - region "Notifications (F8)":
+    - list

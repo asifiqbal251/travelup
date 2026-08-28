@@ -1,0 +1,174 @@
+- generic [ref=f81e4]:
+  - generic [ref=f81e5]:
+    - banner [ref=f81e6]:
+      - generic [ref=f81e7]:
+        - link "TravelUp" [ref=f81e8] [cursor=pointer]:
+          - /url: /
+        - navigation [ref=f81e12]:
+          - link "Home" [ref=f81e13] [cursor=pointer]:
+            - /url: /
+          - link "About" [ref=f81e14] [cursor=pointer]:
+            - /url: /about
+          - button "Clear My Data" [ref=f81e15] [cursor=pointer]
+    - main [ref=f81e16]:
+      - generic [ref=f81e734]:
+        - generic [ref=f81e735]:
+          - generic [ref=f81e736]:
+            - heading "Your top 3 matches" [level=1] [ref=f81e737]
+            - paragraph [ref=f81e738]: Final scores combine your preference fit with travel practicality for your trip length. Estimates only.
+          - button "Revise" [ref=f81e739] [cursor=pointer]
+        - paragraph [ref=f81e743]: Scores are estimates based on your preferences and curated destination data, not live availability or flight schedules. Always verify visa and entry requirements through official government sources for your citizenship.
+        - generic [ref=f81e744]:
+          - article [ref=f81e745]:
+            - generic [ref=f81e746]:
+              - img "Kelowna and the Okanagan Valley, Canada" [ref=f81e748]
+              - generic [ref=f81e749]: 93/100
+              - generic [ref=f81e750]: Strong match
+              - generic [ref=f81e751]:
+                - heading "Kelowna and the Okanagan Valley" [level=2] [ref=f81e752]
+                - paragraph [ref=f81e756]: Canada · Okanagan Valley, British Columbia, Canada
+            - generic [ref=f81e757]:
+              - region "Travel fit" [ref=f81e758]:
+                - generic [ref=f81e759]:
+                  - heading "Travel fit" [level=3] [ref=f81e760]
+                  - 'status "Travel fit: Good fit" [ref=f81e761]': Good fit
+                - generic [ref=f81e762]:
+                  - generic [ref=f81e763]:
+                    - term [ref=f81e764]: How you'll travel
+                    - definition [ref=f81e765]: Drive
+                  - generic [ref=f81e766]:
+                    - term [ref=f81e767]: Travel time
+                    - definition [ref=f81e768]: About 4.5 hours each way
+                  - generic [ref=f81e769]:
+                    - term [ref=f81e770]: Time at destination
+                    - definition [ref=f81e771]: About 6.5 days
+              - list [ref=f81e772]:
+                - listitem [ref=f81e773]:
+                  - generic [ref=f81e774]: •
+                  - text: Great for nature, relaxation
+                - listitem [ref=f81e775]:
+                  - generic [ref=f81e776]: •
+                  - text: Peak season in August
+                - listitem [ref=f81e777]:
+                  - generic [ref=f81e778]: •
+                  - text: Fits your selected budget level
+              - generic [ref=f81e779]:
+                - generic [ref=f81e780]:
+                  - generic [ref=f81e784]: Trip length
+                  - generic [ref=f81e785]: 2–5d
+                - generic [ref=f81e786]:
+                  - generic [ref=f81e790]: Budget
+                  - generic [ref=f81e791]: Moderate – Comfortable – Premium
+                - generic [ref=f81e792]:
+                  - generic [ref=f81e796]: Climate
+                  - generic [ref=f81e797]: Warm, Mild
+              - generic [ref=f81e798]: "Main experiences: Okanagan wine tours · Kelowna waterfront beaches · Knox Mountain hike · Orchard fruit stands"
+              - generic [ref=f81e799]: "Suited to: Solo, Couple, Friends, Family"
+              - button "See score breakdown" [ref=f81e800] [cursor=pointer]
+              - button "View My Trip" [ref=f81e801] [cursor=pointer]
+          - article [ref=f81e802]:
+            - generic [ref=f81e803]:
+              - img "Tofino, Canada" [ref=f81e805]
+              - generic [ref=f81e806]: 88/100
+              - generic [ref=f81e807]: Strong match
+              - generic [ref=f81e808]:
+                - heading "Tofino" [level=2] [ref=f81e809]
+                - paragraph [ref=f81e813]: Canada · West Coast Vancouver Island, British Columbia, Canada
+            - generic [ref=f81e814]:
+              - region "Travel fit" [ref=f81e815]:
+                - generic [ref=f81e816]:
+                  - heading "Travel fit" [level=3] [ref=f81e817]
+                  - 'status "Travel fit: Good fit" [ref=f81e818]': Good fit
+                - generic [ref=f81e819]:
+                  - generic [ref=f81e820]:
+                    - term [ref=f81e821]: How you'll travel
+                    - definition [ref=f81e822]: Ferry + drive
+                  - generic [ref=f81e823]:
+                    - term [ref=f81e824]: Travel time
+                    - definition [ref=f81e825]: About 6 hours each way
+                  - generic [ref=f81e826]:
+                    - term [ref=f81e827]: Time at destination
+                    - definition [ref=f81e828]: About 6.5 days
+              - list [ref=f81e829]:
+                - listitem [ref=f81e830]:
+                  - generic [ref=f81e831]: •
+                  - text: Great for nature, relaxation
+                - listitem [ref=f81e832]:
+                  - generic [ref=f81e833]: •
+                  - text: Peak season in August
+                - listitem [ref=f81e834]:
+                  - generic [ref=f81e835]: •
+                  - text: Fits your selected budget level
+              - generic [ref=f81e836]:
+                - generic [ref=f81e837]:
+                  - generic [ref=f81e841]: Trip length
+                  - generic [ref=f81e842]: 3–5d
+                - generic [ref=f81e843]:
+                  - generic [ref=f81e847]: Budget
+                  - generic [ref=f81e848]: Moderate – Comfortable – Premium
+                - generic [ref=f81e849]:
+                  - generic [ref=f81e853]: Climate
+                  - generic [ref=f81e854]: Mild, Cool
+              - generic [ref=f81e855]: "Main experiences: Long Beach · Pacific Rim National Park trails · Surfing lessons · Storm watching"
+              - generic [ref=f81e856]: "Suited to: Solo, Couple, Friends, Family"
+              - button "See score breakdown" [ref=f81e857] [cursor=pointer]
+              - button "View My Trip" [ref=f81e858] [cursor=pointer]
+          - article [ref=f81e859]:
+            - generic [ref=f81e860]:
+              - img "Victoria, Canada" [ref=f81e862]
+              - generic [ref=f81e863]: 80/100
+              - generic [ref=f81e864]: Strong match
+              - generic [ref=f81e865]:
+                - heading "Victoria" [level=2] [ref=f81e866]
+                - paragraph [ref=f81e870]: Canada · Vancouver Island, British Columbia, Canada
+            - generic [ref=f81e871]:
+              - region "Travel fit" [ref=f81e872]:
+                - generic [ref=f81e873]:
+                  - heading "Travel fit" [level=3] [ref=f81e874]
+                  - 'status "Travel fit: Good fit" [ref=f81e875]': Good fit
+                - generic [ref=f81e876]:
+                  - generic [ref=f81e877]:
+                    - term [ref=f81e878]: How you'll travel
+                    - definition [ref=f81e879]: Ferry + ground transfer
+                  - generic [ref=f81e880]:
+                    - term [ref=f81e881]: Travel time
+                    - definition [ref=f81e882]: About 4 hours each way
+                  - generic [ref=f81e883]:
+                    - term [ref=f81e884]: Time at destination
+                    - definition [ref=f81e885]: About 6.5 days
+              - list [ref=f81e886]:
+                - listitem [ref=f81e887]:
+                  - generic [ref=f81e888]: •
+                  - text: Great for nature, relaxation
+                - listitem [ref=f81e889]:
+                  - generic [ref=f81e890]: •
+                  - text: Peak season in August
+                - listitem [ref=f81e891]:
+                  - generic [ref=f81e892]: •
+                  - text: Fits your selected budget level
+              - generic [ref=f81e893]:
+                - generic [ref=f81e894]:
+                  - generic [ref=f81e898]: Trip length
+                  - generic [ref=f81e899]: 2–4d
+                - generic [ref=f81e900]:
+                  - generic [ref=f81e904]: Budget
+                  - generic [ref=f81e905]: Moderate – Comfortable
+                - generic [ref=f81e906]:
+                  - generic [ref=f81e910]: Climate
+                  - generic [ref=f81e911]: Mild, Cool
+              - generic [ref=f81e912]: "Main experiences: Butchart Gardens · Inner Harbour · Fisherman's Wharf · Royal BC Museum"
+              - generic [ref=f81e913]: "Suited to: Solo, Couple, Friends, Family"
+              - button "See score breakdown" [ref=f81e914] [cursor=pointer]
+              - button "View My Trip" [ref=f81e915] [cursor=pointer]
+    - contentinfo [ref=f81e41]:
+      - generic [ref=f81e42]:
+        - paragraph [ref=f81e43]: TravelUp
+        - paragraph [ref=f81e46]: Helping unsure travellers discover where to go next.
+        - paragraph [ref=f81e47]: All budgets, climates, seasons, itineraries and packing suggestions are indicative estimates, not live information. Always verify visa requirements, entry conditions, safety and travel advisories using official government sources for your citizenship.
+        - generic [ref=f81e48]:
+          - link "About & disclaimer" [ref=f81e49] [cursor=pointer]:
+            - /url: /about
+          - link "Home" [ref=f81e50] [cursor=pointer]:
+            - /url: /
+  - region "Notifications (F8)":
+    - list

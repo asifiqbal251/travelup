@@ -1,0 +1,174 @@
+- generic [ref=f108e4]:
+  - generic [ref=f108e5]:
+    - banner [ref=f108e6]:
+      - generic [ref=f108e7]:
+        - link "TravelUp" [ref=f108e8] [cursor=pointer]:
+          - /url: /
+        - navigation [ref=f108e12]:
+          - link "Home" [ref=f108e13] [cursor=pointer]:
+            - /url: /
+          - link "About" [ref=f108e14] [cursor=pointer]:
+            - /url: /about
+          - button "Clear My Data" [ref=f108e15] [cursor=pointer]
+    - main [ref=f108e16]:
+      - generic [ref=f108e2338]:
+        - generic [ref=f108e2339]:
+          - generic [ref=f108e2340]:
+            - heading "Your top 3 matches" [level=1] [ref=f108e2341]
+            - paragraph [ref=f108e2342]: Final scores combine your preference fit with travel practicality for your trip length. Estimates only.
+          - button "Revise" [ref=f108e2343] [cursor=pointer]
+        - paragraph [ref=f108e2347]: Scores are estimates based on your preferences and curated destination data, not live availability or flight schedules. Always verify visa and entry requirements through official government sources for your citizenship.
+        - generic [ref=f108e2348]:
+          - article [ref=f108e2349]:
+            - generic [ref=f108e2350]:
+              - img "Victoria, Canada" [ref=f108e2352]
+              - generic [ref=f108e2353]: 93/100
+              - generic [ref=f108e2354]: Strong match
+              - generic [ref=f108e2355]:
+                - heading "Victoria" [level=2] [ref=f108e2356]
+                - paragraph [ref=f108e2360]: Canada · Vancouver Island, British Columbia, Canada
+            - generic [ref=f108e2361]:
+              - region "Travel fit" [ref=f108e2362]:
+                - generic [ref=f108e2363]:
+                  - heading "Travel fit" [level=3] [ref=f108e2364]
+                  - 'status "Travel fit: Good fit" [ref=f108e2365]': Good fit
+                - generic [ref=f108e2366]:
+                  - generic [ref=f108e2367]:
+                    - term [ref=f108e2368]: How you'll travel
+                    - definition [ref=f108e2369]: Ferry + ground transfer
+                  - generic [ref=f108e2370]:
+                    - term [ref=f108e2371]: Travel time
+                    - definition [ref=f108e2372]: About 4 hours each way
+                  - generic [ref=f108e2373]:
+                    - term [ref=f108e2374]: Time at destination
+                    - definition [ref=f108e2375]: About 3.5 days
+              - list [ref=f108e2376]:
+                - listitem [ref=f108e2377]:
+                  - generic [ref=f108e2378]: •
+                  - text: Great for nature, food, relaxation
+                - listitem [ref=f108e2379]:
+                  - generic [ref=f108e2380]: •
+                  - text: Peak season in May
+                - listitem [ref=f108e2381]:
+                  - generic [ref=f108e2382]: •
+                  - text: Fits your selected budget level
+              - generic [ref=f108e2383]:
+                - generic [ref=f108e2384]:
+                  - generic [ref=f108e2388]: Trip length
+                  - generic [ref=f108e2389]: 2–4d
+                - generic [ref=f108e2390]:
+                  - generic [ref=f108e2394]: Budget
+                  - generic [ref=f108e2395]: Moderate – Comfortable
+                - generic [ref=f108e2396]:
+                  - generic [ref=f108e2400]: Climate
+                  - generic [ref=f108e2401]: Mild, Cool
+              - generic [ref=f108e2402]: "Main experiences: Butchart Gardens · Inner Harbour · Fisherman's Wharf · Royal BC Museum"
+              - generic [ref=f108e2403]: "Suited to: Solo, Couple, Friends, Family"
+              - button "See score breakdown" [ref=f108e2404] [cursor=pointer]
+              - button "View My Trip" [ref=f108e2405] [cursor=pointer]
+          - article [ref=f108e2406]:
+            - generic [ref=f108e2407]:
+              - img "Napa and Sonoma, United States" [ref=f108e2409]
+              - generic [ref=f108e2410]: 93/100
+              - generic [ref=f108e2411]: Strong match
+              - generic [ref=f108e2412]:
+                - heading "Napa and Sonoma" [level=2] [ref=f108e2413]
+                - paragraph [ref=f108e2417]: United States · North Bay, California, United States
+            - generic [ref=f108e2418]:
+              - region "Travel fit" [ref=f108e2419]:
+                - generic [ref=f108e2420]:
+                  - heading "Travel fit" [level=3] [ref=f108e2421]
+                  - 'status "Travel fit: Good fit" [ref=f108e2422]': Good fit
+                - generic [ref=f108e2423]:
+                  - generic [ref=f108e2424]:
+                    - term [ref=f108e2425]: How you'll travel
+                    - definition [ref=f108e2426]: Drive or transfer from a Bay Area gateway
+                  - generic [ref=f108e2427]:
+                    - term [ref=f108e2428]: Travel time
+                    - definition [ref=f108e2429]: About 6.3 hours each way
+                  - generic [ref=f108e2430]:
+                    - term [ref=f108e2431]: Time at destination
+                    - definition [ref=f108e2432]: About 3 days
+              - list [ref=f108e2433]:
+                - listitem [ref=f108e2434]:
+                  - generic [ref=f108e2435]: •
+                  - text: Great for nature, food, relaxation
+                - listitem [ref=f108e2436]:
+                  - generic [ref=f108e2437]: •
+                  - text: Peak season in May
+                - listitem [ref=f108e2438]:
+                  - generic [ref=f108e2439]: •
+                  - text: Close to your moderate budget
+              - generic [ref=f108e2440]:
+                - generic [ref=f108e2441]:
+                  - generic [ref=f108e2445]: Trip length
+                  - generic [ref=f108e2446]: 2–4d
+                - generic [ref=f108e2447]:
+                  - generic [ref=f108e2451]: Budget
+                  - generic [ref=f108e2452]: Comfortable – Premium
+                - generic [ref=f108e2453]:
+                  - generic [ref=f108e2457]: Climate
+                  - generic [ref=f108e2458]: Warm, Mild
+              - generic [ref=f108e2459]: "Main experiences: Napa Valley wine tasting · Sonoma Plaza · Hot air balloon ride · Culinary walking tour"
+              - generic [ref=f108e2460]: "Suited to: Solo, Couple, Friends"
+              - button "See score breakdown" [ref=f108e2461] [cursor=pointer]
+              - button "View My Trip" [ref=f108e2462] [cursor=pointer]
+          - article [ref=f108e2463]:
+            - generic [ref=f108e2464]:
+              - img "San Diego, United States" [ref=f108e2466]
+              - generic [ref=f108e2467]: 88/100
+              - generic [ref=f108e2468]: Strong match
+              - generic [ref=f108e2469]:
+                - heading "San Diego" [level=2] [ref=f108e2470]
+                - paragraph [ref=f108e2474]: United States · Southern California, United States
+            - generic [ref=f108e2475]:
+              - region "Travel fit" [ref=f108e2476]:
+                - generic [ref=f108e2477]:
+                  - heading "Travel fit" [level=3] [ref=f108e2478]
+                  - 'status "Travel fit: Good fit" [ref=f108e2479]': Good fit
+                - generic [ref=f108e2480]:
+                  - generic [ref=f108e2481]:
+                    - term [ref=f108e2482]: How you'll travel
+                    - definition [ref=f108e2483]: Flight, train or drive depending on origin
+                  - generic [ref=f108e2484]:
+                    - term [ref=f108e2485]: Travel time
+                    - definition [ref=f108e2486]: About 5.6 hours each way
+                  - generic [ref=f108e2487]:
+                    - term [ref=f108e2488]: Time at destination
+                    - definition [ref=f108e2489]: About 3 days
+              - list [ref=f108e2490]:
+                - listitem [ref=f108e2491]:
+                  - generic [ref=f108e2492]: •
+                  - text: Great for food, relaxation
+                - listitem [ref=f108e2493]:
+                  - generic [ref=f108e2494]: •
+                  - text: Peak season in May
+                - listitem [ref=f108e2495]:
+                  - generic [ref=f108e2496]: •
+                  - text: Fits your selected budget level
+              - generic [ref=f108e2497]:
+                - generic [ref=f108e2498]:
+                  - generic [ref=f108e2502]: Trip length
+                  - generic [ref=f108e2503]: 2–5d
+                - generic [ref=f108e2504]:
+                  - generic [ref=f108e2508]: Budget
+                  - generic [ref=f108e2509]: Moderate – Comfortable – Premium
+                - generic [ref=f108e2510]:
+                  - generic [ref=f108e2514]: Climate
+                  - generic [ref=f108e2515]: Warm, Mild
+              - generic [ref=f108e2516]: "Main experiences: Balboa Park and San Diego Zoo · La Jolla Cove · Gaslamp Quarter · Coronado Beach"
+              - generic [ref=f108e2517]: "Suited to: Solo, Couple, Friends, Family"
+              - button "See score breakdown" [ref=f108e2518] [cursor=pointer]
+              - button "View My Trip" [ref=f108e2519] [cursor=pointer]
+    - contentinfo [ref=f108e57]:
+      - generic [ref=f108e58]:
+        - paragraph [ref=f108e59]: TravelUp
+        - paragraph [ref=f108e62]: Helping unsure travellers discover where to go next.
+        - paragraph [ref=f108e63]: All budgets, climates, seasons, itineraries and packing suggestions are indicative estimates, not live information. Always verify visa requirements, entry conditions, safety and travel advisories using official government sources for your citizenship.
+        - generic [ref=f108e64]:
+          - link "About & disclaimer" [ref=f108e65] [cursor=pointer]:
+            - /url: /about
+          - link "Home" [ref=f108e66] [cursor=pointer]:
+            - /url: /
+  - region "Notifications (F8)":
+    - list

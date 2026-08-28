@@ -1,0 +1,59 @@
+- generic [ref=f84e4]:
+  - generic [ref=f84e5]:
+    - banner [ref=f84e6]:
+      - generic [ref=f84e7]:
+        - link "TravelUp" [ref=f84e8] [cursor=pointer]:
+          - /url: /
+        - navigation [ref=f84e12]:
+          - link "Home" [ref=f84e13] [cursor=pointer]:
+            - /url: /
+          - link "About" [ref=f84e14] [cursor=pointer]:
+            - /url: /about
+          - button "Clear My Data" [ref=f84e15] [cursor=pointer]
+    - main [ref=f84e16]:
+      - generic [ref=f84e17]:
+        - generic [ref=f84e18]:
+          - generic [ref=f84e19]:
+            - generic [ref=f84e20]: Step 2 of 7
+            - generic [ref=f84e21]: Timing
+          - progressbar [ref=f84e22]
+        - generic [ref=f84e24]:
+          - generic [ref=f84e25]:
+            - heading "When and for how long" [level=1] [ref=f84e26]
+            - paragraph [ref=f84e27]: Month helps us match the right season.
+            - generic [ref=f84e28]:
+              - generic [ref=f84e29]:
+                - text: Preferred travel month
+                - combobox "Preferred travel month" [ref=f84e30] [cursor=pointer]:
+                  - generic: Flexible / anytime
+              - generic [ref=f84e33]:
+                - generic [ref=f84e34]:
+                  - text: "Total trip length:"
+                  - generic [ref=f84e35]: 3 days
+                - paragraph [ref=f84e36]: Include all travel time—from leaving home until returning—including flights, driving, trains, buses, ferries and transfers.
+                - generic "Total trip length in days" [ref=f84e38]:
+                  - slider [ref=f84e41]
+                - generic [ref=f84e42]:
+                  - generic [ref=f84e43]: 3 days
+                  - generic [ref=f84e44]: 14 days
+              - generic [ref=f84e45]:
+                - text: May we recommend destinations inside your country of residence?
+                - radiogroup "May we recommend destinations inside your country of residence?" [ref=f84e46]:
+                  - radio "Both domestic and international" [checked] [ref=f84e47] [cursor=pointer]
+                  - radio "International only" [ref=f84e49] [cursor=pointer]
+                  - radio "Domestic only" [ref=f84e51] [cursor=pointer]
+          - generic [ref=f84e53]:
+            - button "Back" [ref=f84e54] [cursor=pointer]
+            - button "Next" [active] [ref=f84e55] [cursor=pointer]
+    - contentinfo [ref=f84e56]:
+      - generic [ref=f84e57]:
+        - paragraph [ref=f84e58]: TravelUp
+        - paragraph [ref=f84e61]: Helping unsure travellers discover where to go next.
+        - paragraph [ref=f84e62]: All budgets, climates, seasons, itineraries and packing suggestions are indicative estimates, not live information. Always verify visa requirements, entry conditions, safety and travel advisories using official government sources for your citizenship.
+        - generic [ref=f84e63]:
+          - link "About & disclaimer" [ref=f84e64] [cursor=pointer]:
+            - /url: /about
+          - link "Home" [ref=f84e65] [cursor=pointer]:
+            - /url: /
+  - region "Notifications (F8)":
+    - list

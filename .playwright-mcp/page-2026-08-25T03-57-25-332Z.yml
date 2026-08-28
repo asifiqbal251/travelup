@@ -1,0 +1,174 @@
+- generic [ref=f63e4]:
+  - generic [ref=f63e5]:
+    - banner [ref=f63e6]:
+      - generic [ref=f63e7]:
+        - link "TravelUp" [ref=f63e8] [cursor=pointer]:
+          - /url: /
+        - navigation [ref=f63e12]:
+          - link "Home" [ref=f63e13] [cursor=pointer]:
+            - /url: /
+          - link "About" [ref=f63e14] [cursor=pointer]:
+            - /url: /about
+          - button "Clear My Data" [ref=f63e15] [cursor=pointer]
+    - main [ref=f63e16]:
+      - generic [ref=f63e736]:
+        - generic [ref=f63e737]:
+          - generic [ref=f63e738]:
+            - heading "Your top 3 matches" [level=1] [ref=f63e739]
+            - paragraph [ref=f63e740]: Final scores combine your preference fit with travel practicality for your trip length. Estimates only.
+          - button "Revise" [ref=f63e741] [cursor=pointer]
+        - paragraph [ref=f63e745]: Scores are estimates based on your preferences and curated destination data, not live availability or flight schedules. Always verify visa and entry requirements through official government sources for your citizenship.
+        - generic [ref=f63e746]:
+          - article [ref=f63e747]:
+            - generic [ref=f63e748]:
+              - img "Istanbul & Cappadocia, Türkiye, Türkiye" [ref=f63e750]
+              - generic [ref=f63e751]: 93/100
+              - generic [ref=f63e752]: Strong match
+              - generic [ref=f63e753]:
+                - heading "Istanbul & Cappadocia, Türkiye" [level=2] [ref=f63e754]
+                - paragraph [ref=f63e758]: Türkiye · Western Asia
+            - generic [ref=f63e759]:
+              - region "Travel fit" [ref=f63e760]:
+                - generic [ref=f63e761]:
+                  - heading "Travel fit" [level=3] [ref=f63e762]
+                  - 'status "Travel fit: Good fit" [ref=f63e763]': Good fit
+                - generic [ref=f63e764]:
+                  - generic [ref=f63e765]:
+                    - term [ref=f63e766]: How you'll travel
+                    - definition [ref=f63e767]: International flight + local transport
+                  - generic [ref=f63e768]:
+                    - term [ref=f63e769]: Travel time
+                    - definition [ref=f63e770]: About 18.3 hours each way
+                  - generic [ref=f63e771]:
+                    - term [ref=f63e772]: Time at destination
+                    - definition [ref=f63e773]: About 10 days
+              - list [ref=f63e774]:
+                - listitem [ref=f63e775]:
+                  - generic [ref=f63e776]: •
+                  - text: Great for history and culture, food, cities
+                - listitem [ref=f63e777]:
+                  - generic [ref=f63e778]: •
+                  - text: Peak season in September
+                - listitem [ref=f63e779]:
+                  - generic [ref=f63e780]: •
+                  - text: Fits your selected budget level
+              - generic [ref=f63e781]:
+                - generic [ref=f63e782]:
+                  - generic [ref=f63e786]: Trip length
+                  - generic [ref=f63e787]: 6–12d
+                - generic [ref=f63e788]:
+                  - generic [ref=f63e792]: Budget
+                  - generic [ref=f63e793]: Budget – Moderate – Comfortable
+                - generic [ref=f63e794]:
+                  - generic [ref=f63e798]: Climate
+                  - generic [ref=f63e799]: Mild, Cool
+              - generic [ref=f63e800]: "Main experiences: Hagia Sophia and Blue Mosque · Cappadocia hot air balloon · Grand Bazaar · Turkish bath (hammam)"
+              - generic [ref=f63e801]: "Suited to: Solo, Couple, Friends, Family"
+              - button "See score breakdown" [ref=f63e802] [cursor=pointer]
+              - button "View My Trip" [ref=f63e803] [cursor=pointer]
+          - article [ref=f63e804]:
+            - generic [ref=f63e805]:
+              - img "Lisbon & Porto, Portugal, Portugal" [ref=f63e807]
+              - generic [ref=f63e808]: 90/100
+              - generic [ref=f63e809]: Strong match
+              - generic [ref=f63e810]:
+                - heading "Lisbon & Porto, Portugal" [level=2] [ref=f63e811]
+                - paragraph [ref=f63e815]: Portugal · Southern Europe
+            - generic [ref=f63e816]:
+              - region "Travel fit" [ref=f63e817]:
+                - generic [ref=f63e818]:
+                  - heading "Travel fit" [level=3] [ref=f63e819]
+                  - 'status "Travel fit: Good fit" [ref=f63e820]': Good fit
+                - generic [ref=f63e821]:
+                  - generic [ref=f63e822]:
+                    - term [ref=f63e823]: How you'll travel
+                    - definition [ref=f63e824]: International flight + local transport
+                  - generic [ref=f63e825]:
+                    - term [ref=f63e826]: Travel time
+                    - definition [ref=f63e827]: About 13 hours each way
+                  - generic [ref=f63e828]:
+                    - term [ref=f63e829]: Time at destination
+                    - definition [ref=f63e830]: About 12 days
+              - list [ref=f63e831]:
+                - listitem [ref=f63e832]:
+                  - generic [ref=f63e833]: •
+                  - text: Great for history and culture, food, cities
+                - listitem [ref=f63e834]:
+                  - generic [ref=f63e835]: •
+                  - text: Peak season in September
+                - listitem [ref=f63e836]:
+                  - generic [ref=f63e837]: •
+                  - text: Fits your selected budget level
+              - generic [ref=f63e838]:
+                - generic [ref=f63e839]:
+                  - generic [ref=f63e843]: Trip length
+                  - generic [ref=f63e844]: 5–12d
+                - generic [ref=f63e845]:
+                  - generic [ref=f63e849]: Budget
+                  - generic [ref=f63e850]: Budget – Moderate – Comfortable
+                - generic [ref=f63e851]:
+                  - generic [ref=f63e855]: Climate
+                  - generic [ref=f63e856]: Mild, Warm
+              - generic [ref=f63e857]: "Main experiences: Tram 28 through Alfama · Pastel de nata and port wine · Douro Valley · Belem and Lisbon waterfront"
+              - generic [ref=f63e858]: "Suited to: Solo, Couple, Friends, Family"
+              - button "See score breakdown" [ref=f63e859] [cursor=pointer]
+              - button "View My Trip" [ref=f63e860] [cursor=pointer]
+          - article [ref=f63e861]:
+            - generic [ref=f63e862]:
+              - img "Mexico City, Mexico" [ref=f63e864]
+              - generic [ref=f63e865]: 85/100
+              - generic [ref=f63e866]: Strong match
+              - generic [ref=f63e867]:
+                - heading "Mexico City" [level=2] [ref=f63e868]
+                - paragraph [ref=f63e872]: Mexico · Central Mexico
+            - generic [ref=f63e873]:
+              - region "Travel fit" [ref=f63e874]:
+                - generic [ref=f63e875]:
+                  - heading "Travel fit" [level=3] [ref=f63e876]
+                  - 'status "Travel fit: Good fit" [ref=f63e877]': Good fit
+                - generic [ref=f63e878]:
+                  - generic [ref=f63e879]:
+                    - term [ref=f63e880]: How you'll travel
+                    - definition [ref=f63e881]: International flight + local transport
+                  - generic [ref=f63e882]:
+                    - term [ref=f63e883]: Travel time
+                    - definition [ref=f63e884]: About 8.4 hours each way
+                  - generic [ref=f63e885]:
+                    - term [ref=f63e886]: Time at destination
+                    - definition [ref=f63e887]: About 12 days
+              - list [ref=f63e888]:
+                - listitem [ref=f63e889]:
+                  - generic [ref=f63e890]: •
+                  - text: Great for history and culture, food, cities
+                - listitem [ref=f63e891]:
+                  - generic [ref=f63e892]: •
+                  - text: Peak season in September
+                - listitem [ref=f63e893]:
+                  - generic [ref=f63e894]: •
+                  - text: Fits your selected budget level
+              - generic [ref=f63e895]:
+                - generic [ref=f63e896]:
+                  - generic [ref=f63e900]: Trip length
+                  - generic [ref=f63e901]: 3–9d
+                - generic [ref=f63e902]:
+                  - generic [ref=f63e906]: Budget
+                  - generic [ref=f63e907]: Moderate – Comfortable – Budget
+                - generic [ref=f63e908]:
+                  - generic [ref=f63e912]: Climate
+                  - generic [ref=f63e913]: Mild
+              - generic [ref=f63e914]: "Main experiences: Zócalo · Teotihuacán pyramids · Frida Kahlo museum · Xochimilco"
+              - generic [ref=f63e915]: "Suited to: Solo, Couple, Friends, Family"
+              - button "See score breakdown" [ref=f63e916] [cursor=pointer]
+              - button "View My Trip" [ref=f63e917] [cursor=pointer]
+    - contentinfo [ref=f63e41]:
+      - generic [ref=f63e42]:
+        - paragraph [ref=f63e43]: TravelUp
+        - paragraph [ref=f63e46]: Helping unsure travellers discover where to go next.
+        - paragraph [ref=f63e47]: All budgets, climates, seasons, itineraries and packing suggestions are indicative estimates, not live information. Always verify visa requirements, entry conditions, safety and travel advisories using official government sources for your citizenship.
+        - generic [ref=f63e48]:
+          - link "About & disclaimer" [ref=f63e49] [cursor=pointer]:
+            - /url: /about
+          - link "Home" [ref=f63e50] [cursor=pointer]:
+            - /url: /
+  - region "Notifications (F8)":
+    - list

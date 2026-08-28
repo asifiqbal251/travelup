@@ -1,0 +1,51 @@
+- generic [ref=f93e4]:
+  - generic [ref=f93e5]:
+    - banner [ref=f93e6]:
+      - generic [ref=f93e7]:
+        - link "TravelUp" [ref=f93e8] [cursor=pointer]:
+          - /url: /
+        - navigation [ref=f93e12]:
+          - link "Home" [ref=f93e13] [cursor=pointer]:
+            - /url: /
+          - link "About" [ref=f93e14] [cursor=pointer]:
+            - /url: /about
+          - button "Clear My Data" [ref=f93e15] [cursor=pointer]
+    - main [ref=f93e16]:
+      - generic [ref=f93e17]:
+        - generic [ref=f93e18]:
+          - generic [ref=f93e19]:
+            - generic [ref=f93e20]: Step 6 of 7
+            - generic [ref=f93e21]: Details
+          - progressbar [ref=f93e22]
+        - generic [ref=f93e24]:
+          - generic [ref=f93e164]:
+            - heading "A few more details" [level=1] [ref=f93e165]
+            - paragraph [ref=f93e166]: Optional fields help us refine your matches.
+            - generic [ref=f93e167]:
+              - generic [ref=f93e168]:
+                - text: Dietary considerations
+                - combobox "Dietary considerations" [ref=f93e169] [cursor=pointer]:
+                  - generic: None
+              - generic [ref=f93e172]:
+                - text: Previously visited countries (optional)
+                - textbox "Previously visited countries (optional)" [ref=f93e173]:
+                  - /placeholder: Comma-separated, e.g. Japan, Portugal
+              - generic [ref=f93e174]:
+                - text: Destinations to exclude (optional)
+                - textbox "Destinations to exclude (optional)" [ref=f93e175]:
+                  - /placeholder: Comma-separated, e.g. Iceland, Thailand
+          - generic [ref=f93e53]:
+            - button "Back" [ref=f93e54] [cursor=pointer]
+            - button "Next" [active] [ref=f93e55] [cursor=pointer]
+    - contentinfo [ref=f93e56]:
+      - generic [ref=f93e57]:
+        - paragraph [ref=f93e58]: TravelUp
+        - paragraph [ref=f93e61]: Helping unsure travellers discover where to go next.
+        - paragraph [ref=f93e62]: All budgets, climates, seasons, itineraries and packing suggestions are indicative estimates, not live information. Always verify visa requirements, entry conditions, safety and travel advisories using official government sources for your citizenship.
+        - generic [ref=f93e63]:
+          - link "About & disclaimer" [ref=f93e64] [cursor=pointer]:
+            - /url: /about
+          - link "Home" [ref=f93e65] [cursor=pointer]:
+            - /url: /
+  - region "Notifications (F8)":
+    - list

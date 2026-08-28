@@ -1,0 +1,139 @@
+- generic [ref=f39e4]:
+  - generic [ref=f39e5]:
+    - banner [ref=f39e6]:
+      - generic [ref=f39e7]:
+        - link "TravelUp" [ref=f39e8] [cursor=pointer]:
+          - /url: /
+        - navigation [ref=f39e12]:
+          - link "Home" [ref=f39e13] [cursor=pointer]:
+            - /url: /
+          - link "About" [ref=f39e14] [cursor=pointer]:
+            - /url: /about
+          - button "Clear My Data" [ref=f39e15] [cursor=pointer]
+    - main [ref=f39e16]:
+      - generic [ref=f39e916]:
+        - button "Back to recommendations" [ref=f39e917] [cursor=pointer]
+        - generic [ref=f39e918]:
+          - img "Las Vegas, United States" [ref=f39e920]
+          - generic [ref=f39e922]:
+            - heading "Las Vegas" [level=1] [ref=f39e923]
+            - paragraph [ref=f39e924]: United States · Mojave Desert, Nevada, United States
+        - generic [ref=f39e925]:
+          - tablist [ref=f39e926]:
+            - tab "Itinerary" [selected] [ref=f39e927] [cursor=pointer]
+            - tab "Packing" [ref=f39e928] [cursor=pointer]
+            - tab "Overview" [ref=f39e929] [cursor=pointer]
+          - tabpanel "Itinerary" [ref=f39e930]:
+            - generic [ref=f39e931]:
+              - paragraph [ref=f39e932]: A suggested 4-day plan including outbound and return travel. Indicative only — verify opening hours and tickets before you go.
+              - button "Day 1 Fremont Street & Old Vegas Las Vegas Light intensity Cities Food View details" [ref=f39e1015] [cursor=pointer]:
+                - generic [ref=f39e935]:
+                  - generic [ref=f39e936]:
+                    - generic [ref=f39e937]: Day 1
+                    - heading "Fremont Street & Old Vegas" [level=3] [ref=f39e938]
+                    - generic [ref=f39e939]: Las Vegas
+                  - generic [ref=f39e940]: Light intensity
+                - generic [ref=f39e941]:
+                  - generic [ref=f39e942]: Cities
+                  - generic [ref=f39e943]: Food
+                - generic [ref=f39e944]: View details
+              - generic [ref=f39e977]:
+                - button "Day 2 The Strip Las Vegas Light intensity Cities Photography Hide details" [expanded] [active] [ref=f39e1016] [cursor=pointer]:
+                  - generic [ref=f39e979]:
+                    - generic [ref=f39e980]:
+                      - generic [ref=f39e981]: Day 2
+                      - heading "The Strip" [level=3] [ref=f39e982]
+                      - generic [ref=f39e983]: Las Vegas
+                    - generic [ref=f39e984]: Light intensity
+                  - generic [ref=f39e985]:
+                    - generic [ref=f39e986]: Cities
+                    - generic [ref=f39e987]: Photography
+                  - generic [ref=f39e988]: Hide details
+                - generic [ref=f39e1017]:
+                  - list [ref=f39e1018]:
+                    - listitem [ref=f39e1019]:
+                      - generic [ref=f39e1020]:
+                        - generic [ref=f39e1021]: 08:00–11:00
+                        - generic [ref=f39e1022]: ~3 hr
+                        - generic [ref=f39e1023]: Morning
+                      - generic [ref=f39e1024]:
+                        - generic [ref=f39e1025]: Explore the Strip's resort architecture.
+                        - paragraph
+                    - listitem [ref=f39e1026]:
+                      - generic [ref=f39e1027]: Late morning
+                      - generic [ref=f39e1029]:
+                        - generic [ref=f39e1030]: Mid-morning break
+                        - paragraph [ref=f39e1031]: A short break or local transit between stops.
+                    - listitem [ref=f39e1032]:
+                      - generic [ref=f39e1033]:
+                        - generic [ref=f39e1034]: 12:30–14:00
+                        - generic [ref=f39e1035]: ~1.5 hr
+                        - generic [ref=f39e1036]: Lunch
+                      - generic [ref=f39e1037]:
+                        - generic [ref=f39e1038]: Local bite
+                        - paragraph [ref=f39e1039]: Celebrity-chef dining on the Strip.
+                    - listitem [ref=f39e1040]:
+                      - generic [ref=f39e1041]:
+                        - generic [ref=f39e1042]: 14:00–18:00
+                        - generic [ref=f39e1043]: ~4 hr
+                        - generic [ref=f39e1044]: Afternoon
+                      - generic [ref=f39e1045]:
+                        - generic [ref=f39e1046]: Shopping and resort-hopping along the Strip.
+                        - paragraph
+                    - listitem [ref=f39e1047]:
+                      - generic [ref=f39e1048]:
+                        - generic [ref=f39e1049]: 18:30–21:30
+                        - generic [ref=f39e1050]: ~3 hr
+                        - generic [ref=f39e1051]: Evening
+                      - generic [ref=f39e1052]:
+                        - generic [ref=f39e1053]: Dinner on the Strip and the Bellagio Fountains after dark.
+                        - paragraph
+                  - generic [ref=f39e1054]:
+                    - generic [ref=f39e1055]:
+                      - generic [ref=f39e1056]: Getting around
+                      - generic [ref=f39e1057]: Walking, monorail, taxi or rideshare.
+                    - generic [ref=f39e1058]:
+                      - generic [ref=f39e1059]: Plan ahead
+                      - generic [ref=f39e1060]: Confirm opening hours and book popular tickets before you travel.
+                    - generic [ref=f39e1061]:
+                      - generic [ref=f39e1062]: Optional swap
+                      - generic [ref=f39e1063]: A headline show on an evening when sufficient time is available.
+                    - generic [ref=f39e1064]:
+                      - generic [ref=f39e1065]: Overnight
+                      - generic [ref=f39e1066]: Overnight in Las Vegas.
+              - button "Day 3 · Flexible Flexible day Las Vegas Light intensity Slow start Café and laundry Easy stroll View details" [ref=f39e990] [cursor=pointer]:
+                - generic [ref=f39e991]:
+                  - generic [ref=f39e992]:
+                    - generic [ref=f39e993]: Day 3 · Flexible
+                    - heading "Flexible day" [level=3] [ref=f39e994]
+                    - generic [ref=f39e995]: Las Vegas
+                  - generic [ref=f39e996]: Light intensity
+                - generic [ref=f39e997]:
+                  - generic [ref=f39e998]: Slow start
+                  - generic [ref=f39e999]: Café and laundry
+                  - generic [ref=f39e1000]: Easy stroll
+                - generic [ref=f39e1001]: View details
+              - 'button "Day 4 Return: Las Vegas → Los Angeles Las Vegas Moderate intensity Breakfast Return Arrive home View details" [ref=f39e1003] [cursor=pointer]':
+                - generic [ref=f39e1004]:
+                  - generic [ref=f39e1005]:
+                    - generic [ref=f39e1006]: Day 4
+                    - 'heading "Return: Las Vegas → Los Angeles" [level=3] [ref=f39e1007]'
+                    - generic [ref=f39e1008]: Las Vegas
+                  - generic [ref=f39e1009]: Moderate intensity
+                - generic [ref=f39e1010]:
+                  - generic [ref=f39e1011]: Breakfast
+                  - generic [ref=f39e1012]: Return
+                  - generic [ref=f39e1013]: Arrive home
+                - generic [ref=f39e1014]: View details
+    - contentinfo [ref=f39e41]:
+      - generic [ref=f39e42]:
+        - paragraph [ref=f39e43]: TravelUp
+        - paragraph [ref=f39e46]: Helping unsure travellers discover where to go next.
+        - paragraph [ref=f39e47]: All budgets, climates, seasons, itineraries and packing suggestions are indicative estimates, not live information. Always verify visa requirements, entry conditions, safety and travel advisories using official government sources for your citizenship.
+        - generic [ref=f39e48]:
+          - link "About & disclaimer" [ref=f39e49] [cursor=pointer]:
+            - /url: /about
+          - link "Home" [ref=f39e50] [cursor=pointer]:
+            - /url: /
+  - region "Notifications (F8)":
+    - list

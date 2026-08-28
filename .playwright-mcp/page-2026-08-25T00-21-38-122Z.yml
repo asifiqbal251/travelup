@@ -1,0 +1,69 @@
+- generic [ref=f55e4]:
+  - generic [ref=f55e5]:
+    - banner [ref=f55e6]:
+      - generic [ref=f55e7]:
+        - link "TravelUp" [ref=f55e8] [cursor=pointer]:
+          - /url: /
+        - navigation [ref=f55e12]:
+          - link "Home" [ref=f55e13] [cursor=pointer]:
+            - /url: /
+          - link "About" [ref=f55e14] [cursor=pointer]:
+            - /url: /about
+          - button "Clear My Data" [ref=f55e15] [cursor=pointer]
+    - main [ref=f55e16]:
+      - generic [ref=f55e17]:
+        - generic [ref=f55e18]:
+          - generic [ref=f55e19]:
+            - generic [ref=f55e20]: Step 7 of 7
+            - generic [ref=f55e21]: Review
+          - progressbar [ref=f55e22]
+        - generic [ref=f55e24]:
+          - generic [ref=f55e694]:
+            - heading "Review your answers" [level=1] [ref=f55e695]
+            - paragraph [ref=f55e696]: Make any changes before we find your matches.
+            - generic [ref=f55e698]:
+              - generic [ref=f55e699]:
+                - term [ref=f55e700]: Residence / departure / citizenship
+                - definition [ref=f55e701]: United States · New York · United States
+              - generic [ref=f55e702]:
+                - term [ref=f55e703]: When
+                - definition [ref=f55e704]: Flexible
+              - generic [ref=f55e705]:
+                - term [ref=f55e706]: Total trip
+                - definition [ref=f55e707]: 3 days, including travel time
+              - generic [ref=f55e708]:
+                - term [ref=f55e709]: Domestic
+                - definition [ref=f55e710]: International only
+              - generic [ref=f55e711]:
+                - term [ref=f55e712]: Traveller & budget
+                - definition [ref=f55e713]: Solo · Premium
+              - generic [ref=f55e714]:
+                - term [ref=f55e715]: Interests
+                - definition [ref=f55e716]: Photography
+              - generic [ref=f55e717]:
+                - term [ref=f55e718]: Climate / pace / activity
+                - definition [ref=f55e719]: Cold or snowy · Fast-paced · Highly active
+              - generic [ref=f55e720]:
+                - term [ref=f55e721]: Dietary
+                - definition [ref=f55e722]: None
+              - generic [ref=f55e723]:
+                - term [ref=f55e724]: Visited
+                - definition [ref=f55e725]: None
+              - generic [ref=f55e726]:
+                - term [ref=f55e727]: Excluded
+                - definition [ref=f55e728]: None
+          - generic [ref=f55e39]:
+            - button "Back" [ref=f55e548] [cursor=pointer]
+            - button "See my recommendations" [active] [ref=f55e729] [cursor=pointer]
+    - contentinfo [ref=f55e41]:
+      - generic [ref=f55e42]:
+        - paragraph [ref=f55e43]: TravelUp
+        - paragraph [ref=f55e46]: Helping unsure travellers discover where to go next.
+        - paragraph [ref=f55e47]: All budgets, climates, seasons, itineraries and packing suggestions are indicative estimates, not live information. Always verify visa requirements, entry conditions, safety and travel advisories using official government sources for your citizenship.
+        - generic [ref=f55e48]:
+          - link "About & disclaimer" [ref=f55e49] [cursor=pointer]:
+            - /url: /about
+          - link "Home" [ref=f55e50] [cursor=pointer]:
+            - /url: /
+  - region "Notifications (F8)":
+    - list

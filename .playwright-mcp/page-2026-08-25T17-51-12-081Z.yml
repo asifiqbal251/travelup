@@ -1,0 +1,174 @@
+- generic [ref=f162e4]:
+  - generic [ref=f162e5]:
+    - banner [ref=f162e6]:
+      - generic [ref=f162e7]:
+        - link "TravelUp" [ref=f162e8] [cursor=pointer]:
+          - /url: /
+        - navigation [ref=f162e12]:
+          - link "Home" [ref=f162e13] [cursor=pointer]:
+            - /url: /
+          - link "About" [ref=f162e14] [cursor=pointer]:
+            - /url: /about
+          - button "Clear My Data" [ref=f162e15] [cursor=pointer]
+    - main [ref=f162e16]:
+      - generic [ref=f162e103]:
+        - generic [ref=f162e104]:
+          - generic [ref=f162e105]:
+            - heading "Your top 3 matches" [level=1] [ref=f162e106]
+            - paragraph [ref=f162e107]: Final scores combine your preference fit with travel practicality for your trip length. Estimates only.
+          - button "Revise" [ref=f162e108] [cursor=pointer]
+        - paragraph [ref=f162e112]: Scores are estimates based on your preferences and curated destination data, not live availability or flight schedules. Always verify visa and entry requirements through official government sources for your citizenship.
+        - generic [ref=f162e113]:
+          - article [ref=f162e114]:
+            - generic [ref=f162e115]:
+              - img "New York City, United States" [ref=f162e117]
+              - generic [ref=f162e118]: 92/100
+              - generic [ref=f162e119]: Strong match
+              - generic [ref=f162e120]:
+                - heading "New York City" [level=2] [ref=f162e121]
+                - paragraph [ref=f162e125]: United States · Northeast, United States
+            - generic [ref=f162e126]:
+              - region "Travel fit" [ref=f162e127]:
+                - generic [ref=f162e128]:
+                  - heading "Travel fit" [level=3] [ref=f162e129]
+                  - 'status "Travel fit: Good fit" [ref=f162e130]': Good fit
+                - generic [ref=f162e131]:
+                  - generic [ref=f162e132]:
+                    - term [ref=f162e133]: How you'll travel
+                    - definition [ref=f162e134]: Domestic flight + local public transportation
+                  - generic [ref=f162e135]:
+                    - term [ref=f162e136]: Travel time
+                    - definition [ref=f162e137]: About 2.3 hours each way
+                  - generic [ref=f162e138]:
+                    - term [ref=f162e139]: Time at destination
+                    - definition [ref=f162e140]: About 5 days
+              - list [ref=f162e141]:
+                - listitem [ref=f162e142]:
+                  - generic [ref=f162e143]: •
+                  - text: Great for food, photography, cities
+                - listitem [ref=f162e144]:
+                  - generic [ref=f162e145]: •
+                  - text: Enjoyable in your chosen month
+                - listitem [ref=f162e146]:
+                  - generic [ref=f162e147]: •
+                  - text: Fits your selected budget level
+              - generic [ref=f162e148]:
+                - generic [ref=f162e149]:
+                  - generic [ref=f162e153]: Trip length
+                  - generic [ref=f162e154]: 3–9d
+                - generic [ref=f162e155]:
+                  - generic [ref=f162e159]: Budget
+                  - generic [ref=f162e160]: Premium – Comfortable
+                - generic [ref=f162e161]:
+                  - generic [ref=f162e165]: Climate
+                  - generic [ref=f162e166]: Mild, Cool, Cold or snowy
+              - generic [ref=f162e167]: "Main experiences: Central Park · Times Square · Statue of Liberty · the MET"
+              - generic [ref=f162e168]: "Suited to: Solo, Couple, Friends, Family"
+              - button "See score breakdown" [ref=f162e169] [cursor=pointer]
+              - button "View My Trip" [ref=f162e170] [cursor=pointer]
+          - article [ref=f162e171]:
+            - generic [ref=f162e172]:
+              - img "Mexico City, Mexico" [ref=f162e174]
+              - generic [ref=f162e175]: 92/100
+              - generic [ref=f162e176]: Strong match
+              - generic [ref=f162e177]:
+                - heading "Mexico City" [level=2] [ref=f162e178]
+                - paragraph [ref=f162e182]: Mexico · Central Mexico
+            - generic [ref=f162e183]:
+              - region "Travel fit" [ref=f162e184]:
+                - generic [ref=f162e185]:
+                  - heading "Travel fit" [level=3] [ref=f162e186]
+                  - 'status "Travel fit: Good fit" [ref=f162e187]': Good fit
+                - generic [ref=f162e188]:
+                  - generic [ref=f162e189]:
+                    - term [ref=f162e190]: How you'll travel
+                    - definition [ref=f162e191]: International flight + local transport
+                  - generic [ref=f162e192]:
+                    - term [ref=f162e193]: Travel time
+                    - definition [ref=f162e194]: About 8.4 hours each way
+                  - generic [ref=f162e195]:
+                    - term [ref=f162e196]: Time at destination
+                    - definition [ref=f162e197]: About 3 days
+              - list [ref=f162e198]:
+                - listitem [ref=f162e199]:
+                  - generic [ref=f162e200]: •
+                  - text: Great for food, photography, cities
+                - listitem [ref=f162e201]:
+                  - generic [ref=f162e202]: •
+                  - text: Enjoyable in your chosen month
+                - listitem [ref=f162e203]:
+                  - generic [ref=f162e204]: •
+                  - text: Fits your selected budget level
+              - generic [ref=f162e205]:
+                - generic [ref=f162e206]:
+                  - generic [ref=f162e210]: Trip length
+                  - generic [ref=f162e211]: 3–9d
+                - generic [ref=f162e212]:
+                  - generic [ref=f162e216]: Budget
+                  - generic [ref=f162e217]: Moderate – Comfortable – Budget
+                - generic [ref=f162e218]:
+                  - generic [ref=f162e222]: Climate
+                  - generic [ref=f162e223]: Mild
+              - generic [ref=f162e224]: "Main experiences: Zócalo · Teotihuacán pyramids · Frida Kahlo museum · Xochimilco"
+              - generic [ref=f162e225]: "Suited to: Solo, Couple, Friends, Family"
+              - button "See score breakdown" [ref=f162e226] [cursor=pointer]
+              - button "View My Trip" [ref=f162e227] [cursor=pointer]
+          - article [ref=f162e228]:
+            - generic [ref=f162e229]:
+              - img "Bogotá, Colombia" [ref=f162e231]
+              - generic [ref=f162e232]: 90/100
+              - generic [ref=f162e233]: Strong match
+              - generic [ref=f162e234]:
+                - heading "Bogotá" [level=2] [ref=f162e235]
+                - paragraph [ref=f162e239]: Colombia · Central Andes, Colombia
+            - generic [ref=f162e240]:
+              - region "Travel fit" [ref=f162e241]:
+                - generic [ref=f162e242]:
+                  - heading "Travel fit" [level=3] [ref=f162e243]
+                  - 'status "Travel fit: Good fit" [ref=f162e244]': Good fit
+                - generic [ref=f162e245]:
+                  - generic [ref=f162e246]:
+                    - term [ref=f162e247]: How you'll travel
+                    - definition [ref=f162e248]: International flight + local transport
+                  - generic [ref=f162e249]:
+                    - term [ref=f162e250]: Travel time
+                    - definition [ref=f162e251]: About 11.3 hours each way
+                  - generic [ref=f162e252]:
+                    - term [ref=f162e253]: Time at destination
+                    - definition [ref=f162e254]: About 3 days
+              - list [ref=f162e255]:
+                - listitem [ref=f162e256]:
+                  - generic [ref=f162e257]: •
+                  - text: Great for food, photography, cities
+                - listitem [ref=f162e258]:
+                  - generic [ref=f162e259]: •
+                  - text: Enjoyable in your chosen month
+                - listitem [ref=f162e260]:
+                  - generic [ref=f162e261]: •
+                  - text: Fits your selected budget level
+              - generic [ref=f162e262]:
+                - generic [ref=f162e263]:
+                  - generic [ref=f162e267]: Trip length
+                  - generic [ref=f162e268]: 3–9d
+                - generic [ref=f162e269]:
+                  - generic [ref=f162e273]: Budget
+                  - generic [ref=f162e274]: Moderate – Comfortable
+                - generic [ref=f162e275]:
+                  - generic [ref=f162e279]: Climate
+                  - generic [ref=f162e280]: Mild, Cool
+              - generic [ref=f162e281]: "Main experiences: La Candelaria · Gold Museum · Monserrate cable car · Usaquén market"
+              - generic [ref=f162e282]: "Suited to: Solo, Friends, Couple"
+              - button "See score breakdown" [ref=f162e283] [cursor=pointer]
+              - button "View My Trip" [ref=f162e284] [cursor=pointer]
+    - contentinfo [ref=f162e57]:
+      - generic [ref=f162e58]:
+        - paragraph [ref=f162e59]: TravelUp
+        - paragraph [ref=f162e62]: Helping unsure travellers discover where to go next.
+        - paragraph [ref=f162e63]: All budgets, climates, seasons, itineraries and packing suggestions are indicative estimates, not live information. Always verify visa requirements, entry conditions, safety and travel advisories using official government sources for your citizenship.
+        - generic [ref=f162e64]:
+          - link "About & disclaimer" [ref=f162e65] [cursor=pointer]:
+            - /url: /about
+          - link "Home" [ref=f162e66] [cursor=pointer]:
+            - /url: /
+  - region "Notifications (F8)":
+    - list

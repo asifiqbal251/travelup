@@ -1,0 +1,139 @@
+- generic [ref=f6e4]:
+  - generic [ref=f6e5]:
+    - banner [ref=f6e6]:
+      - generic [ref=f6e7]:
+        - link "TravelUp" [ref=f6e8] [cursor=pointer]:
+          - /url: /
+        - navigation [ref=f6e12]:
+          - link "Home" [ref=f6e13] [cursor=pointer]:
+            - /url: /
+          - link "About" [ref=f6e14] [cursor=pointer]:
+            - /url: /about
+          - button "Clear My Data" [ref=f6e15] [cursor=pointer]
+    - main [ref=f6e16]:
+      - generic [ref=f6e916]:
+        - button "Back to recommendations" [ref=f6e917] [cursor=pointer]
+        - generic [ref=f6e918]:
+          - img "Tofino, Canada" [ref=f6e920]
+          - generic [ref=f6e922]:
+            - heading "Tofino" [level=1] [ref=f6e923]
+            - paragraph [ref=f6e924]: Canada · West Coast Vancouver Island, British Columbia, Canada
+        - generic [ref=f6e925]:
+          - tablist [ref=f6e926]:
+            - tab "Itinerary" [selected] [ref=f6e927] [cursor=pointer]
+            - tab "Packing" [ref=f6e928] [cursor=pointer]
+            - tab "Overview" [ref=f6e929] [cursor=pointer]
+          - tabpanel "Itinerary" [ref=f6e930]:
+            - generic [ref=f6e931]:
+              - paragraph [ref=f6e932]: A suggested 4-day plan including outbound and return travel. Indicative only — verify opening hours and tickets before you go.
+              - 'button "Day 1 · Travel Outbound: Vancouver → Tofino In transit Light intensity Departure Arrival Dinner and rest View details" [ref=f6e1026] [cursor=pointer]':
+                - generic [ref=f6e935]:
+                  - generic [ref=f6e936]:
+                    - generic [ref=f6e937]: Day 1 · Travel
+                    - 'heading "Outbound: Vancouver → Tofino" [level=3] [ref=f6e938]'
+                    - generic [ref=f6e939]: In transit
+                  - generic [ref=f6e940]: Light intensity
+                - generic [ref=f6e941]:
+                  - generic [ref=f6e942]: Departure
+                  - generic [ref=f6e943]: Arrival
+                  - generic [ref=f6e944]: Dinner and rest
+                - generic [ref=f6e945]: View details
+              - generic [ref=f6e989]:
+                - button "Day 2 Long Beach & Pacific Rim Tofino Light intensity Beaches Nature Hide details" [expanded] [active] [ref=f6e1065] [cursor=pointer]:
+                  - generic [ref=f6e991]:
+                    - generic [ref=f6e992]:
+                      - generic [ref=f6e993]: Day 2
+                      - heading "Long Beach & Pacific Rim" [level=3] [ref=f6e994]
+                      - generic [ref=f6e995]: Tofino
+                    - generic [ref=f6e996]: Light intensity
+                  - generic [ref=f6e997]:
+                    - generic [ref=f6e998]: Beaches
+                    - generic [ref=f6e999]: Nature
+                  - generic [ref=f6e1000]: Hide details
+                - generic [ref=f6e1066]:
+                  - list [ref=f6e1067]:
+                    - listitem [ref=f6e1068]:
+                      - generic [ref=f6e1069]:
+                        - generic [ref=f6e1070]: 08:00–11:00
+                        - generic [ref=f6e1071]: ~3 hr
+                        - generic [ref=f6e1072]: Morning
+                      - generic [ref=f6e1073]:
+                        - generic [ref=f6e1074]: Long Beach walk
+                        - paragraph [ref=f6e1075]: Walk the long sweep of Long Beach.
+                    - listitem [ref=f6e1076]:
+                      - generic [ref=f6e1077]: Late morning
+                      - generic [ref=f6e1079]:
+                        - generic [ref=f6e1080]: Mid-morning break
+                        - paragraph [ref=f6e1081]: A short break or local transit between stops.
+                    - listitem [ref=f6e1082]:
+                      - generic [ref=f6e1083]:
+                        - generic [ref=f6e1084]: 12:30–14:00
+                        - generic [ref=f6e1085]: ~1.5 hr
+                        - generic [ref=f6e1086]: Lunch
+                      - generic [ref=f6e1087]:
+                        - generic [ref=f6e1088]: Local bite
+                        - paragraph [ref=f6e1089]: West coast chowder at a village restaurant.
+                    - listitem [ref=f6e1090]:
+                      - generic [ref=f6e1091]:
+                        - generic [ref=f6e1092]: 14:00–18:00
+                        - generic [ref=f6e1093]: ~4 hr
+                        - generic [ref=f6e1094]: Afternoon
+                      - generic [ref=f6e1095]:
+                        - generic [ref=f6e1096]: Rainforest trail walk in Pacific Rim…
+                        - paragraph [ref=f6e1097]: Rainforest trail walk in Pacific Rim National Park.
+                    - listitem [ref=f6e1098]:
+                      - generic [ref=f6e1099]:
+                        - generic [ref=f6e1100]: 18:30–21:30
+                        - generic [ref=f6e1101]: ~3 hr
+                        - generic [ref=f6e1102]: Evening
+                      - generic [ref=f6e1103]:
+                        - generic [ref=f6e1104]: Dinner in Tofino village
+                        - paragraph [ref=f6e1105]: Dinner in Tofino village.
+                  - generic [ref=f6e1106]:
+                    - generic [ref=f6e1107]:
+                      - generic [ref=f6e1108]: Getting around
+                      - generic [ref=f6e1109]: Rental car or local taxi/shuttle, with walking in the village.
+                    - generic [ref=f6e1110]:
+                      - generic [ref=f6e1111]: Plan ahead
+                      - generic [ref=f6e1112]: Confirm opening hours and book popular tickets before you travel.
+                    - generic [ref=f6e1113]:
+                      - generic [ref=f6e1114]: Optional swap
+                      - generic [ref=f6e1115]: Swap for “Surfing or storm watching” if it suits your pace.
+                    - generic [ref=f6e1116]:
+                      - generic [ref=f6e1117]: Overnight
+                      - generic [ref=f6e1118]: Overnight in Tofino.
+              - button "Day 3 Hot Springs Cove day trip Tofino Active intensity Nature Wildlife View details" [ref=f6e1002] [cursor=pointer]:
+                - generic [ref=f6e1003]:
+                  - generic [ref=f6e1004]:
+                    - generic [ref=f6e1005]: Day 3
+                    - heading "Hot Springs Cove day trip" [level=3] [ref=f6e1006]
+                    - generic [ref=f6e1007]: Tofino
+                  - generic [ref=f6e1008]: Active intensity
+                - generic [ref=f6e1009]:
+                  - generic [ref=f6e1010]: Nature
+                  - generic [ref=f6e1011]: Wildlife
+                - generic [ref=f6e1012]: View details
+              - 'button "Day 4 · Travel Return: Tofino → Vancouver In transit Light intensity Check-out Return Arrive home View details" [ref=f6e1119] [cursor=pointer]':
+                - generic [ref=f6e1015]:
+                  - generic [ref=f6e1016]:
+                    - generic [ref=f6e1017]: Day 4 · Travel
+                    - 'heading "Return: Tofino → Vancouver" [level=3] [ref=f6e1018]'
+                    - generic [ref=f6e1019]: In transit
+                  - generic [ref=f6e1020]: Light intensity
+                - generic [ref=f6e1021]:
+                  - generic [ref=f6e1022]: Check-out
+                  - generic [ref=f6e1023]: Return
+                  - generic [ref=f6e1024]: Arrive home
+                - generic [ref=f6e1025]: View details
+    - contentinfo [ref=f6e41]:
+      - generic [ref=f6e42]:
+        - paragraph [ref=f6e43]: TravelUp
+        - paragraph [ref=f6e46]: Helping unsure travellers discover where to go next.
+        - paragraph [ref=f6e47]: All budgets, climates, seasons, itineraries and packing suggestions are indicative estimates, not live information. Always verify visa requirements, entry conditions, safety and travel advisories using official government sources for your citizenship.
+        - generic [ref=f6e48]:
+          - link "About & disclaimer" [ref=f6e49] [cursor=pointer]:
+            - /url: /about
+          - link "Home" [ref=f6e50] [cursor=pointer]:
+            - /url: /
+  - region "Notifications (F8)":
+    - list

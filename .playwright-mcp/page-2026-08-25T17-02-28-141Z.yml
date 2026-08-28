@@ -1,0 +1,174 @@
+- generic [ref=f105e4]:
+  - generic [ref=f105e5]:
+    - banner [ref=f105e6]:
+      - generic [ref=f105e7]:
+        - link "TravelUp" [ref=f105e8] [cursor=pointer]:
+          - /url: /
+        - navigation [ref=f105e12]:
+          - link "Home" [ref=f105e13] [cursor=pointer]:
+            - /url: /
+          - link "About" [ref=f105e14] [cursor=pointer]:
+            - /url: /about
+          - button "Clear My Data" [ref=f105e15] [cursor=pointer]
+    - main [ref=f105e16]:
+      - generic [ref=f105e842]:
+        - generic [ref=f105e843]:
+          - generic [ref=f105e844]:
+            - heading "Your top 3 matches" [level=1] [ref=f105e845]
+            - paragraph [ref=f105e846]: Final scores combine your preference fit with travel practicality for your trip length. Estimates only.
+          - button "Revise" [ref=f105e847] [cursor=pointer]
+        - paragraph [ref=f105e851]: Scores are estimates based on your preferences and curated destination data, not live availability or flight schedules. Always verify visa and entry requirements through official government sources for your citizenship.
+        - generic [ref=f105e852]:
+          - article [ref=f105e853]:
+            - generic [ref=f105e854]:
+              - img "Mexico City, Mexico" [ref=f105e856]
+              - generic [ref=f105e857]: 97/100
+              - generic [ref=f105e858]: Strong match
+              - generic [ref=f105e859]:
+                - heading "Mexico City" [level=2] [ref=f105e860]
+                - paragraph [ref=f105e864]: Mexico · Central Mexico
+            - generic [ref=f105e865]:
+              - region "Travel fit" [ref=f105e866]:
+                - generic [ref=f105e867]:
+                  - heading "Travel fit" [level=3] [ref=f105e868]
+                  - 'status "Travel fit: Good fit" [ref=f105e869]': Good fit
+                - generic [ref=f105e870]:
+                  - generic [ref=f105e871]:
+                    - term [ref=f105e872]: How you'll travel
+                    - definition [ref=f105e873]: International flight + local transport
+                  - generic [ref=f105e874]:
+                    - term [ref=f105e875]: Travel time
+                    - definition [ref=f105e876]: About 8.4 hours each way
+                  - generic [ref=f105e877]:
+                    - term [ref=f105e878]: Time at destination
+                    - definition [ref=f105e879]: About 5 days
+              - list [ref=f105e880]:
+                - listitem [ref=f105e881]:
+                  - generic [ref=f105e882]: •
+                  - text: Great for photography, history and culture, cities
+                - listitem [ref=f105e883]:
+                  - generic [ref=f105e884]: •
+                  - text: Peak season in May
+                - listitem [ref=f105e885]:
+                  - generic [ref=f105e886]: •
+                  - text: Fits your selected budget level
+              - generic [ref=f105e887]:
+                - generic [ref=f105e888]:
+                  - generic [ref=f105e892]: Trip length
+                  - generic [ref=f105e893]: 3–9d
+                - generic [ref=f105e894]:
+                  - generic [ref=f105e898]: Budget
+                  - generic [ref=f105e899]: Moderate – Comfortable – Budget
+                - generic [ref=f105e900]:
+                  - generic [ref=f105e904]: Climate
+                  - generic [ref=f105e905]: Mild
+              - generic [ref=f105e906]: "Main experiences: Zócalo · Teotihuacán pyramids · Frida Kahlo museum · Xochimilco"
+              - generic [ref=f105e907]: "Suited to: Solo, Couple, Friends, Family"
+              - button "See score breakdown" [ref=f105e908] [cursor=pointer]
+              - button "View My Trip" [ref=f105e909] [cursor=pointer]
+          - article [ref=f105e910]:
+            - generic [ref=f105e911]:
+              - img "Buenos Aires, Argentina" [ref=f105e913]
+              - generic [ref=f105e914]: 96/100
+              - generic [ref=f105e915]: Strong match
+              - generic [ref=f105e916]:
+                - heading "Buenos Aires" [level=2] [ref=f105e917]
+                - paragraph [ref=f105e921]: Argentina · Pampas, Argentina
+            - generic [ref=f105e922]:
+              - region "Travel fit" [ref=f105e923]:
+                - generic [ref=f105e924]:
+                  - heading "Travel fit" [level=3] [ref=f105e925]
+                  - 'status "Travel fit: Manageable" [ref=f105e926]': Manageable
+                - generic [ref=f105e927]:
+                  - generic [ref=f105e928]:
+                    - term [ref=f105e929]: How you'll travel
+                    - definition [ref=f105e930]: International flight + local transport
+                  - generic [ref=f105e931]:
+                    - term [ref=f105e932]: Travel time
+                    - definition [ref=f105e933]: About 17.9 hours each way
+                  - generic [ref=f105e934]:
+                    - term [ref=f105e935]: Time at destination
+                    - definition [ref=f105e936]: About 3 days
+              - list [ref=f105e937]:
+                - listitem [ref=f105e938]:
+                  - generic [ref=f105e939]: •
+                  - text: Great for photography, history and culture, cities
+                - listitem [ref=f105e940]:
+                  - generic [ref=f105e941]: •
+                  - text: Peak season in May
+                - listitem [ref=f105e942]:
+                  - generic [ref=f105e943]: •
+                  - text: Fits your selected budget level
+              - generic [ref=f105e944]:
+                - generic [ref=f105e945]:
+                  - generic [ref=f105e949]: Trip length
+                  - generic [ref=f105e950]: 3–10d
+                - generic [ref=f105e951]:
+                  - generic [ref=f105e955]: Budget
+                  - generic [ref=f105e956]: Comfortable – Moderate
+                - generic [ref=f105e957]:
+                  - generic [ref=f105e961]: Climate
+                  - generic [ref=f105e962]: Mild
+              - generic [ref=f105e963]: "Main experiences: Recoleta cemetery · Casa Rosada · San Telmo fair · tango show"
+              - generic [ref=f105e964]: "Suited to: Solo, Couple, Friends"
+              - button "See score breakdown" [ref=f105e965] [cursor=pointer]
+              - button "View My Trip" [ref=f105e966] [cursor=pointer]
+          - article [ref=f105e967]:
+            - generic [ref=f105e968]:
+              - img "Beijing, China" [ref=f105e970]
+              - generic [ref=f105e971]: 95/100
+              - generic [ref=f105e972]: Strong match
+              - generic [ref=f105e973]:
+                - heading "Beijing" [level=2] [ref=f105e974]
+                - paragraph [ref=f105e978]: China · Northern China, China
+            - generic [ref=f105e979]:
+              - region "Travel fit" [ref=f105e980]:
+                - generic [ref=f105e981]:
+                  - heading "Travel fit" [level=3] [ref=f105e982]
+                  - 'status "Travel fit: Manageable" [ref=f105e983]': Manageable
+                - generic [ref=f105e984]:
+                  - generic [ref=f105e985]:
+                    - term [ref=f105e986]: How you'll travel
+                    - definition [ref=f105e987]: International flight + metro and taxis
+                  - generic [ref=f105e988]:
+                    - term [ref=f105e989]: Travel time
+                    - definition [ref=f105e990]: About 21 hours each way
+                  - generic [ref=f105e991]:
+                    - term [ref=f105e992]: Time at destination
+                    - definition [ref=f105e993]: About 3 days
+              - list [ref=f105e994]:
+                - listitem [ref=f105e995]:
+                  - generic [ref=f105e996]: •
+                  - text: Great for photography, history and culture, cities
+                - listitem [ref=f105e997]:
+                  - generic [ref=f105e998]: •
+                  - text: Peak season in May
+                - listitem [ref=f105e999]:
+                  - generic [ref=f105e1000]: •
+                  - text: Fits your selected budget level
+              - generic [ref=f105e1001]:
+                - generic [ref=f105e1002]:
+                  - generic [ref=f105e1006]: Trip length
+                  - generic [ref=f105e1007]: 4–7d
+                - generic [ref=f105e1008]:
+                  - generic [ref=f105e1012]: Budget
+                  - generic [ref=f105e1013]: Budget – Moderate – Comfortable – Premium
+                - generic [ref=f105e1014]:
+                  - generic [ref=f105e1018]: Climate
+                  - generic [ref=f105e1019]: Cold or snowy, Warm, Mild, Cool
+              - generic [ref=f105e1020]: "Main experiences: Great Wall at Mutianyu (primary) or Badaling (alternate) · Forbidden City (advance booking required) · Temple of Heaven · Hutong neighborhood walk"
+              - generic [ref=f105e1021]: "Suited to: Solo, Couple, Friends, Family"
+              - button "See score breakdown" [ref=f105e1022] [cursor=pointer]
+              - button "View My Trip" [ref=f105e1023] [cursor=pointer]
+    - contentinfo [ref=f105e41]:
+      - generic [ref=f105e42]:
+        - paragraph [ref=f105e43]: TravelUp
+        - paragraph [ref=f105e46]: Helping unsure travellers discover where to go next.
+        - paragraph [ref=f105e47]: All budgets, climates, seasons, itineraries and packing suggestions are indicative estimates, not live information. Always verify visa requirements, entry conditions, safety and travel advisories using official government sources for your citizenship.
+        - generic [ref=f105e48]:
+          - link "About & disclaimer" [ref=f105e49] [cursor=pointer]:
+            - /url: /about
+          - link "Home" [ref=f105e50] [cursor=pointer]:
+            - /url: /
+  - region "Notifications (F8)":
+    - list

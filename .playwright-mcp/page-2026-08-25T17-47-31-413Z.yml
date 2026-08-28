@@ -1,0 +1,69 @@
+- generic [ref=f159e4]:
+  - generic [ref=f159e5]:
+    - banner [ref=f159e6]:
+      - generic [ref=f159e7]:
+        - link "TravelUp" [ref=f159e8] [cursor=pointer]:
+          - /url: /
+        - navigation [ref=f159e12]:
+          - link "Home" [ref=f159e13] [cursor=pointer]:
+            - /url: /
+          - link "About" [ref=f159e14] [cursor=pointer]:
+            - /url: /about
+          - button "Clear My Data" [ref=f159e15] [cursor=pointer]
+    - main [ref=f159e16]:
+      - generic [ref=f159e17]:
+        - generic [ref=f159e18]:
+          - generic [ref=f159e19]:
+            - generic [ref=f159e20]: Step 7 of 7
+            - generic [ref=f159e21]: Review
+          - progressbar [ref=f159e22]
+        - generic [ref=f159e24]:
+          - generic [ref=f159e359]:
+            - heading "Review your answers" [level=1] [ref=f159e360]
+            - paragraph [ref=f159e361]: Make any changes before we find your matches.
+            - generic [ref=f159e363]:
+              - generic [ref=f159e364]:
+                - term [ref=f159e365]: Residence / departure / citizenship
+                - definition [ref=f159e366]: United States · San Francisco · United States
+              - generic [ref=f159e367]:
+                - term [ref=f159e368]: When
+                - definition [ref=f159e369]: Flexible
+              - generic [ref=f159e370]:
+                - term [ref=f159e371]: Total trip
+                - definition [ref=f159e372]: 4 days, including travel time
+              - generic [ref=f159e373]:
+                - term [ref=f159e374]: Domestic
+                - definition [ref=f159e375]: Both
+              - generic [ref=f159e376]:
+                - term [ref=f159e377]: Traveller & budget
+                - definition [ref=f159e378]: Couple · Moderate
+              - generic [ref=f159e379]:
+                - term [ref=f159e380]: Interests
+                - definition [ref=f159e381]: Food, Nature, Relaxation
+              - generic [ref=f159e382]:
+                - term [ref=f159e383]: Climate / pace / activity
+                - definition [ref=f159e384]: No preference · Balanced · Moderate
+              - generic [ref=f159e385]:
+                - term [ref=f159e386]: Dietary
+                - definition [ref=f159e387]: None
+              - generic [ref=f159e388]:
+                - term [ref=f159e389]: Visited
+                - definition [ref=f159e390]: None
+              - generic [ref=f159e391]:
+                - term [ref=f159e392]: Excluded
+                - definition [ref=f159e393]: None
+          - generic [ref=f159e39]:
+            - button "Back" [ref=f159e318] [cursor=pointer]
+            - button "See my recommendations" [active] [ref=f159e394] [cursor=pointer]
+    - contentinfo [ref=f159e41]:
+      - generic [ref=f159e42]:
+        - paragraph [ref=f159e43]: TravelUp
+        - paragraph [ref=f159e46]: Helping unsure travellers discover where to go next.
+        - paragraph [ref=f159e47]: All budgets, climates, seasons, itineraries and packing suggestions are indicative estimates, not live information. Always verify visa requirements, entry conditions, safety and travel advisories using official government sources for your citizenship.
+        - generic [ref=f159e48]:
+          - link "About & disclaimer" [ref=f159e49] [cursor=pointer]:
+            - /url: /about
+          - link "Home" [ref=f159e50] [cursor=pointer]:
+            - /url: /
+  - region "Notifications (F8)":
+    - list

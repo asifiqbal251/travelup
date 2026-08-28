@@ -1,0 +1,174 @@
+- generic [ref=f9e4]:
+  - generic [ref=f9e5]:
+    - banner [ref=f9e6]:
+      - generic [ref=f9e7]:
+        - link "TravelUp" [ref=f9e8] [cursor=pointer]:
+          - /url: /
+        - navigation [ref=f9e12]:
+          - link "Home" [ref=f9e13] [cursor=pointer]:
+            - /url: /
+          - link "About" [ref=f9e14] [cursor=pointer]:
+            - /url: /about
+          - button "Clear My Data" [ref=f9e15] [cursor=pointer]
+    - main [ref=f9e16]:
+      - generic [ref=f9e736]:
+        - generic [ref=f9e737]:
+          - generic [ref=f9e738]:
+            - heading "Your top 3 matches" [level=1] [ref=f9e739]
+            - paragraph [ref=f9e740]: Final scores combine your preference fit with travel practicality for your trip length. Estimates only.
+          - button "Revise" [ref=f9e741] [cursor=pointer]
+        - paragraph [ref=f9e745]: Scores are estimates based on your preferences and curated destination data, not live availability or flight schedules. Always verify visa and entry requirements through official government sources for your citizenship.
+        - generic [ref=f9e746]:
+          - article [ref=f9e747]:
+            - generic [ref=f9e748]:
+              - img "Kelowna and the Okanagan Valley, Canada" [ref=f9e750]
+              - generic [ref=f9e751]: 92/100
+              - generic [ref=f9e752]: Strong match
+              - generic [ref=f9e753]:
+                - heading "Kelowna and the Okanagan Valley" [level=2] [ref=f9e754]
+                - paragraph [ref=f9e758]: Canada · Okanagan Valley, British Columbia, Canada
+            - generic [ref=f9e759]:
+              - region "Travel fit" [ref=f9e760]:
+                - generic [ref=f9e761]:
+                  - heading "Travel fit" [level=3] [ref=f9e762]
+                  - 'status "Travel fit: Good fit" [ref=f9e763]': Good fit
+                - generic [ref=f9e764]:
+                  - generic [ref=f9e765]:
+                    - term [ref=f9e766]: How you'll travel
+                    - definition [ref=f9e767]: Drive
+                  - generic [ref=f9e768]:
+                    - term [ref=f9e769]: Travel time
+                    - definition [ref=f9e770]: About 4.5 hours each way
+                  - generic [ref=f9e771]:
+                    - term [ref=f9e772]: Time at destination
+                    - definition [ref=f9e773]: About 3.5 days
+              - list [ref=f9e774]:
+                - listitem [ref=f9e775]:
+                  - generic [ref=f9e776]: •
+                  - text: Great for nature, relaxation, photography
+                - listitem [ref=f9e777]:
+                  - generic [ref=f9e778]: •
+                  - text: Enjoyable in your chosen month
+                - listitem [ref=f9e779]:
+                  - generic [ref=f9e780]: •
+                  - text: Fits your selected budget level
+              - generic [ref=f9e781]:
+                - generic [ref=f9e782]:
+                  - generic [ref=f9e786]: Trip length
+                  - generic [ref=f9e787]: 2–5d
+                - generic [ref=f9e788]:
+                  - generic [ref=f9e792]: Budget
+                  - generic [ref=f9e793]: Moderate – Comfortable – Premium
+                - generic [ref=f9e794]:
+                  - generic [ref=f9e798]: Climate
+                  - generic [ref=f9e799]: Warm, Mild
+              - generic [ref=f9e800]: "Main experiences: Okanagan wine tours · Kelowna waterfront beaches · Knox Mountain hike · Orchard fruit stands"
+              - generic [ref=f9e801]: "Suited to: Solo, Couple, Friends, Family"
+              - button "See score breakdown" [ref=f9e802] [cursor=pointer]
+              - button "View My Trip" [ref=f9e803] [cursor=pointer]
+          - article [ref=f9e804]:
+            - generic [ref=f9e805]:
+              - img "Whistler, Canada" [ref=f9e807]
+              - generic [ref=f9e808]: 88/100
+              - generic [ref=f9e809]: Strong match
+              - generic [ref=f9e810]:
+                - heading "Whistler" [level=2] [ref=f9e811]
+                - paragraph [ref=f9e815]: Canada · Sea to Sky, British Columbia, Canada
+            - generic [ref=f9e816]:
+              - region "Travel fit" [ref=f9e817]:
+                - generic [ref=f9e818]:
+                  - heading "Travel fit" [level=3] [ref=f9e819]
+                  - 'status "Travel fit: Good fit" [ref=f9e820]': Good fit
+                - generic [ref=f9e821]:
+                  - generic [ref=f9e822]:
+                    - term [ref=f9e823]: How you'll travel
+                    - definition [ref=f9e824]: Drive or scheduled shuttle
+                  - generic [ref=f9e825]:
+                    - term [ref=f9e826]: Travel time
+                    - definition [ref=f9e827]: About 2 hours each way
+                  - generic [ref=f9e828]:
+                    - term [ref=f9e829]: Time at destination
+                    - definition [ref=f9e830]: About 4 days
+              - list [ref=f9e831]:
+                - listitem [ref=f9e832]:
+                  - generic [ref=f9e833]: •
+                  - text: Great for nature, relaxation, photography
+                - listitem [ref=f9e834]:
+                  - generic [ref=f9e835]: •
+                  - text: Enjoyable in your chosen month
+                - listitem [ref=f9e836]:
+                  - generic [ref=f9e837]: •
+                  - text: Fits your selected budget level
+              - generic [ref=f9e838]:
+                - generic [ref=f9e839]:
+                  - generic [ref=f9e843]: Trip length
+                  - generic [ref=f9e844]: 2–5d
+                - generic [ref=f9e845]:
+                  - generic [ref=f9e849]: Budget
+                  - generic [ref=f9e850]: Moderate – Comfortable – Premium
+                - generic [ref=f9e851]:
+                  - generic [ref=f9e855]: Climate
+                  - generic [ref=f9e856]: Cold or snowy, Cool, Mild
+              - generic [ref=f9e857]: "Main experiences: Peak 2 Peak Gondola (when operating) · Skiing and snowboarding · Lost Lake · Whistler Village"
+              - generic [ref=f9e858]: "Suited to: Solo, Couple, Friends, Family"
+              - button "See score breakdown" [ref=f9e859] [cursor=pointer]
+              - button "View My Trip" [ref=f9e860] [cursor=pointer]
+          - article [ref=f9e861]:
+            - generic [ref=f9e862]:
+              - img "Yosemite National Park, United States" [ref=f9e864]
+              - generic [ref=f9e865]: 87/100
+              - generic [ref=f9e866]: Strong match
+              - generic [ref=f9e867]:
+                - heading "Yosemite National Park" [level=2] [ref=f9e868]
+                - paragraph [ref=f9e872]: United States · Sierra Nevada, California, United States
+            - generic [ref=f9e873]:
+              - region "Travel fit" [ref=f9e874]:
+                - generic [ref=f9e875]:
+                  - heading "Travel fit" [level=3] [ref=f9e876]
+                  - 'status "Travel fit: Good fit" [ref=f9e877]': Good fit
+                - generic [ref=f9e878]:
+                  - generic [ref=f9e879]:
+                    - term [ref=f9e880]: How you'll travel
+                    - definition [ref=f9e881]: Drive or transfer from a California gateway
+                  - generic [ref=f9e882]:
+                    - term [ref=f9e883]: Travel time
+                    - definition [ref=f9e884]: About 8.9 hours each way
+                  - generic [ref=f9e885]:
+                    - term [ref=f9e886]: Time at destination
+                    - definition [ref=f9e887]: About 2 days
+              - list [ref=f9e888]:
+                - listitem [ref=f9e889]:
+                  - generic [ref=f9e890]: •
+                  - text: Great for nature, photography
+                - listitem [ref=f9e891]:
+                  - generic [ref=f9e892]: •
+                  - text: Enjoyable in your chosen month
+                - listitem [ref=f9e893]:
+                  - generic [ref=f9e894]: •
+                  - text: Fits your selected budget level
+              - generic [ref=f9e895]:
+                - generic [ref=f9e896]:
+                  - generic [ref=f9e900]: Trip length
+                  - generic [ref=f9e901]: 3–5d
+                - generic [ref=f9e902]:
+                  - generic [ref=f9e906]: Budget
+                  - generic [ref=f9e907]: Budget – Moderate – Comfortable
+                - generic [ref=f9e908]:
+                  - generic [ref=f9e912]: Climate
+                  - generic [ref=f9e913]: Cool, Mild, Cold or snowy
+              - generic [ref=f9e914]: "Main experiences: Yosemite Valley viewpoints · Glacier Point (seasonal) · Lower Yosemite Fall Trail · Mariposa Grove of giant sequoias"
+              - generic [ref=f9e915]: "Suited to: Solo, Couple, Friends, Family"
+              - button "See score breakdown" [ref=f9e916] [cursor=pointer]
+              - button "View My Trip" [ref=f9e917] [cursor=pointer]
+    - contentinfo [ref=f9e41]:
+      - generic [ref=f9e42]:
+        - paragraph [ref=f9e43]: TravelUp
+        - paragraph [ref=f9e46]: Helping unsure travellers discover where to go next.
+        - paragraph [ref=f9e47]: All budgets, climates, seasons, itineraries and packing suggestions are indicative estimates, not live information. Always verify visa requirements, entry conditions, safety and travel advisories using official government sources for your citizenship.
+        - generic [ref=f9e48]:
+          - link "About & disclaimer" [ref=f9e49] [cursor=pointer]:
+            - /url: /about
+          - link "Home" [ref=f9e50] [cursor=pointer]:
+            - /url: /
+  - region "Notifications (F8)":
+    - list

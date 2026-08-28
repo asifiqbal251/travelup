@@ -1,0 +1,174 @@
+- generic [ref=f45e4]:
+  - generic [ref=f45e5]:
+    - banner [ref=f45e6]:
+      - generic [ref=f45e7]:
+        - link "TravelUp" [ref=f45e8] [cursor=pointer]:
+          - /url: /
+        - navigation [ref=f45e12]:
+          - link "Home" [ref=f45e13] [cursor=pointer]:
+            - /url: /
+          - link "About" [ref=f45e14] [cursor=pointer]:
+            - /url: /about
+          - button "Clear My Data" [ref=f45e15] [cursor=pointer]
+    - main [ref=f45e16]:
+      - generic [ref=f45e736]:
+        - generic [ref=f45e737]:
+          - generic [ref=f45e738]:
+            - heading "Your top 3 matches" [level=1] [ref=f45e739]
+            - paragraph [ref=f45e740]: Final scores combine your preference fit with travel practicality for your trip length. Estimates only.
+          - button "Revise" [ref=f45e741] [cursor=pointer]
+        - paragraph [ref=f45e745]: Scores are estimates based on your preferences and curated destination data, not live availability or flight schedules. Always verify visa and entry requirements through official government sources for your citizenship.
+        - generic [ref=f45e746]:
+          - article [ref=f45e747]:
+            - generic [ref=f45e748]:
+              - img "Napa and Sonoma, United States" [ref=f45e750]
+              - generic [ref=f45e751]: 95/100
+              - generic [ref=f45e752]: Strong match
+              - generic [ref=f45e753]:
+                - heading "Napa and Sonoma" [level=2] [ref=f45e754]
+                - paragraph [ref=f45e758]: United States · North Bay, California, United States
+            - generic [ref=f45e759]:
+              - region "Travel fit" [ref=f45e760]:
+                - generic [ref=f45e761]:
+                  - heading "Travel fit" [level=3] [ref=f45e762]
+                  - 'status "Travel fit: Good fit" [ref=f45e763]': Good fit
+                - generic [ref=f45e764]:
+                  - generic [ref=f45e765]:
+                    - term [ref=f45e766]: How you'll travel
+                    - definition [ref=f45e767]: Drive
+                  - generic [ref=f45e768]:
+                    - term [ref=f45e769]: Travel time
+                    - definition [ref=f45e770]: About 1.5 hours each way
+                  - generic [ref=f45e771]:
+                    - term [ref=f45e772]: Time at destination
+                    - definition [ref=f45e773]: About 4 days
+              - list [ref=f45e774]:
+                - listitem [ref=f45e775]:
+                  - generic [ref=f45e776]: •
+                  - text: Great for food, nature, relaxation
+                - listitem [ref=f45e777]:
+                  - generic [ref=f45e778]: •
+                  - text: Enjoyable in your chosen month
+                - listitem [ref=f45e779]:
+                  - generic [ref=f45e780]: •
+                  - text: Fits your selected budget level
+              - generic [ref=f45e781]:
+                - generic [ref=f45e782]:
+                  - generic [ref=f45e786]: Trip length
+                  - generic [ref=f45e787]: 2–4d
+                - generic [ref=f45e788]:
+                  - generic [ref=f45e792]: Budget
+                  - generic [ref=f45e793]: Comfortable – Premium
+                - generic [ref=f45e794]:
+                  - generic [ref=f45e798]: Climate
+                  - generic [ref=f45e799]: Warm, Mild
+              - generic [ref=f45e800]: "Main experiences: Napa Valley wine tasting · Sonoma Plaza · Hot air balloon ride · Culinary walking tour"
+              - generic [ref=f45e801]: "Suited to: Solo, Couple, Friends"
+              - button "See score breakdown" [ref=f45e802] [cursor=pointer]
+              - button "View My Trip" [ref=f45e803] [cursor=pointer]
+          - article [ref=f45e804]:
+            - generic [ref=f45e805]:
+              - img "Kelowna and the Okanagan Valley, Canada" [ref=f45e807]
+              - generic [ref=f45e808]: 95/100
+              - generic [ref=f45e809]: Strong match
+              - generic [ref=f45e810]:
+                - heading "Kelowna and the Okanagan Valley" [level=2] [ref=f45e811]
+                - paragraph [ref=f45e815]: Canada · Okanagan Valley, British Columbia, Canada
+            - generic [ref=f45e816]:
+              - region "Travel fit" [ref=f45e817]:
+                - generic [ref=f45e818]:
+                  - heading "Travel fit" [level=3] [ref=f45e819]
+                  - 'status "Travel fit: Good fit" [ref=f45e820]': Good fit
+                - generic [ref=f45e821]:
+                  - generic [ref=f45e822]:
+                    - term [ref=f45e823]: How you'll travel
+                    - definition [ref=f45e824]: Drive or regional flight
+                  - generic [ref=f45e825]:
+                    - term [ref=f45e826]: Travel time
+                    - definition [ref=f45e827]: About 5 hours each way
+                  - generic [ref=f45e828]:
+                    - term [ref=f45e829]: Time at destination
+                    - definition [ref=f45e830]: About 4 days
+              - list [ref=f45e831]:
+                - listitem [ref=f45e832]:
+                  - generic [ref=f45e833]: •
+                  - text: Great for food, nature, relaxation
+                - listitem [ref=f45e834]:
+                  - generic [ref=f45e835]: •
+                  - text: Enjoyable in your chosen month
+                - listitem [ref=f45e836]:
+                  - generic [ref=f45e837]: •
+                  - text: Fits your selected budget level
+              - generic [ref=f45e838]:
+                - generic [ref=f45e839]:
+                  - generic [ref=f45e843]: Trip length
+                  - generic [ref=f45e844]: 2–5d
+                - generic [ref=f45e845]:
+                  - generic [ref=f45e849]: Budget
+                  - generic [ref=f45e850]: Moderate – Comfortable – Premium
+                - generic [ref=f45e851]:
+                  - generic [ref=f45e855]: Climate
+                  - generic [ref=f45e856]: Warm, Mild
+              - generic [ref=f45e857]: "Main experiences: Okanagan wine tours · Kelowna waterfront beaches · Knox Mountain hike · Orchard fruit stands"
+              - generic [ref=f45e858]: "Suited to: Solo, Couple, Friends, Family"
+              - button "See score breakdown" [ref=f45e859] [cursor=pointer]
+              - button "View My Trip" [ref=f45e860] [cursor=pointer]
+          - article [ref=f45e861]:
+            - generic [ref=f45e862]:
+              - img "Victoria, Canada" [ref=f45e864]
+              - generic [ref=f45e865]: 88/100
+              - generic [ref=f45e866]: Strong match
+              - generic [ref=f45e867]:
+                - heading "Victoria" [level=2] [ref=f45e868]
+                - paragraph [ref=f45e872]: Canada · Vancouver Island, British Columbia, Canada
+            - generic [ref=f45e873]:
+              - region "Travel fit" [ref=f45e874]:
+                - generic [ref=f45e875]:
+                  - heading "Travel fit" [level=3] [ref=f45e876]
+                  - 'status "Travel fit: Good fit" [ref=f45e877]': Good fit
+                - generic [ref=f45e878]:
+                  - generic [ref=f45e879]:
+                    - term [ref=f45e880]: How you'll travel
+                    - definition [ref=f45e881]: Ferry, short flight or ground connections depending on origin
+                  - generic [ref=f45e882]:
+                    - term [ref=f45e883]: Travel time
+                    - definition [ref=f45e884]: About 5.2 hours each way
+                  - generic [ref=f45e885]:
+                    - term [ref=f45e886]: Time at destination
+                    - definition [ref=f45e887]: About 3 days
+              - list [ref=f45e888]:
+                - listitem [ref=f45e889]:
+                  - generic [ref=f45e890]: •
+                  - text: Great for food, nature, relaxation
+                - listitem [ref=f45e891]:
+                  - generic [ref=f45e892]: •
+                  - text: Enjoyable in your chosen month
+                - listitem [ref=f45e893]:
+                  - generic [ref=f45e894]: •
+                  - text: Fits your selected budget level
+              - generic [ref=f45e895]:
+                - generic [ref=f45e896]:
+                  - generic [ref=f45e900]: Trip length
+                  - generic [ref=f45e901]: 2–4d
+                - generic [ref=f45e902]:
+                  - generic [ref=f45e906]: Budget
+                  - generic [ref=f45e907]: Moderate – Comfortable
+                - generic [ref=f45e908]:
+                  - generic [ref=f45e912]: Climate
+                  - generic [ref=f45e913]: Mild, Cool
+              - generic [ref=f45e914]: "Main experiences: Butchart Gardens · Inner Harbour · Fisherman's Wharf · Royal BC Museum"
+              - generic [ref=f45e915]: "Suited to: Solo, Couple, Friends, Family"
+              - button "See score breakdown" [ref=f45e916] [cursor=pointer]
+              - button "View My Trip" [ref=f45e917] [cursor=pointer]
+    - contentinfo [ref=f45e41]:
+      - generic [ref=f45e42]:
+        - paragraph [ref=f45e43]: TravelUp
+        - paragraph [ref=f45e46]: Helping unsure travellers discover where to go next.
+        - paragraph [ref=f45e47]: All budgets, climates, seasons, itineraries and packing suggestions are indicative estimates, not live information. Always verify visa requirements, entry conditions, safety and travel advisories using official government sources for your citizenship.
+        - generic [ref=f45e48]:
+          - link "About & disclaimer" [ref=f45e49] [cursor=pointer]:
+            - /url: /about
+          - link "Home" [ref=f45e50] [cursor=pointer]:
+            - /url: /
+  - region "Notifications (F8)":
+    - list

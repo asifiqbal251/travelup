@@ -1,0 +1,50 @@
+- generic [ref=f63e4]:
+  - generic [ref=f63e5]:
+    - banner [ref=f63e6]:
+      - generic [ref=f63e7]:
+        - link "TravelUp" [ref=f63e8] [cursor=pointer]:
+          - /url: /
+        - navigation [ref=f63e12]:
+          - link "Home" [ref=f63e13] [cursor=pointer]:
+            - /url: /
+          - link "About" [ref=f63e14] [cursor=pointer]:
+            - /url: /about
+          - button "Clear My Data" [ref=f63e15] [cursor=pointer]
+    - main [ref=f63e16]:
+      - generic [ref=f63e17]:
+        - generic [ref=f63e18]:
+          - generic [ref=f63e19]:
+            - generic [ref=f63e20]: Step 4 of 7
+            - generic [ref=f63e21]: Your interests
+          - progressbar [ref=f63e22]
+        - generic [ref=f63e24]:
+          - generic [ref=f63e622]:
+            - heading "What do you love?" [level=1] [ref=f63e623]
+            - paragraph [ref=f63e624]: Select all that appeal to you.
+            - group "Interests" [ref=f63e626]:
+              - generic [ref=f63e627]:
+                - button "Nature" [ref=f63e628] [cursor=pointer]
+                - button [active] [pressed] [ref=f63e630] [cursor=pointer]
+                - button "Food" [ref=f63e632] [cursor=pointer]
+                - button "Beaches" [ref=f63e634] [cursor=pointer]
+                - button "Hiking" [ref=f63e636] [cursor=pointer]
+                - button "Wildlife" [ref=f63e638] [cursor=pointer]
+                - button "Adventure" [ref=f63e640] [cursor=pointer]
+                - button "Cities" [ref=f63e642] [cursor=pointer]
+                - button "Relaxation" [ref=f63e644] [cursor=pointer]
+                - button "Photography" [ref=f63e646] [cursor=pointer]
+          - generic [ref=f63e39]:
+            - button "Back" [ref=f63e550] [cursor=pointer]
+            - button "Next" [ref=f63e40] [cursor=pointer]
+    - contentinfo [ref=f63e41]:
+      - generic [ref=f63e42]:
+        - paragraph [ref=f63e43]: TravelUp
+        - paragraph [ref=f63e46]: Helping unsure travellers discover where to go next.
+        - paragraph [ref=f63e47]: All budgets, climates, seasons, itineraries and packing suggestions are indicative estimates, not live information. Always verify visa requirements, entry conditions, safety and travel advisories using official government sources for your citizenship.
+        - generic [ref=f63e48]:
+          - link "About & disclaimer" [ref=f63e49] [cursor=pointer]:
+            - /url: /about
+          - link "Home" [ref=f63e50] [cursor=pointer]:
+            - /url: /
+  - region "Notifications (F8)":
+    - list

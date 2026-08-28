@@ -1,0 +1,9 @@
+- generic [active] [ref=f11e1]:
+  - img "Base44" [ref=f11e5]
+  - generic [ref=f11e7]:
+    - heading "Preview is starting up" [level=1] [ref=f11e8]
+    - generic [ref=f11e9]: Your app preview is being prepared. This page will automatically refresh in a few seconds.
+  - generic [ref=f11e11]:
+    - text: Need help? visit our
+    - link "support center" [ref=f11e12] [cursor=pointer]:
+      - /url: https://app.base44.com/support

@@ -1,0 +1,52 @@
+- generic [ref=f90e4]:
+  - generic [ref=f90e5]:
+    - banner [ref=f90e6]:
+      - generic [ref=f90e7]:
+        - link "TravelUp" [ref=f90e8] [cursor=pointer]:
+          - /url: /
+        - navigation [ref=f90e12]:
+          - link "Home" [ref=f90e13] [cursor=pointer]:
+            - /url: /
+          - link "About" [ref=f90e14] [cursor=pointer]:
+            - /url: /about
+          - button "Clear My Data" [ref=f90e15] [cursor=pointer]
+    - main [ref=f90e16]:
+      - generic [ref=f90e429]:
+        - generic [ref=f90e430]:
+          - generic [ref=f90e431]:
+            - generic [ref=f90e432]: Step 1 of 7
+            - generic [ref=f90e433]: Your travel basics
+          - progressbar [ref=f90e434]
+        - generic [ref=f90e436]:
+          - generic [ref=f90e437]:
+            - heading "Your travel basics" [level=1] [ref=f90e438]
+            - paragraph [ref=f90e439]: So we can tailor your travel recommendations.
+            - generic [ref=f90e440]:
+              - generic [ref=f90e441]:
+                - text: Country of residence
+                - combobox "Country of residence" [ref=f90e442] [cursor=pointer]:
+                  - generic: Canada
+              - generic [ref=f90e445]:
+                - text: Departure city
+                - textbox "Departure city" [ref=f90e446]:
+                  - /placeholder: e.g. London
+                  - text: Vancouver
+              - generic [ref=f90e447]:
+                - text: Citizenship
+                - combobox "Citizenship" [ref=f90e448] [cursor=pointer]:
+                  - generic: Canada
+          - generic [ref=f90e451]:
+            - button "Back" [disabled]
+            - button "Next" [ref=f90e452] [cursor=pointer]
+    - contentinfo [ref=f90e40]:
+      - generic [ref=f90e41]:
+        - paragraph [ref=f90e42]: TravelUp
+        - paragraph [ref=f90e45]: Helping unsure travellers discover where to go next.
+        - paragraph [ref=f90e46]: All budgets, climates, seasons, itineraries and packing suggestions are indicative estimates, not live information. Always verify visa requirements, entry conditions, safety and travel advisories using official government sources for your citizenship.
+        - generic [ref=f90e47]:
+          - link "About & disclaimer" [ref=f90e48] [cursor=pointer]:
+            - /url: /about
+          - link "Home" [ref=f90e49] [cursor=pointer]:
+            - /url: /
+  - region "Notifications (F8)":
+    - list

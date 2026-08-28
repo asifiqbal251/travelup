@@ -1,0 +1,174 @@
+- generic [ref=f124e4]:
+  - generic [ref=f124e5]:
+    - banner [ref=f124e6]:
+      - generic [ref=f124e7]:
+        - link "TravelUp" [ref=f124e8] [cursor=pointer]:
+          - /url: /
+        - navigation [ref=f124e12]:
+          - link "Home" [ref=f124e13] [cursor=pointer]:
+            - /url: /
+          - link "About" [ref=f124e14] [cursor=pointer]:
+            - /url: /about
+          - button "Clear My Data" [ref=f124e15] [cursor=pointer]
+    - main [ref=f124e16]:
+      - generic [ref=f124e464]:
+        - generic [ref=f124e465]:
+          - generic [ref=f124e466]:
+            - heading "Your top 3 matches" [level=1] [ref=f124e467]
+            - paragraph [ref=f124e468]: Final scores combine your preference fit with travel practicality for your trip length. Estimates only.
+          - button "Revise" [ref=f124e469] [cursor=pointer]
+        - paragraph [ref=f124e473]: Scores are estimates based on your preferences and curated destination data, not live availability or flight schedules. Always verify visa and entry requirements through official government sources for your citizenship.
+        - generic [ref=f124e474]:
+          - article [ref=f124e475]:
+            - generic [ref=f124e476]:
+              - img "Montréal and Québec City, Canada" [ref=f124e478]
+              - generic [ref=f124e479]: 95/100
+              - generic [ref=f124e480]: Strong match
+              - generic [ref=f124e481]:
+                - heading "Montréal and Québec City" [level=2] [ref=f124e482]
+                - paragraph [ref=f124e486]: Canada · Québec, Canada
+            - generic [ref=f124e487]:
+              - region "Travel fit" [ref=f124e488]:
+                - generic [ref=f124e489]:
+                  - heading "Travel fit" [level=3] [ref=f124e490]
+                  - 'status "Travel fit: Good fit" [ref=f124e491]': Good fit
+                - generic [ref=f124e492]:
+                  - generic [ref=f124e493]:
+                    - term [ref=f124e494]: How you'll travel
+                    - definition [ref=f124e495]: Domestic flight + train/transfer
+                  - generic [ref=f124e496]:
+                    - term [ref=f124e497]: Travel time
+                    - definition [ref=f124e498]: About 6.8 hours each way
+                  - generic [ref=f124e499]:
+                    - term [ref=f124e500]: Time at destination
+                    - definition [ref=f124e501]: About 2 days
+              - list [ref=f124e502]:
+                - listitem [ref=f124e503]:
+                  - generic [ref=f124e504]: •
+                  - text: Great for history and culture, food, cities
+                - listitem [ref=f124e505]:
+                  - generic [ref=f124e506]: •
+                  - text: Enjoyable in your chosen month
+                - listitem [ref=f124e507]:
+                  - generic [ref=f124e508]: •
+                  - text: Fits your selected budget level
+              - generic [ref=f124e509]:
+                - generic [ref=f124e510]:
+                  - generic [ref=f124e514]: Trip length
+                  - generic [ref=f124e515]: 3–10d
+                - generic [ref=f124e516]:
+                  - generic [ref=f124e520]: Budget
+                  - generic [ref=f124e521]: Comfortable – Moderate
+                - generic [ref=f124e522]:
+                  - generic [ref=f124e526]: Climate
+                  - generic [ref=f124e527]: Cool, Cold or snowy, Mild
+              - generic [ref=f124e528]: "Main experiences: Old Montréal · Mont-Royal · Notre-Dame Basilica · Québec City old town"
+              - generic [ref=f124e529]: "Suited to: Couple, Family, Friends"
+              - button "See score breakdown" [ref=f124e530] [cursor=pointer]
+              - button "View My Trip" [ref=f124e531] [cursor=pointer]
+          - article [ref=f124e532]:
+            - generic [ref=f124e533]:
+              - img "Victoria, Canada" [ref=f124e535]
+              - generic [ref=f124e536]: 90/100
+              - generic [ref=f124e537]: Strong match
+              - generic [ref=f124e538]:
+                - heading "Victoria" [level=2] [ref=f124e539]
+                - paragraph [ref=f124e543]: Canada · Vancouver Island, British Columbia, Canada
+            - generic [ref=f124e544]:
+              - region "Travel fit" [ref=f124e545]:
+                - generic [ref=f124e546]:
+                  - heading "Travel fit" [level=3] [ref=f124e547]
+                  - 'status "Travel fit: Good fit" [ref=f124e548]': Good fit
+                - generic [ref=f124e549]:
+                  - generic [ref=f124e550]:
+                    - term [ref=f124e551]: How you'll travel
+                    - definition [ref=f124e552]: Ferry + ground transfer
+                  - generic [ref=f124e553]:
+                    - term [ref=f124e554]: Travel time
+                    - definition [ref=f124e555]: About 4 hours each way
+                  - generic [ref=f124e556]:
+                    - term [ref=f124e557]: Time at destination
+                    - definition [ref=f124e558]: About 2.5 days
+              - list [ref=f124e559]:
+                - listitem [ref=f124e560]:
+                  - generic [ref=f124e561]: •
+                  - text: Great for history and culture, food, cities
+                - listitem [ref=f124e562]:
+                  - generic [ref=f124e563]: •
+                  - text: Enjoyable in your chosen month
+                - listitem [ref=f124e564]:
+                  - generic [ref=f124e565]: •
+                  - text: Fits your selected budget level
+              - generic [ref=f124e566]:
+                - generic [ref=f124e567]:
+                  - generic [ref=f124e571]: Trip length
+                  - generic [ref=f124e572]: 2–4d
+                - generic [ref=f124e573]:
+                  - generic [ref=f124e577]: Budget
+                  - generic [ref=f124e578]: Moderate – Comfortable
+                - generic [ref=f124e579]:
+                  - generic [ref=f124e583]: Climate
+                  - generic [ref=f124e584]: Mild, Cool
+              - generic [ref=f124e585]: "Main experiences: Butchart Gardens · Inner Harbour · Fisherman's Wharf · Royal BC Museum"
+              - generic [ref=f124e586]: "Suited to: Solo, Couple, Friends, Family"
+              - button "See score breakdown" [ref=f124e587] [cursor=pointer]
+              - button "View My Trip" [ref=f124e588] [cursor=pointer]
+          - article [ref=f124e589]:
+            - generic [ref=f124e590]:
+              - img "Kelowna and the Okanagan Valley, Canada" [ref=f124e592]
+              - generic [ref=f124e593]: 78/100
+              - generic [ref=f124e594]: Strong match
+              - generic [ref=f124e595]:
+                - heading "Kelowna and the Okanagan Valley" [level=2] [ref=f124e596]
+                - paragraph [ref=f124e600]: Canada · Okanagan Valley, British Columbia, Canada
+            - generic [ref=f124e601]:
+              - region "Travel fit" [ref=f124e602]:
+                - generic [ref=f124e603]:
+                  - heading "Travel fit" [level=3] [ref=f124e604]
+                  - 'status "Travel fit: Good fit" [ref=f124e605]': Good fit
+                - generic [ref=f124e606]:
+                  - generic [ref=f124e607]:
+                    - term [ref=f124e608]: How you'll travel
+                    - definition [ref=f124e609]: Drive
+                  - generic [ref=f124e610]:
+                    - term [ref=f124e611]: Travel time
+                    - definition [ref=f124e612]: About 4.5 hours each way
+                  - generic [ref=f124e613]:
+                    - term [ref=f124e614]: Time at destination
+                    - definition [ref=f124e615]: About 2.5 days
+              - list [ref=f124e616]:
+                - listitem [ref=f124e617]:
+                  - generic [ref=f124e618]: •
+                  - text: Great for food
+                - listitem [ref=f124e619]:
+                  - generic [ref=f124e620]: •
+                  - text: Enjoyable in your chosen month
+                - listitem [ref=f124e621]:
+                  - generic [ref=f124e622]: •
+                  - text: Fits your selected budget level
+              - generic [ref=f124e623]:
+                - generic [ref=f124e624]:
+                  - generic [ref=f124e628]: Trip length
+                  - generic [ref=f124e629]: 2–5d
+                - generic [ref=f124e630]:
+                  - generic [ref=f124e634]: Budget
+                  - generic [ref=f124e635]: Moderate – Comfortable – Premium
+                - generic [ref=f124e636]:
+                  - generic [ref=f124e640]: Climate
+                  - generic [ref=f124e641]: Warm, Mild
+              - generic [ref=f124e642]: "Main experiences: Okanagan wine tours · Kelowna waterfront beaches · Knox Mountain hike · Orchard fruit stands"
+              - generic [ref=f124e643]: "Suited to: Solo, Couple, Friends, Family"
+              - button "See score breakdown" [ref=f124e644] [cursor=pointer]
+              - button "View My Trip" [ref=f124e645] [cursor=pointer]
+    - contentinfo [ref=f124e41]:
+      - generic [ref=f124e42]:
+        - paragraph [ref=f124e43]: TravelUp
+        - paragraph [ref=f124e46]: Helping unsure travellers discover where to go next.
+        - paragraph [ref=f124e47]: All budgets, climates, seasons, itineraries and packing suggestions are indicative estimates, not live information. Always verify visa requirements, entry conditions, safety and travel advisories using official government sources for your citizenship.
+        - generic [ref=f124e48]:
+          - link "About & disclaimer" [ref=f124e49] [cursor=pointer]:
+            - /url: /about
+          - link "Home" [ref=f124e50] [cursor=pointer]:
+            - /url: /
+  - region "Notifications (F8)":
+    - list

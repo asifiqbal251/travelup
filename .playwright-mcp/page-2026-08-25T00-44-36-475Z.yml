@@ -1,0 +1,82 @@
+- generic [ref=f3e4]:
+  - generic [ref=f3e5]:
+    - banner [ref=f3e6]:
+      - generic [ref=f3e7]:
+        - link "TravelUp" [ref=f3e8] [cursor=pointer]:
+          - /url: /
+        - navigation [ref=f3e12]:
+          - link "Home" [ref=f3e13] [cursor=pointer]:
+            - /url: /
+          - link "About" [ref=f3e14] [cursor=pointer]:
+            - /url: /about
+          - button "Clear My Data" [ref=f3e15] [cursor=pointer]
+    - main [ref=f3e16]:
+      - generic [ref=f3e731]:
+        - generic [ref=f3e732]:
+          - generic [ref=f3e733]:
+            - heading "Your top 1 matches" [level=1] [ref=f3e734]
+            - paragraph [ref=f3e735]: Final scores combine your preference fit with travel practicality for your trip length. Estimates only.
+          - button "Revise" [ref=f3e736] [cursor=pointer]
+        - paragraph [ref=f3e740]: Scores are estimates based on your preferences and curated destination data, not live availability or flight schedules. Always verify visa and entry requirements through official government sources for your citizenship.
+        - generic [ref=f3e741]:
+          - paragraph [ref=f3e742]: We found only 1 practical match for a 3-day trip from your location.
+          - paragraph [ref=f3e743]: The current destination catalogue has limited practical options for this trip length. Try a longer trip, broader preferences, or nearby and domestic destinations.
+        - article [ref=f3e745]:
+          - generic [ref=f3e746]:
+            - img "Montréal and Québec City, Canada" [ref=f3e748]
+            - generic [ref=f3e749]: 56/100
+            - generic [ref=f3e750]: Fair match
+            - generic [ref=f3e751]:
+              - heading "Montréal and Québec City" [level=2] [ref=f3e752]
+              - paragraph [ref=f3e756]: Canada · Québec, Canada
+          - generic [ref=f3e757]:
+            - region "Travel fit" [ref=f3e758]:
+              - generic [ref=f3e759]:
+                - heading "Travel fit" [level=3] [ref=f3e760]
+                - 'status "Travel fit: Manageable" [ref=f3e761]': Manageable
+              - generic [ref=f3e762]:
+                - generic [ref=f3e763]:
+                  - term [ref=f3e764]: How you'll travel
+                  - definition [ref=f3e765]: International flight + train/transfer
+                - generic [ref=f3e766]:
+                  - term [ref=f3e767]: Travel time
+                  - definition [ref=f3e768]: About 7.4 hours each way
+                - generic [ref=f3e769]:
+                  - term [ref=f3e770]: Time at destination
+                  - definition [ref=f3e771]: About 2 days
+            - list [ref=f3e772]:
+              - listitem [ref=f3e773]:
+                - generic [ref=f3e774]: •
+                - text: Enjoyable in your chosen month
+              - listitem [ref=f3e775]:
+                - generic [ref=f3e776]: •
+                - text: Close to your premium budget
+              - listitem [ref=f3e777]:
+                - generic [ref=f3e778]: •
+                - text: Ideal for 3 total days
+            - generic [ref=f3e779]:
+              - generic [ref=f3e780]:
+                - generic [ref=f3e784]: Trip length
+                - generic [ref=f3e785]: 3–10d
+              - generic [ref=f3e786]:
+                - generic [ref=f3e790]: Budget
+                - generic [ref=f3e791]: Comfortable – Moderate
+              - generic [ref=f3e792]:
+                - generic [ref=f3e796]: Climate
+                - generic [ref=f3e797]: Cool, Cold or snowy, Mild
+            - generic [ref=f3e798]: "Main experiences: Old Montréal · Mont-Royal · Notre-Dame Basilica · Québec City old town"
+            - generic [ref=f3e799]: "Suited to: Couple, Family, Friends"
+            - button "See score breakdown" [ref=f3e800] [cursor=pointer]
+            - button "View My Trip" [ref=f3e801] [cursor=pointer]
+    - contentinfo [ref=f3e41]:
+      - generic [ref=f3e42]:
+        - paragraph [ref=f3e43]: TravelUp
+        - paragraph [ref=f3e46]: Helping unsure travellers discover where to go next.
+        - paragraph [ref=f3e47]: All budgets, climates, seasons, itineraries and packing suggestions are indicative estimates, not live information. Always verify visa requirements, entry conditions, safety and travel advisories using official government sources for your citizenship.
+        - generic [ref=f3e48]:
+          - link "About & disclaimer" [ref=f3e49] [cursor=pointer]:
+            - /url: /about
+          - link "Home" [ref=f3e50] [cursor=pointer]:
+            - /url: /
+  - region "Notifications (F8)":
+    - list

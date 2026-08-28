@@ -1,0 +1,174 @@
+- generic [ref=f102e4]:
+  - generic [ref=f102e5]:
+    - banner [ref=f102e6]:
+      - generic [ref=f102e7]:
+        - link "TravelUp" [ref=f102e8] [cursor=pointer]:
+          - /url: /
+        - navigation [ref=f102e12]:
+          - link "Home" [ref=f102e13] [cursor=pointer]:
+            - /url: /
+          - link "About" [ref=f102e14] [cursor=pointer]:
+            - /url: /about
+          - button "Clear My Data" [ref=f102e15] [cursor=pointer]
+    - main [ref=f102e16]:
+      - generic [ref=f102e254]:
+        - generic [ref=f102e255]:
+          - generic [ref=f102e256]:
+            - heading "Your top 3 matches" [level=1] [ref=f102e257]
+            - paragraph [ref=f102e258]: Final scores combine your preference fit with travel practicality for your trip length. Estimates only.
+          - button "Revise" [ref=f102e259] [cursor=pointer]
+        - paragraph [ref=f102e263]: Scores are estimates based on your preferences and curated destination data, not live availability or flight schedules. Always verify visa and entry requirements through official government sources for your citizenship.
+        - generic [ref=f102e264]:
+          - article [ref=f102e265]:
+            - generic [ref=f102e266]:
+              - img "Isle of Skye, United Kingdom" [ref=f102e268]
+              - generic [ref=f102e269]: 100/100
+              - generic [ref=f102e270]: Strong match
+              - generic [ref=f102e271]:
+                - heading "Isle of Skye" [level=2] [ref=f102e272]
+                - paragraph [ref=f102e276]: United Kingdom · Scottish Highlands, Scotland, United Kingdom
+            - generic [ref=f102e277]:
+              - region "Travel fit" [ref=f102e278]:
+                - generic [ref=f102e279]:
+                  - heading "Travel fit" [level=3] [ref=f102e280]
+                  - 'status "Travel fit: Good fit" [ref=f102e281]': Good fit
+                - generic [ref=f102e282]:
+                  - generic [ref=f102e283]:
+                    - term [ref=f102e284]: How you'll travel
+                    - definition [ref=f102e285]: Flight to Inverness + road transfer
+                  - generic [ref=f102e286]:
+                    - term [ref=f102e287]: Travel time
+                    - definition [ref=f102e288]: About 8 hours each way
+                  - generic [ref=f102e289]:
+                    - term [ref=f102e290]: Time at destination
+                    - definition [ref=f102e291]: About 4.5 days
+              - list [ref=f102e292]:
+                - listitem [ref=f102e293]:
+                  - generic [ref=f102e294]: •
+                  - text: Great for nature, adventure, photography
+                - listitem [ref=f102e295]:
+                  - generic [ref=f102e296]: •
+                  - text: Peak season in May
+                - listitem [ref=f102e297]:
+                  - generic [ref=f102e298]: •
+                  - text: Fits your selected budget level
+              - generic [ref=f102e299]:
+                - generic [ref=f102e300]:
+                  - generic [ref=f102e304]: Trip length
+                  - generic [ref=f102e305]: 4–6d
+                - generic [ref=f102e306]:
+                  - generic [ref=f102e310]: Budget
+                  - generic [ref=f102e311]: Moderate – Comfortable – Premium
+                - generic [ref=f102e312]:
+                  - generic [ref=f102e316]: Climate
+                  - generic [ref=f102e317]: Cool, Cold or snowy, Mild
+              - generic [ref=f102e318]: "Main experiences: Old Man of Storr (weather-dependent) · Fairy Pools (weather-dependent) · Quiraing ridge walk (weather-dependent) · Portree village (fallback anchor)"
+              - generic [ref=f102e319]: "Suited to: Solo, Couple, Friends"
+              - button "See score breakdown" [ref=f102e320] [cursor=pointer]
+              - button "View My Trip" [ref=f102e321] [cursor=pointer]
+          - article [ref=f102e322]:
+            - generic [ref=f102e323]:
+              - img "Lake District, United Kingdom" [ref=f102e325]
+              - generic [ref=f102e326]: 90/100
+              - generic [ref=f102e327]: Strong match
+              - generic [ref=f102e328]:
+                - heading "Lake District" [level=2] [ref=f102e329]
+                - paragraph [ref=f102e333]: United Kingdom · Cumbria, England, United Kingdom
+            - generic [ref=f102e334]:
+              - region "Travel fit" [ref=f102e335]:
+                - generic [ref=f102e336]:
+                  - heading "Travel fit" [level=3] [ref=f102e337]
+                  - 'status "Travel fit: Good fit" [ref=f102e338]': Good fit
+                - generic [ref=f102e339]:
+                  - generic [ref=f102e340]:
+                    - term [ref=f102e341]: How you'll travel
+                    - definition [ref=f102e342]: Train + onward local transfer
+                  - generic [ref=f102e343]:
+                    - term [ref=f102e344]: Travel time
+                    - definition [ref=f102e345]: About 4 hours each way
+                  - generic [ref=f102e346]:
+                    - term [ref=f102e347]: Time at destination
+                    - definition [ref=f102e348]: About 4.5 days
+              - list [ref=f102e349]:
+                - listitem [ref=f102e350]:
+                  - generic [ref=f102e351]: •
+                  - text: Great for nature, adventure, photography
+                - listitem [ref=f102e352]:
+                  - generic [ref=f102e353]: •
+                  - text: Peak season in May
+                - listitem [ref=f102e354]:
+                  - generic [ref=f102e355]: •
+                  - text: Close to your premium budget
+              - generic [ref=f102e356]:
+                - generic [ref=f102e357]:
+                  - generic [ref=f102e361]: Trip length
+                  - generic [ref=f102e362]: 3–5d
+                - generic [ref=f102e363]:
+                  - generic [ref=f102e367]: Budget
+                  - generic [ref=f102e368]: Budget – Moderate – Comfortable
+                - generic [ref=f102e369]:
+                  - generic [ref=f102e373]: Climate
+                  - generic [ref=f102e374]: Cool, Mild, Cold or snowy
+              - generic [ref=f102e375]: "Main experiences: Windermere lake · Gentler fell walk (primary) / Scafell Pike (optional, highly active) · Beatrix Potter sites · Ambleside/Grasmere villages"
+              - generic [ref=f102e376]: "Suited to: Solo, Couple, Friends, Family"
+              - button "See score breakdown" [ref=f102e377] [cursor=pointer]
+              - button "View My Trip" [ref=f102e378] [cursor=pointer]
+          - article [ref=f102e379]:
+            - generic [ref=f102e380]:
+              - img "Iceland, Iceland" [ref=f102e382]
+              - generic [ref=f102e383]: 87/100
+              - generic [ref=f102e384]: Strong match
+              - generic [ref=f102e385]:
+                - heading "Iceland" [level=2] [ref=f102e386]
+                - paragraph [ref=f102e390]: Iceland · Northern Europe
+            - generic [ref=f102e391]:
+              - region "Travel fit" [ref=f102e392]:
+                - generic [ref=f102e393]:
+                  - heading "Travel fit" [level=3] [ref=f102e394]
+                  - 'status "Travel fit: Good fit" [ref=f102e395]': Good fit
+                - generic [ref=f102e396]:
+                  - generic [ref=f102e397]:
+                    - term [ref=f102e398]: How you'll travel
+                    - definition [ref=f102e399]: International flight + local transport
+                  - generic [ref=f102e400]:
+                    - term [ref=f102e401]: Travel time
+                    - definition [ref=f102e402]: About 10.6 hours each way
+                  - generic [ref=f102e403]:
+                    - term [ref=f102e404]: Time at destination
+                    - definition [ref=f102e405]: About 3 days
+              - list [ref=f102e406]:
+                - listitem [ref=f102e407]:
+                  - generic [ref=f102e408]: •
+                  - text: Great for nature, adventure, photography
+                - listitem [ref=f102e409]:
+                  - generic [ref=f102e410]: •
+                  - text: Enjoyable in your chosen month
+                - listitem [ref=f102e411]:
+                  - generic [ref=f102e412]: •
+                  - text: Fits your selected budget level
+              - generic [ref=f102e413]:
+                - generic [ref=f102e414]:
+                  - generic [ref=f102e418]: Trip length
+                  - generic [ref=f102e419]: 5–10d
+                - generic [ref=f102e420]:
+                  - generic [ref=f102e424]: Budget
+                  - generic [ref=f102e425]: Comfortable – Premium
+                - generic [ref=f102e426]:
+                  - generic [ref=f102e430]: Climate
+                  - generic [ref=f102e431]: Cool, Cold or snowy
+              - generic [ref=f102e432]: "Main experiences: Golden Circle waterfalls and geysers · Blue Lagoon hot springs · Northern lights · Black sand beaches"
+              - generic [ref=f102e433]: "Suited to: Solo, Couple, Friends, Family"
+              - button "See score breakdown" [ref=f102e434] [cursor=pointer]
+              - button "View My Trip" [ref=f102e435] [cursor=pointer]
+    - contentinfo [ref=f102e56]:
+      - generic [ref=f102e57]:
+        - paragraph [ref=f102e58]: TravelUp
+        - paragraph [ref=f102e61]: Helping unsure travellers discover where to go next.
+        - paragraph [ref=f102e62]: All budgets, climates, seasons, itineraries and packing suggestions are indicative estimates, not live information. Always verify visa requirements, entry conditions, safety and travel advisories using official government sources for your citizenship.
+        - generic [ref=f102e63]:
+          - link "About & disclaimer" [ref=f102e64] [cursor=pointer]:
+            - /url: /about
+          - link "Home" [ref=f102e65] [cursor=pointer]:
+            - /url: /
+  - region "Notifications (F8)":
+    - list

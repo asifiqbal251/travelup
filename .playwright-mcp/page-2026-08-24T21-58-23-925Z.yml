@@ -1,0 +1,174 @@
+- generic [ref=f25e4]:
+  - generic [ref=f25e5]:
+    - banner [ref=f25e6]:
+      - generic [ref=f25e7]:
+        - link "TravelUp" [ref=f25e8] [cursor=pointer]:
+          - /url: /
+        - navigation [ref=f25e12]:
+          - link "Home" [ref=f25e13] [cursor=pointer]:
+            - /url: /
+          - link "About" [ref=f25e14] [cursor=pointer]:
+            - /url: /about
+          - button "Clear My Data" [ref=f25e15] [cursor=pointer]
+    - main [ref=f25e16]:
+      - generic [ref=f25e732]:
+        - generic [ref=f25e733]:
+          - generic [ref=f25e734]:
+            - heading "Your top 3 matches" [level=1] [ref=f25e735]
+            - paragraph [ref=f25e736]: Final scores combine your preference fit with travel practicality for your trip length. Estimates only.
+          - button "Revise" [ref=f25e737] [cursor=pointer]
+        - paragraph [ref=f25e741]: Scores are estimates based on your preferences and curated destination data, not live availability or flight schedules. Always verify visa and entry requirements through official government sources for your citizenship.
+        - generic [ref=f25e742]:
+          - article [ref=f25e743]:
+            - generic [ref=f25e744]:
+              - img "Las Vegas, United States" [ref=f25e746]
+              - generic [ref=f25e747]: 100/100
+              - generic [ref=f25e748]: Strong match
+              - generic [ref=f25e749]:
+                - heading "Las Vegas" [level=2] [ref=f25e750]
+                - paragraph [ref=f25e754]: United States · Mojave Desert, Nevada, United States
+            - generic [ref=f25e755]:
+              - region "Travel fit" [ref=f25e756]:
+                - generic [ref=f25e757]:
+                  - heading "Travel fit" [level=3] [ref=f25e758]
+                  - 'status "Travel fit: Good fit" [ref=f25e759]': Good fit
+                - generic [ref=f25e760]:
+                  - generic [ref=f25e761]:
+                    - term [ref=f25e762]: How you'll travel
+                    - definition [ref=f25e763]: Flight or drive
+                  - generic [ref=f25e764]:
+                    - term [ref=f25e765]: Travel time
+                    - definition [ref=f25e766]: About 4.5 hours each way
+                  - generic [ref=f25e767]:
+                    - term [ref=f25e768]: Time at destination
+                    - definition [ref=f25e769]: About 3.5 days
+              - list [ref=f25e770]:
+                - listitem [ref=f25e771]:
+                  - generic [ref=f25e772]: •
+                  - text: Great for food, cities
+                - listitem [ref=f25e773]:
+                  - generic [ref=f25e774]: •
+                  - text: Peak season in November
+                - listitem [ref=f25e775]:
+                  - generic [ref=f25e776]: •
+                  - text: Fits your selected budget level
+              - generic [ref=f25e777]:
+                - generic [ref=f25e778]:
+                  - generic [ref=f25e782]: Trip length
+                  - generic [ref=f25e783]: 2–4d
+                - generic [ref=f25e784]:
+                  - generic [ref=f25e788]: Budget
+                  - generic [ref=f25e789]: Budget – Moderate – Comfortable – Premium
+                - generic [ref=f25e790]:
+                  - generic [ref=f25e794]: Climate
+                  - generic [ref=f25e795]: Warm, Mild
+              - generic [ref=f25e796]: "Main experiences: The Strip at night · Bellagio Fountains · Red Rock Canyon · A headline show"
+              - generic [ref=f25e797]: "Suited to: Solo, Couple, Friends"
+              - button "See score breakdown" [ref=f25e798] [cursor=pointer]
+              - button "View My Trip" [ref=f25e799] [cursor=pointer]
+          - article [ref=f25e800]:
+            - generic [ref=f25e801]:
+              - img "Mexico City, Mexico" [ref=f25e803]
+              - generic [ref=f25e804]: 95/100
+              - generic [ref=f25e805]: Strong match
+              - generic [ref=f25e806]:
+                - heading "Mexico City" [level=2] [ref=f25e807]
+                - paragraph [ref=f25e811]: Mexico · Central Mexico
+            - generic [ref=f25e812]:
+              - region "Travel fit" [ref=f25e813]:
+                - generic [ref=f25e814]:
+                  - heading "Travel fit" [level=3] [ref=f25e815]
+                  - 'status "Travel fit: Good fit" [ref=f25e816]': Good fit
+                - generic [ref=f25e817]:
+                  - generic [ref=f25e818]:
+                    - term [ref=f25e819]: How you'll travel
+                    - definition [ref=f25e820]: International flight + local transport
+                  - generic [ref=f25e821]:
+                    - term [ref=f25e822]: Travel time
+                    - definition [ref=f25e823]: About 7.4 hours each way
+                  - generic [ref=f25e824]:
+                    - term [ref=f25e825]: Time at destination
+                    - definition [ref=f25e826]: About 3 days
+              - list [ref=f25e827]:
+                - listitem [ref=f25e828]:
+                  - generic [ref=f25e829]: •
+                  - text: Great for food, cities
+                - listitem [ref=f25e830]:
+                  - generic [ref=f25e831]: •
+                  - text: Peak season in November
+                - listitem [ref=f25e832]:
+                  - generic [ref=f25e833]: •
+                  - text: Fits your selected budget level
+              - generic [ref=f25e834]:
+                - generic [ref=f25e835]:
+                  - generic [ref=f25e839]: Trip length
+                  - generic [ref=f25e840]: 3–9d
+                - generic [ref=f25e841]:
+                  - generic [ref=f25e845]: Budget
+                  - generic [ref=f25e846]: Moderate – Comfortable – Budget
+                - generic [ref=f25e847]:
+                  - generic [ref=f25e851]: Climate
+                  - generic [ref=f25e852]: Mild
+              - generic [ref=f25e853]: "Main experiences: Zócalo · Teotihuacán pyramids · Frida Kahlo museum · Xochimilco"
+              - generic [ref=f25e854]: "Suited to: Solo, Couple, Friends, Family"
+              - button "See score breakdown" [ref=f25e855] [cursor=pointer]
+              - button "View My Trip" [ref=f25e856] [cursor=pointer]
+          - article [ref=f25e857]:
+            - generic [ref=f25e858]:
+              - img "New York City, United States" [ref=f25e860]
+              - generic [ref=f25e861]: 88/100
+              - generic [ref=f25e862]: Strong match
+              - generic [ref=f25e863]:
+                - heading "New York City" [level=2] [ref=f25e864]
+                - paragraph [ref=f25e868]: United States · Northeast, United States
+            - generic [ref=f25e869]:
+              - region "Travel fit" [ref=f25e870]:
+                - generic [ref=f25e871]:
+                  - heading "Travel fit" [level=3] [ref=f25e872]
+                  - 'status "Travel fit: Good fit" [ref=f25e873]': Good fit
+                - generic [ref=f25e874]:
+                  - generic [ref=f25e875]:
+                    - term [ref=f25e876]: How you'll travel
+                    - definition [ref=f25e877]: Domestic flight + local public transportation
+                  - generic [ref=f25e878]:
+                    - term [ref=f25e879]: Travel time
+                    - definition [ref=f25e880]: About 7.2 hours each way
+                  - generic [ref=f25e881]:
+                    - term [ref=f25e882]: Time at destination
+                    - definition [ref=f25e883]: About 3 days
+              - list [ref=f25e884]:
+                - listitem [ref=f25e885]:
+                  - generic [ref=f25e886]: •
+                  - text: Great for food, cities
+                - listitem [ref=f25e887]:
+                  - generic [ref=f25e888]: •
+                  - text: Peak season in November
+                - listitem [ref=f25e889]:
+                  - generic [ref=f25e890]: •
+                  - text: Close to your moderate budget
+              - generic [ref=f25e891]:
+                - generic [ref=f25e892]:
+                  - generic [ref=f25e896]: Trip length
+                  - generic [ref=f25e897]: 3–9d
+                - generic [ref=f25e898]:
+                  - generic [ref=f25e902]: Budget
+                  - generic [ref=f25e903]: Premium – Comfortable
+                - generic [ref=f25e904]:
+                  - generic [ref=f25e908]: Climate
+                  - generic [ref=f25e909]: Mild, Cool, Cold or snowy
+              - generic [ref=f25e910]: "Main experiences: Central Park · Times Square · Statue of Liberty · the MET"
+              - generic [ref=f25e911]: "Suited to: Solo, Couple, Friends, Family"
+              - button "See score breakdown" [ref=f25e912] [cursor=pointer]
+              - button "View My Trip" [ref=f25e913] [cursor=pointer]
+    - contentinfo [ref=f25e41]:
+      - generic [ref=f25e42]:
+        - paragraph [ref=f25e43]: TravelUp
+        - paragraph [ref=f25e46]: Helping unsure travellers discover where to go next.
+        - paragraph [ref=f25e47]: All budgets, climates, seasons, itineraries and packing suggestions are indicative estimates, not live information. Always verify visa requirements, entry conditions, safety and travel advisories using official government sources for your citizenship.
+        - generic [ref=f25e48]:
+          - link "About & disclaimer" [ref=f25e49] [cursor=pointer]:
+            - /url: /about
+          - link "Home" [ref=f25e50] [cursor=pointer]:
+            - /url: /
+  - region "Notifications (F8)":
+    - list

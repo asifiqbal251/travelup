@@ -1,0 +1,174 @@
+- generic [ref=f43e4]:
+  - generic [ref=f43e5]:
+    - banner [ref=f43e6]:
+      - generic [ref=f43e7]:
+        - link "TravelUp" [ref=f43e8] [cursor=pointer]:
+          - /url: /
+        - navigation [ref=f43e12]:
+          - link "Home" [ref=f43e13] [cursor=pointer]:
+            - /url: /
+          - link "About" [ref=f43e14] [cursor=pointer]:
+            - /url: /about
+          - button "Clear My Data" [ref=f43e15] [cursor=pointer]
+    - main [ref=f43e16]:
+      - generic [ref=f43e221]:
+        - generic [ref=f43e222]:
+          - generic [ref=f43e223]:
+            - heading "Your top 3 matches" [level=1] [ref=f43e224]
+            - paragraph [ref=f43e225]: Final scores combine your preference fit with travel practicality for your trip length. Estimates only.
+          - button "Revise" [ref=f43e226] [cursor=pointer]
+        - paragraph [ref=f43e230]: Scores are estimates based on your preferences and curated destination data, not live availability or flight schedules. Always verify visa and entry requirements through official government sources for your citizenship.
+        - generic [ref=f43e231]:
+          - article [ref=f43e232]:
+            - generic [ref=f43e233]:
+              - img "Mexico City, Mexico" [ref=f43e235]
+              - generic [ref=f43e236]: 95/100
+              - generic [ref=f43e237]: Strong match
+              - generic [ref=f43e238]:
+                - heading "Mexico City" [level=2] [ref=f43e239]
+                - paragraph [ref=f43e243]: Mexico · Central Mexico
+            - generic [ref=f43e244]:
+              - region "Travel fit" [ref=f43e245]:
+                - generic [ref=f43e246]:
+                  - heading "Travel fit" [level=3] [ref=f43e247]
+                  - 'status "Travel fit: Manageable" [ref=f43e248]': Manageable
+                - generic [ref=f43e249]:
+                  - generic [ref=f43e250]:
+                    - term [ref=f43e251]: How you'll travel
+                    - definition [ref=f43e252]: International flight + local transport
+                  - generic [ref=f43e253]:
+                    - term [ref=f43e254]: Travel time
+                    - definition [ref=f43e255]: About 7.4 hours each way
+                  - generic [ref=f43e256]:
+                    - term [ref=f43e257]: Time at destination
+                    - definition [ref=f43e258]: About 2 days
+              - list [ref=f43e259]:
+                - listitem [ref=f43e260]:
+                  - generic [ref=f43e261]: •
+                  - text: Great for history and culture, food, cities
+                - listitem [ref=f43e262]:
+                  - generic [ref=f43e263]: •
+                  - text: Enjoyable in your chosen month
+                - listitem [ref=f43e264]:
+                  - generic [ref=f43e265]: •
+                  - text: Fits your selected budget level
+              - generic [ref=f43e266]:
+                - generic [ref=f43e267]:
+                  - generic [ref=f43e271]: Trip length
+                  - generic [ref=f43e272]: 3–9d
+                - generic [ref=f43e273]:
+                  - generic [ref=f43e277]: Budget
+                  - generic [ref=f43e278]: Moderate – Comfortable – Budget
+                - generic [ref=f43e279]:
+                  - generic [ref=f43e283]: Climate
+                  - generic [ref=f43e284]: Mild
+              - generic [ref=f43e285]: "Main experiences: Zócalo · Teotihuacán pyramids · Frida Kahlo museum · Xochimilco"
+              - generic [ref=f43e286]: "Suited to: Solo, Couple, Friends, Family"
+              - button "See score breakdown" [ref=f43e287] [cursor=pointer]
+              - button "View My Trip" [ref=f43e288] [cursor=pointer]
+          - article [ref=f43e289]:
+            - generic [ref=f43e290]:
+              - img "Victoria, Canada" [ref=f43e292]
+              - generic [ref=f43e293]: 90/100
+              - generic [ref=f43e294]: Strong match
+              - generic [ref=f43e295]:
+                - heading "Victoria" [level=2] [ref=f43e296]
+                - paragraph [ref=f43e300]: Canada · Vancouver Island, British Columbia, Canada
+            - generic [ref=f43e301]:
+              - region "Travel fit" [ref=f43e302]:
+                - generic [ref=f43e303]:
+                  - heading "Travel fit" [level=3] [ref=f43e304]
+                  - 'status "Travel fit: Good fit" [ref=f43e305]': Good fit
+                - generic [ref=f43e306]:
+                  - generic [ref=f43e307]:
+                    - term [ref=f43e308]: How you'll travel
+                    - definition [ref=f43e309]: Ferry, short flight or ground connections depending on origin
+                  - generic [ref=f43e310]:
+                    - term [ref=f43e311]: Travel time
+                    - definition [ref=f43e312]: About 5.8 hours each way
+                  - generic [ref=f43e313]:
+                    - term [ref=f43e314]: Time at destination
+                    - definition [ref=f43e315]: About 2 days
+              - list [ref=f43e316]:
+                - listitem [ref=f43e317]:
+                  - generic [ref=f43e318]: •
+                  - text: Great for history and culture, food, cities
+                - listitem [ref=f43e319]:
+                  - generic [ref=f43e320]: •
+                  - text: Enjoyable in your chosen month
+                - listitem [ref=f43e321]:
+                  - generic [ref=f43e322]: •
+                  - text: Fits your selected budget level
+              - generic [ref=f43e323]:
+                - generic [ref=f43e324]:
+                  - generic [ref=f43e328]: Trip length
+                  - generic [ref=f43e329]: 2–4d
+                - generic [ref=f43e330]:
+                  - generic [ref=f43e334]: Budget
+                  - generic [ref=f43e335]: Moderate – Comfortable
+                - generic [ref=f43e336]:
+                  - generic [ref=f43e340]: Climate
+                  - generic [ref=f43e341]: Mild, Cool
+              - generic [ref=f43e342]: "Main experiences: Butchart Gardens · Inner Harbour · Fisherman's Wharf · Royal BC Museum"
+              - generic [ref=f43e343]: "Suited to: Solo, Couple, Friends, Family"
+              - button "See score breakdown" [ref=f43e344] [cursor=pointer]
+              - button "View My Trip" [ref=f43e345] [cursor=pointer]
+          - article [ref=f43e346]:
+            - generic [ref=f43e347]:
+              - img "New York City, United States" [ref=f43e349]
+              - generic [ref=f43e350]: 88/100
+              - generic [ref=f43e351]: Strong match
+              - generic [ref=f43e352]:
+                - heading "New York City" [level=2] [ref=f43e353]
+                - paragraph [ref=f43e357]: United States · Northeast, United States
+            - generic [ref=f43e358]:
+              - region "Travel fit" [ref=f43e359]:
+                - generic [ref=f43e360]:
+                  - heading "Travel fit" [level=3] [ref=f43e361]
+                  - 'status "Travel fit: Good fit" [ref=f43e362]': Good fit
+                - generic [ref=f43e363]:
+                  - generic [ref=f43e364]:
+                    - term [ref=f43e365]: How you'll travel
+                    - definition [ref=f43e366]: Domestic flight + local public transportation
+                  - generic [ref=f43e367]:
+                    - term [ref=f43e368]: Travel time
+                    - definition [ref=f43e369]: About 7.2 hours each way
+                  - generic [ref=f43e370]:
+                    - term [ref=f43e371]: Time at destination
+                    - definition [ref=f43e372]: About 2 days
+              - list [ref=f43e373]:
+                - listitem [ref=f43e374]:
+                  - generic [ref=f43e375]: •
+                  - text: Great for history and culture, food, cities
+                - listitem [ref=f43e376]:
+                  - generic [ref=f43e377]: •
+                  - text: Enjoyable in your chosen month
+                - listitem [ref=f43e378]:
+                  - generic [ref=f43e379]: •
+                  - text: Close to your moderate budget
+              - generic [ref=f43e380]:
+                - generic [ref=f43e381]:
+                  - generic [ref=f43e385]: Trip length
+                  - generic [ref=f43e386]: 3–9d
+                - generic [ref=f43e387]:
+                  - generic [ref=f43e391]: Budget
+                  - generic [ref=f43e392]: Premium – Comfortable
+                - generic [ref=f43e393]:
+                  - generic [ref=f43e397]: Climate
+                  - generic [ref=f43e398]: Mild, Cool, Cold or snowy
+              - generic [ref=f43e399]: "Main experiences: Central Park · Times Square · Statue of Liberty · the MET"
+              - generic [ref=f43e400]: "Suited to: Solo, Couple, Friends, Family"
+              - button "See score breakdown" [ref=f43e401] [cursor=pointer]
+              - button "View My Trip" [ref=f43e402] [cursor=pointer]
+    - contentinfo [ref=f43e41]:
+      - generic [ref=f43e42]:
+        - paragraph [ref=f43e43]: TravelUp
+        - paragraph [ref=f43e46]: Helping unsure travellers discover where to go next.
+        - paragraph [ref=f43e47]: All budgets, climates, seasons, itineraries and packing suggestions are indicative estimates, not live information. Always verify visa requirements, entry conditions, safety and travel advisories using official government sources for your citizenship.
+        - generic [ref=f43e48]:
+          - link "About & disclaimer" [ref=f43e49] [cursor=pointer]:
+            - /url: /about
+          - link "Home" [ref=f43e50] [cursor=pointer]:
+            - /url: /
+  - region "Notifications (F8)":
+    - list

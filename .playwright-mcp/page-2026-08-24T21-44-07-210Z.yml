@@ -1,0 +1,120 @@
+- generic [ref=f6e4]:
+  - generic [ref=f6e5]:
+    - banner [ref=f6e6]:
+      - generic [ref=f6e7]:
+        - link "TravelUp" [ref=f6e8] [cursor=pointer]:
+          - /url: /
+        - navigation [ref=f6e12]:
+          - link "Home" [ref=f6e13] [cursor=pointer]:
+            - /url: /
+          - link "About" [ref=f6e14] [cursor=pointer]:
+            - /url: /about
+          - button "Clear My Data" [ref=f6e15] [cursor=pointer]
+    - main [ref=f6e16]:
+      - generic [ref=f6e916]:
+        - button "Back to recommendations" [ref=f6e917] [cursor=pointer]
+        - generic [ref=f6e918]:
+          - img "Tofino, Canada" [ref=f6e920]
+          - generic [ref=f6e922]:
+            - heading "Tofino" [level=1] [ref=f6e923]
+            - paragraph [ref=f6e924]: Canada · West Coast Vancouver Island, British Columbia, Canada
+        - generic [ref=f6e925]:
+          - tablist [ref=f6e926]:
+            - tab "Itinerary" [selected] [ref=f6e927] [cursor=pointer]
+            - tab "Packing" [ref=f6e928] [cursor=pointer]
+            - tab "Overview" [ref=f6e929] [cursor=pointer]
+          - tabpanel "Itinerary" [ref=f6e930]:
+            - generic [ref=f6e931]:
+              - paragraph [ref=f6e932]: A suggested 4-day plan including outbound and return travel. Indicative only — verify opening hours and tickets before you go.
+              - 'button "Day 1 · Travel Outbound: Vancouver → Tofino In transit Light intensity Departure Arrival Dinner and rest View details" [ref=f6e1026] [cursor=pointer]':
+                - generic [ref=f6e935]:
+                  - generic [ref=f6e936]:
+                    - generic [ref=f6e937]: Day 1 · Travel
+                    - 'heading "Outbound: Vancouver → Tofino" [level=3] [ref=f6e938]'
+                    - generic [ref=f6e939]: In transit
+                  - generic [ref=f6e940]: Light intensity
+                - generic [ref=f6e941]:
+                  - generic [ref=f6e942]: Departure
+                  - generic [ref=f6e943]: Arrival
+                  - generic [ref=f6e944]: Dinner and rest
+                - generic [ref=f6e945]: View details
+              - button "Day 2 Long Beach & Pacific Rim Tofino Light intensity Beaches Nature View details" [ref=f6e990] [cursor=pointer]:
+                - generic [ref=f6e991]:
+                  - generic [ref=f6e992]:
+                    - generic [ref=f6e993]: Day 2
+                    - heading "Long Beach & Pacific Rim" [level=3] [ref=f6e994]
+                    - generic [ref=f6e995]: Tofino
+                  - generic [ref=f6e996]: Light intensity
+                - generic [ref=f6e997]:
+                  - generic [ref=f6e998]: Beaches
+                  - generic [ref=f6e999]: Nature
+                - generic [ref=f6e1000]: View details
+              - button "Day 3 Hot Springs Cove day trip Tofino Active intensity Nature Wildlife View details" [ref=f6e1002] [cursor=pointer]:
+                - generic [ref=f6e1003]:
+                  - generic [ref=f6e1004]:
+                    - generic [ref=f6e1005]: Day 3
+                    - heading "Hot Springs Cove day trip" [level=3] [ref=f6e1006]
+                    - generic [ref=f6e1007]: Tofino
+                  - generic [ref=f6e1008]: Active intensity
+                - generic [ref=f6e1009]:
+                  - generic [ref=f6e1010]: Nature
+                  - generic [ref=f6e1011]: Wildlife
+                - generic [ref=f6e1012]: View details
+              - generic [ref=f6e1013]:
+                - 'button "Day 4 · Travel Return: Tofino → Vancouver In transit Light intensity Check-out Return Arrive home Hide details" [expanded] [active] [ref=f6e1027] [cursor=pointer]':
+                  - generic [ref=f6e1015]:
+                    - generic [ref=f6e1016]:
+                      - generic [ref=f6e1017]: Day 4 · Travel
+                      - 'heading "Return: Tofino → Vancouver" [level=3] [ref=f6e1018]'
+                      - generic [ref=f6e1019]: In transit
+                    - generic [ref=f6e1020]: Light intensity
+                  - generic [ref=f6e1021]:
+                    - generic [ref=f6e1022]: Check-out
+                    - generic [ref=f6e1023]: Return
+                    - generic [ref=f6e1024]: Arrive home
+                  - generic [ref=f6e1025]: Hide details
+                - generic [ref=f6e1028]:
+                  - list [ref=f6e1029]:
+                    - listitem [ref=f6e1030]:
+                      - generic [ref=f6e1031]: Check-out
+                      - generic [ref=f6e1033]:
+                        - generic [ref=f6e1034]: Check out and depart
+                        - paragraph [ref=f6e1035]: Leave your accommodation in good time.
+                    - listitem [ref=f6e1036]:
+                      - generic [ref=f6e1037]: Return begins
+                      - generic [ref=f6e1039]:
+                        - generic [ref=f6e1040]: Head to the ferry terminal
+                        - paragraph [ref=f6e1041]: Check out and transfer to the terminal in good time.
+                    - listitem [ref=f6e1042]:
+                      - generic [ref=f6e1043]: Ferry crossing
+                      - generic [ref=f6e1045]:
+                        - generic [ref=f6e1046]: Board the ferry
+                        - paragraph [ref=f6e1047]: Cross by ferry on the way home.
+                    - listitem [ref=f6e1048]:
+                      - generic [ref=f6e1049]: Arrive home
+                      - generic [ref=f6e1051]:
+                        - generic [ref=f6e1052]: Arrive home
+                        - paragraph [ref=f6e1053]: Travel home to Vancouver.
+                  - paragraph [ref=f6e1054]: "Estimated total journey: about 6 hours each way."
+                  - generic [ref=f6e1055]:
+                    - generic [ref=f6e1056]:
+                      - generic [ref=f6e1057]: Getting around
+                      - generic [ref=f6e1058]: Rental car or local taxi/shuttle, with walking in the village.
+                    - generic [ref=f6e1059]:
+                      - generic [ref=f6e1060]: Plan ahead
+                      - generic [ref=f6e1061]: Confirm your departure time.
+                    - generic [ref=f6e1062]:
+                      - generic [ref=f6e1063]: Overnight
+                      - generic [ref=f6e1064]: Home
+    - contentinfo [ref=f6e41]:
+      - generic [ref=f6e42]:
+        - paragraph [ref=f6e43]: TravelUp
+        - paragraph [ref=f6e46]: Helping unsure travellers discover where to go next.
+        - paragraph [ref=f6e47]: All budgets, climates, seasons, itineraries and packing suggestions are indicative estimates, not live information. Always verify visa requirements, entry conditions, safety and travel advisories using official government sources for your citizenship.
+        - generic [ref=f6e48]:
+          - link "About & disclaimer" [ref=f6e49] [cursor=pointer]:
+            - /url: /about
+          - link "Home" [ref=f6e50] [cursor=pointer]:
+            - /url: /
+  - region "Notifications (F8)":
+    - list

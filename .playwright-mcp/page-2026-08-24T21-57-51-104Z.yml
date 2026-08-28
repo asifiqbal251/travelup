@@ -1,0 +1,60 @@
+- generic [ref=f25e4]:
+  - generic [ref=f25e5]:
+    - banner [ref=f25e6]:
+      - generic [ref=f25e7]:
+        - link "TravelUp" [ref=f25e8] [cursor=pointer]:
+          - /url: /
+        - navigation [ref=f25e12]:
+          - link "Home" [ref=f25e13] [cursor=pointer]:
+            - /url: /
+          - link "About" [ref=f25e14] [cursor=pointer]:
+            - /url: /about
+          - button "Clear My Data" [ref=f25e15] [cursor=pointer]
+    - main [ref=f25e16]:
+      - generic [ref=f25e17]:
+        - generic [ref=f25e18]:
+          - generic [ref=f25e19]:
+            - generic [ref=f25e20]: Step 5 of 7
+            - generic [ref=f25e21]: Preferences
+          - progressbar [ref=f25e22]
+        - generic [ref=f25e24]:
+          - generic [ref=f25e650]:
+            - heading "Your preferences" [level=1] [ref=f25e651]
+            - paragraph [ref=f25e652]: Climate, pace and how active you want to be.
+            - generic [ref=f25e653]:
+              - generic [ref=f25e654]:
+                - text: Preferred climate
+                - radiogroup "Preferred climate" [ref=f25e655]:
+                  - radio "Warm" [ref=f25e656] [cursor=pointer]
+                  - radio "Mild" [ref=f25e658] [cursor=pointer]
+                  - radio "Cool" [ref=f25e660] [cursor=pointer]
+                  - radio "Cold or snowy" [ref=f25e662] [cursor=pointer]
+                  - radio "No preference" [ref=f25e664] [cursor=pointer]
+              - generic [ref=f25e666]:
+                - text: Preferred pace
+                - radiogroup "Preferred pace" [ref=f25e667]:
+                  - radio "Relaxed" [ref=f25e668] [cursor=pointer]
+                  - radio "Balanced" [ref=f25e670] [cursor=pointer]
+                  - radio "Fast-paced" [ref=f25e672] [cursor=pointer]
+              - generic [ref=f25e674]:
+                - text: Preferred physical activity
+                - radiogroup "Preferred physical activity" [ref=f25e675]:
+                  - radio "Light" [ref=f25e676] [cursor=pointer]
+                  - radio "Moderate" [ref=f25e678] [cursor=pointer]
+                  - radio "Active" [ref=f25e680] [cursor=pointer]
+                  - radio "Highly active" [ref=f25e682] [cursor=pointer]
+          - generic [ref=f25e39]:
+            - button "Back" [ref=f25e548] [cursor=pointer]
+            - button "Next" [active] [ref=f25e40] [cursor=pointer]
+    - contentinfo [ref=f25e41]:
+      - generic [ref=f25e42]:
+        - paragraph [ref=f25e43]: TravelUp
+        - paragraph [ref=f25e46]: Helping unsure travellers discover where to go next.
+        - paragraph [ref=f25e47]: All budgets, climates, seasons, itineraries and packing suggestions are indicative estimates, not live information. Always verify visa requirements, entry conditions, safety and travel advisories using official government sources for your citizenship.
+        - generic [ref=f25e48]:
+          - link "About & disclaimer" [ref=f25e49] [cursor=pointer]:
+            - /url: /about
+          - link "Home" [ref=f25e50] [cursor=pointer]:
+            - /url: /
+  - region "Notifications (F8)":
+    - list

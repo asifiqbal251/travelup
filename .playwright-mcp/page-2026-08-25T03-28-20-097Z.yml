@@ -1,0 +1,174 @@
+- generic [ref=f21e4]:
+  - generic [ref=f21e5]:
+    - banner [ref=f21e6]:
+      - generic [ref=f21e7]:
+        - link "TravelUp" [ref=f21e8] [cursor=pointer]:
+          - /url: /
+        - navigation [ref=f21e12]:
+          - link "Home" [ref=f21e13] [cursor=pointer]:
+            - /url: /
+          - link "About" [ref=f21e14] [cursor=pointer]:
+            - /url: /about
+          - button "Clear My Data" [ref=f21e15] [cursor=pointer]
+    - main [ref=f21e16]:
+      - generic [ref=f21e736]:
+        - generic [ref=f21e737]:
+          - generic [ref=f21e738]:
+            - heading "Your top 3 matches" [level=1] [ref=f21e739]
+            - paragraph [ref=f21e740]: Final scores combine your preference fit with travel practicality for your trip length. Estimates only.
+          - button "Revise" [ref=f21e741] [cursor=pointer]
+        - paragraph [ref=f21e745]: Scores are estimates based on your preferences and curated destination data, not live availability or flight schedules. Always verify visa and entry requirements through official government sources for your citizenship.
+        - generic [ref=f21e746]:
+          - article [ref=f21e747]:
+            - generic [ref=f21e748]:
+              - img "Tofino, Canada" [ref=f21e750]
+              - generic [ref=f21e751]: 95/100
+              - generic [ref=f21e752]: Strong match
+              - generic [ref=f21e753]:
+                - heading "Tofino" [level=2] [ref=f21e754]
+                - paragraph [ref=f21e758]: Canada · West Coast Vancouver Island, British Columbia, Canada
+            - generic [ref=f21e759]:
+              - region "Travel fit" [ref=f21e760]:
+                - generic [ref=f21e761]:
+                  - heading "Travel fit" [level=3] [ref=f21e762]
+                  - 'status "Travel fit: Good fit" [ref=f21e763]': Good fit
+                - generic [ref=f21e764]:
+                  - generic [ref=f21e765]:
+                    - term [ref=f21e766]: How you'll travel
+                    - definition [ref=f21e767]: Ferry + drive
+                  - generic [ref=f21e768]:
+                    - term [ref=f21e769]: Travel time
+                    - definition [ref=f21e770]: About 6 hours each way
+                  - generic [ref=f21e771]:
+                    - term [ref=f21e772]: Time at destination
+                    - definition [ref=f21e773]: About 3.5 days
+              - list [ref=f21e774]:
+                - listitem [ref=f21e775]:
+                  - generic [ref=f21e776]: •
+                  - text: Great for nature, beaches, wildlife
+                - listitem [ref=f21e777]:
+                  - generic [ref=f21e778]: •
+                  - text: Enjoyable in your chosen month
+                - listitem [ref=f21e779]:
+                  - generic [ref=f21e780]: •
+                  - text: Fits your selected budget level
+              - generic [ref=f21e781]:
+                - generic [ref=f21e782]:
+                  - generic [ref=f21e786]: Trip length
+                  - generic [ref=f21e787]: 3–5d
+                - generic [ref=f21e788]:
+                  - generic [ref=f21e792]: Budget
+                  - generic [ref=f21e793]: Moderate – Comfortable – Premium
+                - generic [ref=f21e794]:
+                  - generic [ref=f21e798]: Climate
+                  - generic [ref=f21e799]: Mild, Cool
+              - generic [ref=f21e800]: "Main experiences: Long Beach · Pacific Rim National Park trails · Surfing lessons · Storm watching"
+              - generic [ref=f21e801]: "Suited to: Solo, Couple, Friends, Family"
+              - button "See score breakdown" [ref=f21e802] [cursor=pointer]
+              - button "View My Trip" [ref=f21e803] [cursor=pointer]
+          - article [ref=f21e804]:
+            - generic [ref=f21e805]:
+              - img "Kelowna and the Okanagan Valley, Canada" [ref=f21e807]
+              - generic [ref=f21e808]: 83/100
+              - generic [ref=f21e809]: Strong match
+              - generic [ref=f21e810]:
+                - heading "Kelowna and the Okanagan Valley" [level=2] [ref=f21e811]
+                - paragraph [ref=f21e815]: Canada · Okanagan Valley, British Columbia, Canada
+            - generic [ref=f21e816]:
+              - region "Travel fit" [ref=f21e817]:
+                - generic [ref=f21e818]:
+                  - heading "Travel fit" [level=3] [ref=f21e819]
+                  - 'status "Travel fit: Good fit" [ref=f21e820]': Good fit
+                - generic [ref=f21e821]:
+                  - generic [ref=f21e822]:
+                    - term [ref=f21e823]: How you'll travel
+                    - definition [ref=f21e824]: Drive
+                  - generic [ref=f21e825]:
+                    - term [ref=f21e826]: Travel time
+                    - definition [ref=f21e827]: About 4.5 hours each way
+                  - generic [ref=f21e828]:
+                    - term [ref=f21e829]: Time at destination
+                    - definition [ref=f21e830]: About 3.5 days
+              - list [ref=f21e831]:
+                - listitem [ref=f21e832]:
+                  - generic [ref=f21e833]: •
+                  - text: Great for nature, beaches
+                - listitem [ref=f21e834]:
+                  - generic [ref=f21e835]: •
+                  - text: Enjoyable in your chosen month
+                - listitem [ref=f21e836]:
+                  - generic [ref=f21e837]: •
+                  - text: Fits your selected budget level
+              - generic [ref=f21e838]:
+                - generic [ref=f21e839]:
+                  - generic [ref=f21e843]: Trip length
+                  - generic [ref=f21e844]: 2–5d
+                - generic [ref=f21e845]:
+                  - generic [ref=f21e849]: Budget
+                  - generic [ref=f21e850]: Moderate – Comfortable – Premium
+                - generic [ref=f21e851]:
+                  - generic [ref=f21e855]: Climate
+                  - generic [ref=f21e856]: Warm, Mild
+              - generic [ref=f21e857]: "Main experiences: Okanagan wine tours · Kelowna waterfront beaches · Knox Mountain hike · Orchard fruit stands"
+              - generic [ref=f21e858]: "Suited to: Solo, Couple, Friends, Family"
+              - button "See score breakdown" [ref=f21e859] [cursor=pointer]
+              - button "View My Trip" [ref=f21e860] [cursor=pointer]
+          - article [ref=f21e861]:
+            - generic [ref=f21e862]:
+              - img "San Diego, United States" [ref=f21e864]
+              - generic [ref=f21e865]: 83/100
+              - generic [ref=f21e866]: Strong match
+              - generic [ref=f21e867]:
+                - heading "San Diego" [level=2] [ref=f21e868]
+                - paragraph [ref=f21e872]: United States · Southern California, United States
+            - generic [ref=f21e873]:
+              - region "Travel fit" [ref=f21e874]:
+                - generic [ref=f21e875]:
+                  - heading "Travel fit" [level=3] [ref=f21e876]
+                  - 'status "Travel fit: Good fit" [ref=f21e877]': Good fit
+                - generic [ref=f21e878]:
+                  - generic [ref=f21e879]:
+                    - term [ref=f21e880]: How you'll travel
+                    - definition [ref=f21e881]: Flight, train or drive depending on origin
+                  - generic [ref=f21e882]:
+                    - term [ref=f21e883]: Travel time
+                    - definition [ref=f21e884]: About 5.6 hours each way
+                  - generic [ref=f21e885]:
+                    - term [ref=f21e886]: Time at destination
+                    - definition [ref=f21e887]: About 3 days
+              - list [ref=f21e888]:
+                - listitem [ref=f21e889]:
+                  - generic [ref=f21e890]: •
+                  - text: Great for beaches, wildlife
+                - listitem [ref=f21e891]:
+                  - generic [ref=f21e892]: •
+                  - text: Enjoyable in your chosen month
+                - listitem [ref=f21e893]:
+                  - generic [ref=f21e894]: •
+                  - text: Fits your selected budget level
+              - generic [ref=f21e895]:
+                - generic [ref=f21e896]:
+                  - generic [ref=f21e900]: Trip length
+                  - generic [ref=f21e901]: 2–5d
+                - generic [ref=f21e902]:
+                  - generic [ref=f21e906]: Budget
+                  - generic [ref=f21e907]: Moderate – Comfortable – Premium
+                - generic [ref=f21e908]:
+                  - generic [ref=f21e912]: Climate
+                  - generic [ref=f21e913]: Warm, Mild
+              - generic [ref=f21e914]: "Main experiences: Balboa Park and San Diego Zoo · La Jolla Cove · Gaslamp Quarter · Coronado Beach"
+              - generic [ref=f21e915]: "Suited to: Solo, Couple, Friends, Family"
+              - button "See score breakdown" [ref=f21e916] [cursor=pointer]
+              - button "View My Trip" [ref=f21e917] [cursor=pointer]
+    - contentinfo [ref=f21e41]:
+      - generic [ref=f21e42]:
+        - paragraph [ref=f21e43]: TravelUp
+        - paragraph [ref=f21e46]: Helping unsure travellers discover where to go next.
+        - paragraph [ref=f21e47]: All budgets, climates, seasons, itineraries and packing suggestions are indicative estimates, not live information. Always verify visa requirements, entry conditions, safety and travel advisories using official government sources for your citizenship.
+        - generic [ref=f21e48]:
+          - link "About & disclaimer" [ref=f21e49] [cursor=pointer]:
+            - /url: /about
+          - link "Home" [ref=f21e50] [cursor=pointer]:
+            - /url: /
+  - region "Notifications (F8)":
+    - list

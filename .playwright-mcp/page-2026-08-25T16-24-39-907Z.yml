@@ -1,0 +1,128 @@
+- generic [ref=f12e4]:
+  - generic [ref=f12e5]:
+    - banner [ref=f12e6]:
+      - generic [ref=f12e7]:
+        - link "TravelUp" [ref=f12e8] [cursor=pointer]:
+          - /url: /
+        - navigation [ref=f12e12]:
+          - link "Home" [ref=f12e13] [cursor=pointer]:
+            - /url: /
+          - link "About" [ref=f12e14] [cursor=pointer]:
+            - /url: /about
+          - button "Clear My Data" [ref=f12e15] [cursor=pointer]
+    - main [ref=f12e16]:
+      - generic [ref=f12e963]:
+        - button "Back to recommendations" [ref=f12e964] [cursor=pointer]
+        - generic [ref=f12e965]:
+          - img "Paris, France" [ref=f12e967]
+          - generic [ref=f12e969]:
+            - heading "Paris" [level=1] [ref=f12e970]
+            - paragraph [ref=f12e971]: France · Île-de-France, France
+        - generic [ref=f12e972]:
+          - tablist [ref=f12e973]:
+            - tab "Itinerary" [selected] [ref=f12e974] [cursor=pointer]
+            - tab "Packing" [ref=f12e975] [cursor=pointer]
+            - tab "Overview" [ref=f12e976] [cursor=pointer]
+          - tabpanel "Itinerary" [ref=f12e977]:
+            - generic [ref=f12e978]:
+              - paragraph [ref=f12e979]: A suggested 3-day plan including outbound and return travel. Indicative only — verify opening hours and tickets before you go.
+              - button "Day 1 Marais & Latin Quarter Paris Light intensity Cities Food History and culture View details" [ref=f12e1067] [cursor=pointer]:
+                - generic [ref=f12e982]:
+                  - generic [ref=f12e983]:
+                    - generic [ref=f12e984]: Day 1
+                    - heading "Marais & Latin Quarter" [level=3] [ref=f12e985]
+                    - generic [ref=f12e986]: Paris
+                  - generic [ref=f12e987]: Light intensity
+                - generic [ref=f12e988]:
+                  - generic [ref=f12e989]: Cities
+                  - generic [ref=f12e990]: Food
+                  - generic [ref=f12e991]: History and culture
+                - generic [ref=f12e992]: View details
+              - generic [ref=f12e1042]:
+                - button "Day 2 Major museum & the Seine Paris Moderate intensity History and culture Cities Hide details" [expanded] [active] [ref=f12e1068] [cursor=pointer]:
+                  - generic [ref=f12e1044]:
+                    - generic [ref=f12e1045]:
+                      - generic [ref=f12e1046]: Day 2
+                      - heading "Major museum & the Seine" [level=3] [ref=f12e1047]
+                      - generic [ref=f12e1048]: Paris
+                    - generic [ref=f12e1049]: Moderate intensity
+                  - generic [ref=f12e1050]:
+                    - generic [ref=f12e1051]: History and culture
+                    - generic [ref=f12e1052]: Cities
+                  - generic [ref=f12e1053]: Hide details
+                - generic [ref=f12e1069]:
+                  - list [ref=f12e1070]:
+                    - listitem [ref=f12e1071]:
+                      - generic [ref=f12e1072]:
+                        - generic [ref=f12e1073]: 08:00–11:00
+                        - generic [ref=f12e1074]: ~3 hr
+                        - generic [ref=f12e1075]: Morning
+                      - generic [ref=f12e1076]:
+                        - generic [ref=f12e1077]: Visit the Louvre — book a timed entry ahead. The Louvre is closed Tuesdays; on a Tuesday, the Musée d'Orsay is the alternative.
+                        - paragraph
+                    - listitem [ref=f12e1078]:
+                      - generic [ref=f12e1079]: Late morning
+                      - generic [ref=f12e1081]:
+                        - generic [ref=f12e1082]: Mid-morning break
+                        - paragraph [ref=f12e1083]: A short break or local transit between stops.
+                    - listitem [ref=f12e1084]:
+                      - generic [ref=f12e1085]:
+                        - generic [ref=f12e1086]: 12:30–14:00
+                        - generic [ref=f12e1087]: ~1.5 hr
+                        - generic [ref=f12e1088]: Lunch
+                      - generic [ref=f12e1089]:
+                        - generic [ref=f12e1090]: Local bite
+                        - paragraph [ref=f12e1091]: A classic bistro lunch — steak frites or a croque-monsieur.
+                    - listitem [ref=f12e1092]:
+                      - generic [ref=f12e1093]:
+                        - generic [ref=f12e1094]: 14:00–18:00
+                        - generic [ref=f12e1095]: ~4 hr
+                        - generic [ref=f12e1096]: Afternoon
+                      - generic [ref=f12e1097]:
+                        - generic [ref=f12e1098]: Walk the Seine to the Eiffel Tower; book tower access ahead or admire it from the Trocadéro.
+                        - paragraph
+                    - listitem [ref=f12e1099]:
+                      - generic [ref=f12e1100]:
+                        - generic [ref=f12e1101]: 18:30–21:30
+                        - generic [ref=f12e1102]: ~3 hr
+                        - generic [ref=f12e1103]: Evening
+                      - generic [ref=f12e1104]:
+                        - generic [ref=f12e1105]: French bistro dinner in Saint-Germain or the Marais.
+                        - paragraph
+                  - generic [ref=f12e1106]:
+                    - generic [ref=f12e1107]:
+                      - generic [ref=f12e1108]: Getting around
+                      - generic [ref=f12e1109]: Walking and the metro; taxis for longer hops.
+                    - generic [ref=f12e1110]:
+                      - generic [ref=f12e1111]: Plan ahead
+                      - generic [ref=f12e1112]: Confirm opening hours and book popular tickets before you travel.
+                    - generic [ref=f12e1113]:
+                      - generic [ref=f12e1114]: Optional swap
+                      - generic [ref=f12e1115]: Swap for “Versailles day trip (optional)” if it suits your pace.
+                    - generic [ref=f12e1116]:
+                      - generic [ref=f12e1117]: Overnight
+                      - generic [ref=f12e1118]: Overnight in Paris.
+              - button "Day 3 Montmartre & Sacré-Cœur Paris Moderate intensity Cities Photography History and culture View details" [ref=f12e1055] [cursor=pointer]:
+                - generic [ref=f12e1056]:
+                  - generic [ref=f12e1057]:
+                    - generic [ref=f12e1058]: Day 3
+                    - heading "Montmartre & Sacré-Cœur" [level=3] [ref=f12e1059]
+                    - generic [ref=f12e1060]: Paris
+                  - generic [ref=f12e1061]: Moderate intensity
+                - generic [ref=f12e1062]:
+                  - generic [ref=f12e1063]: Cities
+                  - generic [ref=f12e1064]: Photography
+                  - generic [ref=f12e1065]: History and culture
+                - generic [ref=f12e1066]: View details
+    - contentinfo [ref=f12e61]:
+      - generic [ref=f12e62]:
+        - paragraph [ref=f12e63]: TravelUp
+        - paragraph [ref=f12e66]: Helping unsure travellers discover where to go next.
+        - paragraph [ref=f12e67]: All budgets, climates, seasons, itineraries and packing suggestions are indicative estimates, not live information. Always verify visa requirements, entry conditions, safety and travel advisories using official government sources for your citizenship.
+        - generic [ref=f12e68]:
+          - link "About & disclaimer" [ref=f12e69] [cursor=pointer]:
+            - /url: /about
+          - link "Home" [ref=f12e70] [cursor=pointer]:
+            - /url: /
+  - region "Notifications (F8)":
+    - list

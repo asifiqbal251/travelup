@@ -1,0 +1,127 @@
+- generic [ref=f9e4]:
+  - generic [ref=f9e5]:
+    - banner [ref=f9e6]:
+      - generic [ref=f9e7]:
+        - link "TravelUp" [ref=f9e8] [cursor=pointer]:
+          - /url: /
+        - navigation [ref=f9e12]:
+          - link "Home" [ref=f9e13] [cursor=pointer]:
+            - /url: /
+          - link "About" [ref=f9e14] [cursor=pointer]:
+            - /url: /about
+          - button "Clear My Data" [ref=f9e15] [cursor=pointer]
+    - main [ref=f9e16]:
+      - generic [ref=f9e1298]:
+        - button "Back to recommendations" [ref=f9e1299] [cursor=pointer]
+        - generic [ref=f9e1300]:
+          - img "Victoria, Canada" [ref=f9e1302]
+          - generic [ref=f9e1304]:
+            - heading "Victoria" [level=1] [ref=f9e1305]
+            - paragraph [ref=f9e1306]: Canada · Vancouver Island, British Columbia, Canada
+        - generic [ref=f9e1307]:
+          - tablist [ref=f9e1308]:
+            - tab "Itinerary" [selected] [ref=f9e1309] [cursor=pointer]
+            - tab "Packing" [ref=f9e1310] [cursor=pointer]
+            - tab "Overview" [ref=f9e1311] [cursor=pointer]
+          - tabpanel "Itinerary" [ref=f9e1312]:
+            - generic [ref=f9e1313]:
+              - paragraph [ref=f9e1314]: A suggested 4-day plan including outbound and return travel. Indicative only — verify opening hours and tickets before you go.
+              - generic [ref=f9e1315]:
+                - button "Day 1 Inner Harbour & Old Town Victoria Light intensity Cities History and culture Hide details" [expanded] [ref=f9e1316] [cursor=pointer]:
+                  - generic [ref=f9e1317]:
+                    - generic [ref=f9e1318]:
+                      - generic [ref=f9e1319]: Day 1
+                      - heading "Inner Harbour & Old Town" [level=3] [ref=f9e1320]
+                      - generic [ref=f9e1321]: Victoria
+                    - generic [ref=f9e1322]: Light intensity
+                  - generic [ref=f9e1323]:
+                    - generic [ref=f9e1324]: Cities
+                    - generic [ref=f9e1325]: History and culture
+                  - generic [ref=f9e1326]: Hide details
+                - generic [ref=f9e1327]:
+                  - list [ref=f9e1328]:
+                    - listitem [ref=f9e1329]:
+                      - generic [ref=f9e1330]: Departure
+                      - generic [ref=f9e1332]:
+                        - generic [ref=f9e1333]: Drive or transfer to the ferry terminal
+                        - paragraph [ref=f9e1334]: Allow time to check in for the ferry.
+                    - listitem [ref=f9e1335]:
+                      - generic [ref=f9e1336]: Ferry crossing
+                      - generic [ref=f9e1338]:
+                        - generic [ref=f9e1339]: Board the ferry
+                        - paragraph [ref=f9e1340]: Cross by ferry; times are indicative only.
+                    - listitem [ref=f9e1341]:
+                      - generic [ref=f9e1342]: Onward travel
+                      - generic [ref=f9e1344]:
+                        - generic [ref=f9e1345]: Continue by road after arrival
+                        - paragraph [ref=f9e1346]: Drive or transfer toward your destination.
+                    - listitem [ref=f9e1347]:
+                      - generic [ref=f9e1348]: Arrival
+                      - generic [ref=f9e1350]:
+                        - generic [ref=f9e1351]: Arrive and check in
+                        - paragraph [ref=f9e1352]: Reach your destination and settle into your stay.
+                    - listitem [ref=f9e1353]:
+                      - generic [ref=f9e1354]:
+                        - generic [ref=f9e1355]: 18:30–21:00
+                        - generic [ref=f9e1356]: ~2.5 hr
+                        - generic [ref=f9e1357]: Evening
+                      - generic [ref=f9e1358]:
+                        - generic [ref=f9e1359]: Dinner in the Old Town district.
+                        - paragraph
+                  - paragraph [ref=f9e1360]: "Estimated total journey: about 4 hours each way."
+                  - generic [ref=f9e1361]:
+                    - generic [ref=f9e1362]:
+                      - generic [ref=f9e1363]: Getting around
+                      - generic [ref=f9e1364]: Walking, local buses, taxis and harbour transport where useful.
+                    - generic [ref=f9e1365]:
+                      - generic [ref=f9e1366]: Plan ahead
+                      - generic [ref=f9e1367]: Confirm opening hours and book popular tickets before you travel.
+                    - generic [ref=f9e1368]:
+                      - generic [ref=f9e1369]: Overnight
+                      - generic [ref=f9e1370]: Overnight in Victoria.
+              - button "Day 2 Butchart Gardens Victoria Light intensity Nature Relaxation View details" [ref=f9e1372] [cursor=pointer]:
+                - generic [ref=f9e1373]:
+                  - generic [ref=f9e1374]:
+                    - generic [ref=f9e1375]: Day 2
+                    - heading "Butchart Gardens" [level=3] [ref=f9e1376]
+                    - generic [ref=f9e1377]: Victoria
+                  - generic [ref=f9e1378]: Light intensity
+                - generic [ref=f9e1379]:
+                  - generic [ref=f9e1380]: Nature
+                  - generic [ref=f9e1381]: Relaxation
+                - generic [ref=f9e1382]: View details
+              - button "Day 3 Fisherman's Wharf & Dallas Road waterfront Victoria Light intensity Nature Food View details" [ref=f9e1384] [cursor=pointer]:
+                - generic [ref=f9e1385]:
+                  - generic [ref=f9e1386]:
+                    - generic [ref=f9e1387]: Day 3
+                    - heading "Fisherman's Wharf & Dallas Road waterfront" [level=3] [ref=f9e1388]
+                    - generic [ref=f9e1389]: Victoria
+                  - generic [ref=f9e1390]: Light intensity
+                - generic [ref=f9e1391]:
+                  - generic [ref=f9e1392]: Nature
+                  - generic [ref=f9e1393]: Food
+                - generic [ref=f9e1394]: View details
+              - 'button "Day 4 Return: Victoria → Vancouver Victoria Moderate intensity Breakfast Return Arrive home View details" [ref=f9e1396] [cursor=pointer]':
+                - generic [ref=f9e1397]:
+                  - generic [ref=f9e1398]:
+                    - generic [ref=f9e1399]: Day 4
+                    - 'heading "Return: Victoria → Vancouver" [level=3] [ref=f9e1400]'
+                    - generic [ref=f9e1401]: Victoria
+                  - generic [ref=f9e1402]: Moderate intensity
+                - generic [ref=f9e1403]:
+                  - generic [ref=f9e1404]: Breakfast
+                  - generic [ref=f9e1405]: Return
+                  - generic [ref=f9e1406]: Arrive home
+                - generic [ref=f9e1407]: View details
+    - contentinfo [ref=f9e41]:
+      - generic [ref=f9e42]:
+        - paragraph [ref=f9e43]: TravelUp
+        - paragraph [ref=f9e46]: Helping unsure travellers discover where to go next.
+        - paragraph [ref=f9e47]: All budgets, climates, seasons, itineraries and packing suggestions are indicative estimates, not live information. Always verify visa requirements, entry conditions, safety and travel advisories using official government sources for your citizenship.
+        - generic [ref=f9e48]:
+          - link "About & disclaimer" [ref=f9e49] [cursor=pointer]:
+            - /url: /about
+          - link "Home" [ref=f9e50] [cursor=pointer]:
+            - /url: /
+  - region "Notifications (F8)":
+    - list
