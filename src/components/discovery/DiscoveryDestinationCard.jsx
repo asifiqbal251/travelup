@@ -1,20 +1,22 @@
 import { Image } from "@/components/ui/image";
 import { TRAVEL_FALLBACK_IMAGE } from "@/lib/fallbackImage";
 import { nameWithCountry } from "@/lib/destinationLabel";
+import { DEST_CARD_WIDTH, DEST_CARD_ASPECT, DEST_TITLE_CLAMP } from "@/lib/destinationCard";
 
 // Image-led destination card. The photograph becomes the card (bleeds to every
 // edge). Default visible content is limited to name + one concise reason; a
 // score badge appears only for personalized recommendations. Country stays in
 // the accessible name even when not visually repeated.
 //
-// `featured` slightly enlarges the first card in a rail for editorial hierarchy
-// without reordering data. Hover/focus feedback completes in ~200ms (motion-safe
-// only); keyboard focus gets an equivalent elevated state plus a focus ring.
+// Every sibling card in a rail uses the SAME geometry (shared
+// destinationCard.js): identical width, aspect ratio, crop, radius and reserved
+// title area — no first-card enlargement. `featured` is accepted for call-site
+// compatibility but has no visual effect. Hover/focus feedback completes in
+// ~200ms (motion-safe only); keyboard focus gets an equivalent elevated state
+// plus a focus ring.
 export default function DiscoveryDestinationCard({ item, onOpen, personalized, featured }) {
+  void featured; // geometry is uniform regardless of position
   const { dest, reason, result } = item;
-  const width = featured
-    ? "w-[82vw] max-w-[340px] sm:w-[340px] lg:w-[360px]"
-    : "w-[78vw] max-w-[300px] sm:w-[300px] lg:w-[320px]";
 
   const labeled = nameWithCountry(dest.name, dest.country);
   const a11yLabel = personalized && result
@@ -26,9 +28,9 @@ export default function DiscoveryDestinationCard({ item, onOpen, personalized, f
       type="button"
       onClick={() => onOpen(item)}
       aria-label={a11yLabel}
-      className={`group block ${width} text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-on-dark focus-visible:ring-offset-2 focus-visible:ring-offset-cinema motion-safe:transition-[transform] motion-safe:duration-200 motion-safe:ease-out motion-safe:hover:-translate-y-1 motion-safe:focus-visible:-translate-y-1`}
+      className={`group block ${DEST_CARD_WIDTH} text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-on-dark focus-visible:ring-offset-2 focus-visible:ring-offset-cinema motion-safe:transition-[transform] motion-safe:duration-200 motion-safe:ease-out motion-safe:hover:-translate-y-1 motion-safe:focus-visible:-translate-y-1`}
     >
-      <span className="relative block w-full aspect-[4/5] overflow-hidden rounded-2xl bg-cinema/40">
+      <span className={`relative block w-full ${DEST_CARD_ASPECT} overflow-hidden rounded-2xl bg-cinema/40`}>
         <Image
           src={dest.image_url}
           alt=""
@@ -54,10 +56,10 @@ export default function DiscoveryDestinationCard({ item, onOpen, personalized, f
           </span>
         )}
         <span className="absolute inset-x-0 bottom-0 p-4">
-          <span className="block font-display text-lg font-bold text-on-dark leading-tight">
+          <span className={`block font-display text-lg font-bold text-on-dark ${DEST_TITLE_CLAMP}`}>
             {dest.name}
           </span>
-          <span className={`block text-sm font-medium mt-1 ${personalized ? "text-teal" : "text-on-dark/85"}`}>
+          <span className={`block text-sm font-medium mt-1 line-clamp-1 ${personalized ? "text-teal" : "text-on-dark/85"}`}>
             {reason}
           </span>
         </span>
