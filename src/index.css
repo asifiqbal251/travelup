@@ -12,8 +12,36 @@
     --on-dark: 43 33% 96%;         /* #F8F6F1 text on dark */
     --muted-dark: 220 16% 70%;     /* muted text on dark */
     --teal: 184 90% 45%;           /* #02DAE3 WhereNova turquoise */
-    --coral: 14 98% 60%;           /* #FE6D32 supporting coral */
+    --coral: 11 100% 64%;          /* #FF6B4A — Best fit marker only */
     --orange: 28 98% 52%;          /* #FE8D0D warm accent */
+
+    /* ---- WhereNova design system tokens (Build 7) ---- */
+    /* Dark surfaces — discovery, questionnaire, reveal, results */
+    --wn-page: #081428;
+    --wn-page-2: #0B1B33;
+    --wn-surface: #102542;
+    --wn-surface-2: #16304F;
+    --wn-line: rgba(255, 255, 255, 0.10);
+    --wn-line-2: rgba(255, 255, 255, 0.20);
+    --wn-text: #EDF4FA;
+    --wn-text-2: #9DB2C9;
+    --wn-text-3: #63799A;
+    /* Light surfaces — trip page, about, planning */
+    --wn-page-l: #EEF3F8;
+    --wn-page-2-l: #F6F9FC;
+    --wn-surface-l: #FFFFFF;
+    --wn-surface-2-l: #F2F6FA;
+    --wn-line-l: #DEE7F0;
+    --wn-line-2-l: #C6D5E4;
+    --wn-text-l: #0B1B33;
+    --wn-text-2-l: #4A6280;
+    --wn-text-3-l: #7089A5;
+    /* Brand accents — identical on both surfaces */
+    --wn-cyan: #3FD8E0;
+    --wn-cyan-2: #22BFCC;
+    --wn-cyan-bright: #48E2E8;
+    --wn-coral: #FF6B4A;
+    --wn-ink-deep: #06202B;
 
     /* ---- Semantic shadcn tokens (light workflow surface) ---- */
     --background: var(--workflow);
@@ -123,6 +151,21 @@
 .wn-logo-contrast {
   filter: drop-shadow(0 0 1px rgba(255, 255, 255, 0.85)) drop-shadow(0 2px 4px rgba(0, 0, 0, 0.30));
 }
+
+/* WhereNova primary CTAs — surface-specific gradients (Build 7). */
+.wn-cta-dark {
+  background-image: linear-gradient(180deg, #48E2E8, #22BFCC);
+  color: #06202B;
+}
+.wn-cta-dark:hover { filter: brightness(1.06); }
+.wn-cta-light {
+  background-image: linear-gradient(180deg, #143257, #0B1B33);
+  color: #FFFFFF;
+}
+.wn-cta-light:hover { filter: brightness(1.12); }
+/* Hide scrollbars on snap-scrollers. */
+.no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
 
 /* Lightweight questionnaire step transition (fade + slight rise). The global
    reduced-motion guard below collapses this to near-instant. */
