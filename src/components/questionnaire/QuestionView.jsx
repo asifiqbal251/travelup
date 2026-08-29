@@ -12,6 +12,12 @@ import DayScroller from "@/components/questionnaire/DayScroller";
 
 const HEADLINE_STYLE = { fontSize: "clamp(30px, 4.6vw, 50px)" };
 
+// Selected-state fill for chips/segments. Literal rgba(), not an opacity
+// modifier on --wn-cyan -- Tailwind's bg-wn-cyan/NN silently fails because
+// --wn-cyan is a plain hex custom property, not space-separated channels
+// (see docs/travelfit-visual-fidelity-pass.md #5 for the root cause).
+const SELECTED_FILL = { background: "linear-gradient(180deg, rgba(63,216,224,.16), rgba(63,216,224,.07))" };
+
 export default function QuestionView({
   qIndex,
   answers,
@@ -161,12 +167,22 @@ function MonthGrid({ value, onMonth }) {
   );
 }
 
-function SingleGroup({ q, qIndex, answers, onSingle }) {
+// Q6-9 (Budget/Climate/Pace/Activity) use a segmented control instead of
+// loose chips: one bordered container, equal-width cells, divided by
+// hairlines. All four of these questions carry noPref -- that's already a
+// reliable, existing signal for "this is a scale question" so no separate
+// id allowlist is needed.
+function SegmentedGroup({ q, qIndex, answers, onSingle }) {
   const selected = answers[q.field];
+  const opts = q.options.filter((o) => !o.noPref);
   return (
     <div>
-      <div role="radiogroup" aria-label={q.title} className="grid grid-cols-2 gap-3">
-        {q.options.filter((o) => !o.noPref).map((o) => {
+      <div
+        role="radiogroup"
+        aria-label={q.title}
+        className="mx-auto max-w-[520px] flex rounded-xl border border-wn-line overflow-hidden"
+      >
+        {opts.map((o, i) => {
           const on = selected === o.key;
           return (
             <button
@@ -175,15 +191,14 @@ function SingleGroup({ q, qIndex, answers, onSingle }) {
               role="radio"
               aria-checked={on}
               onClick={() => onSingle(qIndex, o.key)}
+              style={on ? SELECTED_FILL : undefined}
               className={cn(
-                "min-h-14 rounded-2xl px-4 py-4 text-left flex items-center gap-3 ring-1 focus:outline-none focus:ring-2 focus:ring-wn-cyan motion-safe:transition",
-                on
-                  ? "bg-wn-cyan/15 ring-wn-cyan text-wn-text font-semibold"
-                  : "bg-wn-surface/50 ring-wn-line-2 text-wn-text-2 hover:text-wn-text"
+                "flex-1 min-h-14 px-2 text-[15px] font-medium motion-safe:transition focus:outline-none focus-visible:relative focus-visible:z-10 focus-visible:ring-2 focus-visible:ring-wn-cyan",
+                i > 0 && "border-l border-wn-line",
+                on ? "text-wn-cyan font-semibold" : "text-wn-text hover:bg-wn-surface"
               )}
             >
-              <span className="flex-1 text-[15px]">{o.label}</span>
-              {on && <Check className="w-5 h-5 text-wn-cyan shrink-0" aria-hidden="true" />}
+              {o.label}
             </button>
           );
         })}
@@ -204,30 +219,65 @@ function SingleGroup({ q, qIndex, answers, onSingle }) {
   );
 }
 
+// Auto-width pills that wrap and centre, for Q4 (Traveller, single) and Q5
+// (Interests, multi). Selection is never colour-alone: border width steps
+// up (1px -> 2px) on top of the colour/fill change, and the checkmark is
+// kept as a third, non-colour signal.
+function OptionChip({ label, on, onClick, role, ariaState }) {
+  return (
+    <button
+      type="button"
+      role={role}
+      {...ariaState}
+      onClick={onClick}
+      style={on ? SELECTED_FILL : undefined}
+      className={cn(
+        "inline-flex items-center gap-2 px-5 py-3.5 rounded-xl text-[15px] font-medium motion-safe:transition motion-safe:hover:-translate-y-px focus:outline-none focus-visible:ring-2 focus-visible:ring-wn-cyan",
+        on
+          ? "border-2 border-wn-cyan text-wn-cyan"
+          : "border border-wn-line bg-wn-surface text-wn-text hover:border-wn-line-2"
+      )}
+    >
+      {label}
+      {on && <Check className="w-4 h-4 text-wn-cyan shrink-0" aria-hidden="true" />}
+    </button>
+  );
+}
+
+function SingleGroup({ q, qIndex, answers, onSingle }) {
+  const selected = answers[q.field];
+  if (q.noPref) {
+    return <SegmentedGroup q={q} qIndex={qIndex} answers={answers} onSingle={onSingle} />;
+  }
+  return (
+    <div role="radiogroup" aria-label={q.title} className="flex flex-wrap gap-[10px] justify-center">
+      {q.options.map((o) => (
+        <OptionChip
+          key={o.key}
+          label={o.label}
+          on={selected === o.key}
+          onClick={() => onSingle(qIndex, o.key)}
+          role="radio"
+          ariaState={{ "aria-checked": selected === o.key }}
+        />
+      ))}
+    </div>
+  );
+}
+
 function MultiGroup({ q, answers, onToggle }) {
   const arr = answers.interests || [];
   return (
-    <div role="group" aria-label={q.title} className="grid grid-cols-2 gap-3">
-      {q.options.map((o) => {
-        const on = arr.includes(o.key);
-        return (
-          <button
-            key={o.key}
-            type="button"
-            aria-pressed={on}
-            onClick={() => onToggle(o.key)}
-            className={cn(
-              "min-h-14 rounded-2xl px-4 py-4 text-left flex items-center justify-between gap-3 ring-1 focus:outline-none focus:ring-2 focus:ring-wn-cyan motion-safe:transition",
-              on
-                ? "bg-wn-cyan/15 ring-wn-cyan text-wn-text font-semibold"
-                : "bg-wn-surface/50 ring-wn-line-2 text-wn-text-2 hover:text-wn-text"
-            )}
-          >
-            <span className="text-[15px]">{o.label}</span>
-            {on && <Check className="w-5 h-5 text-wn-cyan shrink-0" aria-hidden="true" />}
-          </button>
-        );
-      })}
+    <div role="group" aria-label={q.title} className="flex flex-wrap gap-[10px] justify-center">
+      {q.options.map((o) => (
+        <OptionChip
+          key={o.key}
+          label={o.label}
+          on={arr.includes(o.key)}
+          onClick={() => onToggle(o.key)}
+          ariaState={{ "aria-pressed": arr.includes(o.key) }}
+        />
+      ))}
     </div>
   );
 }
