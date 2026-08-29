@@ -18,7 +18,7 @@ import { assessPracticality } from "@/lib/practicality";
 import { scoreWithPracticality } from "@/lib/scoring";
 import TripView, { TripHeader } from "@/components/TripView";
 import { toast } from "@/components/ui/use-toast";
-import { ArrowLeft, Bookmark, BookmarkCheck } from "lucide-react";
+import { Bookmark, BookmarkCheck } from "lucide-react";
 
 const QUOTA_MSG = "This browser is out of space for another saved trip. Delete an older saved trip and try again.";
 const GENERIC_MSG = "We couldn't save this itinerary in this browser. Check your browser storage settings and try again.";
@@ -54,9 +54,11 @@ export default function TripDetail() {
 
   if (loading) {
     return (
-      <div className="max-w-2xl mx-auto px-4 py-20 text-center text-muted-foreground">
-        <div className="w-8 h-8 mx-auto border-4 border-muted border-t-ink rounded-full animate-spin mb-4" />
-        Building your trip…
+      <div className="min-h-[100dvh] bg-wn-page text-wn-text-2">
+        <div className="max-w-2xl mx-auto px-4 py-20 text-center">
+          <div className="w-8 h-8 mx-auto border-4 border-wn-line border-t-wn-cyan rounded-full animate-spin mb-4" />
+          Building your trip…
+        </div>
       </div>
     );
   }
@@ -132,39 +134,39 @@ export default function TripDetail() {
   };
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-8">
-      <Button variant="ghost" onClick={() => navigate("/results")} className="mb-4 min-h-11">
-        <ArrowLeft className="w-4 h-4 mr-2" /> Back to recommendations
-      </Button>
+    <div>
+      <TripHeader display={display} score={score} backHref="/results" backLabel="Back to recommendations" />
 
-      <TripHeader display={display} />
+      <div className="relative -mt-6 sm:-mt-8 rounded-t-[28px] sm:rounded-t-[32px] bg-wn-page-l overflow-hidden">
+        <div className="max-w-3xl mx-auto px-4 pt-8 pb-8">
+          <div className="mb-6">
+            <Button
+              onClick={doSave}
+              variant={alreadySaved ? "outline" : "default"}
+              className={`w-full sm:w-auto min-h-12 ${alreadySaved ? "" : "wn-cta-light"}`}
+              aria-label={alreadySaved ? "Replace saved itinerary" : "Save itinerary"}
+            >
+              {alreadySaved
+                ? <><BookmarkCheck className="w-4 h-4 mr-2" /> Saved — tap to replace</>
+                : <><Bookmark className="w-4 h-4 mr-2" /> Save itinerary</>}
+            </Button>
+          </div>
 
-      <div className="mb-6">
-        <Button
-          onClick={doSave}
-          variant={alreadySaved ? "outline" : "default"}
-          className={`w-full sm:w-auto min-h-12 ${alreadySaved ? "" : "wn-cta-light"}`}
-          aria-label={alreadySaved ? "Replace saved itinerary" : "Save itinerary"}
-        >
-          {alreadySaved
-            ? <><BookmarkCheck className="w-4 h-4 mr-2" /> Saved — tap to replace</>
-            : <><Bookmark className="w-4 h-4 mr-2" /> Save itinerary</>}
-        </Button>
+          <TripView
+            display={display}
+            itinerary={itinerary}
+            packingGroups={packingGroups}
+            packingState={packingState}
+            travelFit={travelFit}
+            packingHandlers={{
+              onToggle: handleToggle,
+              onAdd: handleAdd,
+              onRemove: handleRemove,
+              onReset: handleReset
+            }}
+          />
+        </div>
       </div>
-
-      <TripView
-        display={display}
-        itinerary={itinerary}
-        packingGroups={packingGroups}
-        packingState={packingState}
-        travelFit={travelFit}
-        packingHandlers={{
-          onToggle: handleToggle,
-          onAdd: handleAdd,
-          onRemove: handleRemove,
-          onReset: handleReset
-        }}
-      />
 
       {/* Duplicate itinerary */}
       <AlertDialog open={dupOpen} onOpenChange={setDupOpen}>

@@ -10,7 +10,7 @@ import {
 } from "@/lib/storage";
 import TripView, { TripHeader } from "@/components/TripView";
 import { toast } from "@/components/ui/use-toast";
-import { ArrowLeft, Trash2, Plane } from "lucide-react";
+import { Trash2, Plane } from "lucide-react";
 
 // Renders a saved trip purely from its immutable snapshot. It never calls the
 // Destination entity API, regenerates itinerary/packing/overview, or changes
@@ -34,24 +34,28 @@ export default function SavedTripDetail() {
 
   if (loading) {
     return (
-      <div className="max-w-2xl mx-auto px-4 py-20 text-center text-muted-foreground">
-        <div className="w-8 h-8 mx-auto border-4 border-muted border-t-ink rounded-full animate-spin mb-4" />
-        Opening saved trip…
+      <div className="min-h-[100dvh] bg-wn-page text-wn-text-2">
+        <div className="max-w-2xl mx-auto px-4 py-20 text-center">
+          <div className="w-8 h-8 mx-auto border-4 border-wn-line border-t-wn-cyan rounded-full animate-spin mb-4" />
+          Opening saved trip…
+        </div>
       </div>
     );
   }
 
   if (!trip) {
     return (
-      <div className="max-w-2xl mx-auto px-4 py-16 text-center">
-        <Plane className="w-10 h-10 text-muted-foreground mx-auto mb-4" />
-        <h1 className="font-display text-2xl font-bold mb-2 text-ink">Saved trip not found</h1>
-        <p className="text-muted-foreground mb-6">
-          This saved trip may have been deleted or is no longer available on this browser.
-        </p>
-        <Button asChild className="bg-ink hover:bg-ink/90 text-on-dark min-h-11">
-          <Link to="/saved-trips">Back to saved trips</Link>
-        </Button>
+      <div className="min-h-[100dvh] bg-wn-page text-wn-text">
+        <div className="max-w-2xl mx-auto px-4 py-16 text-center">
+          <Plane className="w-10 h-10 text-wn-text-2 mx-auto mb-4" />
+          <h1 className="font-display text-2xl font-bold mb-2 text-wn-text">Saved trip not found</h1>
+          <p className="text-wn-text-2 mb-6">
+            This saved trip may have been deleted or is no longer available on this browser.
+          </p>
+          <Button asChild className="wn-cta-dark min-h-11">
+            <Link to="/saved-trips">Back to saved trips</Link>
+          </Button>
+        </div>
       </div>
     );
   }
@@ -103,37 +107,37 @@ export default function SavedTripDetail() {
   };
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-8">
-      <Button variant="ghost" onClick={() => navigate("/saved-trips")} className="mb-4 min-h-11">
-        <ArrowLeft className="w-4 h-4 mr-2" /> Back to saved trips
-      </Button>
+    <div>
+      <TripHeader display={display} score={typeof trip.score === "number" ? trip.score : null} backHref="/saved-trips" backLabel="Back to saved trips" />
 
-      <TripHeader display={display} />
+      <div className="relative -mt-6 sm:-mt-8 rounded-t-[28px] sm:rounded-t-[32px] bg-wn-page-l overflow-hidden">
+        <div className="max-w-3xl mx-auto px-4 pt-8 pb-8">
+          <div className="mb-6">
+            <Button
+              variant="outline"
+              onClick={() => setDeleteOpen(true)}
+              className="min-h-11"
+              aria-label={`Delete saved trip to ${trip.destination.name}`}
+            >
+              <Trash2 className="w-4 h-4 mr-2" /> Delete saved trip
+            </Button>
+          </div>
 
-      <div className="mb-6">
-        <Button
-          variant="outline"
-          onClick={() => setDeleteOpen(true)}
-          className="min-h-11"
-          aria-label={`Delete saved trip to ${trip.destination.name}`}
-        >
-          <Trash2 className="w-4 h-4 mr-2" /> Delete saved trip
-        </Button>
+          <TripView
+            display={display}
+            itinerary={trip.itinerary}
+            packingGroups={packingGroups}
+            packingState={packingState}
+            travelFit={trip.travelFit}
+            packingHandlers={{
+              onToggle: handleToggle,
+              onAdd: handleAdd,
+              onRemove: handleRemove,
+              onReset: handleReset
+            }}
+          />
+        </div>
       </div>
-
-      <TripView
-        display={display}
-        itinerary={trip.itinerary}
-        packingGroups={packingGroups}
-        packingState={packingState}
-        travelFit={trip.travelFit}
-        packingHandlers={{
-          onToggle: handleToggle,
-          onAdd: handleAdd,
-          onRemove: handleRemove,
-          onReset: handleReset
-        }}
-      />
 
       <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
         <AlertDialogContent>

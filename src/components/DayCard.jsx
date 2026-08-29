@@ -27,8 +27,8 @@ function DetailLine({ label, value }) {
   if (!value) return null;
   return (
     <div className="flex gap-3">
-      <span className="text-xs font-semibold text-muted-foreground w-28 flex-shrink-0 uppercase tracking-wide">{label}</span>
-      <span className="text-sm text-ink/80 flex-1 min-w-0">{value}</span>
+      <span className="text-xs font-semibold text-wn-text-2-l w-28 flex-shrink-0 uppercase tracking-wide">{label}</span>
+      <span className="text-sm text-wn-text-l/80 flex-1 min-w-0">{value}</span>
     </div>
   );
 }
@@ -43,7 +43,7 @@ export default function DayCard({ day, isOpen, badge, onToggle }) {
   return (
     <div
       className={`rounded-2xl motion-safe:transition-colors motion-safe:duration-200 ${
-        isOpen ? "bg-card shadow-sm ring-1 ring-border" : "bg-transparent"
+        isOpen ? "bg-wn-surface-l shadow-sm ring-1 ring-wn-line-l" : "bg-transparent"
       }`}
     >
       <button
@@ -51,15 +51,15 @@ export default function DayCard({ day, isOpen, badge, onToggle }) {
         onClick={onToggle}
         aria-expanded={isOpen}
         aria-controls={`day-${day.day}-details`}
-        className="w-full text-left p-5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink rounded-2xl"
+        className="w-full text-left p-5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-wn-cyan rounded-2xl"
       >
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+            <div className="text-xs font-semibold text-wn-text-2-l uppercase tracking-wide">
               Day {day.day}{tag}
             </div>
-            <h3 className="font-display font-semibold text-ink break-words">{day.title}</h3>
-            <div className="text-xs text-muted-foreground mt-0.5">{day.location}</div>
+            <h3 className="font-display font-semibold text-wn-text-l break-words">{day.title}</h3>
+            <div className="text-xs text-wn-text-2-l mt-0.5">{day.location}</div>
           </div>
           <span className={`text-xs font-medium px-2.5 py-1 rounded-full flex-shrink-0 ${badge}`}>
             {day.intensity} intensity
@@ -69,13 +69,13 @@ export default function DayCard({ day, isOpen, badge, onToggle }) {
           {(day.highlights || []).map((h, i) => (
             <span
               key={i}
-              className="text-xs bg-muted text-muted-foreground rounded-full px-2 py-0.5"
+              className="text-xs bg-wn-surface-2-l text-wn-text-2-l rounded-full px-2 py-0.5"
             >
               {h}
             </span>
           ))}
         </div>
-        <span className="inline-flex items-center gap-1 text-sm font-medium text-ink mt-3">
+        <span className="inline-flex items-center gap-1 text-sm font-medium text-wn-text-l mt-3">
           {isOpen ? "Hide details" : "View details"}
           <ChevronDown className={`w-4 h-4 motion-safe:transition-transform motion-safe:duration-200 ${isOpen ? "rotate-180" : ""}`} />
         </span>
@@ -84,14 +84,14 @@ export default function DayCard({ day, isOpen, badge, onToggle }) {
       {isOpen && (
         <div id={`day-${day.day}-details`} className="px-5 pb-5">
           <ol className="relative mt-3">
-            <span className="absolute left-3 top-1 bottom-1 w-px bg-border" aria-hidden="true" />
+            <span className="absolute left-3 top-1 bottom-1 w-px bg-wn-line-l" aria-hidden="true" />
             {(day.timeline || []).map((e, i) => {
               const Icon = eventIcon(e);
               const note = e.source ? day[e.source] : e.note;
               return (
                 <li key={i} className="relative flex gap-3 pb-5 last:pb-0">
                   <span
-                    className="relative z-10 flex-shrink-0 w-6 h-6 rounded-full bg-card ring-1 ring-border flex items-center justify-center text-ink"
+                    className="relative z-10 flex-shrink-0 w-6 h-6 rounded-full bg-wn-surface-l ring-1 ring-wn-line-l flex items-center justify-center text-wn-text-l"
                     aria-hidden="true"
                   >
                     <Icon className="w-3 h-3" />
@@ -101,20 +101,20 @@ export default function DayCard({ day, isOpen, badge, onToggle }) {
                       <div className="w-24 flex-shrink-0">
                         {e.time ? (
                           <>
-                            <div className="text-xs font-medium text-ink">{e.time}</div>
-                            <div className="text-[10px] text-muted-foreground">{e.duration}</div>
-                            <div className="text-[10px] font-semibold text-muted-foreground uppercase mt-0.5">{e.slot}</div>
+                            <div className="text-xs font-medium text-wn-text-l">{e.time}</div>
+                            <div className="text-[10px] text-wn-text-2-l">{e.duration}</div>
+                            <div className="text-[10px] font-semibold text-wn-text-2-l uppercase mt-0.5">{e.slot}</div>
                           </>
                         ) : (
                           <>
-                            <div className="text-xs font-semibold text-ink leading-tight">{e.slot}</div>
-                            {e.duration && <div className="text-[10px] text-muted-foreground mt-0.5">{e.duration}</div>}
+                            <div className="text-xs font-semibold text-wn-text-l leading-tight">{e.slot}</div>
+                            {e.duration && <div className="text-[10px] text-wn-text-2-l mt-0.5">{e.duration}</div>}
                           </>
                         )}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="text-sm font-medium text-ink">{e.name}</div>
-                        {note && <p className="text-sm text-ink/75 mt-0.5">{note}</p>}
+                        <div className="text-sm font-medium text-wn-text-l">{e.name}</div>
+                        {note && <p className="text-sm text-wn-text-l/75 mt-0.5">{note}</p>}
                       </div>
                     </div>
                   </div>
@@ -123,7 +123,7 @@ export default function DayCard({ day, isOpen, badge, onToggle }) {
             })}
           </ol>
           {day.journey && (
-            <p className="text-xs text-muted-foreground mt-3 italic">{day.journey}</p>
+            <p className="text-xs text-wn-text-2-l mt-3 italic">{day.journey}</p>
           )}
           <div className="mt-5 space-y-3">
             <DetailLine label="Getting around" value={day.gettingAround} />
