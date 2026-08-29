@@ -15,7 +15,18 @@ import TravelFit from "@/components/TravelFit";
 import DayCard from "@/components/DayCard";
 import { TRAVEL_FALLBACK_IMAGE } from "@/lib/fallbackImage";
 import { nameWithCountry } from "@/lib/destinationLabel";
+import { BUDGET_ORDER } from "@/lib/options";
 import { Check, Plus, Trash2, RotateCcw, Info } from "lucide-react";
+
+// budget_categories arrays aren't stored in canonical order in the backend
+// (e.g. ["Moderate","Comfortable","Budget"]), so a raw join produced garbled
+// output like "Moderate – Comfortable – Budget". Sort to BUDGET_ORDER first.
+function orderedBudgetLabel(categories) {
+  return (categories || [])
+    .slice()
+    .sort((a, b) => BUDGET_ORDER.indexOf(a) - BUDGET_ORDER.indexOf(b))
+    .join(" – ");
+}
 
 const INTENSITY_COLOR = {
   Light: "bg-muted text-muted-foreground",
@@ -280,7 +291,7 @@ function OverviewView({ display }) {
         <dl className="space-y-2 text-sm">
           <div className="flex justify-between gap-4 py-2 border-b border-border"><dt className="text-muted-foreground">Best months</dt><dd className="text-ink text-right">{display.bestForSummary}</dd></div>
           <div className="flex justify-between gap-4 py-2 border-b border-border"><dt className="text-muted-foreground">Suggested length</dt><dd className="text-ink">{display.minDays}–{display.maxDays} days</dd></div>
-          <div className="flex justify-between gap-4 py-2 border-b border-border"><dt className="text-muted-foreground">Budget</dt><dd className="text-ink text-right">{(display.budgetCategories || []).join(" – ")}</dd></div>
+          <div className="flex justify-between gap-4 py-2 border-b border-border"><dt className="text-muted-foreground">Budget</dt><dd className="text-ink text-right">{orderedBudgetLabel(display.budgetCategories)}</dd></div>
           <div className="flex justify-between gap-4 py-2 border-b border-border"><dt className="text-muted-foreground">Climate</dt><dd className="text-ink text-right">{(display.climateTags || []).join(", ")}</dd></div>
           <div className="flex justify-between gap-4 py-2 border-b border-border"><dt className="text-muted-foreground">Suited to</dt><dd className="text-ink text-right">{(display.travellerTypes || []).join(", ")}</dd></div>
           <div className="flex justify-between gap-4 py-2"><dt className="text-muted-foreground">Dietary notes</dt><dd className="text-ink text-right">{display.dietaryNotes}</dd></div>
