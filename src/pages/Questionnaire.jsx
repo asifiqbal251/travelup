@@ -147,7 +147,7 @@ export default function Questionnaire() {
     setField(QUESTIONS[qIndex].field, key);
     const qs = screenQuestions(current, desktop);
     const complete = qs.every((qi) => qi === qIndex || isAnswered(qi, answers));
-    if (complete) scheduleAdvance(300);
+    if (complete) scheduleAdvance(key === "no-pref" ? 0 : 300);
   };
   const onMonth = (value) => {
     setField("travelMonth", value);

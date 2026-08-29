@@ -1,4 +1,6 @@
-// One-question-per-screen Travel Fit flow.
+// Travel Fit flow. One question per screen on mobile; desktop (>=1024px)
+// deliberately pairs Q6+Q7 and Q8+Q9 on a shared screen (see screenOrderFor)
+// so related preferences sit side by side on wider viewports.
 //
 // Presentation only — every answer maps to the SAME controlled vocabulary the
 // scoring engine already consumes (src/lib/options.js, src/lib/scoring.js).
@@ -128,7 +130,8 @@ export const QUESTIONS = [
   },
 ];
 
-// Desktop (>=1024px) pairs Q6+Q7 (indices 5,6) and Q8+Q9 (indices 7,8).
+// Desktop (>=1024px) deliberately pairs Q6+Q7 (indices 5,6) and Q8+Q9
+// (indices 7,8) on shared screens — an intentional design choice, not a gap.
 export function screenOrderFor(desktop) {
   return desktop ? [0, 1, 2, 3, 4, 5, 7] : [0, 1, 2, 3, 4, 5, 6, 7, 8];
 }
