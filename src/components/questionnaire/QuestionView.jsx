@@ -26,7 +26,7 @@ export default function QuestionView({
   const q = QUESTIONS[qIndex];
 
   return (
-    <section aria-label={q.title} className="step-enter">
+    <section aria-label={q.title} className="step-enter text-center">
       <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-wn-cyan mb-3">
         {q.eyebrow}
       </p>
@@ -82,7 +82,7 @@ function OriginInput({ value, onText, onChip, onTextEnter }) {
         }}
         onFocus={() => setFocused(true)}
         onBlur={() => setTimeout(() => setFocused(false), 150)}
-        className="w-full min-h-12 px-4 rounded-xl bg-wn-surface/70 ring-1 ring-wn-line-2 text-wn-text text-[15px] placeholder:text-wn-text-3 focus:outline-none focus:ring-2 focus:ring-wn-cyan"
+        className="w-full min-h-12 px-4 rounded-xl bg-wn-surface/70 ring-1 ring-wn-line-2 text-wn-text text-[15px] text-center placeholder:text-wn-text-3 focus:outline-none focus:ring-2 focus:ring-wn-cyan"
       />
       {inferred && (
         <p className="mt-2 text-[13px] text-wn-text-3">
@@ -105,7 +105,7 @@ function OriginInput({ value, onText, onChip, onTextEnter }) {
           ))}
         </ul>
       )}
-      <div className="mt-4 flex flex-wrap gap-2">
+      <div className="mt-4 flex flex-wrap gap-2 justify-center">
         {ORIGIN_CHIPS.map((c) => (
           <button
             key={c}
