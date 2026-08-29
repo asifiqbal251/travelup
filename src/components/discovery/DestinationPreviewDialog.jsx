@@ -104,7 +104,7 @@ export default function DestinationPreviewDialog({
           {list.length > 1 && <SideArrow dir={-1} label="Previous destination" />}
 
           {/* Fixed-dimension panel */}
-          <div className="relative w-[94vw] sm:max-w-[600px] lg:max-w-[720px] sm:h-[560px] lg:h-[600px] sm:max-h-[88vh] overflow-hidden rounded-3xl bg-cinema/90 backdrop-blur-xl border border-white/10 text-on-dark flex flex-col sm:grid sm:grid-cols-2">
+          <div className="relative w-[94vw] sm:max-w-[600px] lg:max-w-[1100px] sm:h-[560px] lg:h-[680px] sm:max-h-[88vh] overflow-hidden rounded-3xl bg-cinema/90 backdrop-blur-xl border border-white/10 text-on-dark flex flex-col sm:grid sm:grid-cols-[60%_40%]">
             <DialogPrimitive.Close
               aria-label="Close"
               className="glass-badge absolute right-3 top-3 z-20 grid h-9 w-9 place-items-center rounded-full text-on-dark opacity-90 transition-opacity hover:opacity-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-on-dark focus-visible:ring-offset-2 focus-visible:ring-offset-cinema"
@@ -113,7 +113,7 @@ export default function DestinationPreviewDialog({
             </DialogPrimitive.Close>
 
             {/* Image side */}
-            <div className="relative h-44 sm:h-full">
+            <div className="relative h-44 sm:h-full overflow-hidden">
               <Image
                 src={d.image_url}
                 alt=""
@@ -136,7 +136,7 @@ export default function DestinationPreviewDialog({
 
             {/* Content side */}
             <div className="flex flex-col min-h-0 flex-1">
-              <div className="overflow-y-auto px-6 pt-7 pb-4 sm:px-7 flex-1">
+              <div className="overflow-hidden px-6 pt-7 pb-4 sm:px-7 flex-1">
                 <DialogPrimitive.Title className="font-display text-2xl font-bold text-on-dark">
                   {d.name}
                 </DialogPrimitive.Title>
@@ -153,19 +153,23 @@ export default function DestinationPreviewDialog({
 
                 <div className="mt-5">
                   <h3 className="text-xs font-medium text-on-dark/60 mb-1.5">Top experiences</h3>
-                  <p className="text-sm text-on-dark/85 leading-snug line-clamp-2">
-                    {(d.top_experiences || []).slice(0, 3).join(" · ")}
-                  </p>
+                  <ul className="space-y-1">
+                    {(d.top_experiences || []).slice(0, 4).map((exp, i) => (
+                      <li key={i} className="text-sm text-on-dark/85 leading-snug truncate">
+                        {exp}
+                      </li>
+                    ))}
+                  </ul>
                 </div>
 
-                <dl className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2.5 text-sm">
-                  <div>
+                <dl className="mt-5 flex items-start gap-6 text-sm">
+                  <div className="min-w-0 shrink-0">
                     <dt className="text-xs font-medium text-on-dark/60">Suggested length</dt>
-                    <dd className="font-display font-semibold text-on-dark mt-0.5">{d.min_days}–{d.max_days} days</dd>
+                    <dd className="font-display font-semibold text-on-dark mt-0.5 whitespace-nowrap">{d.min_days}–{d.max_days} days</dd>
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <dt className="text-xs font-medium text-on-dark/60">Best months</dt>
-                    <dd className="text-on-dark mt-0.5 leading-snug">{bestMonthsSummary(d)}</dd>
+                    <dd className="text-on-dark mt-0.5 leading-snug truncate">{bestMonthsSummary(d)}</dd>
                   </div>
                 </dl>
 
@@ -184,24 +188,24 @@ export default function DestinationPreviewDialog({
 
                 {result && prac && (
                   <div className="mt-5 pt-5 border-t border-white/10">
-                    <div className="flex items-center justify-between gap-3 mb-3">
+                    <div className="flex items-center justify-between gap-3">
                       <TravelFitRing score={result.finalScore} size="md" />
                       <span className="text-sm text-teal font-semibold">{result.matchLabel}</span>
                     </div>
-                    <dl className="grid grid-cols-1 gap-y-2 text-sm">
-                      <div className="flex items-start justify-between gap-4">
-                        <dt className="text-muted-dark flex items-center gap-1.5"><Compass className="w-3.5 h-3.5" /> Travel mode</dt>
-                        <dd className="text-on-dark text-right max-w-[60%]">{normalizeMode(prac.travelMode)}</dd>
-                      </div>
-                      <div className="flex items-center justify-between gap-4">
-                        <dt className="text-muted-dark flex items-center gap-1.5"><Clock className="w-3.5 h-3.5" /> Travel time</dt>
-                        <dd className="text-on-dark">About {prac.oneWayHours} hours each way</dd>
-                      </div>
-                      <div className="flex items-center justify-between gap-4">
-                        <dt className="text-muted-dark flex items-center gap-1.5"><Gauge className="w-3.5 h-3.5" /> Time at destination</dt>
-                        <dd className="text-on-dark">{prac.usableDestinationDays} days</dd>
-                      </div>
-                    </dl>
+                    <div className="mt-3 flex items-center gap-3 text-xs text-on-dark/70">
+                      <span className="inline-flex items-center gap-1 min-w-0">
+                        <Compass className="w-3 h-3 shrink-0" />
+                        <span className="truncate">{normalizeMode(prac.travelMode)}</span>
+                      </span>
+                      <span className="inline-flex items-center gap-1 shrink-0 whitespace-nowrap">
+                        <Clock className="w-3 h-3" />
+                        {prac.oneWayHours}h each way
+                      </span>
+                      <span className="inline-flex items-center gap-1 shrink-0 whitespace-nowrap">
+                        <Gauge className="w-3 h-3" />
+                        {prac.usableDestinationDays}d there
+                      </span>
+                    </div>
                   </div>
                 )}
               </div>
