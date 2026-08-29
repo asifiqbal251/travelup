@@ -49,3 +49,14 @@ who never touches the scroller silently gets a 7-day trip they never
 chose. Pre-existing, not introduced by the v3 polish work. Decide later
 whether duration should start genuinely unset — that's a product question
 (is 7 a sensible default, or a silent assumption?) not just a UI one.
+
+## Destination images needing replacement
+
+3 of 54 destination images have baked-in frames/EXIF captions and need
+replacing in Base44 (not a code fix): Victoria, Tofino (visible
+"1/500 sec, f/11" caption), Tanzania & Zanzibar. Separately: all 54
+source images are uniformly 1024×1024 (square) — every non-square card
+crops equally (rails lose ~20% off the sides, the results hero loses
+~37.5% off top/bottom). Already handled correctly by object-fit: cover,
+no code fix needed — but worth matching card aspect ratios if images are
+ever regenerated or resourced.
