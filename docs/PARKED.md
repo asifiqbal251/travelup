@@ -39,3 +39,13 @@ This is deferred, not rejected — a paired/denser desktop layout may be
 worth revisiting deliberately later (e.g. as its own considered redesign
 rather than a special case bolted onto the one-question-per-screen flow),
 not reintroduced incidentally while working on something else.
+
+## Trip duration defaults to 7
+
+`BLANK_ANSWERS.travelDays` defaults to 7, so Q2's day scroller reads as
+"answered" the moment the screen mounts. Two consequences: a Continue
+button appears on Q2 (unlike other single-select questions), and a user
+who never touches the scroller silently gets a 7-day trip they never
+chose. Pre-existing, not introduced by the v3 polish work. Decide later
+whether duration should start genuinely unset — that's a product question
+(is 7 a sensible default, or a silent assumption?) not just a UI one.
