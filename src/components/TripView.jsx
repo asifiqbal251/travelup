@@ -70,7 +70,7 @@ export function TripHeader({ display, score, backHref, backLabel }) {
         </Link>
       )}
       {typeof score === "number" && (
-        <span className="absolute top-4 right-4 sm:right-6 rounded-full glass-badge p-1.5">
+        <span className="absolute top-4 right-4 sm:right-6">
           <TravelFitRing score={score} size="lg" />
         </span>
       )}

@@ -129,7 +129,7 @@ export default function SavedTrips() {
                     }}
                   />
                   {typeof t.score === "number" ? (
-                    <span className="absolute top-3 left-3 rounded-full glass-badge p-1">
+                    <span className="absolute top-3 left-3">
                       <TravelFitRing score={t.score} size="md" />
                     </span>
                   ) : (

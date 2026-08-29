@@ -49,7 +49,7 @@ export default function DiscoveryDestinationCard({ item, onOpen, personalized, f
           }}
         />
         {personalized && result && (
-          <span className="absolute top-3 right-3 rounded-full glass-badge p-1" aria-hidden="true">
+          <span className="absolute top-3 right-3" aria-hidden="true">
             <TravelFitRing score={result.finalScore} size="md" />
           </span>
         )}
