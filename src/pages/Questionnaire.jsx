@@ -70,6 +70,7 @@ export default function Questionnaire() {
     () => (done ? [] : screenQuestions(current, desktop)),
     [current, desktop, done]
   );
+  const paired = sQuestions.length > 1; // desktop Q6+Q7 / Q8+Q9 screens
   const screenComplete = sQuestions.length > 0 && sQuestions.every((qi) => isAnswered(qi, answers));
   const answeredFlags = useMemo(
     () => QUESTIONS.map((_, i) => isAnswered(i, answers)),
@@ -249,26 +250,41 @@ export default function Questionnaire() {
         tabIndex={-1}
         className="grid place-items-center px-4 sm:px-6 py-6 outline-none min-h-0"
       >
-        <div className="w-full max-w-[640px] mx-auto">
+        <div className={`w-full mx-auto ${paired ? "max-w-[1040px]" : "max-w-[640px]"}`}>
           {done ? (
             <CompletionScreen answers={answers} onContinue={reveal} />
           ) : (
-            <div className={sQuestions.length > 1 ? "grid md:grid-cols-2 gap-8 lg:gap-12" : ""}>
-              {sQuestions.map((qi) => (
-                <QuestionView
-                  key={qi}
-                  qIndex={qi}
-                  answers={answers}
-                  onSingle={onSingle}
-                  onMonth={onMonth}
-                  onDay={onDay}
-                  onMultiToggle={onMultiToggle}
-                  onChip={onChip}
-                  onText={onText}
-                  onTextEnter={onTextEnter}
-                />
-              ))}
-            </div>
+            <>
+              <div className={paired ? "grid md:grid-cols-2 gap-8 lg:gap-12" : ""}>
+                {sQuestions.map((qi) => (
+                  <QuestionView
+                    key={qi}
+                    qIndex={qi}
+                    answers={answers}
+                    onSingle={onSingle}
+                    onMonth={onMonth}
+                    onDay={onDay}
+                    onMultiToggle={onMultiToggle}
+                    onChip={onChip}
+                    onText={onText}
+                    onTextEnter={onTextEnter}
+                  />
+                ))}
+              </div>
+              {/* Paired screens: shared Continue button centred beneath both
+                  columns instead of pushed to the footer's bottom-right corner. */}
+              {paired && showContinue && (
+                <div className="mt-8 flex justify-center">
+                  <button
+                    type="button"
+                    onClick={goNext}
+                    className="wn-cta-dark inline-flex items-center gap-2 h-12 px-7 rounded-xl font-semibold focus:outline-none focus-visible:ring-2 focus-visible:ring-wn-cyan focus-visible:ring-offset-2 focus-visible:ring-offset-wn-page motion-safe:transition"
+                  >
+                    Continue <ArrowRight className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
+            </>
           )}
         </div>
       </main>
@@ -285,7 +301,9 @@ export default function Questionnaire() {
         </button>
 
         <div className="flex items-center gap-4">
-          {showContinue && (
+          {/* Paired screens render their own centred Continue button above
+              the footer instead (see #9) -- not duplicated here. */}
+          {showContinue && !paired && (
             <button
               type="button"
               onClick={goNext}
