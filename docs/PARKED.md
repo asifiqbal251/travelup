@@ -25,3 +25,17 @@ To add a real 4th tier later, three things must happen together:
 Separately: 15 of 54 destinations are tagged `["Balanced"]` only — pace data
 is thin across the catalogue regardless of tier count. Worth a content pass
 independent of whether a 4th tier ever ships.
+
+## Desktop question pairing
+
+Removed in `docs/wherenova-polish-pass-v3.md` Part E1 —
+`src/lib/questionnaireFlow.js`'s `screenOrderFor`/`screenStartFor`/
+`screenQuestions` now always return one question per screen, on every
+viewport. It previously paired Q6+Q7 and Q8+Q9 above 1024px; three separate
+pieces of user feedback traced back to it (7 screens on desktop vs. 9 on
+mobile, an extra forced Continue click, cramped headlines).
+
+This is deferred, not rejected — a paired/denser desktop layout may be
+worth revisiting deliberately later (e.g. as its own considered redesign
+rather than a special case bolted onto the one-question-per-screen flow),
+not reintroduced incidentally while working on something else.

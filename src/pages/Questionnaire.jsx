@@ -10,6 +10,8 @@ import {
   buildPrefs,
   hydrateAnswers,
   answerSummary,
+  BLANK_ANSWERS,
+  resumeSummary,
 } from "@/lib/questionnaireFlow";
 import { getPrefs, setPrefs, setSelectedDestinationId } from "@/lib/storage";
 import ProgressRail from "@/components/questionnaire/ProgressRail";
@@ -56,8 +58,23 @@ export default function Questionnaire() {
   const desktop = useMinWidth(1024);
 
   const [answers, setAnswers] = useState(() => hydrateAnswers(getPrefs()));
-  const [current, setCurrent] = useState(0); // screen start index
+  // Partial saved sets resume silently at the first unanswered question
+  // instead of always starting at Q1 (Part E3) -- a fully-answered set is
+  // handled separately below via the resume interstitial, so this only
+  // matters for the partial case.
+  const [current, setCurrent] = useState(() => {
+    const h = hydrateAnswers(getPrefs());
+    const firstUnanswered = QUESTIONS.findIndex((_, i) => !isAnswered(i, h));
+    return firstUnanswered >= 0 ? firstUnanswered : 0;
+  });
   const [done, setDone] = useState(false);
+  // A complete saved answer set shows a "picking up where you left off"
+  // interstitial before Q1 rather than silently re-presenting every
+  // question pre-answered, which read as broken (Part E3).
+  const [resuming, setResuming] = useState(() => {
+    const h = hydrateAnswers(getPrefs());
+    return QUESTIONS.every((_, i) => isAnswered(i, h));
+  });
   const [sheetOpen, setSheetOpen] = useState(false);
   const [mountedComplete, setMountedComplete] = useState(false);
 
@@ -65,12 +82,11 @@ export default function Questionnaire() {
   const mainRef = useRef(null);
   const liveRef = useRef(null);
 
-  const order = useMemo(() => screenOrderFor(desktop), [desktop]);
+  const order = useMemo(() => screenOrderFor(), []);
   const sQuestions = useMemo(
-    () => (done ? [] : screenQuestions(current, desktop)),
-    [current, desktop, done]
+    () => (done ? [] : screenQuestions(current)),
+    [current, done]
   );
-  const paired = sQuestions.length > 1; // desktop Q6+Q7 / Q8+Q9 screens
   const screenComplete = sQuestions.length > 0 && sQuestions.every((qi) => isAnswered(qi, answers));
   const answeredFlags = useMemo(
     () => QUESTIONS.map((_, i) => isAnswered(i, answers)),
@@ -86,24 +102,26 @@ export default function Questionnaire() {
       advanceTimer.current = null;
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [current, desktop, done]);
+  }, [current, done]);
 
   // Move focus to the content so screen readers announce the new screen.
   useEffect(() => {
     const t = setTimeout(() => mainRef.current?.focus(), 60);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [current, desktop, done]);
+  }, [current, done, resuming]);
 
   // Live region announcement.
   useEffect(() => {
     if (liveRef.current) {
-      liveRef.current.textContent = done
+      liveRef.current.textContent = resuming
+        ? "Picking up where you left off."
+        : done
         ? "Your Travel Fit is ready."
         : sQuestions.map((qi) => QUESTIONS[qi].title).join(". ");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [current, done, desktop]);
+  }, [current, done, resuming]);
 
   const setField = (field, value) => setAnswers((a) => ({ ...a, [field]: value }));
 
@@ -131,6 +149,10 @@ export default function Questionnaire() {
   };
   const goPrev = () => {
     clearAdvance();
+    if (resuming) {
+      navigate("/");
+      return;
+    }
     if (done) {
       setDone(false);
       return;
@@ -147,7 +169,7 @@ export default function Questionnaire() {
 
   const onSingle = (qIndex, key) => {
     setField(QUESTIONS[qIndex].field, key);
-    const qs = screenQuestions(current, desktop);
+    const qs = screenQuestions(current);
     const complete = qs.every((qi) => qi === qIndex || isAnswered(qi, answers));
     if (complete) scheduleAdvance(key === "no-pref" ? 0 : 300);
   };
@@ -180,7 +202,8 @@ export default function Questionnaire() {
     clearAdvance();
     setSheetOpen(false);
     setDone(false);
-    setCurrent(screenStartFor(qIndex, desktop));
+    setResuming(false);
+    setCurrent(screenStartFor(qIndex));
   };
 
   const reveal = () => {
@@ -189,8 +212,20 @@ export default function Questionnaire() {
     navigate("/results");
   };
 
+  // Resume interstitial actions (Part E3).
+  const resumeContinue = () => {
+    setResuming(false);
+    setDone(true);
+  };
+  const resumeStartFresh = () => {
+    clearAdvance();
+    setAnswers({ ...BLANK_ANSWERS });
+    setCurrent(0);
+    setResuming(false);
+  };
+
   // Continue button visibility.
-  const showContinue = !done && (() => {
+  const showContinue = !resuming && !done && (() => {
     const q = sQuestions.length ? QUESTIONS[sQuestions[0]] : null;
     if (!q) return false;
     if (q.type === "multi") return answers.interests.length > 0;
@@ -198,13 +233,10 @@ export default function Questionnaire() {
     return screenComplete && mountedComplete;
   })();
 
-  const counter = done
+  const counter = resuming || done
     ? ""
     : `${sQuestions.map((qi) => qi + 1).join("–")} of 9`;
 
-  // current is the screen-START question index, which for paired desktop
-  // screens (6+7, 8+9) is already the first question's index -- so this
-  // naturally satisfies "use the first question's hue" with no extra logic.
   const glowHue = done ? COMPLETION_HUE : (QUESTION_HUES[current] || QUESTION_HUES[0]);
 
   return (
@@ -250,41 +282,26 @@ export default function Questionnaire() {
         tabIndex={-1}
         className="grid place-items-center px-4 sm:px-6 py-6 outline-none min-h-0"
       >
-        <div className={`w-full mx-auto ${paired ? "max-w-[1040px]" : "max-w-[640px]"}`}>
-          {done ? (
+        <div className="w-full mx-auto max-w-[640px]">
+          {resuming ? (
+            <ResumeInterstitial answers={answers} onContinue={resumeContinue} onStartFresh={resumeStartFresh} />
+          ) : done ? (
             <CompletionScreen answers={answers} onContinue={reveal} />
           ) : (
-            <>
-              <div className={paired ? "grid md:grid-cols-2 gap-8 lg:gap-12" : ""}>
-                {sQuestions.map((qi) => (
-                  <QuestionView
-                    key={qi}
-                    qIndex={qi}
-                    answers={answers}
-                    onSingle={onSingle}
-                    onMonth={onMonth}
-                    onDay={onDay}
-                    onMultiToggle={onMultiToggle}
-                    onChip={onChip}
-                    onText={onText}
-                    onTextEnter={onTextEnter}
-                  />
-                ))}
-              </div>
-              {/* Paired screens: shared Continue button centred beneath both
-                  columns instead of pushed to the footer's bottom-right corner. */}
-              {paired && showContinue && (
-                <div className="mt-8 flex justify-center">
-                  <button
-                    type="button"
-                    onClick={goNext}
-                    className="wn-cta-dark inline-flex items-center gap-2 h-12 px-7 rounded-xl font-semibold focus:outline-none focus-visible:ring-2 focus-visible:ring-wn-cyan focus-visible:ring-offset-2 focus-visible:ring-offset-wn-page motion-safe:transition"
-                  >
-                    Continue <ArrowRight className="w-4 h-4" />
-                  </button>
-                </div>
-              )}
-            </>
+            sQuestions.map((qi) => (
+              <QuestionView
+                key={qi}
+                qIndex={qi}
+                answers={answers}
+                onSingle={onSingle}
+                onMonth={onMonth}
+                onDay={onDay}
+                onMultiToggle={onMultiToggle}
+                onChip={onChip}
+                onText={onText}
+                onTextEnter={onTextEnter}
+              />
+            ))
           )}
         </div>
       </main>
@@ -294,16 +311,14 @@ export default function Questionnaire() {
         <button
           type="button"
           onClick={goPrev}
-          aria-label={current === 0 && !done ? "Back to home" : "Back"}
+          aria-label={current === 0 && !done && !resuming ? "Back to home" : "Back"}
           className="inline-flex items-center justify-center h-11 w-11 rounded-full bg-wn-surface/60 ring-1 ring-wn-line-2 text-wn-text hover:bg-wn-surface focus:outline-none focus-visible:ring-2 focus-visible:ring-wn-cyan focus-visible:ring-offset-2 focus-visible:ring-offset-wn-page motion-safe:transition"
         >
           <ArrowLeft className="w-5 h-5" />
         </button>
 
         <div className="flex items-center gap-4">
-          {/* Paired screens render their own centred Continue button above
-              the footer instead (see #9) -- not duplicated here. */}
-          {showContinue && !paired && (
+          {showContinue && (
             <button
               type="button"
               onClick={goNext}
@@ -325,6 +340,42 @@ export default function Questionnaire() {
           onClose={() => setSheetOpen(false)}
         />
       )}
+    </div>
+  );
+}
+
+// "Picking up where you left off" -- shown instead of Q1 when every
+// question already has an answer from a previous completed run (Part E3),
+// so re-entering the questionnaire doesn't read as broken (every dash lit,
+// every question silently pre-answered) with no explanation.
+function ResumeInterstitial({ answers, onContinue, onStartFresh }) {
+  return (
+    <div className="text-center step-enter max-w-[640px] mx-auto">
+      <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-wn-cyan mb-4">
+        Welcome back
+      </p>
+      <h1
+        className="font-display font-extrabold tracking-[-0.03em] leading-[1.08] text-wn-text"
+        style={{ fontSize: "clamp(30px, 4.6vw, 50px)" }}
+      >
+        Picking up where you left off — {resumeSummary(answers)}.
+      </h1>
+      <div className="mt-10 flex items-center justify-center gap-3 flex-wrap">
+        <button
+          type="button"
+          onClick={onContinue}
+          className="wn-cta-dark inline-flex items-center gap-2 h-12 px-8 rounded-xl text-[15px] font-semibold focus:outline-none focus:ring-2 focus:ring-wn-cyan focus:ring-offset-2 focus:ring-offset-wn-page motion-safe:transition"
+        >
+          Continue <ArrowRight className="w-4 h-4" />
+        </button>
+        <button
+          type="button"
+          onClick={onStartFresh}
+          className="inline-flex items-center h-12 px-8 rounded-xl text-[15px] font-semibold text-wn-text-2 ring-1 ring-wn-line-2 hover:text-wn-text hover:bg-wn-surface focus:outline-none focus:ring-2 focus:ring-wn-cyan focus:ring-offset-2 focus:ring-offset-wn-page motion-safe:transition"
+        >
+          Start fresh
+        </button>
+      </div>
     </div>
   );
 }

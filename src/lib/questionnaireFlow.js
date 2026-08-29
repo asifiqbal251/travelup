@@ -129,20 +129,19 @@ export const QUESTIONS = [
   },
 ];
 
-// Desktop (>=1024px) deliberately pairs Q6+Q7 (indices 5,6) and Q8+Q9
-// (indices 7,8) on shared screens — an intentional design choice, not a gap.
-export function screenOrderFor(desktop) {
-  return desktop ? [0, 1, 2, 3, 4, 5, 7] : [0, 1, 2, 3, 4, 5, 6, 7, 8];
+// One question per screen on every viewport -- desktop used to pair Q6+Q7
+// and Q8+Q9 above 1024px, but that was reversed
+// (docs/wherenova-polish-pass-v3.md Part E1): it produced 7 screens on
+// desktop vs. 9 on mobile, forced an extra Continue click, and cramped
+// headlines. Parked for a possible deliberate revisit later
+// (docs/PARKED.md), not reintroduced casually.
+export function screenOrderFor() {
+  return [0, 1, 2, 3, 4, 5, 6, 7, 8];
 }
-export function screenStartFor(q, desktop) {
-  if (!desktop) return q;
-  if (q === 6) return 5;
-  if (q === 8) return 7;
+export function screenStartFor(q) {
   return q;
 }
-export function screenQuestions(start, desktop) {
-  if (desktop && start === 5) return [5, 6];
-  if (desktop && start === 7) return [7, 8];
+export function screenQuestions(start) {
   return [start];
 }
 
@@ -325,9 +324,32 @@ export function answerSummary(qIndex, answers) {
   }
 }
 
+// "We know where to send you" read as presumptuous (Part E2). The literal
+// spec text is "...We found three you'll love", but the questionnaire never
+// calls rankDestinations() -- it has no way to know how many destinations
+// will actually match until Results.jsx runs, and that count can genuinely
+// be below 3 (rankDestinations applies a hard practicality eligibility gate
+// before slicing to 3; Results.jsx already has its own correct messaging
+// for the below-3 case). Deliberately staying localStorage-only here rather
+// than adding a fetch+rank dependency to the completion screen -- no stated
+// count means the line is correct regardless of how many actually match,
+// and echoes the landing headline ("Find where you'll love going.").
 export function completionHeadline(answers) {
   const city = String(answers.departureCity || "").trim();
   const days = answers.travelDays;
-  if (city) return `${days} days from ${city}. We know where to send you.`;
-  return `${days} days. We know where to send you.`;
+  if (city) return `${days} days from ${city}. We found where you'll love going.`;
+  return `${days} days. We found where you'll love going.`;
+}
+
+// Short resume summary for the "picking up where you left off" interstitial
+// (Part E3), e.g. "8 days from Vancouver, October".
+export function resumeSummary(answers) {
+  const days = answers.travelDays;
+  const city = String(answers.departureCity || "").trim();
+  const monthLabel =
+    !answers.travelMonth || answers.travelMonth === "flexible"
+      ? "flexible timing"
+      : MONTHS[Number(answers.travelMonth) - 1];
+  const lead = city ? `${days} days from ${city}` : `${days} days`;
+  return `${lead}, ${monthLabel}`;
 }
