@@ -21,7 +21,8 @@ const COUNTRY_TO_ISO2 = {
   "Sweden": "SE", "Switzerland": "CH", "Taiwan": "TW", "Tanzania": "TZ",
   "Thailand": "TH", "Tunisia": "TN", "Türkiye": "TR", "Turkey": "TR", "Ukraine": "UA",
   "United Arab Emirates": "AE", "United Kingdom": "GB", "United States": "US",
-  "Uruguay": "UY", "Venezuela": "VE", "Vietnam": "VN"
+  "Uruguay": "UY", "Venezuela": "VE", "Vietnam": "VN",
+  "Costa Rica": "CR", "Georgia": "GE"
 };
 
 function iso2ToFlag(iso2) {
@@ -33,8 +34,15 @@ function iso2ToFlag(iso2) {
   return String.fromCodePoint(0x1f1e6 + c1, 0x1f1e6 + c2);
 }
 
+// For a multi-country destination string (e.g. "Argentina & Chile"), fall back
+// to the first listed country's flag rather than showing none. Single-country
+// values (the common case) hit the map directly.
 export function flagForCountry(country) {
   if (!country) return "";
-  const iso = COUNTRY_TO_ISO2[String(country).trim()];
+  const trimmed = String(country).trim();
+  const direct = COUNTRY_TO_ISO2[trimmed];
+  if (direct) return iso2ToFlag(direct);
+  const first = trimmed.split(/&|,| and |\//i)[0].trim();
+  const iso = COUNTRY_TO_ISO2[first];
   return iso ? iso2ToFlag(iso) : "";
 }

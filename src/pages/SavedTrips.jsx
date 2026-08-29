@@ -10,6 +10,7 @@ import { getSavedTrips, deleteSavedTrip } from "@/lib/storage";
 import { TRAVEL_FALLBACK_IMAGE } from "@/lib/fallbackImage";
 import TravelFitRing from "@/components/TravelFitRing";
 import { Trash2, Plane, ArrowRight } from "lucide-react";
+import { flagForCountry } from "@/lib/countryFlag";
 
 const FIT_BADGE = {
   Practical: { label: "Good fit", cls: "bg-teal text-cinema" },
@@ -143,7 +144,8 @@ export default function SavedTrips() {
                   <span className="absolute inset-x-0 bottom-0 p-5 text-on-dark">
                     <span className="block font-display text-xl font-bold leading-tight">{d.name}</span>
                     <span className="block text-sm text-on-dark/85 mt-1">
-                      From {(t.preferences && t.preferences.departureCity) || "home"} · {t.preferences && t.preferences.travelDays}-day trip
+                      {flagForCountry(d.country) && <span aria-hidden="true">{flagForCountry(d.country)} </span>}
+                      {d.country} · From {(t.preferences && t.preferences.departureCity) || "home"} · {t.preferences && t.preferences.travelDays}-day trip
                     </span>
                     <span className="flex items-center gap-2 mt-2">
                       <span className="text-xs text-on-dark/75">Updated {formatDate(t.updatedAt)}</span>

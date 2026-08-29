@@ -1,4 +1,5 @@
 import React from "react";
+import { normalizeMode, roundedTravelHours } from "@/lib/travelMode";
 
 // One clean responsive Travel Fit summary strip with the locked labels.
 // Replaces the previous three-box statistic layout. Used on the (light) Trip
@@ -10,20 +11,12 @@ const BADGE = {
   "Poor practical fit": { label: "Poor fit", cls: "bg-destructive text-destructive-foreground" }
 };
 
-function normalizeMode(mode) {
-  if (!mode) return "Local transport";
-  let m = String(mode)
-    .replace(/local ground transportation/gi, "local transport")
-    .replace(/ground transportation/gi, "local transport")
-    .replace(/ground transfer/gi, "transfer");
-  return m;
-}
-
 export default function TravelFit({ prac, prefs }) {
   if (!prac) return null;
   const badge = BADGE[prac.level] || BADGE.Practical;
-  const mode = prac.isOverride ? prac.travelMode : normalizeMode(prac.travelMode);
-  const eachWay = `About ${prac.oneWayHours} hour${prac.oneWayHours === 1 ? "" : "s"} each way`;
+  const rounded = roundedTravelHours(prac.oneWayHours);
+  const mode = normalizeMode(prac.travelMode);
+  const eachWay = `About ${rounded} hour${rounded === 1 ? "" : "s"} each way`;
   const timeThere = `About ${prac.usableDestinationDays} day${prac.usableDestinationDays === 1 ? "" : "s"}`;
 
   return (

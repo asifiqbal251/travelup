@@ -17,6 +17,7 @@ import TravelFitRing from "@/components/TravelFitRing";
 import DayCard from "@/components/DayCard";
 import { TRAVEL_FALLBACK_IMAGE } from "@/lib/fallbackImage";
 import { nameWithCountry } from "@/lib/destinationLabel";
+import { flagForCountry } from "@/lib/countryFlag";
 import { BUDGET_ORDER } from "@/lib/options";
 import { Check, Plus, Trash2, RotateCcw, Info, ArrowLeft } from "lucide-react";
 
@@ -79,7 +80,8 @@ export function TripHeader({ display, score, backHref, backLabel }) {
           <h1 className="font-display font-extrabold tracking-[-0.02em] text-wn-text text-4xl sm:text-5xl">
             {display.name}
           </h1>
-          <p className="text-wn-text-2 text-[15px] sm:text-base mt-2">
+          <p className="text-wn-text-2 text-[15px] sm:text-base mt-2 flex items-center gap-2">
+            {flagForCountry(display.country) && <span aria-hidden="true">{flagForCountry(display.country)}</span>}
             {display.country} · {display.region}
           </p>
         </div>

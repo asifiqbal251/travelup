@@ -7,6 +7,7 @@ import { TRAVEL_FALLBACK_IMAGE } from "@/lib/fallbackImage";
 import { bestMonthsSummary } from "@/lib/discoveryCollections";
 import { nameWithCountry } from "@/lib/destinationLabel";
 import { flagForCountry } from "@/lib/countryFlag";
+import { normalizeMode, roundedTravelHours } from "@/lib/travelMode";
 import TravelFitRing from "@/components/TravelFitRing";
 import {
   X, ChevronLeft, ChevronRight, MapPin, Clock, Gauge, ArrowRight, Compass
@@ -27,14 +28,6 @@ import {
 // The panel uses FIXED desktop dimensions (fixed height, fixed/consistent
 // image area, line-clamped body) so switching destinations never reflows or
 // resizes the dialog.
-function normalizeMode(mode) {
-  if (!mode) return "Local transport";
-  return String(mode)
-    .replace(/local ground transportation/gi, "local transport")
-    .replace(/ground transportation/gi, "local transport")
-    .replace(/ground transfer/gi, "transfer");
-}
-
 export default function DestinationPreviewDialog({
   items,
   index,
@@ -199,7 +192,7 @@ export default function DestinationPreviewDialog({
                       </span>
                       <span className="inline-flex items-center gap-1 shrink-0 whitespace-nowrap">
                         <Clock className="w-3 h-3" />
-                        {prac.oneWayHours}h each way
+                        {roundedTravelHours(prac.oneWayHours)}h each way
                       </span>
                       <span className="inline-flex items-center gap-1 shrink-0 whitespace-nowrap">
                         <Gauge className="w-3 h-3" />
