@@ -207,7 +207,7 @@ export default function Questionnaire() {
   const glowHue = done ? COMPLETION_HUE : (QUESTION_HUES[current] || QUESTION_HUES[0]);
 
   return (
-    <div className="min-h-[100dvh] bg-wn-page text-wn-text flex flex-col relative overflow-hidden">
+    <div className="min-h-[100dvh] bg-wn-page text-wn-text grid grid-rows-[auto_1fr_auto] relative overflow-hidden">
       {/* background glow -- see docs/travelfit-visual-fidelity-pass.md #2 */}
       <div className="fixed inset-0 -z-10 pointer-events-none">
         <div
@@ -243,11 +243,11 @@ export default function Questionnaire() {
         </Link>
       </header>
 
-      {/* main — optically centred */}
+      {/* main — optically centred (grid row 2, 1fr, place-items:center) */}
       <main
         ref={mainRef}
         tabIndex={-1}
-        className="flex-1 flex items-center justify-center px-4 sm:px-6 py-6 outline-none"
+        className="grid place-items-center px-4 sm:px-6 py-6 outline-none min-h-0"
       >
         <div className="w-full max-w-3xl mx-auto">
           {done ? (
