@@ -113,7 +113,7 @@ export default function DestinationPreviewDialog({
             </DialogPrimitive.Close>
 
             {/* Image side */}
-            <div className="relative h-44 sm:h-full">
+            <div className="relative h-44 sm:h-full overflow-hidden">
               <Image
                 src={d.image_url}
                 alt=""
