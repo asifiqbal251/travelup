@@ -30,7 +30,7 @@ export default function TravelFitRing({ score, size = "md", className = "" }) {
         />
         <circle
           cx={center} cy={center} r={r}
-          fill="none" stroke="var(--wn-cyan)" strokeWidth={cfg.stroke}
+          fill="none" stroke="rgb(var(--wn-cyan))" strokeWidth={cfg.stroke}
           strokeLinecap="round"
           strokeDasharray={circumference}
           strokeDashoffset={offset}

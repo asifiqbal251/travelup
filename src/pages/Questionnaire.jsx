@@ -48,7 +48,7 @@ const QUESTION_HUES = [
 const COMPLETION_HUE = "#2E6B6E";
 
 function glowFor(hue) {
-  return `radial-gradient(120% 90% at 50% 8%, ${hue} 0%, var(--wn-page) 62%)`;
+  return `radial-gradient(120% 90% at 50% 8%, ${hue} 0%, rgb(var(--wn-page)) 62%)`;
 }
 
 export default function Questionnaire() {

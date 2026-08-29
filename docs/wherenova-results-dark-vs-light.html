@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WhereNova — Results concept (dark vs light)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --display:"Manrope","Helvetica Neue",Arial,sans-serif;
+  --body:"Inter","Helvetica Neue",Arial,sans-serif;
+
+  --cyan:#3FD8E0;
+  --cyan-deep:#0E8A99;
+  --coral:#FF6B4A;
+  --amber:#FFB03C;
+
+  --r-sm:8px; --r-md:12px; --r-lg:16px; --r-xl:24px;
+  --ease:cubic-bezier(.2,.7,.3,1);
+}
+
+/* ---------- DARK ---------- */
+[data-theme="dark"]{
+  --page:#081428;
+  --page-2:#0B1B33;
+  --surface:#102votes;
+  --surface:#102542;
+  --surface-2:#16304F;
+  --line:rgba(255,255,255,.10);
+  --line-strong:rgba(255,255,255,.18);
+  --text:#EDF4FA;
+  --text-2:#9DB2C9;
+  --text-3:#6E88A3;
+  --cta-bg:linear-gradient(180deg,#48E2E8,#22BFCC);
+  --cta-fg:#06202B;
+  --cta-shadow:0 1px 0 rgba(255,255,255,.25) inset, 0 8px 24px -12px rgba(34,191,204,.9);
+  --ghost-line:rgba(255,255,255,.22);
+  --card-shadow:0 24px 60px -32px rgba(0,0,0,.9);
+  --scrim:linear-gradient(180deg,rgba(8,20,40,0) 30%,rgba(8,20,40,.55) 68%,rgba(8,20,40,.94) 100%);
+  --nav-bg:rgba(8,20,40,.72);
+}
+
+/* ---------- LIGHT ---------- */
+[data-theme="light"]{
+  --page:#EEF3F8;
+  --page-2:#F6F9FC;
+  --surface:#FFFFFF;
+  --surface-2:#F2F6FA;
+  --line:#DEE7F0;
+  --line-strong:#C6D5E4;
+  --text:#0B1B33;
+  --text-2:#4A6280;
+  --text-3:#7089A5;
+  --cta-bg:linear-gradient(180deg,#143257,#0B1B33);
+  --cta-fg:#FFFFFF;
+  --cta-shadow:0 8px 22px -14px rgba(11,27,51,.8);
+  --ghost-line:#C6D5E4;
+  --card-shadow:0 18px 44px -30px rgba(11,27,51,.55);
+  --scrim:linear-gradient(180deg,rgba(6,16,32,0) 30%,rgba(6,16,32,.42) 66%,rgba(6,16,32,.88) 100%);
+  --nav-bg:rgba(246,249,252,.82);
+}
+
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--page);
+  color:var(--text);
+  font-family:var(--body);
+  font-size:16px;
+  line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+  transition:background .35s var(--ease),color .35s var(--ease);
+}
+
+/* ---------- prototype toolbar ---------- */
+.proto{
+  position:sticky; top:0; z-index:80;
+  display:flex; align-items:center; justify-content:space-between;
+  gap:16px; padding:10px 24px;
+  background:#000; color:#fff;
+  font:600 12px/1 var(--body); letter-spacing:.06em; text-transform:uppercase;
+}
+.proto span{opacity:.6}
+.switch{display:flex; gap:4px; background:rgba(255,255,255,.12); padding:4px; border-radius:999px}
+.switch button{
+  font:700 11px/1 var(--body); letter-spacing:.1em; text-transform:uppercase;
+  color:#fff; background:transparent; border:0; cursor:pointer;
+  padding:8px 16px; border-radius:999px; transition:.2s var(--ease);
+}
+.switch button[aria-pressed="true"]{background:#fff; color:#000}
+.switch button:focus-visible{outline:2px solid var(--cyan); outline-offset:2px}
+
+/* ---------- shell ---------- */
+.wrap{max-width:1320px; margin:0 auto; padding:0 32px}
+@media(max-width:700px){ .wrap{padding:0 20px} }
+
+.nav{
+  position:sticky; top:37px; z-index:60;
+  background:var(--nav-bg);
+  backdrop-filter:saturate(160%) blur(18px);
+  -webkit-backdrop-filter:saturate(160%) blur(18px);
+  border-bottom:1px solid var(--line);
+}
+.nav .wrap{display:flex; align-items:center; justify-content:space-between; height:68px}
+.brand{display:flex; align-items:center; gap:10px; font-family:var(--display); font-weight:800; font-size:19px; letter-spacing:-.01em}
+.brand .mark{width:30px; height:24px}
+.brand em{font-style:normal; color:var(--cyan)}
+.nav ul{display:flex; gap:28px; list-style:none; margin:0; padding:0}
+.nav a{color:var(--text-2); text-decoration:none; font-size:14px; font-weight:500}
+.nav a:hover{color:var(--text)}
+@media(max-width:700px){ .nav ul{display:none} }
+
+/* ---------- page head ---------- */
+.head{padding:56px 0 32px}
+.eyebrow{
+  font:700 11px/1 var(--body); letter-spacing:.16em; text-transform:uppercase;
+  color:var(--cyan-deep); display:flex; align-items:center; gap:8px;
+}
+[data-theme="dark"] .eyebrow{color:var(--cyan)}
+.head h1{
+  font-family:var(--display); font-weight:800;
+  font-size:clamp(34px,4.4vw,54px); line-height:1.02; letter-spacing:-.03em;
+  margin:14px 0 12px;
+}
+.head p{color:var(--text-2); max-width:52ch; margin:0; font-size:16px}
+.head-row{display:flex; align-items:flex-end; justify-content:space-between; gap:24px; flex-wrap:wrap}
+
+/* ---------- buttons ---------- */
+.btn{
+  display:inline-flex; align-items:center; justify-content:center; gap:10px;
+  font:600 15px/1 var(--body); letter-spacing:-.01em;
+  padding:15px 26px; border-radius:var(--r-md); border:0; cursor:pointer;
+  text-decoration:none; transition:transform .18s var(--ease), filter .18s var(--ease);
+}
+.btn:hover{transform:translateY(-1px)}
+.btn:focus-visible{outline:2px solid var(--cyan); outline-offset:3px}
+.btn-primary{background:var(--cta-bg); color:var(--cta-fg); box-shadow:var(--cta-shadow)}
+.btn-ghost{background:transparent; color:var(--text); border:1px solid var(--ghost-line)}
+.btn-sm{padding:11px 18px; font-size:14px}
+
+/* ---------- travel fit score (signature) ---------- */
+.fit{position:relative; width:76px; height:76px; flex:0 0 auto}
+.fit svg{transform:rotate(-90deg); display:block}
+.fit .track{stroke:rgba(255,255,255,.22)}
+[data-theme="light"] .fit .track{stroke:rgba(255,255,255,.3)}
+.fit .arc{stroke:var(--cyan); stroke-linecap:round; transition:stroke-dashoffset 1s var(--ease)}
+.fit .num{
+  position:absolute; inset:0; display:grid; place-content:center; text-align:center;
+  font-family:var(--display); font-weight:800; font-size:26px; letter-spacing:-.03em;
+  color:#fff; line-height:1;
+}
+.fit .num small{display:block; font:700 8px/1 var(--body); letter-spacing:.14em; opacity:.72; margin-top:4px}
+.fit-lg{width:104px; height:104px}
+.fit-lg .num{font-size:38px}
+.fit-lg .num small{font-size:9px; margin-top:5px}
+
+/* ---------- photo slots ---------- */
+.photo{position:relative; overflow:hidden; background:#123; isolation:isolate}
+.photo .scene{position:absolute; inset:0; width:100%; height:100%}
+.photo::after{content:""; position:absolute; inset:0; background:var(--scrim)}
+.photo > *{position:relative}
+.photo .overlay{position:absolute; inset:0; z-index:2; display:flex; flex-direction:column; justify-content:space-between; padding:22px}
+.ph-mexico{background:linear-gradient(170deg,#2A3F73 0%,#7B5C8E 42%,#E08A5B 74%,#F5C07A 100%)}
+.ph-istanbul{background:linear-gradient(170deg,#1E3A63 0%,#4E6C9B 38%,#D98A5C 72%,#F2B872 100%)}
+.ph-beijing{background:linear-gradient(170deg,#1C4C7A 0%,#3E86B8 45%,#87BEDC 78%,#CFE4F0 100%)}
+
+.badge{
+  align-self:flex-start;
+  display:inline-flex; align-items:center; gap:7px;
+  font:700 10px/1 var(--body); letter-spacing:.14em; text-transform:uppercase;
+  color:#fff; background:rgba(255,107,74,.92);
+  padding:8px 12px; border-radius:999px;
+  backdrop-filter:blur(6px);
+}
+.place{color:#fff}
+.place h2{font-family:var(--display); font-weight:800; letter-spacing:-.025em; margin:0; line-height:1.05}
+.place .where{
+  display:flex; align-items:center; gap:8px; margin-top:7px;
+  font-size:13.5px; color:rgba(255,255,255,.82);
+}
+
+/* ---------- hero match ---------- */
+.hero{
+  display:grid; grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);
+  background:var(--surface); border:1px solid var(--line);
+  border-radius:var(--r-xl); overflow:hidden; box-shadow:var(--card-shadow);
+  margin-bottom:28px;
+}
+.hero .photo{min-height:440px}
+.hero .place h2{font-size:clamp(30px,3.2vw,42px)}
+.hero .body{padding:34px; display:flex; flex-direction:column; gap:22px}
+@media(max-width:900px){
+  .hero{grid-template-columns:1fr}
+  .hero .photo{min-height:280px}
+  .hero .body{padding:24px}
+}
+
+.reason{
+  font-size:17px; line-height:1.55; color:var(--text); margin:0;
+  font-weight:500; letter-spacing:-.01em;
+}
+.reason b{color:var(--cyan-deep); font-weight:700}
+[data-theme="dark"] .reason b{color:var(--cyan)}
+
+.facts{display:grid; grid-template-columns:repeat(3,1fr); gap:2px; background:var(--line); border:1px solid var(--line); border-radius:var(--r-md); overflow:hidden}
+.facts div{background:var(--surface); padding:14px 16px}
+.facts dt{font:700 10px/1 var(--body); letter-spacing:.13em; text-transform:uppercase; color:var(--text-3); margin:0 0 7px}
+.facts dd{margin:0; font-size:14.5px; font-weight:600; letter-spacing:-.01em}
+@media(max-width:560px){ .facts{grid-template-columns:1fr} }
+
+details.why{border-top:1px solid var(--line); padding-top:16px}
+details.why summary{
+  cursor:pointer; list-style:none; font-size:14px; font-weight:600; color:var(--text-2);
+  display:flex; align-items:center; gap:8px;
+}
+details.why summary::-webkit-details-marker{display:none}
+details.why summary::after{content:"›"; transition:transform .2s var(--ease); font-size:18px; line-height:1}
+details.why[open] summary::after{transform:rotate(90deg)}
+details.why summary:focus-visible{outline:2px solid var(--cyan); outline-offset:3px; border-radius:4px}
+.why-body{margin-top:14px; display:flex; flex-direction:column; gap:10px}
+.why-row{display:flex; align-items:center; gap:12px; font-size:14px; color:var(--text-2)}
+.why-row .bar{flex:1; height:5px; border-radius:99px; background:var(--line); overflow:hidden}
+.why-row .bar i{display:block; height:100%; background:var(--cyan); border-radius:99px}
+.why-row span:first-child{width:112px; flex:0 0 auto; color:var(--text)}
+.why-row span:last-child{width:34px; text-align:right; font-variant-numeric:tabular-nums; font-weight:600}
+
+/* ---------- two equal cards ---------- */
+.pair{display:grid; grid-template-columns:1fr 1fr; gap:28px}
+@media(max-width:860px){ .pair{grid-template-columns:1fr} }
+.card{
+  display:flex; flex-direction:column;
+  background:var(--surface); border:1px solid var(--line);
+  border-radius:var(--r-lg); overflow:hidden; box-shadow:var(--card-shadow);
+  transition:transform .28s var(--ease), border-color .28s var(--ease);
+}
+.card:hover{transform:translateY(-4px); border-color:var(--line-strong)}
+.card .photo{aspect-ratio:16/10}
+.card .place h2{font-size:25px}
+.card .body{padding:24px; display:flex; flex-direction:column; gap:18px; flex:1}
+.card .body .btn{margin-top:auto}
+
+.pill{
+  display:inline-flex; align-items:center; gap:6px;
+  font:600 11px/1 var(--body); letter-spacing:.1em; text-transform:uppercase;
+  color:var(--text-2); border:1px solid var(--line); border-radius:999px; padding:7px 12px;
+}
+
+.footnote{
+  color:var(--text-3); font-size:13px; padding:36px 0 80px; max-width:70ch;
+}
+
+@media(prefers-reduced-motion:reduce){
+  *{transition:none !important; animation:none !important}
+  .card:hover,.btn:hover{transform:none}
+}
+</style>
+</head>
+<body>
+
+<div class="proto">
+  <span>WhereNova · results concept · pick a direction</span>
+  <div class="switch" role="group" aria-label="Theme">
+    <button type="button" data-set="dark" aria-pressed="true">Dark</button>
+    <button type="button" data-set="light" aria-pressed="false">Light</button>
+  </div>
+</div>
+
+<header class="nav">
+  <div class="wrap">
+    <div class="brand">
+      <svg class="mark" viewBox="0 0 60 46" aria-hidden="true">
+        <path d="M6 6 L18 40 L30 12" fill="none" stroke="#2FD3DE" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M30 12 L42 40 L54 6" fill="none" stroke="#FF8A3C" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Where<em>N</em>ova
+    </div>
+    <ul>
+      <li><a href="#">Home</a></li>
+      <li><a href="#">Saved trips</a></li>
+      <li><a href="#">About</a></li>
+    </ul>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <div class="head">
+    <div class="head-row">
+      <div>
+        <p class="eyebrow">8-day trip from Paris · photography, cities, food</p>
+        <h1>Three places that fit.</h1>
+        <p>Scored on how well each one matches your preferences and how practical it is for eight days. Estimates only.</p>
+      </div>
+      <button class="btn btn-ghost btn-sm" type="button">Change my answers</button>
+    </div>
+  </div>
+
+  <!-- HERO MATCH -->
+  <article class="hero">
+    <div class="photo ph-mexico">
+      <svg class="scene" viewBox="0 0 800 440" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+        <path d="M0 300 L120 210 L200 262 L300 196 L400 268 L470 240 L560 290 L680 232 L800 286 L800 440 L0 440Z" fill="rgba(20,30,60,.34)"/>
+        <path d="M0 352 H160 V300 H180 V352 H250 V286 H268 V352 H300 V318 H420 V296 H436 V352 H520 V330 H600 V308 H616 V352 H720 V336 H800 V440 H0Z" fill="rgba(12,20,40,.62)"/>
+        <rect x="330" y="252" width="16" height="100" fill="rgba(12,20,40,.62)"/>
+        <rect x="374" y="252" width="16" height="100" fill="rgba(12,20,40,.62)"/>
+      </svg>
+      <div class="overlay">
+        <span class="badge">Best fit</span>
+        <div class="place">
+          <div class="fit fit-lg">
+            <svg width="104" height="104" viewBox="0 0 104 104">
+              <circle class="track" cx="52" cy="52" r="46" fill="none" stroke-width="6"/>
+              <circle class="arc" cx="52" cy="52" r="46" fill="none" stroke-width="6"
+                      stroke-dasharray="289" stroke-dashoffset="58"/>
+            </svg>
+            <div class="num">80<small>TRAVEL FIT</small></div>
+          </div>
+          <h2 style="margin-top:18px">Mexico City</h2>
+          <p class="where">Mexico · Central Mexico</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="body">
+      <p class="reason">Dense, walkable and endlessly photogenic — the Zócalo at dawn, Teotihuacán by mid-morning, and some of the best street food anywhere. <b>Matches all three of your interests.</b></p>
+
+      <dl class="facts">
+        <div><dt>Getting there</dt><dd>Flight + local transport</dd></div>
+        <div><dt>Travel time</dt><dd>~18.7 h each way</dd></div>
+        <div><dt>Time on the ground</dt><dd>About 4 days</dd></div>
+      </dl>
+
+      <div style="display:flex; gap:8px; flex-wrap:wrap">
+        <span class="pill">August is a great time to go</span>
+        <span class="pill">Fits your budget</span>
+      </div>
+
+      <details class="why">
+        <summary>How this score was built</summary>
+        <div class="why-body">
+          <div class="why-row"><span>Interests</span><span class="bar"><i style="width:94%"></i></span><span>94</span></div>
+          <div class="why-row"><span>Season</span><span class="bar"><i style="width:81%"></i></span><span>81</span></div>
+          <div class="why-row"><span>Budget</span><span class="bar"><i style="width:78%"></i></span><span>78</span></div>
+          <div class="why-row"><span>Practicality</span><span class="bar"><i style="width:66%"></i></span><span>66</span></div>
+        </div>
+      </details>
+
+      <a class="btn btn-primary" href="#" style="align-self:flex-start">Plan this trip →</a>
+    </div>
+  </article>
+
+  <!-- PAIR -->
+  <div class="pair">
+
+    <article class="card">
+      <div class="photo ph-istanbul">
+        <svg class="scene" viewBox="0 0 800 500" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+          <path d="M0 400 H800 V500 H0Z" fill="rgba(12,20,40,.62)"/>
+          <path d="M250 400 A110 110 0 0 1 470 400 Z" fill="rgba(12,20,40,.62)"/>
+          <path d="M120 400 A62 62 0 0 1 244 400 Z" fill="rgba(12,20,40,.62)"/>
+          <path d="M540 400 A70 70 0 0 1 680 400 Z" fill="rgba(12,20,40,.62)"/>
+          <rect x="222" y="212" width="13" height="188" fill="rgba(12,20,40,.62)"/>
+          <rect x="486" y="212" width="13" height="188" fill="rgba(12,20,40,.62)"/>
+          <rect x="700" y="252" width="12" height="148" fill="rgba(12,20,40,.62)"/>
+        </svg>
+        <div class="overlay">
+          <div class="fit" style="align-self:flex-end">
+            <svg width="76" height="76" viewBox="0 0 76 76">
+              <circle class="track" cx="38" cy="38" r="33" fill="none" stroke-width="5"/>
+              <circle class="arc" cx="38" cy="38" r="33" fill="none" stroke-width="5"
+                      stroke-dasharray="207" stroke-dashoffset="46"/>
+            </svg>
+            <div class="num">78<small>FIT</small></div>
+          </div>
+          <div class="place">
+            <h2>Istanbul &amp; Cappadocia</h2>
+            <p class="where">Türkiye · Western Asia</p>
+          </div>
+        </div>
+      </div>
+      <div class="body">
+        <p class="reason">Two very different halves in one trip — Bosphorus mornings and bazaars, then fairy chimneys and balloons at sunrise.</p>
+        <dl class="facts">
+          <div><dt>Travel time</dt><dd>~7.6 h each way</dd></div>
+          <div><dt>On the ground</dt><dd>About 7 days</dd></div>
+        </dl>
+        <div style="display:flex; gap:8px; flex-wrap:wrap">
+          <span class="pill">Great in August</span>
+        </div>
+        <a class="btn btn-primary" href="#">Plan this trip →</a>
+      </div>
+    </article>
+
+    <article class="card">
+      <div class="photo ph-beijing">
+        <svg class="scene" viewBox="0 0 800 500" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+          <path d="M0 410 H800 V500 H0Z" fill="rgba(12,26,48,.6)"/>
+          <path d="M180 300 Q400 232 620 300 L590 322 H210Z" fill="rgba(12,26,48,.6)"/>
+          <path d="M228 356 Q400 300 572 356 L548 376 H252Z" fill="rgba(12,26,48,.6)"/>
+          <rect x="270" y="376" width="260" height="34" fill="rgba(12,26,48,.6)"/>
+          <path d="M0 372 L90 330 L180 372 Z" fill="rgba(12,26,48,.42)"/>
+          <path d="M640 372 L730 326 L800 372 Z" fill="rgba(12,26,48,.42)"/>
+        </svg>
+        <div class="overlay">
+          <div class="fit" style="align-self:flex-end">
+            <svg width="76" height="76" viewBox="0 0 76 76">
+              <circle class="track" cx="38" cy="38" r="33" fill="none" stroke-width="5"/>
+              <circle class="arc" cx="38" cy="38" r="33" fill="none" stroke-width="5"
+                      stroke-dasharray="207" stroke-dashoffset="46"/>
+            </svg>
+            <div class="num">78<small>FIT</small></div>
+          </div>
+          <div class="place">
+            <h2>Beijing</h2>
+            <p class="where">China · Northern China</p>
+          </div>
+        </div>
+      </div>
+      <div class="body">
+        <p class="reason">Hutong lanes and imperial scale in the same afternoon. The Great Wall at Mutianyu is the shot you came for.</p>
+        <dl class="facts">
+          <div><dt>Travel time</dt><dd>~17.5 h each way</dd></div>
+          <div><dt>On the ground</dt><dd>About 4 days</dd></div>
+        </dl>
+        <div style="display:flex; gap:8px; flex-wrap:wrap">
+          <span class="pill">Book the Forbidden City ahead</span>
+        </div>
+        <a class="btn btn-primary" href="#">Plan this trip →</a>
+      </div>
+    </article>
+
+  </div>
+
+  <p class="footnote">Photography is represented by placeholder artwork. Everything else — layout, type scale, score treatment, colour roles, spacing and copy — is the real proposal.</p>
+
+</main>
+
+<script>
+  const root = document.documentElement;
+  document.querySelectorAll('.switch button').forEach(b=>{
+    b.addEventListener('click',()=>{
+      root.setAttribute('data-theme', b.dataset.set);
+      document.querySelectorAll('.switch button').forEach(x=>
+        x.setAttribute('aria-pressed', String(x===b)));
+    });
+  });
+</script>
+</body>
+</html>

@@ -15,32 +15,45 @@
     --coral: 11 100% 64%;          /* #FF6B4A — Best fit marker only, matches --wn-coral */
 
     /* ---- WhereNova design system tokens (Build 7) ---- */
+    /* Space-separated RGB channels (not hex) so Tailwind's bg-wn-x/NN opacity
+       modifier can actually blend against them via rgb(var(--wn-x) /
+       <alpha-value>) in tailwind.config.js -- see
+       docs/wherenova-polish-pass-v3.md Part A. A bare hex string can't be
+       parsed as channels, so any /NN modifier on one silently produced
+       invalid CSS that browsers drop entirely (bg-* fell back to fully
+       transparent; text-* fell back to inheriting the ancestor's color).
+       --wn-line/--wn-line-2 are the one exception, kept as rgba() literals:
+       their whole purpose is a translucent DEFAULT with no modifier ever
+       applied to them in this codebase, and the <alpha-value> mechanism only
+       controls alpha when a modifier IS present -- with no modifier it's
+       always 1, which would make them opaque white and break every existing
+       unmodified use (borders/dividers throughout the app). */
     /* Dark surfaces — discovery, questionnaire, reveal, results */
-    --wn-page: #081428;
-    --wn-page-2: #0B1B33;
-    --wn-surface: #102542;
-    --wn-surface-2: #16304F;
+    --wn-page: 8 20 40;
+    --wn-page-2: 11 27 51;
+    --wn-surface: 16 37 66;
+    --wn-surface-2: 22 48 79;
     --wn-line: rgba(255, 255, 255, 0.10);
     --wn-line-2: rgba(255, 255, 255, 0.20);
-    --wn-text: #EDF4FA;
-    --wn-text-2: #9DB2C9;
-    --wn-text-3: #63799A;
+    --wn-text: 237 244 250;
+    --wn-text-2: 157 178 201;
+    --wn-text-3: 99 121 154;
     /* Light surfaces — trip page, about, planning */
-    --wn-page-l: #EEF3F8;
-    --wn-page-2-l: #F6F9FC;
-    --wn-surface-l: #FFFFFF;
-    --wn-surface-2-l: #F2F6FA;
-    --wn-line-l: #DEE7F0;
-    --wn-line-2-l: #C6D5E4;
-    --wn-text-l: #0B1B33;
-    --wn-text-2-l: #4A6280;
-    --wn-text-3-l: #7089A5;
+    --wn-page-l: 238 243 248;
+    --wn-page-2-l: 246 249 252;
+    --wn-surface-l: 255 255 255;
+    --wn-surface-2-l: 242 246 250;
+    --wn-line-l: 222 231 240;
+    --wn-line-2-l: 198 213 228;
+    --wn-text-l: 11 27 51;
+    --wn-text-2-l: 74 98 128;
+    --wn-text-3-l: 112 137 165;
     /* Brand accents — identical on both surfaces */
-    --wn-cyan: #3FD8E0;
-    --wn-cyan-2: #22BFCC;
-    --wn-cyan-bright: #48E2E8;
-    --wn-coral: #FF6B4A;
-    --wn-ink-deep: #06202B;
+    --wn-cyan: 63 216 224;
+    --wn-cyan-2: 34 191 204;
+    --wn-cyan-bright: 72 226 232;
+    --wn-coral: 255 107 74;
+    --wn-ink-deep: 6 32 43;
 
     /* ---- Semantic shadcn tokens (light workflow surface) ---- */
     --background: var(--workflow);

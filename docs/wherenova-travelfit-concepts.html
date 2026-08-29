@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WhereNova — Travel Fit: two concepts</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --display:"Manrope","Helvetica Neue",Arial,sans-serif;
+  --body:"Inter","Helvetica Neue",Arial,sans-serif;
+  --page:#081428;
+  --page-2:#0B1B33;
+  --surface:#102542;
+  --surface-2:#16304F;
+  --line:rgba(255,255,255,.10);
+  --line-2:rgba(255,255,255,.20);
+  --text:#EDF4FA;
+  --text-2:#9DB2C9;
+  --text-3:#63799A;
+  --cyan:#3FD8E0;
+  --cyan-2:#22BFCC;
+  --coral:#FF6B4A;
+  --ease:cubic-bezier(.2,.7,.3,1);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:var(--page);color:var(--text);font-family:var(--body);font-size:16px;line-height:1.5;-webkit-font-smoothing:antialiased}
+button,input{font-family:inherit}
+:focus-visible{outline:2px solid var(--cyan);outline-offset:3px;border-radius:6px}
+
+/* ---------------- prototype bar ---------------- */
+.proto{position:sticky;top:0;z-index:90;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:10px 24px;background:#000;color:#fff;font:600 12px/1 var(--body);letter-spacing:.06em;text-transform:uppercase}
+.proto > span{opacity:.6}
+.switch{display:flex;gap:4px;background:rgba(255,255,255,.12);padding:4px;border-radius:999px}
+.switch button{font:700 11px/1 var(--body);letter-spacing:.09em;text-transform:uppercase;color:#fff;background:transparent;border:0;cursor:pointer;padding:8px 16px;border-radius:999px;transition:.2s var(--ease)}
+.switch button[aria-pressed="true"]{background:#fff;color:#000}
+
+.stage{display:none}
+.stage.on{display:block}
+
+/* ---------------- shared: day scroller ---------------- */
+.days{position:relative;margin:6px 0 0}
+.days-rail{display:flex;gap:4px;align-items:center;overflow-x:auto;scroll-snap-type:x mandatory;padding:12px 0 16px;scrollbar-width:none;-ms-overflow-style:none}
+.days-rail::-webkit-scrollbar{display:none}
+.days-rail::before,.days-rail::after{content:"";flex:0 0 42%}
+.day{flex:0 0 auto;scroll-snap-align:center;background:none;border:0;cursor:pointer;color:var(--text-3);font-family:var(--display);font-weight:700;font-size:22px;letter-spacing:-.02em;padding:8px 16px;border-radius:12px;transition:.24s var(--ease);opacity:.5}
+.day:hover{color:var(--text-2);opacity:.85}
+.day[aria-checked="true"]{color:var(--cyan);font-size:46px;opacity:1;padding:4px 22px}
+.days-cap{display:flex;justify-content:space-between;font:600 11px/1 var(--body);letter-spacing:.12em;text-transform:uppercase;color:var(--text-3)}
+
+/* ---------------- shared: option controls ---------------- */
+.opts{display:flex;flex-wrap:wrap;gap:10px}
+.opt{
+  background:var(--surface);border:1px solid var(--line);color:var(--text);
+  padding:14px 20px;border-radius:12px;cursor:pointer;font-size:15px;font-weight:500;
+  transition:.2s var(--ease);
+}
+.opt:hover{border-color:var(--line-2);transform:translateY(-1px)}
+.opt[aria-pressed="true"],.opt[aria-checked="true"]{
+  border-color:var(--cyan);color:var(--cyan);
+  background:linear-gradient(180deg,rgba(63,216,224,.16),rgba(63,216,224,.07));
+}
+.opt[aria-pressed="true"]::after{content:" ✓";opacity:.8}
+
+.seg{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;background:var(--surface);border:1px solid var(--line);padding:6px;border-radius:14px}
+.seg button{background:none;border:0;color:var(--text-2);cursor:pointer;padding:13px 8px;border-radius:10px;font-size:13.5px;font-weight:600;transition:.2s var(--ease)}
+.seg button:hover{color:var(--text)}
+.seg button[aria-checked="true"]{background:linear-gradient(180deg,rgba(63,216,224,.2),rgba(63,216,224,.08));color:var(--cyan);box-shadow:inset 0 0 0 1px rgba(63,216,224,.45)}
+
+.textin{
+  width:100%;background:var(--surface);border:1px solid var(--line);color:var(--text);
+  padding:16px 18px;border-radius:12px;font-size:17px;
+}
+.textin::placeholder{color:var(--text-3)}
+.sugg{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.sugg button{background:none;border:1px dashed var(--line-2);color:var(--text-2);padding:8px 14px;border-radius:999px;cursor:pointer;font-size:13px}
+.sugg button:hover{color:var(--cyan);border-color:var(--cyan)}
+
+.btn{display:inline-flex;align-items:center;gap:10px;font:600 15px/1 var(--body);padding:16px 28px;border:0;border-radius:12px;cursor:pointer;
+  background:linear-gradient(180deg,#48E2E8,#22BFCC);color:#06202B;
+  box-shadow:0 1px 0 rgba(255,255,255,.25) inset,0 10px 26px -14px rgba(34,191,204,.9);
+  transition:.2s var(--ease)}
+.btn:hover{transform:translateY(-1px)}
+.btn:disabled{opacity:.3;cursor:not-allowed;transform:none;box-shadow:none}
+.link{background:none;border:0;color:var(--text-3);cursor:pointer;font-size:13px;text-decoration:underline;text-underline-offset:3px;padding:6px 0}
+.link:hover{color:var(--text-2)}
+
+/* ================= CONCEPT A — CANVAS ================= */
+.cv-wrap{max-width:760px;margin:0 auto;padding:0 24px 140px}
+.cv-head{padding:64px 0 40px;border-bottom:1px solid var(--line)}
+.cv-eyebrow{font:700 11px/1 var(--body);letter-spacing:.16em;text-transform:uppercase;color:var(--cyan)}
+.cv-sentence{font-family:var(--display);font-weight:800;font-size:clamp(28px,3.6vw,42px);line-height:1.15;letter-spacing:-.03em;margin:16px 0 0}
+.cv-sentence i{font-style:normal;color:var(--text-3);transition:color .3s var(--ease)}
+.cv-sentence i.set{color:var(--cyan)}
+
+.blk{border-bottom:1px solid var(--line);padding:26px 0}
+.blk-head{display:flex;align-items:baseline;justify-content:space-between;gap:16px;width:100%;background:none;border:0;padding:0;cursor:default;text-align:left;color:inherit}
+.blk-q{font-family:var(--display);font-weight:700;font-size:23px;letter-spacing:-.02em;margin:0}
+.blk-sum{color:var(--cyan);font-size:15px;font-weight:600;white-space:nowrap}
+.blk-body{margin-top:20px}
+
+.blk.locked{opacity:.32;pointer-events:none}
+.blk.locked .blk-q{font-size:17px;font-weight:600;color:var(--text-2)}
+.blk.locked .blk-body{display:none}
+
+.blk.done .blk-head{cursor:pointer}
+.blk.done .blk-q{font-size:17px;font-weight:600;color:var(--text-2)}
+.blk.done .blk-body{display:none}
+.blk.done:hover .blk-q{color:var(--text)}
+
+.blk.active .blk-sum{display:none}
+.blk.active .blk-body{display:block;animation:rise .45s var(--ease)}
+@keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+.cv-foot{position:fixed;left:0;right:0;bottom:0;z-index:70;background:linear-gradient(180deg,rgba(8,20,40,0),rgba(8,20,40,.96) 40%);padding:28px 24px 26px}
+.cv-foot-in{max-width:760px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:20px}
+.cv-prog{flex:1;height:3px;background:var(--line);border-radius:99px;overflow:hidden;max-width:280px}
+.cv-prog i{display:block;height:100%;width:0;background:var(--cyan);border-radius:99px;transition:width .5s var(--ease)}
+
+.style-grid{display:grid;gap:22px}
+.style-row{display:grid;gap:10px}
+.style-row header{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.style-row h4{margin:0;font-size:14px;font-weight:600;color:var(--text-2)}
+
+.months{display:grid;grid-template-columns:repeat(6,1fr);gap:6px}
+.months button{background:var(--surface);border:1px solid var(--line);color:var(--text-2);padding:12px 4px;border-radius:10px;cursor:pointer;font-size:13px;font-weight:600;transition:.2s var(--ease)}
+.months button:hover{color:var(--text);border-color:var(--line-2)}
+.months button[aria-checked="true"]{border-color:var(--cyan);color:var(--cyan);background:linear-gradient(180deg,rgba(63,216,224,.16),rgba(63,216,224,.06))}
+@media(max-width:560px){.months{grid-template-columns:repeat(4,1fr)}.seg{grid-template-columns:repeat(2,1fr)}}
+
+/* ================= CONCEPT B — CONVERSATION ================= */
+.cn-stage{min-height:calc(100vh - 37px);display:grid;grid-template-rows:auto 1fr auto;position:relative;overflow:hidden}
+.cn-glow{position:absolute;inset:0;z-index:0;transition:background 1.1s var(--ease)}
+.cn-top,.cn-mid,.cn-bot{position:relative;z-index:1}
+.cn-top{padding:28px 32px;display:flex;align-items:center;justify-content:space-between}
+.cn-brand{font-family:var(--display);font-weight:800;font-size:17px;letter-spacing:-.01em}
+.cn-brand em{font-style:normal;color:var(--cyan)}
+.cn-dots{display:flex;gap:6px}
+.cn-dots i{width:22px;height:3px;border-radius:99px;background:var(--line);transition:.4s var(--ease)}
+.cn-dots i.on{background:var(--cyan)}
+.cn-dots i.now{background:var(--cyan);box-shadow:0 0 12px rgba(63,216,224,.7)}
+
+.cn-mid{display:grid;place-items:center;padding:24px 32px}
+.cn-card{width:100%;max-width:640px;text-align:center;animation:cnIn .5s var(--ease)}
+@keyframes cnIn{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+.cn-q{font-family:var(--display);font-weight:800;font-size:clamp(30px,4.6vw,50px);line-height:1.08;letter-spacing:-.03em;margin:0 0 10px}
+.cn-hint{color:var(--text-3);font-size:14.5px;margin:0 0 32px}
+.cn-card .opts{justify-content:center}
+.cn-card .seg{max-width:520px;margin:0 auto}
+.cn-card .months{max-width:520px;margin:0 auto}
+.cn-actions{margin-top:32px;display:flex;flex-direction:column;align-items:center;gap:12px}
+
+.cn-bot{padding:24px 32px;display:flex;align-items:center;justify-content:space-between}
+.cn-back{background:none;border:1px solid var(--line);color:var(--text-2);width:44px;height:44px;border-radius:50%;cursor:pointer;font-size:17px;transition:.2s var(--ease)}
+.cn-back:hover{color:var(--text);border-color:var(--line-2)}
+.cn-back:disabled{opacity:.25;cursor:not-allowed}
+.cn-count{font:600 11px/1 var(--body);letter-spacing:.14em;text-transform:uppercase;color:var(--text-3)}
+
+.cn-done .cn-q{font-size:clamp(34px,5vw,58px)}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<div class="proto">
+  <span>WhereNova · Travel Fit · two interaction models</span>
+  <div class="switch" role="group" aria-label="Concept">
+    <button type="button" data-go="A" aria-pressed="true">A · Canvas</button>
+    <button type="button" data-go="B" aria-pressed="false">B · Conversation</button>
+  </div>
+</div>
+
+<!-- ============ CONCEPT A ============ -->
+<section class="stage on" id="stageA">
+  <div class="cv-wrap">
+    <div class="cv-head">
+      <p class="cv-eyebrow">Find my Travel Fit</p>
+      <h1 class="cv-sentence">A <i id="s-days">trip</i> from <i id="s-city">somewhere</i>, <i id="s-when">sometime</i>, <i id="s-who">on your own</i>.</h1>
+    </div>
+
+    <div class="blk active" data-blk="city">
+      <div class="blk-head"><h3 class="blk-q">Where are you starting from?</h3><span class="blk-sum"></span></div>
+      <div class="blk-body">
+        <input class="textin" id="cityIn" placeholder="Start typing a city" autocomplete="off">
+        <div class="sugg">
+          <button type="button">Vancouver</button><button type="button">Los Angeles</button>
+          <button type="button">San Francisco</button><button type="button">Paris</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="blk locked" data-blk="days">
+      <div class="blk-head"><h3 class="blk-q">How long do you have?</h3><span class="blk-sum"></span></div>
+      <div class="blk-body">
+        <div class="days">
+          <div class="days-rail" id="dayRail" role="radiogroup" aria-label="Trip length in days"></div>
+          <div class="days-cap"><span>3 days</span><span>14 days</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="blk locked" data-blk="when">
+      <div class="blk-head"><h3 class="blk-q">When do you want to go?</h3><span class="blk-sum"></span></div>
+      <div class="blk-body">
+        <div class="months" id="monthGrid" role="radiogroup" aria-label="Travel month"></div>
+        <button class="link" data-flex>I'm flexible</button>
+      </div>
+    </div>
+
+    <div class="blk locked" data-blk="who">
+      <div class="blk-head"><h3 class="blk-q">Who's coming?</h3><span class="blk-sum"></span></div>
+      <div class="blk-body"><div class="opts" role="radiogroup">
+        <button class="opt" role="radio" aria-checked="false">Just me</button>
+        <button class="opt" role="radio" aria-checked="false">Two of us</button>
+        <button class="opt" role="radio" aria-checked="false">Friends</button>
+        <button class="opt" role="radio" aria-checked="false">Family</button>
+      </div></div>
+    </div>
+
+    <div class="blk locked" data-blk="likes">
+      <div class="blk-head"><h3 class="blk-q">What pulls you somewhere?</h3><span class="blk-sum"></span></div>
+      <div class="blk-body"><div class="opts" id="likes">
+        <button class="opt" aria-pressed="false">Food</button><button class="opt" aria-pressed="false">Cities</button>
+        <button class="opt" aria-pressed="false">Nature</button><button class="opt" aria-pressed="false">History</button>
+        <button class="opt" aria-pressed="false">Beaches</button><button class="opt" aria-pressed="false">Hiking</button>
+        <button class="opt" aria-pressed="false">Photography</button><button class="opt" aria-pressed="false">Wildlife</button>
+        <button class="opt" aria-pressed="false">Adventure</button><button class="opt" aria-pressed="false">Slowing down</button>
+      </div></div>
+    </div>
+
+    <div class="blk locked" data-blk="style">
+      <div class="blk-head"><h3 class="blk-q">How do you like to travel?</h3><span class="blk-sum"></span></div>
+      <div class="blk-body"><div class="style-grid" id="styleGrid"></div></div>
+    </div>
+  </div>
+
+  <div class="cv-foot">
+    <div class="cv-foot-in">
+      <div class="cv-prog"><i id="cvProg"></i></div>
+      <button class="btn" id="cvGo" disabled>Show me where →</button>
+    </div>
+  </div>
+</section>
+
+<!-- ============ CONCEPT B ============ -->
+<section class="stage" id="stageB">
+  <div class="cn-stage">
+    <div class="cn-glow" id="cnGlow"></div>
+    <div class="cn-top">
+      <div class="cn-brand">Where<em>N</em>ova</div>
+      <div class="cn-dots" id="cnDots"></div>
+    </div>
+    <div class="cn-mid"><div id="cnSlot"></div></div>
+    <div class="cn-bot">
+      <button class="cn-back" id="cnBack" aria-label="Previous question">←</button>
+      <span class="cn-count" id="cnCount"></span>
+    </div>
+  </div>
+</section>
+
+<script>
+/* ---------- concept switch ---------- */
+document.querySelectorAll('.switch button').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('.switch button').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));
+  document.getElementById('stageA').classList.toggle('on', b.dataset.go==='A');
+  document.getElementById('stageB').classList.toggle('on', b.dataset.go==='B');
+}));
+
+const MONTHS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const STYLE=[
+  {k:'budget',label:'Budget',opts:['Budget','Moderate','Comfortable','Premium']},
+  {k:'weather',label:'Weather',opts:['Warm','Mild','Cool','Cold or snowy']},
+  {k:'pace',label:'Pace',opts:['Relaxed','Balanced','Full','Packed']},
+  {k:'effort',label:'Activity',opts:['Light','Moderate','Active','Very active']}
+];
+
+/* ================= CONCEPT A ================= */
+(function(){
+  const ORDER=['city','days','when','who','likes','style'];
+  const st={city:null,days:null,when:null,who:null,likes:[],style:{}};
+  const blks={}; ORDER.forEach(k=>blks[k]=document.querySelector(`[data-blk="${k}"]`));
+
+  // day rail
+  const rail=document.getElementById('dayRail');
+  for(let d=3;d<=14;d++){
+    const b=document.createElement('button');
+    b.className='day'; b.type='button'; b.textContent=d;
+    b.setAttribute('role','radio'); b.setAttribute('aria-checked','false');
+    b.addEventListener('click',()=>{
+      rail.querySelectorAll('.day').forEach(x=>x.setAttribute('aria-checked','false'));
+      b.setAttribute('aria-checked','true');
+      b.scrollIntoView({inline:'center',block:'nearest',behavior:'smooth'});
+      st.days=d; done('days');
+    });
+    rail.appendChild(b);
+  }
+  rail.addEventListener('keydown',e=>{
+    if(e.key!=='ArrowLeft'&&e.key!=='ArrowRight')return;
+    e.preventDefault();
+    const all=[...rail.querySelectorAll('.day')];
+    const i=all.findIndex(x=>x.getAttribute('aria-checked')==='true');
+    const n=all[Math.min(all.length-1,Math.max(0,(i<0?0:i)+(e.key==='ArrowRight'?1:-1)))];
+    n&&n.click(); n&&n.focus();
+  });
+
+  // months
+  const mg=document.getElementById('monthGrid');
+  MONTHS.forEach(m=>{
+    const b=document.createElement('button'); b.type='button'; b.textContent=m;
+    b.setAttribute('role','radio'); b.setAttribute('aria-checked','false');
+    b.addEventListener('click',()=>{
+      mg.querySelectorAll('button').forEach(x=>x.setAttribute('aria-checked','false'));
+      b.setAttribute('aria-checked','true'); st.when=m; done('when');
+    });
+    mg.appendChild(b);
+  });
+  blks.when.querySelector('[data-flex]').addEventListener('click',()=>{
+    mg.querySelectorAll('button').forEach(x=>x.setAttribute('aria-checked','false'));
+    st.when='Flexible'; done('when');
+  });
+
+  // city
+  const ci=document.getElementById('cityIn');
+  ci.addEventListener('input',()=>{ st.city=ci.value.trim()||null; paint(); });
+  ci.addEventListener('change',()=>{ if(st.city) done('city'); });
+  blks.city.querySelectorAll('.sugg button').forEach(b=>b.addEventListener('click',()=>{
+    ci.value=b.textContent; st.city=b.textContent; done('city');
+  }));
+
+  // who
+  blks.who.querySelectorAll('.opt').forEach(b=>b.addEventListener('click',()=>{
+    blks.who.querySelectorAll('.opt').forEach(x=>x.setAttribute('aria-checked','false'));
+    b.setAttribute('aria-checked','true'); st.who=b.textContent; done('who');
+  }));
+
+  // likes
+  document.querySelectorAll('#likes .opt').forEach(b=>b.addEventListener('click',()=>{
+    const on=b.getAttribute('aria-pressed')==='true';
+    b.setAttribute('aria-pressed',String(!on));
+    st.likes=[...document.querySelectorAll('#likes .opt')].filter(x=>x.getAttribute('aria-pressed')==='true').map(x=>x.textContent);
+    if(st.likes.length){ reveal('style'); } paint();
+  }));
+
+  // style
+  const sg=document.getElementById('styleGrid');
+  STYLE.forEach(row=>{
+    const wrap=document.createElement('div'); wrap.className='style-row';
+    wrap.innerHTML=`<header><h4>${row.label}</h4><button class="link" type="button">No preference</button></header>
+      <div class="seg" role="radiogroup" aria-label="${row.label}">${row.opts.map(o=>`<button type="button" role="radio" aria-checked="false">${o}</button>`).join('')}</div>`;
+    wrap.querySelectorAll('.seg button').forEach(b=>b.addEventListener('click',()=>{
+      wrap.querySelectorAll('.seg button').forEach(x=>x.setAttribute('aria-checked','false'));
+      b.setAttribute('aria-checked','true'); st.style[row.k]=b.textContent; paint();
+    }));
+    wrap.querySelector('.link').addEventListener('click',()=>{
+      wrap.querySelectorAll('.seg button').forEach(x=>x.setAttribute('aria-checked','false'));
+      st.style[row.k]='Any'; paint();
+    });
+    sg.appendChild(wrap);
+  });
+
+  function reveal(k){ if(blks[k].classList.contains('locked')) blks[k].classList.remove('locked'); }
+  function done(k){
+    blks[k].classList.remove('active'); blks[k].classList.add('done');
+    const i=ORDER.indexOf(k), n=ORDER[i+1];
+    if(n){ blks[n].classList.remove('locked'); blks[n].classList.add('active');
+      blks[n].scrollIntoView({block:'center',behavior:'smooth'}); }
+    paint();
+  }
+  ORDER.forEach(k=>blks[k].querySelector('.blk-head').addEventListener('click',()=>{
+    if(!blks[k].classList.contains('done'))return;
+    ORDER.forEach(o=>blks[o].classList.remove('active'));
+    blks[k].classList.remove('done'); blks[k].classList.add('active');
+  }));
+
+  const S={days:document.getElementById('s-days'),city:document.getElementById('s-city'),
+           when:document.getElementById('s-when'),who:document.getElementById('s-who')};
+  function paint(){
+    const sum={city:st.city,days:st.days?st.days+' days':null,
+      when:st.when==='Flexible'?'whenever':st.when?'in '+st.when:null,
+      who:st.who,likes:st.likes.length?st.likes.slice(0,3).join(', '):null,
+      style:Object.keys(st.style).length?Object.values(st.style).slice(0,2).join(' · '):null};
+    ORDER.forEach(k=>{ const el=blks[k].querySelector('.blk-sum'); el.textContent=sum[k]||''; });
+
+    S.city.textContent=st.city||'somewhere'; S.city.classList.toggle('set',!!st.city);
+    S.days.textContent=st.days?st.days+'-day trip':'trip'; S.days.classList.toggle('set',!!st.days);
+    S.when.textContent=st.when==='Flexible'?'whenever you like':st.when?'in '+st.when:'sometime';
+    S.when.classList.toggle('set',!!st.when);
+    S.who.textContent=st.who?st.who.toLowerCase():'on your own'; S.who.classList.toggle('set',!!st.who);
+
+    const filled=[st.city,st.days,st.when,st.who,st.likes.length?1:null].filter(Boolean).length;
+    document.getElementById('cvProg').style.width=(filled/5*100)+'%';
+    document.getElementById('cvGo').disabled=filled<5;
+  }
+  paint();
+})();
+
+/* ================= CONCEPT B ================= */
+(function(){
+  const Q=[
+    {k:'city',q:"Where are you starting from?",hint:"We'll work out what's actually reachable.",t:'city',glow:'#1E4E6B'},
+    {k:'days',q:"How long do you have?",hint:"Including travel days.",t:'days',glow:'#28506E'},
+    {k:'when',q:"When are you going?",hint:"Pick a month, or leave it open.",t:'months',glow:'#2E4C74'},
+    {k:'who',q:"Who's coming?",hint:"",t:'one',opts:['Just me','Two of us','Friends','Family'],glow:'#3A4A78'},
+    {k:'likes',q:"What pulls you somewhere?",hint:"Choose as many as you like.",t:'many',
+      opts:['Food','Cities','Nature','History','Beaches','Hiking','Photography','Wildlife','Adventure','Slowing down'],glow:'#46426F'},
+    ...STYLE.map((s,i)=>({k:s.k,q:{budget:"What are you spending?",weather:"What weather do you want?",pace:"What pace suits you?",effort:"How active do you want to be?"}[s.k],
+      hint:"",t:'seg',opts:s.opts,skip:true,glow:['#57406A','#5E4160','#664253','#6B4448'][i]}))
+  ];
+  const st={}; let i=0;
+  const slot=document.getElementById('cnSlot'), dots=document.getElementById('cnDots'),
+        glow=document.getElementById('cnGlow'), back=document.getElementById('cnBack'),
+        count=document.getElementById('cnCount');
+  Q.forEach(()=>dots.appendChild(document.createElement('i')));
+
+  const next=()=>{ i++; render(); };
+  function render(){
+    back.disabled=i===0;
+    [...dots.children].forEach((d,n)=>{d.className=n<i?'on':n===i?'now':''});
+    glow.style.background = i<Q.length
+      ? `radial-gradient(120% 90% at 50% 8%, ${Q[i].glow} 0%, var(--page) 62%)`
+      : `radial-gradient(120% 90% at 50% 8%, #2E6B6E 0%, var(--page) 62%)`;
+
+    if(i>=Q.length){
+      count.textContent='';
+      slot.innerHTML=`<div class="cn-card cn-done">
+        <p class="cn-hint" style="color:var(--cyan);letter-spacing:.16em;text-transform:uppercase;font-weight:700;font-size:11px">Your Travel Fit is ready</p>
+        <h2 class="cn-q">${st.days||8} days from ${st.city||'Paris'}.<br>We know where to send you.</h2>
+        <div class="cn-actions"><button class="btn">Show me where →</button></div></div>`;
+      return;
+    }
+    const q=Q[i];
+    count.textContent=`${i+1} of ${Q.length}`;
+    let ctrl='';
+    if(q.t==='city') ctrl=`<input class="textin" id="cnCity" placeholder="Start typing a city" autocomplete="off" style="text-align:center">
+      <div class="sugg" style="justify-content:center">${['Vancouver','Los Angeles','San Francisco','Paris'].map(c=>`<button type="button">${c}</button>`).join('')}</div>`;
+    if(q.t==='days') ctrl=`<div class="days"><div class="days-rail" id="cnRail" role="radiogroup" aria-label="Trip length"></div>
+      <div class="days-cap" style="max-width:420px;margin:0 auto"><span>3 days</span><span>14 days</span></div></div>`;
+    if(q.t==='months') ctrl=`<div class="months" id="cnMonths" role="radiogroup" aria-label="Month"></div>
+      <div class="cn-actions"><button class="link" id="cnFlex">I'm flexible</button></div>`;
+    if(q.t==='one'||q.t==='many') ctrl=`<div class="opts">${q.opts.map(o=>`<button class="opt" ${q.t==='many'?'aria-pressed="false"':'role="radio" aria-checked="false"'}>${o}</button>`).join('')}</div>`;
+    if(q.t==='seg') ctrl=`<div class="seg" role="radiogroup">${q.opts.map(o=>`<button type="button" role="radio" aria-checked="false">${o}</button>`).join('')}</div>`;
+
+    slot.innerHTML=`<div class="cn-card"><h2 class="cn-q">${q.q}</h2>
+      ${q.hint?`<p class="cn-hint">${q.hint}</p>`:'<div style="height:24px"></div>'}
+      ${ctrl}<div class="cn-actions" id="cnAct"></div></div>`;
+
+    const act=document.getElementById('cnAct');
+    if(q.skip){ const s=document.createElement('button'); s.className='link'; s.textContent='No preference';
+      s.onclick=()=>{st[q.k]='Any';next();}; act.appendChild(s); }
+
+    if(q.t==='city'){
+      const inp=document.getElementById('cnCity'); inp.focus();
+      inp.addEventListener('keydown',e=>{if(e.key==='Enter'&&inp.value.trim()){st.city=inp.value.trim();next();}});
+      slot.querySelectorAll('.sugg button').forEach(b=>b.onclick=()=>{st.city=b.textContent;next();});
+    }
+    if(q.t==='days'){
+      const r=document.getElementById('cnRail');
+      for(let d=3;d<=14;d++){ const b=document.createElement('button');
+        b.className='day'; b.type='button'; b.textContent=d; b.setAttribute('role','radio'); b.setAttribute('aria-checked','false');
+        b.onclick=()=>{st.days=d;
+          r.querySelectorAll('.day').forEach(x=>x.setAttribute('aria-checked','false'));
+          b.setAttribute('aria-checked','true'); b.scrollIntoView({inline:'center',block:'nearest',behavior:'smooth'});
+          setTimeout(next,420);};
+        r.appendChild(b);}
+    }
+    if(q.t==='months'){
+      const m=document.getElementById('cnMonths');
+      MONTHS.forEach(mo=>{const b=document.createElement('button');b.type='button';b.textContent=mo;
+        b.setAttribute('role','radio');b.setAttribute('aria-checked','false');
+        b.onclick=()=>{st.when=mo;b.setAttribute('aria-checked','true');setTimeout(next,300);};m.appendChild(b);});
+      document.getElementById('cnFlex').onclick=()=>{st.when='Flexible';next();};
+    }
+    if(q.t==='one'||q.t==='seg'){
+      slot.querySelectorAll('.opt,.seg button').forEach(b=>b.onclick=()=>{
+        st[q.k]=b.textContent;
+        b.setAttribute(q.t==='one'?'aria-checked':'aria-checked','true');
+        setTimeout(next,300);});
+    }
+    if(q.t==='many'){
+      const chosen=new Set();
+      slot.querySelectorAll('.opt').forEach(b=>b.onclick=()=>{
+        const on=b.getAttribute('aria-pressed')==='true';
+        b.setAttribute('aria-pressed',String(!on));
+        on?chosen.delete(b.textContent):chosen.add(b.textContent);
+        st.likes=[...chosen];
+        let go=document.getElementById('cnGo2');
+        if(chosen.size&&!go){ go=document.createElement('button'); go.className='btn'; go.id='cnGo2';
+          go.textContent='Continue →'; go.onclick=next; act.appendChild(go); }
+        else if(!chosen.size&&go){ go.remove(); }
+      });
+    }
+  }
+  back.onclick=()=>{ if(i>0){i--;render();} };
+  render();
+})();
+</script>
+</body>
+</html>
