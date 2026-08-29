@@ -9,7 +9,27 @@ import { rankDestinations, buildReasons, buildSuggestions, practicalityExcludedC
 import { nameWithCountry } from "@/lib/destinationLabel";
 import { flagForCountry } from "@/lib/countryFlag";
 import TravelFitRing from "@/components/TravelFitRing";
-import { ArrowLeft, ArrowRight, Info, ChevronDown, MapPin, Compass, Clock, Gauge } from "lucide-react";
+import { ArrowLeft, ArrowRight, Info, ChevronDown, Compass, Clock, Gauge } from "lucide-react";
+
+// Sibling-deduplication for the fit-reason pills (C4): walk the three cards
+// in display order (hero first) sharing one "already used" set, so the same
+// reason string (e.g. "Peak season in October") never repeats verbatim
+// across cards -- each card falls through to its own next-best reason from
+// buildReasons() instead. Caps at 2 pills per card.
+function withDedupedPills(top, prefs) {
+  const used = new Set();
+  return top.map(({ dest, result }) => {
+    const reasons = buildReasons(dest, prefs, result);
+    const pills = [];
+    for (const r of reasons) {
+      if (pills.length >= 2) break;
+      if (used.has(r)) continue;
+      pills.push(r);
+      used.add(r);
+    }
+    return { dest, result, pills };
+  });
+}
 
 export default function Results() {
   const navigate = useNavigate();
@@ -64,6 +84,7 @@ export default function Results() {
   }
 
   const top = ranked.slice(0, 3);
+  const withPills = withDedupedPills(top, prefs);
   const suggestions = buildSuggestions(ranked, prefs);
   const practicalityExcluded = practicalityExcludedCount(allDestinations, prefs);
   const hasTripLengthHint = suggestions.some((s) => /increase your trip|longer|7 days/i.test(s.label));
@@ -71,12 +92,17 @@ export default function Results() {
 
   return (
     <div className="min-h-[100dvh] bg-wn-page text-wn-text">
-      <div className="max-w-5xl mx-auto px-4 py-8">
-        <div className="mb-6 flex items-center justify-between gap-4">
+      {/* C1: 1320px container, 32px padding, centred */}
+      <div className="max-w-[1320px] mx-auto px-8">
+        <div className="pt-14 pb-8 flex items-end justify-between gap-6 flex-wrap">
           <div>
-            <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-wn-cyan mb-2">Your Travel Fit</p>
-            <h1 className="font-display text-3xl font-bold text-wn-text">Your top {top.length} matches</h1>
-            <p className="text-[15px] text-wn-text-2 mt-1">
+            <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-wn-cyan mb-3.5 flex items-center gap-2">
+              Your Travel Fit
+            </p>
+            <h1 className="font-display font-extrabold text-wn-text" style={{ fontSize: "clamp(34px, 4.4vw, 54px)", lineHeight: 1.02, letterSpacing: "-0.03em", marginBottom: 12 }}>
+              Your top {top.length} matches
+            </h1>
+            <p className="text-wn-text-2 max-w-[52ch] text-base">
               Final scores combine your preference fit with travel practicality for your trip length. Estimates only.
             </p>
           </div>
@@ -139,21 +165,21 @@ export default function Results() {
           </div>
         )}
 
-        {top.length === 0 ? (
+        {withPills.length === 0 ? (
           <div className="text-center py-16 text-wn-text-2">
             <p>No practical destinations were found for a {prefs.travelDays}-day trip from your location in the current catalogue.</p>
             <p className="mt-1">Try a longer trip, broader preferences, or nearby and domestic destinations.</p>
             <Button onClick={() => navigate("/questionnaire")} className="wn-cta-dark mt-4 min-h-11">Revise answers</Button>
           </div>
         ) : (
-          <div className="space-y-6">
-            {top[0] && (
-              <HeroMatchCard dest={top[0].dest} result={top[0].result} prefs={prefs} onSelect={selectDest} />
+          <div className="space-y-7 pb-16">
+            {withPills[0] && (
+              <HeroMatchCard dest={withPills[0].dest} result={withPills[0].result} pills={withPills[0].pills} onSelect={selectDest} />
             )}
-            {top.length > 1 && (
-              <div className="grid sm:grid-cols-2 gap-6">
-                {top.slice(1).map(({ dest, result }) => (
-                  <MatchCard key={dest.id} dest={dest} result={result} prefs={prefs} onSelect={selectDest} />
+            {withPills.length > 1 && (
+              <div className="grid md:grid-cols-2 gap-7">
+                {withPills.slice(1).map(({ dest, result, pills }) => (
+                  <MatchCard key={dest.id} dest={dest} result={result} pills={pills} onSelect={selectDest} />
                 ))}
               </div>
             )}
@@ -170,12 +196,12 @@ function ScoreBreakdown({ result }) {
   const [open, setOpen] = useState(false);
   const b = result.breakdown;
   const rows = [
-    ["Season fit", b.season, 25],
-    ["Interest match", b.interest, 25],
-    ["Budget fit", b.budget, 15],
+    ["Season", b.season, 25],
+    ["Interests", b.interest, 25],
+    ["Budget", b.budget, 15],
     ["Trip length", b.length, 15],
     ["Climate", b.climate, 10],
-    ["Pace, activity & traveller", b.pace, 10]
+    ["Pace & activity", b.pace, 10]
   ];
   if (result.visited) {
     rows.push(["Visited before", -result.visitedPenalty, result.visitedPenalty]);
@@ -183,99 +209,92 @@ function ScoreBreakdown({ result }) {
   const finalScore = result.finalScore;
 
   return (
-    <div>
-      <button
-        type="button"
-        onClick={() => setOpen((o) => !o)}
-        className="inline-flex items-center gap-1.5 text-[15px] font-medium text-wn-text-2 hover:text-wn-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-wn-cyan rounded"
-        aria-expanded={open}
-      >
+    <details className="why border-t border-wn-line pt-4" open={open} onToggle={(e) => setOpen(e.target.open)}>
+      <summary className="cursor-pointer list-none text-[14px] font-semibold text-wn-text-2 flex items-center gap-2 [&::-webkit-details-marker]:hidden">
         How this score was built
         <ChevronDown className={`w-4 h-4 motion-safe:transition-transform motion-safe:duration-200 ${open ? "rotate-180" : ""}`} />
-      </button>
-      {open && (
-        <div className="mt-4 pt-4 border-t border-wn-line space-y-2.5">
-          {rows.map(([label, got, max]) => {
-            const penalty = got < 0;
-            return (
-              <div key={label}>
-                <div className="flex justify-between text-xs mb-1">
-                  <span className="text-wn-text-2">{label}</span>
-                  <span className={`font-medium ${penalty ? "text-destructive" : "text-wn-text"}`}>
-                    {penalty ? `${got}` : `${Math.round(got)}/${max}`}
-                  </span>
-                </div>
-                <div className="h-1.5 rounded-full bg-wn-line overflow-hidden">
-                  <div
-                    className={penalty ? "h-full bg-destructive" : "h-full bg-wn-cyan"}
-                    style={{ width: `${Math.max(0, (got / max) * 100)}%` }}
-                  />
-                </div>
-              </div>
-            );
-          })}
-          <div className="border-t border-wn-line pt-3 mt-2 space-y-1.5">
-            <div className="flex justify-between text-xs">
-              <span className="text-wn-text-2">Base preference score</span>
-              <span className="font-medium text-wn-text">{result.baseScore}</span>
+      </summary>
+      <div className="mt-3.5 flex flex-col gap-2.5">
+        {rows.map(([label, got, max]) => {
+          const penalty = got < 0;
+          const pct = Math.max(0, Math.min(100, (got / max) * 100));
+          return (
+            <div key={label} className="flex items-center gap-3 text-[14px] text-wn-text-2">
+              <span className="w-28 shrink-0 text-wn-text">{label}</span>
+              <span className="flex-1 h-[5px] rounded-full bg-wn-line overflow-hidden">
+                <span
+                  className={`block h-full rounded-full ${penalty ? "bg-destructive" : "bg-wn-cyan"}`}
+                  style={{ width: `${pct}%` }}
+                />
+              </span>
+              <span className={`w-9 text-right tabular-nums font-semibold ${penalty ? "text-destructive" : "text-wn-text"}`}>
+                {penalty ? got : Math.round(got)}
+              </span>
             </div>
-            <div className="flex justify-between text-xs">
-              <span className="text-wn-text-2">Travel-practicality penalty</span>
-              <span className="font-medium text-destructive">{result.travelPenalty > 0 ? `-${result.travelPenalty}` : "0"}</span>
-            </div>
-            <div className="flex justify-between text-[15px] font-semibold pt-1 text-wn-text">
-              <span>Final match score</span>
-              <span>{finalScore}/100</span>
-            </div>
-          </div>
+          );
+        })}
+        <div className="border-t border-wn-line pt-2.5 mt-1 flex justify-between text-[14px] font-semibold text-wn-text">
+          <span>Final match score</span>
+          <span>{finalScore}/100</span>
         </div>
-      )}
-    </div>
+      </div>
+    </details>
   );
 }
 
-// ---- Compact 3-fact travel-practicality row ----
+// ---- C5: compact 3-fact bordered grid ----
 
-function ThreeFactRow({ prac }) {
+function FactsGrid({ prac }) {
   const mode = prac.travelMode;
   return (
-    <dl className="grid grid-cols-3 gap-3 py-4 border-y border-wn-line">
-      <div className="min-w-0">
-        <dt className="flex items-center gap-1 text-[11px] uppercase tracking-wide text-wn-text-3">
-          <Compass className="w-3 h-3" /> How you'll travel
+    <dl className="grid grid-cols-3 gap-[2px] bg-wn-line border border-wn-line rounded-xl overflow-hidden">
+      <div className="bg-wn-surface px-4 py-3.5 min-w-0">
+        <dt className="text-[10px] font-bold uppercase tracking-[0.13em] text-wn-text-3 mb-1.5 flex items-center gap-1">
+          <Compass className="w-3 h-3" /> Getting there
         </dt>
-        <dd className="text-[13px] sm:text-[15px] font-medium text-wn-text mt-1 break-words">{mode}</dd>
+        <dd className="text-[14.5px] font-semibold text-wn-text break-words">{mode}</dd>
       </div>
-      <div className="min-w-0">
-        <dt className="flex items-center gap-1 text-[11px] uppercase tracking-wide text-wn-text-3">
+      <div className="bg-wn-surface px-4 py-3.5 min-w-0">
+        <dt className="text-[10px] font-bold uppercase tracking-[0.13em] text-wn-text-3 mb-1.5 flex items-center gap-1">
           <Clock className="w-3 h-3" /> Travel time
         </dt>
-        <dd className="text-[13px] sm:text-[15px] font-medium text-wn-text mt-1">
-          {prac.oneWayHours}h each way
-        </dd>
+        <dd className="text-[14.5px] font-semibold text-wn-text">{prac.oneWayHours}h each way</dd>
       </div>
-      <div className="min-w-0">
-        <dt className="flex items-center gap-1 text-[11px] uppercase tracking-wide text-wn-text-3">
-          <Gauge className="w-3 h-3" /> Time on ground
+      <div className="bg-wn-surface px-4 py-3.5 min-w-0">
+        <dt className="text-[10px] font-bold uppercase tracking-[0.13em] text-wn-text-3 mb-1.5 flex items-center gap-1">
+          <Gauge className="w-3 h-3" /> On the ground
         </dt>
-        <dd className="text-[13px] sm:text-[15px] font-medium text-wn-text mt-1">
-          {prac.usableDestinationDays}d
-        </dd>
+        <dd className="text-[14.5px] font-semibold text-wn-text">{prac.usableDestinationDays}d</dd>
       </div>
     </dl>
   );
 }
 
-// ---- Featured top match: horizontal hero (desktop), stacked (mobile) ----
+function Pills({ pills }) {
+  if (!pills || !pills.length) return null;
+  return (
+    <div className="flex flex-wrap gap-2">
+      {pills.map((p, i) => (
+        <span
+          key={i}
+          className="inline-flex items-center text-[11px] font-semibold uppercase tracking-[0.1em] text-wn-text-2 border border-wn-line rounded-full px-3 py-1.5"
+        >
+          {p}
+        </span>
+      ))}
+    </div>
+  );
+}
 
-function HeroMatchCard({ dest, result, prefs, onSelect }) {
-  const reasons = buildReasons(dest, prefs, result);
+// ---- C2/C3: featured top match, image column wider than content (1.35fr:1fr) ----
+
+function HeroMatchCard({ dest, result, pills, onSelect }) {
   const prac = result.practicality;
   const finalScore = result.finalScore;
 
   return (
-    <article className="rounded-3xl bg-wn-surface ring-1 ring-wn-line-2 overflow-hidden sm:grid sm:grid-cols-5">
-      <div className="relative h-64 sm:h-auto sm:col-span-2">
+    <article className="rounded-3xl bg-wn-surface ring-1 ring-wn-line overflow-hidden md:grid" style={{ gridTemplateColumns: "minmax(0,1.35fr) minmax(0,1fr)" }}>
+      <div className="relative min-h-[280px] md:min-h-[440px]">
         <Image
           src={dest.image_url}
           alt={nameWithCountry(dest.name, dest.country)}
@@ -285,54 +304,43 @@ function HeroMatchCard({ dest, result, prefs, onSelect }) {
         />
         <span
           className="absolute inset-0"
-          style={{ background: "linear-gradient(to top, rgba(6,16,31,0.85) 0%, rgba(6,16,31,0.35) 45%, rgba(6,16,31,0) 100%)" }}
+          style={{ background: "linear-gradient(180deg, rgba(8,20,40,0) 30%, rgba(8,20,40,.55) 68%, rgba(8,20,40,.94) 100%)" }}
         />
-        <span className="glass-badge absolute top-4 left-4 inline-flex items-center text-[11px] font-bold uppercase tracking-[0.14em] text-wn-coral px-3 py-1.5 rounded-full">
-          Best fit
-        </span>
-        <span className="absolute top-4 right-4 rounded-full glass-badge p-1.5">
-          <TravelFitRing score={finalScore} size="lg" />
-        </span>
-        <div className="absolute bottom-0 left-0 right-0 p-5 sm:hidden">
-          <h2 className="font-display font-bold text-wn-text text-2xl flex items-center gap-2">
-            <MapPin className="w-4 h-4 text-wn-text-2 shrink-0" /> {dest.name}
-          </h2>
-          <p className="text-wn-text-2 text-[15px] flex items-center gap-1.5">
-            {flagForCountry(dest.country) && <span aria-hidden="true">{flagForCountry(dest.country)}</span>}
-            {dest.country} · {dest.region}
-          </p>
+        {/* overlay: badge top-left, ring+name+location stacked bottom-left. Nothing else on the photo. */}
+        <div className="absolute inset-0 flex flex-col justify-between p-[22px]">
+          <span className="self-start inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.14em] text-white bg-wn-coral/90 rounded-full px-3 py-2">
+            Best fit
+          </span>
+          <div>
+            <TravelFitRing score={finalScore} size="lg" />
+            <h2
+              className="font-display font-extrabold text-white mt-4"
+              style={{ fontSize: "clamp(30px, 3.2vw, 42px)", letterSpacing: "-0.025em", lineHeight: 1.05 }}
+            >
+              {dest.name}
+            </h2>
+            <p className="flex items-center gap-2 mt-1.5 text-[13.5px]" style={{ color: "rgba(255,255,255,.82)" }}>
+              {flagForCountry(dest.country) && <span aria-hidden="true">{flagForCountry(dest.country)}</span>}
+              {dest.country} · {dest.region}
+            </p>
+          </div>
         </div>
       </div>
 
-      <div className="p-5 sm:p-8 sm:col-span-3 flex flex-col justify-center">
-        <h2 className="hidden sm:flex font-display font-bold text-wn-text text-3xl items-center gap-2">
-          <MapPin className="w-5 h-5 text-wn-text-2 shrink-0" /> {dest.name}
-        </h2>
-        <p className="hidden sm:flex text-wn-text-2 text-[15px] items-center gap-1.5 mt-1">
-          {flagForCountry(dest.country) && <span aria-hidden="true">{flagForCountry(dest.country)}</span>}
-          {dest.country} · {dest.region}
-        </p>
-
+      <div className="p-6 md:p-[34px] flex flex-col gap-[22px]">
         {dest.intro && (
-          <p className="text-wn-text text-[15px] sm:text-base leading-relaxed mt-4">{dest.intro}</p>
+          <p className="text-[17px] leading-[1.55] text-wn-text font-medium" style={{ letterSpacing: "-0.01em" }}>
+            {dest.intro}
+          </p>
         )}
 
-        <ThreeFactRow prac={prac} />
+        <FactsGrid prac={prac} />
 
-        <ul className="space-y-1.5 my-4">
-          {reasons.map((r, i) => (
-            <li key={i} className="text-[15px] text-wn-text-2 flex gap-2">
-              <span className="text-wn-cyan">•</span> {r}
-            </li>
-          ))}
-          {result.visited && (
-            <li className="text-[13px] text-wn-text-3">You've been before — ranked a little lower as a result.</li>
-          )}
-        </ul>
+        <Pills pills={pills} />
 
         <ScoreBreakdown result={result} />
 
-        <Button onClick={() => onSelect(dest.id)} className="w-full sm:w-auto mt-6 wn-cta-dark min-h-12 px-8">
+        <Button onClick={() => onSelect(dest.id)} className="self-start wn-cta-dark min-h-12 px-8">
           View my trip <ArrowRight className="w-4 h-4 ml-2" />
         </Button>
       </div>
@@ -340,25 +348,15 @@ function HeroMatchCard({ dest, result, prefs, onSelect }) {
   );
 }
 
-// Qualitative match-tier badge — distinct info from the numeric ring and,
-// unlike "Best fit", meaningful on the two non-featured cards.
-const MATCH_LABEL_CLASS = {
-  "Strong match": "bg-wn-cyan/15 ring-1 ring-wn-cyan text-wn-cyan",
-  "Fair match": "bg-wn-surface-2 ring-1 ring-wn-line-2 text-wn-text",
-  "Weak match": "bg-wn-surface-2 ring-1 ring-wn-line-2 text-wn-text-2",
-  "Poor practical match": "bg-destructive text-destructive-foreground"
-};
+// ---- C6: identical supporting cards, equal height, CTA aligned via margin-top:auto ----
 
-// ---- Supporting matches (#2, #3): identical component, identical props shape ----
-
-function MatchCard({ dest, result, prefs, onSelect }) {
-  const reasons = buildReasons(dest, prefs, result);
+function MatchCard({ dest, result, pills, onSelect }) {
   const prac = result.practicality;
   const finalScore = result.finalScore;
 
   return (
-    <article className="rounded-3xl bg-wn-surface ring-1 ring-wn-line overflow-hidden motion-safe:transition-transform motion-safe:duration-200 motion-safe:hover:-translate-y-1">
-      <div className="relative h-48 sm:h-56">
+    <article className="flex flex-col rounded-2xl bg-wn-surface ring-1 ring-wn-line overflow-hidden motion-safe:transition-transform motion-safe:duration-200 motion-safe:hover:-translate-y-1">
+      <div className="relative aspect-[16/10]">
         <Image
           src={dest.image_url}
           alt={nameWithCountry(dest.name, dest.country)}
@@ -367,47 +365,39 @@ function MatchCard({ dest, result, prefs, onSelect }) {
           className="w-full h-full"
         />
         <span
-          className="absolute inset-x-0 bottom-0 h-2/3"
-          style={{ background: "linear-gradient(to top, rgba(6,16,31,0.9) 0%, rgba(6,16,31,0.5) 42%, rgba(6,16,31,0) 100%)" }}
+          className="absolute inset-0"
+          style={{ background: "linear-gradient(180deg, rgba(8,20,40,0) 30%, rgba(8,20,40,.55) 68%, rgba(8,20,40,.94) 100%)" }}
         />
-        <span className={`absolute top-3 left-3 text-xs font-semibold px-2.5 py-1 rounded-full ${MATCH_LABEL_CLASS[result.matchLabel] || MATCH_LABEL_CLASS["Fair match"]}`}>
-          {result.matchLabel}
-        </span>
-        <span className="absolute top-3 right-3 rounded-full glass-badge p-1">
-          <TravelFitRing score={finalScore} size="md" />
-        </span>
-        <div className="absolute bottom-0 left-0 right-0 p-5">
-          <h2 className="font-display font-bold text-wn-text text-xl flex items-center gap-2">
-            <MapPin className="w-4 h-4 text-wn-text-2 shrink-0" /> {dest.name}
-          </h2>
-          <p className="text-wn-text-2 text-[15px] flex items-center gap-1.5">
-            {flagForCountry(dest.country) && <span aria-hidden="true">{flagForCountry(dest.country)}</span>}
-            {dest.country} · {dest.region}
-          </p>
+        <div className="absolute inset-0 flex flex-col justify-between p-[22px]">
+          <span className="self-end">
+            <TravelFitRing score={finalScore} size="md" />
+          </span>
+          <div>
+            <h2 className="font-display font-extrabold text-white text-[25px]" style={{ letterSpacing: "-0.025em", lineHeight: 1.05 }}>
+              {dest.name}
+            </h2>
+            <p className="flex items-center gap-2 mt-1.5 text-[13.5px]" style={{ color: "rgba(255,255,255,.82)" }}>
+              {flagForCountry(dest.country) && <span aria-hidden="true">{flagForCountry(dest.country)}</span>}
+              {dest.country} · {dest.region}
+            </p>
+          </div>
         </div>
       </div>
 
-      <div className="p-5 sm:p-6">
+      <div className="p-6 flex-1 flex flex-col gap-[18px]">
         {dest.intro && (
-          <p className="text-wn-text text-[15px] leading-relaxed mb-4">{dest.intro}</p>
+          <p className="text-[17px] leading-[1.55] text-wn-text font-medium" style={{ letterSpacing: "-0.01em" }}>
+            {dest.intro}
+          </p>
         )}
 
-        <ThreeFactRow prac={prac} />
+        <FactsGrid prac={prac} />
 
-        <ul className="space-y-1.5 my-4">
-          {reasons.map((r, i) => (
-            <li key={i} className="text-[15px] text-wn-text-2 flex gap-2">
-              <span className="text-wn-cyan">•</span> {r}
-            </li>
-          ))}
-          {result.visited && (
-            <li className="text-[13px] text-wn-text-3">You've been before — ranked a little lower as a result.</li>
-          )}
-        </ul>
+        <Pills pills={pills} />
 
         <ScoreBreakdown result={result} />
 
-        <Button onClick={() => onSelect(dest.id)} className="w-full mt-5 wn-cta-dark min-h-12">
+        <Button onClick={() => onSelect(dest.id)} className="wn-cta-dark min-h-12 mt-auto">
           View my trip <ArrowRight className="w-4 h-4 ml-2" />
         </Button>
       </div>

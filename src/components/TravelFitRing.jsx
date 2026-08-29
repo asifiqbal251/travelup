@@ -1,11 +1,13 @@
 // Reusable Travel Fit score gauge: a circular progress ring with the score
 // centered inside and a small "TRAVEL FIT" label beneath it. Two sizes only —
-// "lg" for the single featured/top match, "md" (standard) for every other
-// card, modal and rail badge. Designed to sit over a photo/dark scrim (every
-// current call site is a dark surface), so the number and label render light.
+// "lg" (104px) for the single featured/top match, "md" (76px, "standard")
+// for every other card, modal and rail badge -- exact dimensions from
+// docs/wherenova-polish-pass-v3.md Part D / the results prototype. Designed
+// to sit over a photo/dark scrim (every current call site is a dark
+// surface), so the number and label render light.
 const SIZES = {
-  lg: { box: 128, stroke: 8, fontSize: 40, labelSize: 11, gap: 2 },
-  md: { box: 64, stroke: 5, fontSize: 20, labelSize: 8, gap: 1 }
+  lg: { box: 104, stroke: 6, fontSize: 32, labelSize: 9, gap: 3 },
+  md: { box: 76, stroke: 5, fontSize: 22, labelSize: 8, gap: 2 }
 };
 
 export default function TravelFitRing({ score, size = "md", className = "" }) {
