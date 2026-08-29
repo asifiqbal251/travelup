@@ -30,11 +30,25 @@ function useMinWidth(px) {
   return ok;
 }
 
-// Hue-shifted radial gradient placeholder (cool blue -> teal). Cross-fades
-// between questions; replaced with real photography before beta.
-function gradientFor(progress) {
-  const hue = Math.round(215 - 30 * Math.max(0, Math.min(1, progress)));
-  return `radial-gradient(125% 125% at 50% 25%, hsl(${hue} 64% 20%) 0%, hsl(${hue} 55% 12%) 55%, #06101f 100%)`;
+// Per-question background glow -- one hue per question (indices match
+// QUESTIONS), shifting warmer as the flow advances. See
+// docs/travelfit-visual-fidelity-pass.md #2. All 10 hues verified >=5.4:1
+// contrast against --wn-text.
+const QUESTION_HUES = [
+  "#1E4E6B", // 1 Origin
+  "#28506E", // 2 Duration
+  "#2E4C74", // 3 Month
+  "#3A4A78", // 4 Company
+  "#46426F", // 5 Interests
+  "#57406A", // 6 Budget
+  "#5E4160", // 7 Climate
+  "#664253", // 8 Pace
+  "#6B4448"  // 9 Activity
+];
+const COMPLETION_HUE = "#2E6B6E";
+
+function glowFor(hue) {
+  return `radial-gradient(120% 90% at 50% 8%, ${hue} 0%, var(--wn-page) 62%)`;
 }
 
 export default function Questionnaire() {
@@ -46,7 +60,6 @@ export default function Questionnaire() {
   const [done, setDone] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [mountedComplete, setMountedComplete] = useState(false);
-  const [bg, setBg] = useState({ a: gradientFor(0), b: null, front: "a" });
 
   const advanceTimer = useRef(null);
   const mainRef = useRef(null);
@@ -88,18 +101,6 @@ export default function Questionnaire() {
         ? "Your Travel Fit is ready."
         : sQuestions.map((qi) => QUESTIONS[qi].title).join(". ");
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [current, done, desktop]);
-
-  // Background cross-fade — the back layer receives the new gradient, then the
-  // front flips so the new fades in while the old fades out.
-  useEffect(() => {
-    const p = done ? 1 : order.length > 1 ? order.indexOf(current) / (order.length - 1) : 0;
-    const g = gradientFor(p);
-    setBg((b) => {
-      const back = b.front === "a" ? "b" : "a";
-      return { ...b, [back]: g, front: back };
-    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [current, done, desktop]);
 
@@ -200,19 +201,19 @@ export default function Questionnaire() {
     ? ""
     : `${sQuestions.map((qi) => qi + 1).join("–")} of 9`;
 
+  // current is the screen-START question index, which for paired desktop
+  // screens (6+7, 8+9) is already the first question's index -- so this
+  // naturally satisfies "use the first question's hue" with no extra logic.
+  const glowHue = done ? COMPLETION_HUE : (QUESTION_HUES[current] || QUESTION_HUES[0]);
+
   return (
     <div className="min-h-[100dvh] bg-wn-page text-wn-text flex flex-col relative overflow-hidden">
-      {/* background layers */}
+      {/* background glow -- see docs/travelfit-visual-fidelity-pass.md #2 */}
       <div className="fixed inset-0 -z-10 pointer-events-none">
         <div
-          className="absolute inset-0 motion-safe:transition-opacity duration-1000"
-          style={{ background: bg.a || undefined, opacity: bg.front === "a" ? 1 : 0 }}
+          className="absolute inset-0 motion-safe:transition-[background] motion-safe:duration-[1100ms] motion-safe:ease-[cubic-bezier(0.2,0.7,0.3,1)]"
+          style={{ background: glowFor(glowHue) }}
         />
-        <div
-          className="absolute inset-0 motion-safe:transition-opacity duration-1000"
-          style={{ background: bg.b || undefined, opacity: bg.front === "b" ? 1 : 0 }}
-        />
-        <div className="absolute inset-0 bg-[#06101f]/55" />
       </div>
 
       {/* screen-reader live region */}
