@@ -31,16 +31,16 @@ export default function TravelFit({ prac, prefs }) {
           {badge.label}
         </span>
       </div>
-      <dl className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-6 sm:divide-x sm:divide-wn-line-l">
-        <div className="min-w-0 sm:pr-4">
+      <dl className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-6">
+        <div className="min-w-0 sm:col-span-2">
           <dt className="text-[11px] uppercase tracking-wide text-wn-text-2-l">How you'll travel</dt>
-          <dd className="text-[15px] font-medium text-wn-text-l mt-1 break-words">{mode}</dd>
+          <dd className="text-[15px] font-medium text-wn-text-l mt-1">{mode}</dd>
         </div>
-        <div className="sm:px-4">
+        <div className="min-w-0">
           <dt className="text-[11px] uppercase tracking-wide text-wn-text-2-l">Travel time</dt>
           <dd className="text-[15px] font-medium text-wn-text-l mt-1">{eachWay}</dd>
         </div>
-        <div className="sm:pl-4">
+        <div className="min-w-0">
           <dt className="text-[11px] uppercase tracking-wide text-wn-text-2-l">Time at destination</dt>
           <dd className="text-[15px] font-medium text-wn-text-l mt-1">{timeThere}</dd>
         </div>

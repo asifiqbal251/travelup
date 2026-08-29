@@ -248,12 +248,12 @@ function ScoreBreakdown({ result }) {
 function FactsGrid({ prac }) {
   const mode = normalizeMode(prac.travelMode);
   return (
-    <dl className="grid grid-cols-3 gap-[2px] bg-wn-line border border-wn-line rounded-xl overflow-hidden">
-      <div className="bg-wn-surface px-4 py-3.5 min-w-0">
+    <dl className="grid grid-cols-2 gap-[2px] bg-wn-line border border-wn-line rounded-xl overflow-hidden">
+      <div className="bg-wn-surface px-4 py-3.5 col-span-2 min-w-0">
         <dt className="text-[10px] font-bold uppercase tracking-[0.13em] text-wn-text-3 mb-1.5 flex items-center gap-1">
           <Compass className="w-3 h-3" /> Getting there
         </dt>
-        <dd className="text-[14.5px] font-semibold text-wn-text truncate">{mode}</dd>
+        <dd className="text-[14.5px] font-semibold text-wn-text">{mode}</dd>
       </div>
       <div className="bg-wn-surface px-4 py-3.5 min-w-0">
         <dt className="text-[10px] font-bold uppercase tracking-[0.13em] text-wn-text-3 mb-1.5 flex items-center gap-1">
