@@ -241,14 +241,14 @@ export default function DestinationPreviewDialog({
                 {returning ? (
                   <Button
                     onClick={viewTrip}
-                    className="w-full sm:w-auto bg-coral hover:bg-coral/90 text-ink min-h-12 focus-visible:!ring-on-dark focus-visible:ring-offset-cinema"
+                    className="w-full sm:w-auto wn-cta-dark min-h-12 focus-visible:!ring-on-dark focus-visible:ring-offset-cinema"
                   >
                     View my trip <ArrowRight className="w-4 h-4 ml-2" />
                   </Button>
                 ) : (
                   <Button
                     asChild
-                    className="w-full sm:w-auto bg-coral hover:bg-coral/90 text-ink min-h-12 focus-visible:!ring-on-dark focus-visible:ring-offset-cinema"
+                    className="w-full sm:w-auto wn-cta-dark min-h-12 focus-visible:!ring-on-dark focus-visible:ring-offset-cinema"
                   >
                     <Link to="/questionnaire">Find my Travel Fit</Link>
                   </Button>

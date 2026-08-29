@@ -141,7 +141,7 @@ export default function TripDetail() {
         <Button
           onClick={doSave}
           variant={alreadySaved ? "outline" : "default"}
-          className={`w-full sm:w-auto min-h-12 ${alreadySaved ? "" : "bg-coral hover:bg-coral/90 text-ink"}`}
+          className={`w-full sm:w-auto min-h-12 ${alreadySaved ? "" : "wn-cta-light"}`}
           aria-label={alreadySaved ? "Replace saved itinerary" : "Save itinerary"}
         >
           {alreadySaved

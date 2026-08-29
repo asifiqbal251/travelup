@@ -288,7 +288,7 @@ function DestinationCard({ rank, dest, result, prefs, onSelect }) {
           </div>
         )}
 
-        <Button onClick={() => onSelect(dest.id)} className="w-full mt-5 bg-coral hover:bg-coral/90 text-ink min-h-12">
+        <Button onClick={() => onSelect(dest.id)} className="w-full mt-5 wn-cta-dark min-h-12">
           View my trip <ArrowRight className="w-4 h-4 ml-2" />
         </Button>
       </div>

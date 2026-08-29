@@ -71,7 +71,7 @@ export default function SavedTrips() {
         <p className="text-muted-foreground mb-6">
           You can save any itinerary from its trip page to view it again here later.
         </p>
-        <Button asChild className="bg-coral hover:bg-coral/90 text-ink min-h-11">
+        <Button asChild className="wn-cta-dark min-h-11">
           <Link to="/questionnaire">Find my trip</Link>
         </Button>
       </div>

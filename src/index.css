@@ -11,9 +11,8 @@
     --ink: 219 76% 20%;            /* #0C2A59 primary navy */
     --on-dark: 43 33% 96%;         /* #F8F6F1 text on dark */
     --muted-dark: 220 16% 70%;     /* muted text on dark */
-    --teal: 184 90% 45%;           /* #02DAE3 WhereNova turquoise */
-    --coral: 11 100% 64%;          /* #FF6B4A — Best fit marker only */
-    --orange: 28 98% 52%;          /* #FE8D0D warm accent */
+    --teal: 183 72% 56%;           /* #3FD8E0 — unified with --wn-cyan, single source of truth */
+    --coral: 11 100% 64%;          /* #FF6B4A — Best fit marker only, matches --wn-coral */
 
     /* ---- WhereNova design system tokens (Build 7) ---- */
     /* Dark surfaces — discovery, questionnaire, reveal, results */
@@ -152,15 +151,19 @@
   filter: drop-shadow(0 0 1px rgba(255, 255, 255, 0.85)) drop-shadow(0 2px 4px rgba(0, 0, 0, 0.30));
 }
 
-/* WhereNova primary CTAs — surface-specific gradients (Build 7). */
+/* WhereNova primary CTAs — surface-specific gradients (Build 7). !important on
+   background-image/color so these win over shadcn Button's default-variant
+   utility classes (bg-primary/text-primary-foreground), which live in
+   Tailwind's utilities layer and would otherwise out-rank this components-
+   layer rule when both are applied to the same element. */
 .wn-cta-dark {
-  background-image: linear-gradient(180deg, #48E2E8, #22BFCC);
-  color: #06202B;
+  background-image: linear-gradient(180deg, #48E2E8, #22BFCC) !important;
+  color: #06202B !important;
 }
 .wn-cta-dark:hover { filter: brightness(1.06); }
 .wn-cta-light {
-  background-image: linear-gradient(180deg, #143257, #0B1B33);
-  color: #FFFFFF;
+  background-image: linear-gradient(180deg, #143257, #0B1B33) !important;
+  color: #FFFFFF !important;
 }
 .wn-cta-light:hover { filter: brightness(1.12); }
 /* Hide scrollbars on snap-scrollers. */
