@@ -15,6 +15,7 @@ import {
 import { generateItinerary } from "@/lib/itinerary";
 import { generatePackingList } from "@/lib/packing";
 import { assessPracticality } from "@/lib/practicality";
+import { scoreWithPracticality } from "@/lib/scoring";
 import TripView, { TripHeader } from "@/components/TripView";
 import { toast } from "@/components/ui/use-toast";
 import { ArrowLeft, Bookmark, BookmarkCheck } from "lucide-react";
@@ -64,6 +65,7 @@ export default function TripDetail() {
   const itinerary = generateItinerary(dest, prefs);
   const packingGroups = generatePackingList(dest, prefs);
   const travelFit = assessPracticality(dest, prefs);
+  const score = scoreWithPracticality(dest, prefs, travelFit).finalScore;
   const fingerprint = tripFingerprint(prefs, dest.id);
 
   const persistPacking = (next) => {
@@ -113,7 +115,7 @@ export default function TripDetail() {
       return;
     }
     const snapshot = buildTripSnapshot({
-      dest, prefs, fingerprint, itinerary, packingGroups, packingState, travelFit
+      dest, prefs, fingerprint, itinerary, packingGroups, packingState, travelFit, score
     });
     reportSaveResult(saveNewTrip(snapshot));
   };
@@ -123,7 +125,7 @@ export default function TripDetail() {
     const existing = findSavedTripByFingerprint(fingerprint);
     if (!existing) return;
     const snapshot = buildTripSnapshot({
-      dest, prefs, fingerprint, itinerary, packingGroups, packingState, travelFit,
+      dest, prefs, fingerprint, itinerary, packingGroups, packingState, travelFit, score,
       existingId: existing.id, existingSavedAt: existing.savedAt
     });
     reportSaveResult(replaceSavedTrip(existing.id, snapshot));

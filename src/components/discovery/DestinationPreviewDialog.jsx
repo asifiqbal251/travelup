@@ -7,6 +7,7 @@ import { TRAVEL_FALLBACK_IMAGE } from "@/lib/fallbackImage";
 import { bestMonthsSummary } from "@/lib/discoveryCollections";
 import { nameWithCountry } from "@/lib/destinationLabel";
 import { flagForCountry } from "@/lib/countryFlag";
+import TravelFitRing from "@/components/TravelFitRing";
 import {
   X, ChevronLeft, ChevronRight, MapPin, Clock, Gauge, ArrowRight, Compass
 } from "lucide-react";
@@ -183,14 +184,8 @@ export default function DestinationPreviewDialog({
 
                 {result && prac && (
                   <div className="mt-5 pt-5 border-t border-white/10">
-                    <div className="flex items-end justify-between gap-3 mb-3">
-                      <div>
-                        <div className="flex items-baseline gap-0.5 leading-none">
-                          <span className="font-display text-3xl font-bold text-on-dark">{result.finalScore}</span>
-                          <span className="text-sm font-medium text-muted-dark">/100</span>
-                        </div>
-                        <span className="block text-[10px] uppercase tracking-wide text-muted-dark mt-1">Travel Fit</span>
-                      </div>
+                    <div className="flex items-center justify-between gap-3 mb-3">
+                      <TravelFitRing score={result.finalScore} size="md" />
                       <span className="text-sm text-teal font-semibold">{result.matchLabel}</span>
                     </div>
                     <dl className="grid grid-cols-1 gap-y-2 text-sm">

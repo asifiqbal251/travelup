@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { getSavedTrips, deleteSavedTrip } from "@/lib/storage";
 import { TRAVEL_FALLBACK_IMAGE } from "@/lib/fallbackImage";
+import TravelFitRing from "@/components/TravelFitRing";
 import { Trash2, Plane, ArrowRight } from "lucide-react";
 
 const FIT_BADGE = {
@@ -127,12 +128,18 @@ export default function SavedTrips() {
                         "linear-gradient(to top, rgba(7,24,39,0.86) 0%, rgba(7,24,39,0.45) 42%, rgba(7,24,39,0) 100%)"
                     }}
                   />
-                  <span className="glass-badge absolute top-3 left-3 px-2.5 py-2 rounded-2xl text-left">
-                    <span className="block text-[10px] uppercase tracking-wide text-on-dark/70 leading-none">Travel Fit</span>
-                    <span className={`inline-flex mt-1.5 text-sm font-bold px-2.5 py-0.5 rounded-full ${fit.cls}`}>
-                      {fit.label}
+                  {typeof t.score === "number" ? (
+                    <span className="absolute top-3 left-3 rounded-full glass-badge p-1">
+                      <TravelFitRing score={t.score} size="md" />
                     </span>
-                  </span>
+                  ) : (
+                    <span className="glass-badge absolute top-3 left-3 px-2.5 py-2 rounded-2xl text-left">
+                      <span className="block text-[10px] uppercase tracking-wide text-on-dark/70 leading-none">Travel Fit</span>
+                      <span className={`inline-flex mt-1.5 text-sm font-bold px-2.5 py-0.5 rounded-full ${fit.cls}`}>
+                        {fit.label}
+                      </span>
+                    </span>
+                  )}
                   <span className="absolute inset-x-0 bottom-0 p-5 text-on-dark">
                     <span className="block font-display text-xl font-bold leading-tight">{d.name}</span>
                     <span className="block text-sm text-on-dark/85 mt-1">

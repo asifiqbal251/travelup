@@ -267,7 +267,7 @@ export function deleteSavedTrip(id) {
 // saved trip renders identically later even if data or code change.
 export function buildTripSnapshot({
   dest, prefs, fingerprint, itinerary, packingGroups, packingState, travelFit,
-  existingId, existingSavedAt
+  score, existingId, existingSavedAt
 }) {
   const now = new Date().toISOString();
   const id = existingId || genId();
@@ -277,6 +277,11 @@ export function buildTripSnapshot({
     savedAt: existingSavedAt || now,
     updatedAt: now,
     fingerprint,
+    // Travel Fit final score (0-100) at save time, for the ring badge on the
+    // Saved Trips card. Optional: trips saved before this field existed
+    // simply omit it — isValidSavedTrip() doesn't require it, so old saves
+    // stay valid and callers fall back to the qualitative fit badge.
+    score: typeof score === "number" ? score : null,
     destination: {
       id: dest.id,
       name: dest.name,

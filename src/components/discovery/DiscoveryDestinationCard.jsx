@@ -2,6 +2,7 @@ import { Image } from "@/components/ui/image";
 import { TRAVEL_FALLBACK_IMAGE } from "@/lib/fallbackImage";
 import { nameWithCountry } from "@/lib/destinationLabel";
 import { DEST_CARD_WIDTH, DEST_CARD_ASPECT, DEST_TITLE_CLAMP } from "@/lib/destinationCard";
+import TravelFitRing from "@/components/TravelFitRing";
 
 // Image-led destination card. The photograph becomes the card (bleeds to every
 // edge). Default visible content is limited to name + one concise reason; a
@@ -48,11 +49,8 @@ export default function DiscoveryDestinationCard({ item, onOpen, personalized, f
           }}
         />
         {personalized && result && (
-          <span
-            className="glass-badge absolute top-3 right-3 text-on-dark text-xs font-semibold px-2.5 py-1 rounded-full"
-            aria-hidden="true"
-          >
-            {result.finalScore}
+          <span className="absolute top-3 right-3 rounded-full glass-badge p-1" aria-hidden="true">
+            <TravelFitRing score={result.finalScore} size="md" />
           </span>
         )}
         <span className="absolute inset-x-0 bottom-0 p-4">
