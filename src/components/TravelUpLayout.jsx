@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, Outlet, useNavigate, useLocation } from "react-router-dom";
 import { Menu, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -9,13 +9,51 @@ import {
 } from "@/components/ui/alert-dialog";
 import { clearState } from "@/lib/storage";
 
+const NAV_HEIGHT = 68;
+
+// "hero" = starts fully transparent over a full-bleed dark hero (TripHeader
+// carries a [data-trip-hero] marker so we can measure it), then crosses over
+// to the light frosted treatment once the hero scrolls past. "light" pages
+// include PageNotFound's own bg-slate-50 -- 404 isn't listed in the spec but
+// its page is light, so it gets the light nav rather than the dark default.
+function navThemeFor(pathname) {
+  if (pathname === "/trip" || /^\/saved-trips\/[^/]+$/.test(pathname)) return "hero";
+  if (pathname === "/about") return "light";
+  if (pathname === "/" || pathname === "/results" || pathname === "/saved-trips") return "dark";
+  return "light";
+}
+
+function useScrolledPastHero(active) {
+  const [past, setPast] = useState(false);
+  useEffect(() => {
+    if (!active) {
+      setPast(false);
+      return;
+    }
+    const onScroll = () => {
+      const hero = document.querySelector("[data-trip-hero]");
+      const threshold = hero ? hero.offsetHeight - NAV_HEIGHT : 0;
+      setPast(window.scrollY >= Math.max(0, threshold));
+    };
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, [active]);
+  return past;
+}
+
 export default function TravelUpLayout() {
   const navigate = useNavigate();
   const { pathname } = useLocation();
-  const onLanding = pathname === "/";
   const [menuOpen, setMenuOpen] = useState(false);
   const [clearOpen, setClearOpen] = useState(false);
   const logoRef = useRef(null);
+
+  const theme = navThemeFor(pathname);
+  const scrolledPastHero = useScrolledPastHero(theme === "hero");
+  // Effective surface: "hero" resolves to transparent-over-dark-hero until
+  // scrolled past, then behaves exactly like "light".
+  const surface = theme === "hero" ? (scrolledPastHero ? "light" : "transparent") : theme;
 
   const openClear = () => setClearOpen(true);
 
@@ -29,39 +67,69 @@ export default function TravelUpLayout() {
 
   const close = () => setMenuOpen(false);
 
+  const headerStyle =
+    surface === "transparent"
+      ? { background: "transparent" }
+      : surface === "light"
+      ? {
+          background: "rgba(246, 249, 252, .82)",
+          backdropFilter: "saturate(160%) blur(18px)",
+          WebkitBackdropFilter: "saturate(160%) blur(18px)",
+          borderBottom: "1px solid rgb(var(--wn-line-l))"
+        }
+      : {
+          background: "rgba(8, 20, 40, .72)",
+          backdropFilter: "saturate(160%) blur(18px)",
+          WebkitBackdropFilter: "saturate(160%) blur(18px)",
+          borderBottom: "1px solid var(--wn-line)"
+        };
+
+  const linkCls =
+    surface === "light"
+      ? "text-wn-text-2-l hover:text-wn-text-l"
+      : "text-wn-text-2 hover:text-wn-text";
+  const iconTextCls = surface === "light" ? "text-wn-text-l" : "text-wn-text";
+  const ringOffset =
+    surface === "light"
+      ? "focus-visible:ring-offset-2 focus-visible:ring-offset-wn-surface-l"
+      : "focus-visible:ring-offset-2 focus-visible:ring-offset-wn-page";
+
   return (
     <div className="min-h-screen flex flex-col bg-workflow text-ink">
-      <header className={`z-40 ${onLanding ? "absolute top-0 left-0 right-0 bg-transparent" : "glass sticky top-0"}`}>
-        <div className="max-w-5xl mx-auto px-4 h-16 flex items-center justify-between">
+      <header
+        className="z-40 sticky top-0 motion-safe:transition-[background-color,backdrop-filter,border-color] motion-safe:duration-300"
+        style={{ height: NAV_HEIGHT, ...headerStyle }}
+      >
+        <div className="max-w-5xl mx-auto px-4 h-full flex items-center justify-between">
           <Link
             ref={logoRef}
             to="/"
             aria-label="WhereNova home"
-            className="flex items-center rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-on-dark"
+            className={`flex items-center rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-wn-cyan ${ringOffset}`}
           >
             <WherenovaLogo onDark widthClass="w-[38px] sm:w-[42px]" wordmarkClass="h-[22px] sm:h-[24px]" />
           </Link>
           <nav className="hidden sm:flex items-center gap-1">
-            <Button asChild variant="ghost" className="text-on-dark hover:bg-white/10 hover:text-on-dark focus-visible:!ring-on-dark focus-visible:ring-offset-cinema">
+            <Button asChild variant="ghost" className={`hover:bg-transparent ${linkCls} focus-visible:!ring-wn-cyan ${ringOffset}`}>
               <Link to="/">Home</Link>
             </Button>
-            <Button asChild variant="ghost" className="text-on-dark hover:bg-white/10 hover:text-on-dark focus-visible:!ring-on-dark focus-visible:ring-offset-cinema">
+            <Button asChild variant="ghost" className={`hover:bg-transparent ${linkCls} focus-visible:!ring-wn-cyan ${ringOffset}`}>
               <Link to="/saved-trips">Saved trips</Link>
             </Button>
-            <Button asChild variant="ghost" className="text-on-dark hover:bg-white/10 hover:text-on-dark focus-visible:!ring-on-dark focus-visible:ring-offset-cinema">
+            <Button asChild variant="ghost" className={`hover:bg-transparent ${linkCls} focus-visible:!ring-wn-cyan ${ringOffset}`}>
               <Link to="/about">About</Link>
             </Button>
             <button
               type="button"
               onClick={openClear}
-              className="ml-2 inline-flex items-center gap-1.5 h-9 px-3 rounded-lg text-xs font-medium text-on-dark/70 hover:text-on-dark hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-on-dark"
+              className={`ml-2 inline-flex items-center gap-1.5 h-9 px-3 rounded-lg text-xs font-medium motion-safe:transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-wn-cyan ${ringOffset} ${linkCls}`}
               aria-label="Clear my data"
             >
               <Trash2 className="w-3.5 h-3.5" /> Clear my data
             </button>
           </nav>
           <button
-            className="sm:hidden p-2 min-h-11 min-w-11 text-on-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-on-dark rounded"
+            className={`sm:hidden p-2 min-h-11 min-w-11 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-wn-cyan rounded ${ringOffset} ${iconTextCls}`}
             aria-label="Open menu"
             aria-expanded={menuOpen}
             onClick={() => setMenuOpen((o) => !o)}
@@ -70,20 +138,27 @@ export default function TravelUpLayout() {
           </button>
         </div>
         {menuOpen && (
-          <div className="sm:hidden glass border-t border-white/10 px-4 pb-4 pt-2 flex flex-col gap-1">
-            <Button asChild variant="ghost" className="text-on-dark hover:bg-white/10 justify-start min-h-11 focus-visible:!ring-on-dark focus-visible:ring-offset-cinema" onClick={close}>
+          <div
+            className="sm:hidden px-4 pb-4 pt-2 flex flex-col gap-1"
+            style={
+              surface === "light"
+                ? { background: "rgba(246, 249, 252, .95)", borderTop: "1px solid rgb(var(--wn-line-l))" }
+                : { background: "rgba(8, 20, 40, .95)", borderTop: "1px solid var(--wn-line)" }
+            }
+          >
+            <Button asChild variant="ghost" className={`hover:bg-transparent justify-start min-h-11 ${linkCls} focus-visible:!ring-wn-cyan ${ringOffset}`} onClick={close}>
               <Link to="/">Home</Link>
             </Button>
-            <Button asChild variant="ghost" className="text-on-dark hover:bg-white/10 justify-start min-h-11 focus-visible:!ring-on-dark focus-visible:ring-offset-cinema" onClick={close}>
+            <Button asChild variant="ghost" className={`hover:bg-transparent justify-start min-h-11 ${linkCls} focus-visible:!ring-wn-cyan ${ringOffset}`} onClick={close}>
               <Link to="/saved-trips">Saved trips</Link>
             </Button>
-            <Button asChild variant="ghost" className="text-on-dark hover:bg-white/10 justify-start min-h-11 focus-visible:!ring-on-dark focus-visible:ring-offset-cinema" onClick={close}>
+            <Button asChild variant="ghost" className={`hover:bg-transparent justify-start min-h-11 ${linkCls} focus-visible:!ring-wn-cyan ${ringOffset}`} onClick={close}>
               <Link to="/about">About</Link>
             </Button>
             <Button
               onClick={() => { close(); openClear(); }}
               variant="ghost"
-              className="text-on-dark/70 hover:text-on-dark hover:bg-white/10 justify-start min-h-11 focus-visible:!ring-on-dark focus-visible:ring-offset-cinema"
+              className={`hover:bg-transparent justify-start min-h-11 ${linkCls} focus-visible:!ring-wn-cyan ${ringOffset}`}
             >
               <Trash2 className="w-4 h-4 mr-2" /> Clear my data
             </Button>

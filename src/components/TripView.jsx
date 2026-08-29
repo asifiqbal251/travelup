@@ -45,7 +45,7 @@ const INTENSITY_COLOR = {
 // over the hero instead of cutting to light abruptly.
 export function TripHeader({ display, score, backHref, backLabel }) {
   return (
-    <div className="relative w-full h-[52vh] sm:h-[58vh] min-h-[380px] max-h-[620px] bg-wn-page overflow-hidden">
+    <div data-trip-hero className="relative w-full h-[52vh] sm:h-[58vh] min-h-[380px] max-h-[620px] bg-wn-page overflow-hidden">
       <Image
         src={display.imageUrl}
         alt={nameWithCountry(display.name, display.country)}
