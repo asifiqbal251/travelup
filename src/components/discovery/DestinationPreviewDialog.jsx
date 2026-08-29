@@ -104,7 +104,7 @@ export default function DestinationPreviewDialog({
           {list.length > 1 && <SideArrow dir={-1} label="Previous destination" />}
 
           {/* Fixed-dimension panel */}
-          <div className="relative w-[94vw] sm:max-w-[600px] lg:max-w-[720px] sm:h-[560px] lg:h-[600px] sm:max-h-[88vh] overflow-hidden rounded-3xl bg-cinema/90 backdrop-blur-xl border border-white/10 text-on-dark flex flex-col sm:grid sm:grid-cols-2">
+          <div className="relative w-[94vw] sm:max-w-[600px] lg:max-w-[1100px] sm:h-[560px] lg:h-[680px] sm:max-h-[88vh] overflow-hidden rounded-3xl bg-cinema/90 backdrop-blur-xl border border-white/10 text-on-dark flex flex-col sm:grid sm:grid-cols-[60%_40%]">
             <DialogPrimitive.Close
               aria-label="Close"
               className="glass-badge absolute right-3 top-3 z-20 grid h-9 w-9 place-items-center rounded-full text-on-dark opacity-90 transition-opacity hover:opacity-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-on-dark focus-visible:ring-offset-2 focus-visible:ring-offset-cinema"
