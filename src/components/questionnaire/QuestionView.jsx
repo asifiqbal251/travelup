@@ -82,7 +82,7 @@ function OriginInput({ value, onText, onChip, onTextEnter }) {
         }}
         onFocus={() => setFocused(true)}
         onBlur={() => setTimeout(() => setFocused(false), 150)}
-        className="w-full min-h-12 px-4 rounded-xl bg-wn-surface/70 ring-1 ring-wn-line-2 text-wn-text text-[15px] text-center placeholder:text-wn-text-3 focus:outline-none focus:ring-2 focus:ring-wn-cyan"
+        className="w-full min-h-12 px-[18px] py-4 rounded-xl bg-wn-surface border border-wn-line text-wn-text text-[17px] text-center placeholder:text-wn-text-3 focus:outline-none focus:ring-2 focus:ring-wn-cyan"
       />
       {inferred && (
         <p className="mt-2 text-[13px] text-wn-text-3">
@@ -90,14 +90,14 @@ function OriginInput({ value, onText, onChip, onTextEnter }) {
         </p>
       )}
       {focused && suggestions.length > 0 && (
-        <ul className="absolute z-20 mt-2 w-full rounded-xl bg-wn-surface/95 ring-1 ring-wn-line-2 overflow-hidden shadow-2xl backdrop-blur">
+        <ul className="absolute z-20 mt-2 w-full rounded-xl bg-wn-surface-2 ring-1 ring-wn-line-2 overflow-hidden shadow-2xl backdrop-blur">
           {suggestions.map((s) => (
             <li key={s}>
               <button
                 type="button"
                 onMouseDown={(e) => e.preventDefault()}
                 onClick={() => onChip(s)}
-                className="w-full text-left min-h-11 px-4 inline-flex items-center text-[15px] text-wn-text hover:bg-wn-cyan/15 focus:bg-wn-cyan/15 focus:outline-none"
+                className="w-full text-left min-h-11 px-4 inline-flex items-center text-[15px] text-wn-text hover:bg-[rgba(63,216,224,0.15)] focus:bg-[rgba(63,216,224,0.15)] focus:outline-none"
               >
                 {s}
               </button>
@@ -111,7 +111,7 @@ function OriginInput({ value, onText, onChip, onTextEnter }) {
             key={c}
             type="button"
             onClick={() => onChip(c)}
-            className="min-h-11 px-4 rounded-full bg-wn-surface/60 ring-1 ring-wn-line-2 text-wn-text text-sm hover:ring-wn-cyan/60 hover:text-wn-text focus:outline-none focus:ring-2 focus:ring-wn-cyan motion-safe:transition"
+            className="min-h-11 px-[14px] py-2 rounded-full bg-transparent border border-dashed border-wn-line-2 text-wn-text-2 text-sm hover:border-wn-cyan hover:text-wn-cyan focus:outline-none focus:ring-2 focus:ring-wn-cyan motion-safe:transition"
           >
             {c}
           </button>
