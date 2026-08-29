@@ -42,9 +42,10 @@ const AuthenticatedApp = () => {
   // Render the main app
   return (
     <Routes>
+      {/* Full-bleed immersive route -- no site chrome (see docs/travelfit-visual-fidelity-pass.md #1) */}
+      <Route path="/questionnaire" element={<Questionnaire />} />
       <Route element={<TravelUpLayout />}>
         <Route path="/" element={<Landing />} />
-        <Route path="/questionnaire" element={<Questionnaire />} />
         <Route path="/results" element={<Results />} />
         <Route path="/trip" element={<TripDetail />} />
         <Route path="/about" element={<About />} />

@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { ArrowLeft, ArrowRight, X } from "lucide-react";
 import {
   QUESTIONS,
@@ -218,8 +218,9 @@ export default function Questionnaire() {
       {/* screen-reader live region */}
       <div ref={liveRef} aria-live="polite" aria-atomic="true" className="sr-only" />
 
-      {/* progress rail */}
-      <header className="px-4 sm:px-6 pt-5 pb-3">
+      {/* header: wordmark + progress rail. Full-bleed immersive route -- no
+          site chrome, see docs/travelfit-visual-fidelity-pass.md #1. */}
+      <header className="relative px-4 sm:px-6 pt-5 pb-3">
         <ProgressRail
           currentSet={sQuestions}
           answered={answeredFlags}
@@ -227,6 +228,18 @@ export default function Questionnaire() {
           onJump={jumpTo}
           onOpenSheet={() => setSheetOpen(true)}
         />
+        <Link
+          to="/"
+          aria-label="WhereNova home"
+          className="absolute z-10 left-4 sm:left-6 top-5 leading-none focus:outline-none focus-visible:ring-2 focus-visible:ring-wn-cyan rounded"
+        >
+          <span
+            className="font-display font-extrabold whitespace-nowrap text-wn-text"
+            style={{ fontSize: 17, letterSpacing: "-0.01em" }}
+          >
+            Where<span className="text-wn-cyan">N</span>ova
+          </span>
+        </Link>
       </header>
 
       {/* main — optically centred */}
