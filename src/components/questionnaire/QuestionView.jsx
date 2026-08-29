@@ -37,7 +37,7 @@ export default function QuestionView({
         {q.eyebrow}
       </p>
       <h2
-        className="font-display font-extrabold tracking-[-0.02em] leading-[1.08] text-wn-text"
+        className="font-display font-extrabold tracking-[-0.03em] leading-[1.08] text-wn-text"
         style={HEADLINE_STYLE}
       >
         {q.title}

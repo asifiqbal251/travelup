@@ -249,7 +249,7 @@ export default function Questionnaire() {
         tabIndex={-1}
         className="grid place-items-center px-4 sm:px-6 py-6 outline-none min-h-0"
       >
-        <div className="w-full max-w-3xl mx-auto">
+        <div className="w-full max-w-[640px] mx-auto">
           {done ? (
             <CompletionScreen answers={answers} onContinue={reveal} />
           ) : (
