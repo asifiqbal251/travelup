@@ -20,6 +20,7 @@ npx skills add base44/skills
 ## Key Files
 
 - `src/`: frontend application source.
+- `docs/PARKED.md`: scoped-but-not-done work — check before re-investigating.
 - `src/api/base44Client.js`: frontend Base44 SDK client.
 - `vite.config.js`: Vite config and Base44 Vite plugin setup.
 - `.env.local`: local-only environment values; never commit secrets.

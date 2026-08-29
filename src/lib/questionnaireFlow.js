@@ -108,8 +108,7 @@ export const QUESTIONS = [
     options: [
       { key: "relaxed", label: "Relaxed", value: "Relaxed" },
       { key: "balanced", label: "Balanced", value: "Balanced" },
-      { key: "full", label: "Full", value: "Fast-paced" },
-      { key: "packed", label: "Packed", value: "Fast-paced" },
+      { key: "fast-paced", label: "Fast-paced", value: "Fast-paced" },
       { key: "no-pref", label: "No preference", value: "No preference", noPref: true },
     ],
   },
@@ -254,7 +253,7 @@ function findLabel(question, key) {
 }
 
 // Hydrate answers from stored prefs (returning users). Best-effort reverse
-// mapping; pace "Fast-paced" resolves to the first matching key ("full").
+// mapping via findKey (matches stored value back to its option key).
 export function hydrateAnswers(prefs) {
   if (!prefs) return { ...BLANK_ANSWERS };
   const byId = (id) => QUESTIONS.find((x) => x.id === id);
