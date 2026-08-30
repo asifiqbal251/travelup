@@ -236,7 +236,6 @@ const COUNTRY_CENTROIDS = {
   tunisia: { lat: 33.89, lng: 9.54 },
   turkiye: { lat: 38.96, lng: 35.24 },
   ukraine: { lat: 48.38, lng: 31.17 },
-  uruguay: { lat: -32.52, lng: -55.77 },
   venezuela: { lat: 6.42, lng: -66.59 },
   vietnam: { lat: 14.06, lng: 108.28 },
   belgium: { lat: 50.5, lng: 4.47 }
