@@ -47,6 +47,7 @@ export default function TravelUpLayout() {
   const { pathname } = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
   const [clearOpen, setClearOpen] = useState(false);
+  const [resetKey, setResetKey] = useState(0);
   const logoRef = useRef(null);
 
   const theme = navThemeFor(pathname);
@@ -62,6 +63,11 @@ export default function TravelUpLayout() {
     setMenuOpen(false);
     clearState();
     navigate("/");
+    // Force a full remount of the routed page below: navigating to "/" from
+    // "/" itself doesn't remount Landing, so any state it read from
+    // localStorage on mount (Travel Fit banner, saved-trip rails) would
+    // otherwise keep showing stale data until a manual reload.
+    setResetKey((k) => k + 1);
     setTimeout(() => logoRef.current?.focus(), 0);
   };
 
@@ -167,7 +173,7 @@ export default function TravelUpLayout() {
       </header>
 
       <main className="flex-1">
-        <Outlet />
+        <Outlet key={resetKey} />
       </main>
 
       <footer className="bg-cinema text-on-dark/70">
