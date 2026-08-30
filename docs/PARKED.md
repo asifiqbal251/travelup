@@ -60,3 +60,41 @@ crops equally (rails lose ~20% off the sides, the results hero loses
 ~37.5% off top/bottom). Already handled correctly by object-fit: cover,
 no code fix needed — but worth matching card aspect ratios if images are
 ever regenerated or resourced.
+
+## Origin-agnostic connection overhead
+
+Each destination carries flat connection_hours and internal_access_penalty
+values applied regardless of the traveller's actual origin. Authored for a
+distant origin, they badly overstate travel time for nearby ones — e.g.
+Sydney -> South Island NZ computes 11.7h against a real ~3.5h direct flight
+(3x). Didn't cause an eligibility failure in audit testing, but it understates
+practicality and depresses the score via travelPenalty for close origins.
+Fixing properly means making these fields origin-aware, which is a data-model
+change, not a display fix. Revisit during the recommender/scoring round.
+
+## Score clustering for under-specified profiles
+
+A user who skips interests, leaves climate on "No preference" and month on
+flexible gets a top-10 spread of 2 points (68-70) — the score stops carrying
+information. Confirmed with real data (audit profile P8). Related to the
+"No preference awards full credit" decision (see `docs/AGENTS.md`). Options:
+nudge users to pick at least one interest, or revisit how unset dimensions
+are scored. Revisit during the recommender round.
+
+## Saved trips are snapshots, not live
+
+Saved trips copy destination content at save time and never re-read the
+Destination entity. Consequence: anyone who saved Victoria, Tofino or
+Tanzania & Zanzibar before 2026-08-29 still sees the old defective images.
+This is deliberate (SavedTripDetail.jsx documents it), but decide whether
+saved trips should ever refresh stale content, or whether a one-off migration
+is warranted for the three regenerated images.
+
+## Generic recommendation reasons
+
+buildReasons() is accurate but formulaic: two structurally different
+destinations with identical score breakdowns produce byte-identical reason
+text (confirmed — NYC profile gave New York City and Istanbul & Cappadocia
+the same three strings). withDedupedPills() mitigates this within a single
+results page but not across sessions. Needs destination-specific content,
+not a code fix. Revisit with the "why this month" data work.
