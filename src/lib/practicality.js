@@ -8,6 +8,7 @@
 
 import { getCityCoords, getDestinationCoords } from "@/lib/coordinates";
 import { getRegionalRoute } from "@/lib/regionalRoutes";
+import { genericTravelMode } from "@/lib/travelMode";
 
 const EARTH_R = 6371;
 function toRad(d) {
@@ -176,13 +177,14 @@ export function assessPracticality(dest, prefs) {
   else usableRaw = tripDays - 4;
   const usableDestinationDays = Math.max(0, Math.round(usableRaw * 2) / 2);
 
-  let travelMode =
-    (dest && dest.travel_mode) ||
-    (isDomestic
-      ? "Domestic flight + local ground transportation"
-      : "International flight + local ground transportation");
-  if (isDomestic && travelMode.includes("International flight"))
-    travelMode = travelMode.replace("International flight", "Domestic flight");
+  // The destination's authored `travel_mode` field is a single value written
+  // assuming a specific (often nearby) origin — it's only accurate here when
+  // a regional-route override matched above and confirmed this origin. For
+  // every other origin, show a generic label for the actual computed path
+  // (flight, plus local transport) rather than a curated string that may
+  // describe an unrelated journey (e.g. a train, for a traveller who is
+  // flying).
+  const travelMode = genericTravelMode(isDomestic);
 
   return {
     level,

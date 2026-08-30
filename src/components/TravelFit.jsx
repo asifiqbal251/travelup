@@ -1,4 +1,5 @@
 import React from "react";
+import { normalizeMode } from "@/lib/travelMode";
 
 // One clean responsive Travel Fit summary strip with the locked labels.
 // Replaces the previous three-box statistic layout. Used on the (light) Trip
@@ -9,15 +10,6 @@ const BADGE = {
   Stretch: { label: "Travel-heavy", cls: "bg-wn-text-l/80 text-white" },
   "Poor practical fit": { label: "Poor fit", cls: "bg-destructive text-destructive-foreground" }
 };
-
-function normalizeMode(mode) {
-  if (!mode) return "Local transport";
-  let m = String(mode)
-    .replace(/local ground transportation/gi, "local transport")
-    .replace(/ground transportation/gi, "local transport")
-    .replace(/ground transfer/gi, "transfer");
-  return m;
-}
 
 export default function TravelFit({ prac, prefs }) {
   if (!prac) return null;
