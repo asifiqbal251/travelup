@@ -9,7 +9,6 @@ import { nameWithCountry } from "@/lib/destinationLabel";
 import { flagForCountry } from "@/lib/countryFlag";
 import { normalizeMode, roundedTravelHours } from "@/lib/travelMode";
 import TravelFitRing from "@/components/TravelFitRing";
-import { normalizeMode } from "@/lib/travelMode";
 import {
   X, ChevronLeft, ChevronRight, MapPin, Clock, Gauge, ArrowRight, Compass
 } from "lucide-react";
