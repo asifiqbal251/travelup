@@ -23,3 +23,12 @@ export function genericTravelMode(isDomestic) {
       : "International flight + local ground transportation"
   );
 }
+
+// Round a modelled one-way travel time to the nearest whole hour for
+// display only. practicality.js keeps the raw unrounded value — rounding
+// upstream would change which destinations qualify for which trip lengths.
+export function roundedTravelHours(hours) {
+  const n = Number(hours);
+  if (hours == null || Number.isNaN(n)) return null;
+  return Math.round(n);
+}
