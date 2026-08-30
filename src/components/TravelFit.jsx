@@ -1,5 +1,5 @@
 import React from "react";
-import { normalizeMode } from "@/lib/travelMode";
+import { normalizeMode, roundedTravelHours } from "@/lib/travelMode";
 
 // One clean responsive Travel Fit summary strip with the locked labels.
 // Replaces the previous three-box statistic layout. Used on the (light) Trip
@@ -14,8 +14,9 @@ const BADGE = {
 export default function TravelFit({ prac, prefs }) {
   if (!prac) return null;
   const badge = BADGE[prac.level] || BADGE.Practical;
-  const mode = prac.isOverride ? prac.travelMode : normalizeMode(prac.travelMode);
-  const eachWay = `About ${prac.oneWayHours} hour${prac.oneWayHours === 1 ? "" : "s"} each way`;
+  const rounded = roundedTravelHours(prac.oneWayHours);
+  const mode = normalizeMode(prac.travelMode);
+  const eachWay = `About ${rounded} hour${rounded === 1 ? "" : "s"} each way`;
   const timeThere = `About ${prac.usableDestinationDays} day${prac.usableDestinationDays === 1 ? "" : "s"}`;
 
   return (
@@ -30,16 +31,16 @@ export default function TravelFit({ prac, prefs }) {
           {badge.label}
         </span>
       </div>
-      <dl className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-6 sm:divide-x sm:divide-wn-line-l">
-        <div className="min-w-0 sm:pr-4">
+      <dl className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-6">
+        <div className="min-w-0 sm:col-span-2">
           <dt className="text-[11px] uppercase tracking-wide text-wn-text-2-l">How you'll travel</dt>
-          <dd className="text-[15px] font-medium text-wn-text-l mt-1 break-words">{mode}</dd>
+          <dd className="text-[15px] font-medium text-wn-text-l mt-1">{mode}</dd>
         </div>
-        <div className="sm:px-4">
+        <div className="min-w-0">
           <dt className="text-[11px] uppercase tracking-wide text-wn-text-2-l">Travel time</dt>
           <dd className="text-[15px] font-medium text-wn-text-l mt-1">{eachWay}</dd>
         </div>
-        <div className="sm:pl-4">
+        <div className="min-w-0">
           <dt className="text-[11px] uppercase tracking-wide text-wn-text-2-l">Time at destination</dt>
           <dd className="text-[15px] font-medium text-wn-text-l mt-1">{timeThere}</dd>
         </div>

@@ -8,6 +8,7 @@ import { TRAVEL_FALLBACK_IMAGE } from "@/lib/fallbackImage";
 import { rankDestinations, buildReasons, buildSuggestions, practicalityExcludedCount } from "@/lib/scoring";
 import { nameWithCountry } from "@/lib/destinationLabel";
 import { flagForCountry } from "@/lib/countryFlag";
+import { normalizeMode, roundedTravelHours } from "@/lib/travelMode";
 import TravelFitRing from "@/components/TravelFitRing";
 import { ArrowLeft, ArrowRight, Info, ChevronDown, Compass, Clock, Gauge } from "lucide-react";
 
@@ -108,7 +109,7 @@ export default function Results() {
                 : `Your top ${top.length} matches`}
             </h1>
             <p className="text-wn-text-2 max-w-[52ch] text-base">
-              Final scores combine your preference fit with travel practicality for your trip length. Estimates only.
+              Scored on how well each place fits you, and how practical it is for {prefs.travelDays} days.
             </p>
           </div>
           <Button
@@ -252,20 +253,20 @@ function ScoreBreakdown({ result }) {
 // ---- C5: compact 3-fact bordered grid ----
 
 function FactsGrid({ prac }) {
-  const mode = prac.travelMode;
+  const mode = normalizeMode(prac.travelMode);
   return (
-    <dl className="grid grid-cols-3 gap-[2px] bg-wn-line border border-wn-line rounded-xl overflow-hidden">
-      <div className="bg-wn-surface px-4 py-3.5 min-w-0">
+    <dl className="grid grid-cols-2 gap-[2px] bg-wn-line border border-wn-line rounded-xl overflow-hidden">
+      <div className="bg-wn-surface px-4 py-3.5 col-span-2 min-w-0">
         <dt className="text-[10px] font-bold uppercase tracking-[0.13em] text-wn-text-3 mb-1.5 flex items-center gap-1">
           <Compass className="w-3 h-3" /> Getting there
         </dt>
-        <dd className="text-[14.5px] font-semibold text-wn-text break-words">{mode}</dd>
+        <dd className="text-[14.5px] font-semibold text-wn-text">{mode}</dd>
       </div>
       <div className="bg-wn-surface px-4 py-3.5 min-w-0">
         <dt className="text-[10px] font-bold uppercase tracking-[0.13em] text-wn-text-3 mb-1.5 flex items-center gap-1">
           <Clock className="w-3 h-3" /> Travel time
         </dt>
-        <dd className="text-[14.5px] font-semibold text-wn-text">{prac.oneWayHours}h each way</dd>
+        <dd className="text-[14.5px] font-semibold text-wn-text">{roundedTravelHours(prac.oneWayHours)}h each way</dd>
       </div>
       <div className="bg-wn-surface px-4 py-3.5 min-w-0">
         <dt className="text-[10px] font-bold uppercase tracking-[0.13em] text-wn-text-3 mb-1.5 flex items-center gap-1">

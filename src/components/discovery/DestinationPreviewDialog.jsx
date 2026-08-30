@@ -7,6 +7,7 @@ import { TRAVEL_FALLBACK_IMAGE } from "@/lib/fallbackImage";
 import { bestMonthsSummary } from "@/lib/discoveryCollections";
 import { nameWithCountry } from "@/lib/destinationLabel";
 import { flagForCountry } from "@/lib/countryFlag";
+import { normalizeMode, roundedTravelHours } from "@/lib/travelMode";
 import TravelFitRing from "@/components/TravelFitRing";
 import { normalizeMode } from "@/lib/travelMode";
 import {
@@ -129,7 +130,7 @@ export default function DestinationPreviewDialog({
 
             {/* Content side */}
             <div className="flex flex-col min-h-0 flex-1">
-              <div className="overflow-hidden px-6 pt-7 pb-4 sm:px-7 flex-1">
+              <div className="overflow-hidden px-6 pt-7 pb-4 lg:px-7 flex-1">
                 <DialogPrimitive.Title className="font-display text-2xl font-bold text-on-dark">
                   {d.name}
                 </DialogPrimitive.Title>
@@ -185,19 +186,21 @@ export default function DestinationPreviewDialog({
                       <TravelFitRing score={result.finalScore} size="md" />
                       <span className="text-sm text-teal font-semibold">{result.matchLabel}</span>
                     </div>
-                    <div className="mt-3 flex items-center gap-3 text-xs text-on-dark/70">
+                    <div className="mt-3 flex flex-col gap-1.5 text-xs text-on-dark/70">
                       <span className="inline-flex items-center gap-1 min-w-0">
                         <Compass className="w-3 h-3 shrink-0" />
-                        <span className="truncate">{normalizeMode(prac.travelMode)}</span>
+                        <span>{normalizeMode(prac.travelMode)}</span>
                       </span>
-                      <span className="inline-flex items-center gap-1 shrink-0 whitespace-nowrap">
-                        <Clock className="w-3 h-3" />
-                        {prac.oneWayHours}h each way
-                      </span>
-                      <span className="inline-flex items-center gap-1 shrink-0 whitespace-nowrap">
-                        <Gauge className="w-3 h-3" />
-                        {prac.usableDestinationDays}d there
-                      </span>
+                      <div className="flex items-center gap-3">
+                        <span className="inline-flex items-center gap-1 whitespace-nowrap">
+                          <Clock className="w-3 h-3" />
+                          {roundedTravelHours(prac.oneWayHours)}h each way
+                        </span>
+                        <span className="inline-flex items-center gap-1 whitespace-nowrap">
+                          <Gauge className="w-3 h-3" />
+                          {prac.usableDestinationDays}d there
+                        </span>
+                      </div>
                     </div>
                   </div>
                 )}
