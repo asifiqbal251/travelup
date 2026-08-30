@@ -322,11 +322,13 @@ export function buildReasons(dest, prefs, result) {
 export function buildSuggestions(ranked, prefs) {
   const top = ranked.slice(0, 3);
   if (!top.length) return [];
-  // Fire only when at least one shown result is genuinely weak (below 50).
-  // When fewer than 3 destinations qualify but they all score well, Results
-  // shows a "fit well" message instead — there is nothing to suggest changing.
+  // Fire when at least one shown result is genuinely weak (below 50), OR
+  // when fewer than 3 destinations qualified at all -- even if the ones
+  // shown are all good, the traveller could still reach a fuller page of
+  // matches by loosening a constraint.
   const lowScore = top.some((r) => r.result.finalScore < 50);
-  if (!lowScore) return [];
+  const fewerThanThree = top.length < 3;
+  if (!lowScore && !fewerThanThree) return [];
 
   const anyPoor = top.some((r) => r.result.practicality.level === "Poor practical fit");
   const anyStretch = top.some((r) => r.result.practicality.level === "Stretch");
@@ -346,6 +348,8 @@ export function buildSuggestions(ranked, prefs) {
     out.push({ label: "Select more interests that appeal to you.", step: 3 });
   if (travelScope(prefs) === "international")
     out.push({ label: "Allow domestic destinations.", step: 1 });
+  if (travelScope(prefs) === "domestic")
+    out.push({ label: "Allow international destinations.", step: 1 });
   if (anySeason0 && prefs.travelMonth && prefs.travelMonth !== "flexible")
     out.push({ label: "Choose a flexible travel month.", step: 1 });
   if (anyPoor || anyStretch)
@@ -354,5 +358,13 @@ export function buildSuggestions(ranked, prefs) {
     out.push({ label: "Select 'No preference' for climate.", step: 4 });
   if (anyPace0)
     out.push({ label: "Revise your pace or activity preference.", step: 4 });
+
+  // Fewer than 3 results but nothing above fired (every preference is
+  // already at its most permissive setting) -- still offer the one lever
+  // that's always available: a longer trip opens up more long-haul
+  // destinations under the practicality gate.
+  if (fewerThanThree && !out.length && Number(prefs.travelDays) < 14)
+    out.push({ label: "Increase your trip length.", step: 1 });
+
   return out.slice(0, 3);
 }

@@ -86,6 +86,7 @@ export default function Results() {
   const top = ranked.slice(0, 3);
   const withPills = withDedupedPills(top, prefs);
   const suggestions = buildSuggestions(ranked, prefs);
+  const lowScore = top.some((r) => r.result.finalScore < 50);
   const practicalityExcluded = practicalityExcludedCount(allDestinations, prefs);
   const hasTripLengthHint = suggestions.some((s) => /increase your trip|longer|7 days/i.test(s.label));
   const showPracticalityNote = practicalityExcluded > 0 && !hasTripLengthHint;
@@ -100,7 +101,11 @@ export default function Results() {
               Your Travel Fit
             </p>
             <h1 className="font-display font-extrabold text-wn-text" style={{ fontSize: "clamp(34px, 4.4vw, 54px)", lineHeight: 1.02, letterSpacing: "-0.03em", marginBottom: 12 }}>
-              Your top {top.length} matches
+              {top.length === 0
+                ? "Your matches"
+                : top.length === 1
+                ? "Your top match"
+                : `Your top ${top.length} matches`}
             </h1>
             <p className="text-wn-text-2 max-w-[52ch] text-base">
               Final scores combine your preference fit with travel practicality for your trip length. Estimates only.
@@ -141,7 +146,9 @@ export default function Results() {
         {suggestions.length > 0 && (
           <div className="rounded-2xl bg-wn-surface ring-1 ring-wn-line p-4 mb-6">
             <p className="text-[15px] font-medium text-wn-text">
-              These are weaker practical matches for your current preferences.
+              {lowScore
+                ? "These are weaker practical matches for your current preferences."
+                : "Want more options to choose from? Here's what you could adjust."}
             </p>
             <div className="mt-3 flex flex-wrap gap-2">
               {suggestions.map((s, i) => (
@@ -177,7 +184,7 @@ export default function Results() {
               <HeroMatchCard dest={withPills[0].dest} result={withPills[0].result} pills={withPills[0].pills} onSelect={selectDest} />
             )}
             {withPills.length > 1 && (
-              <div className="grid md:grid-cols-2 gap-7">
+              <div className={`grid gap-7 ${withPills.length > 2 ? "md:grid-cols-2" : "md:max-w-[calc(50%-14px)] md:mx-auto"}`}>
                 {withPills.slice(1).map(({ dest, result, pills }) => (
                   <MatchCard key={dest.id} dest={dest} result={result} pills={pills} onSelect={selectDest} />
                 ))}
