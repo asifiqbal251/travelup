@@ -309,6 +309,7 @@ function HeroMatchCard({ dest, result, pills, onSelect }) {
           fittingType="fill"
           fallbackSrc={TRAVEL_FALLBACK_IMAGE}
           className="w-full h-full"
+          loading="eager"
         />
         <span
           className="absolute inset-0"

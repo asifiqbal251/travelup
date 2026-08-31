@@ -240,7 +240,7 @@ export default function Questionnaire() {
   const glowHue = done ? COMPLETION_HUE : (QUESTION_HUES[current] || QUESTION_HUES[0]);
 
   return (
-    <div className="min-h-[100dvh] bg-wn-page text-wn-text grid grid-rows-[auto_1fr_auto] relative overflow-hidden">
+    <div className="min-h-[100dvh] bg-wn-page text-wn-text grid grid-rows-[auto_1fr_auto] relative overflow-hidden min-w-0">
       {/* background glow -- see docs/travelfit-visual-fidelity-pass.md #2 */}
       <div className="fixed inset-0 -z-10 pointer-events-none">
         <div
@@ -280,9 +280,9 @@ export default function Questionnaire() {
       <main
         ref={mainRef}
         tabIndex={-1}
-        className="grid place-items-center px-4 sm:px-6 py-6 outline-none min-h-0"
+        className="grid place-items-center px-4 sm:px-6 py-6 outline-none min-h-0 min-w-0"
       >
-        <div className="w-full mx-auto max-w-[640px]">
+        <div className="w-full mx-auto max-w-[640px] min-w-0">
           {resuming ? (
             <ResumeInterstitial answers={answers} onContinue={resumeContinue} onStartFresh={resumeStartFresh} />
           ) : done ? (
