@@ -27,6 +27,12 @@ export default function DayScroller({ value, onSelect }) {
   const scrollRef = useRef(null);
   const itemRefs = useRef({});
   const reduced = useReducedMotion();
+  // Component-local only — never persisted. While the value is still the
+  // untouched BLANK_ANSWERS.travelDays default (7), the readout shows
+  // "7 days — suggested"; the moment the user interacts (even landing back
+  // on 7) the suffix drops. Resets on remount (e.g. navigating back to Q2),
+  // which is acceptable per the spec — no schema change.
+  const [touched, setTouched] = useState(false);
 
   const center = (n) => {
     const el = itemRefs.current[n];
@@ -42,6 +48,7 @@ export default function DayScroller({ value, onSelect }) {
   }, [value]);
 
   const pick = (n) => {
+    setTouched(true);
     onSelect(n);
     requestAnimationFrame(() => center(n));
   };
@@ -55,6 +62,7 @@ export default function DayScroller({ value, onSelect }) {
       pick(Math.max(3, value - 1));
     } else if (e.key === "Enter") {
       e.preventDefault();
+      setTouched(true);
       onSelect(value);
     }
   };
@@ -91,6 +99,9 @@ export default function DayScroller({ value, onSelect }) {
             </button>
           );
         })}
+      </div>
+      <div className="mt-1 text-[15px] text-wn-text-2 tabular-nums">
+        {value} days{touched ? "" : <span className="text-wn-text-3"> — suggested</span>}
       </div>
       <div className="flex justify-between w-full px-2 mt-2 text-sm text-wn-text-3">
         <span>3 days</span>
