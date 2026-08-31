@@ -1,3 +1,78 @@
+# ⚠️ MULTI-AGENT COORDINATION — READ BEFORE ANY EDIT
+
+This project is worked on by multiple AI tools: **Claude Code** (local),
+**Base44 Builder** (hosted, auto-syncs to GitHub), and **Codex/ChatGPT**.
+All three can commit to this repository. Uncoordinated parallel edits have
+already caused repeated merge conflicts and lost work. Follow this exactly.
+
+## The rule
+
+**One declared writer per session. Every other tool is read-only until the
+writer commits, pushes, and reports the new commit hash.**
+
+## If you are an AI agent starting work in this repo
+
+Before making ANY change, do this, in order:
+
+1. **State that you are the declared writer** for this session, and name the
+   files/components you expect to touch.
+2. **Run `git fetch origin` and `git status`** (or the local-checkout
+   equivalent available to you). Confirm your checkout matches
+   `origin/main`'s current HEAD before editing anything.
+3. **If you cannot verify you're in sync with `origin/main`** (e.g. no
+   network/SSH access from your environment) — **stop and say so explicitly**
+   rather than proceeding on an unverified checkout. Ask the human to confirm
+   the current hash before you continue. Do not assume "reported clean" means
+   "actually current."
+4. **Do not edit any file** that another declared writer might currently be
+   touching. If uncertain, ask.
+
+## Before finishing a session
+
+1. Run lint AND a production build. Both must pass clean. (Lint alone is not
+   sufficient — a missing export can pass lint and still break the build.)
+2. Commit.
+3. State clearly that you are handing off, and that the human needs to push
+   (agents generally cannot push — this requires the human's SSH credentials).
+4. After pushing, the new commit hash must be recorded before any other tool
+   begins work.
+
+## If you discover a push was rejected / the remote has diverged
+
+**Do not blind-merge or blind-pull.** First:
+
+```
+git fetch origin
+git log --oneline origin/main -5
+```
+
+Read the commit messages. If they touch files you were also editing, inspect
+the actual diff before merging:
+
+```
+git --no-pager diff <last-shared-hash> origin/main -- <overlapping files>
+```
+
+Only merge once you understand what changed and why. If both sides
+implemented the same fix differently, determine which version contains
+functionality the other lacks — do not assume "cleaner" or "newer" means
+"correct."
+
+## Why this matters (context for any agent reading this)
+
+Base44's builder can commit and push to `origin/main` autonomously and
+silently — there is no notification when this happens. Some agent
+environments (confirmed: Claude Code's sandbox) cannot reliably `git fetch`
+due to SSH access limitations in that environment, meaning they can report a
+"clean" working tree while actually being several commits behind. This
+combination has caused two real conflicts in this project, one of which
+would have silently reintroduced a shipped bug if merged without inspection.
+Treat every session start as an opportunity for the remote to have moved
+without your knowledge.
+
+---
+
+*(Original AGENTS.md content continues below)*
 # AGENTS.md
 
 ## Project Context
