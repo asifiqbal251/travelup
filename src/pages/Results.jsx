@@ -302,7 +302,7 @@ function HeroMatchCard({ dest, result, pills, onSelect }) {
 
   return (
     <article className="rounded-3xl bg-wn-surface ring-1 ring-wn-line overflow-hidden md:grid" style={{ gridTemplateColumns: "minmax(0,1.35fr) minmax(0,1fr)" }}>
-      <div className="relative min-h-[280px] md:min-h-[440px]">
+      <div className="relative aspect-[16/10] md:aspect-auto md:min-h-[440px]">
         <Image
           src={dest.image_url}
           alt={nameWithCountry(dest.name, dest.country)}

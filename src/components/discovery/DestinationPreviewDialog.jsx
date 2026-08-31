@@ -96,8 +96,8 @@ export default function DestinationPreviewDialog({
           {/* Left arrow — outside the panel, vertically centered */}
           {list.length > 1 && <SideArrow dir={-1} label="Previous destination" />}
 
-          {/* Fixed-dimension panel */}
-          <div className="relative w-[94vw] sm:max-w-[600px] lg:max-w-[1100px] sm:h-[560px] lg:h-[680px] sm:max-h-[88vh] overflow-hidden rounded-3xl bg-cinema/90 backdrop-blur-xl border border-white/10 text-on-dark flex flex-col sm:grid sm:grid-cols-[60%_40%]">
+          {/* Fixed-dimension panel on desktop (lg+); scrollable mobile-safe panel below lg */}
+          <div className="relative w-[94vw] sm:max-w-[600px] lg:max-w-[1100px] max-h-[90vh] lg:h-[680px] lg:max-h-none overflow-hidden rounded-3xl bg-cinema/90 backdrop-blur-xl border border-white/10 text-on-dark flex flex-col lg:grid lg:grid-cols-[60%_40%]">
             <DialogPrimitive.Close
               aria-label="Close"
               className="glass-badge absolute right-3 top-3 z-20 grid h-9 w-9 place-items-center rounded-full text-on-dark opacity-90 transition-opacity hover:opacity-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-on-dark focus-visible:ring-offset-2 focus-visible:ring-offset-cinema"
@@ -105,8 +105,10 @@ export default function DestinationPreviewDialog({
               <X className="h-4 w-4" />
             </DialogPrimitive.Close>
 
-            {/* Image side */}
-            <div className="relative h-44 sm:h-full overflow-hidden">
+            {/* Image side. Bounded (not shrink-0) so a short landscape
+                viewport can shrink it down to make room for the content
+                column instead of squeezing that column to zero height. */}
+            <div className="relative aspect-[4/3] max-h-[40vh] min-h-[96px] lg:aspect-auto lg:h-full lg:max-h-none lg:min-h-0 overflow-hidden">
               <Image
                 src={d.image_url}
                 alt=""
@@ -122,14 +124,11 @@ export default function DestinationPreviewDialog({
                     "linear-gradient(to top, rgba(7,24,39,0.78) 0%, rgba(7,24,39,0.08) 58%, rgba(7,24,39,0) 100%)"
                 }}
               />
-              <div className="absolute inset-x-0 bottom-0 p-5 sm:hidden">
-                <p className="text-sm text-on-dark/80">{locLine}</p>
-              </div>
             </div>
 
             {/* Content side */}
             <div className="flex flex-col min-h-0 flex-1">
-              <div className="overflow-hidden px-6 pt-7 pb-4 lg:px-7 flex-1">
+              <div className="overflow-y-auto lg:overflow-hidden min-h-0 px-6 pt-7 pb-4 lg:px-7 flex-1">
                 <DialogPrimitive.Title className="font-display text-2xl font-bold text-on-dark">
                   {d.name}
                 </DialogPrimitive.Title>

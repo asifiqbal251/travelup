@@ -17,6 +17,7 @@ import { getPrefs, setPrefs, setSelectedDestinationId } from "@/lib/storage";
 import ProgressRail from "@/components/questionnaire/ProgressRail";
 import QuestionView from "@/components/questionnaire/QuestionView";
 import CompletionScreen from "@/components/questionnaire/CompletionScreen";
+import WherenovaLogo from "@/components/WherenovaLogo";
 
 function useMinWidth(px) {
   const [ok, setOk] = useState(() =>
@@ -255,25 +256,55 @@ export default function Questionnaire() {
       {/* header: wordmark + progress rail. Full-bleed immersive route -- no
           site chrome, see docs/travelfit-visual-fidelity-pass.md #1. */}
       <header className="relative px-4 sm:px-6 pt-5 pb-3">
-        <ProgressRail
-          currentSet={sQuestions}
-          answered={answeredFlags}
-          desktop={desktop}
-          onJump={jumpTo}
-          onOpenSheet={() => setSheetOpen(true)}
-        />
-        <Link
-          to="/"
-          aria-label="WhereNova home"
-          className="absolute z-10 left-4 sm:left-6 top-5 leading-none focus:outline-none focus-visible:ring-2 focus-visible:ring-wn-cyan rounded"
-        >
-          <span
-            className="font-display font-extrabold whitespace-nowrap text-wn-text"
-            style={{ fontSize: 17, letterSpacing: "-0.01em" }}
-          >
-            Where<span className="text-wn-cyan">N</span>ova
-          </span>
-        </Link>
+        {desktop ? (
+          // Desktop (lg+, >=1024px): unchanged from before this fix — the
+          // wordmark absolutely overlaid on the centered rail never
+          // collided here, so this branch is untouched.
+          <>
+            <ProgressRail
+              currentSet={sQuestions}
+              answered={answeredFlags}
+              desktop={desktop}
+              onJump={jumpTo}
+              onOpenSheet={() => setSheetOpen(true)}
+            />
+            <Link
+              to="/"
+              aria-label="WhereNova home"
+              className="absolute z-10 left-4 sm:left-6 top-5 leading-none focus:outline-none focus-visible:ring-2 focus-visible:ring-wn-cyan rounded"
+            >
+              <span
+                className="font-display font-extrabold whitespace-nowrap text-wn-text"
+                style={{ fontSize: 17, letterSpacing: "-0.01em" }}
+              >
+                Where<span className="text-wn-cyan">N</span>ova
+              </span>
+            </Link>
+          </>
+        ) : (
+          // Below lg: the rail is full-width (`w-full max-w-3xl`), so an
+          // absolutely-positioned logo in the same corner collided with it.
+          // Lay them out side-by-side instead, and use the real logo asset
+          // (mark + wordmark) to match the rest of the app.
+          <div className="flex items-center gap-3">
+            <Link
+              to="/"
+              aria-label="WhereNova home"
+              className="shrink-0 leading-none focus:outline-none focus-visible:ring-2 focus-visible:ring-wn-cyan rounded"
+            >
+              <WherenovaLogo onDark widthClass="w-[28px]" wordmarkClass="h-[16px]" />
+            </Link>
+            <div className="min-w-0 flex-1">
+              <ProgressRail
+                currentSet={sQuestions}
+                answered={answeredFlags}
+                desktop={desktop}
+                onJump={jumpTo}
+                onOpenSheet={() => setSheetOpen(true)}
+              />
+            </div>
+          </div>
+        )}
       </header>
 
       {/* main — optically centred (grid row 2, 1fr, place-items:center) */}
