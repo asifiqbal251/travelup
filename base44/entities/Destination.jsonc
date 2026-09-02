@@ -153,6 +153,46 @@
       "type": "string",
       "description": "One-sentence factual note on eSIM / local SIM availability and coverage"
     },
+    "etiquette_notes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 3,
+      "description": "Up to 3 short, concrete, destination-specific behaviour notes"
+    },
+    "tipping_norm": {
+      "type": "string",
+      "description": "One sentence on local tipping expectation"
+    },
+    "payment_norm": {
+      "type": "string",
+      "description": "One sentence on card acceptance and cash needs"
+    },
+    "daily_cost_low": {
+      "type": "number",
+      "description": "Budget-tier daily per-person cost in USD (accommodation+food+local transport+activities, excludes flights)"
+    },
+    "daily_cost_mid": {
+      "type": "number",
+      "description": "Mid-tier daily per-person cost in USD (excludes flights)"
+    },
+    "daily_cost_high": {
+      "type": "number",
+      "description": "Comfort/luxury-tier daily per-person cost in USD (excludes flights)"
+    },
+    "airport_transfer_note": {
+      "type": "string",
+      "description": "1-2 sentences on getting from the gateway airport to the city center"
+    },
+    "local_transport_note": {
+      "type": "string",
+      "description": "1-2 sentences on getting around town locally"
+    },
+    "intercity_note": {
+      "type": "string",
+      "description": "Optional 1-2 sentences on intercity travel; empty for single-city/island trips"
+    },
     "draft_etiquette_notes": {
       "type": "array",
       "items": {
