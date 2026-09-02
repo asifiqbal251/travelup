@@ -11,13 +11,23 @@ const BADGE = {
   "Poor practical fit": { label: "Poor fit", cls: "bg-destructive text-destructive-foreground" }
 };
 
-export default function TravelFit({ prac, prefs }) {
+export default function TravelFit({ prac, prefs, notes }) {
   if (!prac) return null;
   const badge = BADGE[prac.level] || BADGE.Practical;
   const rounded = roundedTravelHours(prac.oneWayHours);
   const mode = normalizeMode(prac.travelMode);
   const eachWay = `About ${rounded} hour${rounded === 1 ? "" : "s"} each way`;
   const timeThere = `About ${prac.usableDestinationDays} day${prac.usableDestinationDays === 1 ? "" : "s"}`;
+
+  // Transportation guidance rows, integrated into the same "getting there"
+  // card rather than as a separate isolated section. Each hides independently
+  // when its field is empty (intercityNote is empty for island/single-city
+  // destinations by design).
+  const transportRows = [
+    notes && notes.airportTransferNote && ["From the airport", notes.airportTransferNote],
+    notes && notes.localTransportNote && ["Getting around", notes.localTransportNote],
+    notes && notes.intercityNote && ["Between cities", notes.intercityNote]
+  ].filter(Boolean);
 
   return (
     <section aria-label="Travel fit" className="rounded-2xl bg-wn-surface-l p-4 mb-5">
@@ -45,6 +55,17 @@ export default function TravelFit({ prac, prefs }) {
           <dd className="text-[15px] font-medium text-wn-text-l mt-1">{timeThere}</dd>
         </div>
       </dl>
+
+      {transportRows.length > 0 && (
+        <div className="mt-4 pt-4 border-t border-wn-line-l space-y-2.5">
+          {transportRows.map(([label, text]) => (
+            <p key={label} className="text-sm leading-relaxed text-wn-text-l/80">
+              <span className="font-medium text-wn-text-l">{label}: </span>
+              {text}
+            </p>
+          ))}
+        </div>
+      )}
     </section>
   );
 }

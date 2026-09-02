@@ -90,6 +90,39 @@ This is deliberate (SavedTripDetail.jsx documents it), but decide whether
 saved trips should ever refresh stale content, or whether a one-off migration
 is warranted for the three regenerated images.
 
+## Destination modal already has zero desktop slack (pre-existing, 5 destinations overflow)
+
+Found 2026-09-02 while measuring room for an Essentials panel in
+`DestinationPreviewDialog.jsx` (`docs/wherenova-display-build-brief.md`).
+The modal's desktop content column is fixed at 597px (680px panel minus
+header padding and the 80px CTA footer) with `lg:overflow-hidden` — content
+past that is silently clipped, not scrolled.
+
+Rendered the unmodified dialog (current production code, no Essentials
+added) against all 54 live destination records, each with a realistic
+`result`/score section attached (always present when opened from
+discovery). Measured `scrollHeight - clientHeight` of the content column:
+
+- Best case across all 54: exactly 0px slack — content fills the box
+  exactly, with nothing to spare.
+- 5 of 54 already overflow today: Hanoi, Central Vietnam & Ho Chi Minh
+  City, Vietnam (-17px), Kelowna and the Okanagan Valley (-13px), Tofino
+  (-3px), Las Vegas (-3px), Yosemite National Park (-3px). These lose the
+  bottom of the Travel Fit score section (or more) on desktop, invisibly.
+
+Root cause looks like two-line destination titles (long names) combined
+with the always-present score/travel-fit block pushing past budget — not
+anything to do with the new Track A/B fields, which were never added to
+this component. This means the "no internal scrolling at desktop, verified
+across 8 destinations" guarantee referenced in the build brief does not
+hold across the full catalogue as it stands today.
+
+Not fixed in the display-build session (out of scope, and touching a
+"hard-won" layout deserves its own considered pass rather than a
+drive-by). Revisit as its own fix: likely candidates are trimming the tags
+row, shortening the top-experiences list for long-titled destinations, or
+revisiting the fixed-height budget itself.
+
 ## Generic recommendation reasons
 
 buildReasons() is accurate but formulaic: two structurally different

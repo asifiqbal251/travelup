@@ -296,7 +296,23 @@ export function buildTripSnapshot({
       budgetCategories: dest.budget_categories || [],
       climateTags: dest.climate_tags || [],
       travellerTypes: dest.traveller_types || [],
-      dietaryNotes: dest.dietary_notes || ""
+      dietaryNotes: dest.dietary_notes || "",
+      currencyCode: dest.currency_code || "",
+      currencyName: dest.currency_name || "",
+      languages: dest.languages || [],
+      plugTypes: dest.plug_types || [],
+      voltage: dest.voltage || "",
+      emergencyNumbers: dest.emergency_number || [],
+      connectivityNote: dest.connectivity_note || "",
+      etiquetteNotes: dest.etiquette_notes || [],
+      tippingNorm: dest.tipping_norm || "",
+      paymentNorm: dest.payment_norm || "",
+      dailyCostLow: dest.daily_cost_low,
+      dailyCostMid: dest.daily_cost_mid,
+      dailyCostHigh: dest.daily_cost_high,
+      airportTransferNote: dest.airport_transfer_note || "",
+      localTransportNote: dest.local_transport_note || "",
+      intercityNote: dest.intercity_note || ""
     },
     preferences: {
       residenceCountry: prefs.residenceCountry,
@@ -357,6 +373,22 @@ export function normalizeDestinationDisplay(d) {
     budgetCategories: d.budget_categories || d.budgetCategories || [],
     climateTags: d.climate_tags || d.climateTags || [],
     travellerTypes: d.traveller_types || d.travellerTypes || [],
-    dietaryNotes: d.dietary_notes != null ? d.dietary_notes : (d.dietaryNotes || "")
+    dietaryNotes: d.dietary_notes != null ? d.dietary_notes : (d.dietaryNotes || ""),
+    currencyCode: d.currency_code != null ? d.currency_code : (d.currencyCode || ""),
+    currencyName: d.currency_name != null ? d.currency_name : (d.currencyName || ""),
+    languages: d.languages || [],
+    plugTypes: d.plug_types || d.plugTypes || [],
+    voltage: d.voltage || "",
+    emergencyNumbers: d.emergency_number || d.emergencyNumbers || [],
+    connectivityNote: d.connectivity_note != null ? d.connectivity_note : (d.connectivityNote || ""),
+    etiquetteNotes: d.etiquette_notes || d.etiquetteNotes || [],
+    tippingNorm: d.tipping_norm != null ? d.tipping_norm : (d.tippingNorm || ""),
+    paymentNorm: d.payment_norm != null ? d.payment_norm : (d.paymentNorm || ""),
+    dailyCostLow: d.daily_cost_low != null ? d.daily_cost_low : d.dailyCostLow,
+    dailyCostMid: d.daily_cost_mid != null ? d.daily_cost_mid : d.dailyCostMid,
+    dailyCostHigh: d.daily_cost_high != null ? d.daily_cost_high : d.dailyCostHigh,
+    airportTransferNote: d.airport_transfer_note != null ? d.airport_transfer_note : (d.airportTransferNote || ""),
+    localTransportNote: d.local_transport_note != null ? d.local_transport_note : (d.localTransportNote || ""),
+    intercityNote: d.intercity_note != null ? d.intercity_note : (d.intercityNote || "")
   };
 }
