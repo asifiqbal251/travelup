@@ -308,18 +308,24 @@ function HeroMatchCard({ dest, result, pills, onSelect }) {
           alt={nameWithCountry(dest.name, dest.country)}
           fittingType="fill"
           fallbackSrc={TRAVEL_FALLBACK_IMAGE}
-          className="[grid-area:1/1] w-full h-full"
+          className="[grid-area:1/1] z-0 w-full h-full"
           loading="eager"
         />
         <span
-          className="[grid-area:1/1]"
+          className="[grid-area:1/1] z-10"
           style={{ background: "linear-gradient(180deg, rgba(8,20,40,0) 30%, rgba(8,20,40,.55) 68%, rgba(8,20,40,.94) 100%)" }}
         />
         {/* overlay: badge top-left, ring+name+location stacked bottom-left. Nothing else on the photo.
             Stacked via CSS grid (not absolute inset-0) so this block's real content height can grow
             the image container when the title wraps to two or three lines, instead of overflowing
-            past a height fixed purely by aspect-ratio into the card content below. */}
-        <div className="[grid-area:1/1] flex flex-col justify-between p-[22px]">
+            past a height fixed purely by aspect-ratio into the card content below. Explicit z-index on
+            all three layers (not just DOM order) because the Image component's own internals use
+            position:relative/absolute -- without an explicit z-index those nested positioned
+            descendants paint AFTER this grid's non-positioned siblings regardless of DOM order,
+            which is what hid this text layer entirely behind the photo (regression, see
+            docs/wherenova-bug-e-regression-brief.md). z-index isolates each grid layer into its own
+            stacking context so that internal positioning can't leak above a sibling layer. */}
+        <div className="[grid-area:1/1] z-20 flex flex-col justify-between p-[22px]">
           <span className="self-start inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.14em] text-white bg-wn-coral/90 rounded-full px-3 py-2">
             Best fit
           </span>
