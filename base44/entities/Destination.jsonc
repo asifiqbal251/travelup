@@ -131,8 +131,23 @@
       "description": "Mains voltage at the gateway (e.g. 230V, 120V); some countries use dual voltage"
     },
     "emergency_number": {
-      "type": "string",
-      "description": "Single most useful general emergency number for a tourist"
+      "type": "array",
+      "description": "Emergency numbers by service; single entry with service 'Emergency' for unified numbers, multiple entries where numbers differ by service",
+      "items": {
+        "type": "object",
+        "properties": {
+          "service": {
+            "type": "string"
+          },
+          "number": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "service",
+          "number"
+        ]
+      }
     },
     "connectivity_note": {
       "type": "string",
