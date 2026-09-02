@@ -104,6 +104,40 @@
     "dietary_notes": {
       "type": "string"
     },
+    "currency_code": {
+      "type": "string",
+      "description": "ISO 4217 currency code (e.g. EUR, USD)"
+    },
+    "currency_name": {
+      "type": "string",
+      "description": "Full currency name (e.g. Euro, US dollar)"
+    },
+    "languages": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Official or commonly encountered languages a tourist will see and hear"
+    },
+    "plug_types": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Electrical plug/socket types commonly found (e.g. C, F, G, A, B)"
+    },
+    "voltage": {
+      "type": "string",
+      "description": "Mains voltage at the gateway (e.g. 230V, 120V); some countries use dual voltage"
+    },
+    "emergency_number": {
+      "type": "string",
+      "description": "Single most useful general emergency number for a tourist"
+    },
+    "connectivity_note": {
+      "type": "string",
+      "description": "One-sentence factual note on eSIM / local SIM availability and coverage"
+    },
     "top_experiences": {
       "type": "array",
       "items": {
