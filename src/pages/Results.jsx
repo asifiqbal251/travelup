@@ -302,21 +302,24 @@ function HeroMatchCard({ dest, result, pills, onSelect }) {
 
   return (
     <article className="rounded-3xl bg-wn-surface ring-1 ring-wn-line overflow-hidden md:grid" style={{ gridTemplateColumns: "minmax(0,1.35fr) minmax(0,1fr)" }}>
-      <div className="relative aspect-[16/10] md:aspect-auto md:min-h-[440px]">
+      <div className="grid relative aspect-[16/10] md:aspect-auto md:min-h-[440px]">
         <Image
           src={dest.image_url}
           alt={nameWithCountry(dest.name, dest.country)}
           fittingType="fill"
           fallbackSrc={TRAVEL_FALLBACK_IMAGE}
-          className="w-full h-full"
+          className="[grid-area:1/1] w-full h-full"
           loading="eager"
         />
         <span
-          className="absolute inset-0"
+          className="[grid-area:1/1]"
           style={{ background: "linear-gradient(180deg, rgba(8,20,40,0) 30%, rgba(8,20,40,.55) 68%, rgba(8,20,40,.94) 100%)" }}
         />
-        {/* overlay: badge top-left, ring+name+location stacked bottom-left. Nothing else on the photo. */}
-        <div className="absolute inset-0 flex flex-col justify-between p-[22px]">
+        {/* overlay: badge top-left, ring+name+location stacked bottom-left. Nothing else on the photo.
+            Stacked via CSS grid (not absolute inset-0) so this block's real content height can grow
+            the image container when the title wraps to two or three lines, instead of overflowing
+            past a height fixed purely by aspect-ratio into the card content below. */}
+        <div className="[grid-area:1/1] flex flex-col justify-between p-[22px]">
           <span className="self-start inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.14em] text-white bg-wn-coral/90 rounded-full px-3 py-2">
             Best fit
           </span>
