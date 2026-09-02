@@ -153,6 +153,46 @@
       "type": "string",
       "description": "One-sentence factual note on eSIM / local SIM availability and coverage"
     },
+    "draft_etiquette_notes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 3,
+      "description": "DRAFT (pending review): up to 3 short, concrete, destination-specific behaviour notes; not yet live"
+    },
+    "draft_tipping_norm": {
+      "type": "string",
+      "description": "DRAFT (pending review): one sentence on local tipping expectation; not yet live"
+    },
+    "draft_payment_norm": {
+      "type": "string",
+      "description": "DRAFT (pending review): one sentence on card acceptance and cash needs; not yet live"
+    },
+    "draft_daily_cost_low": {
+      "type": "number",
+      "description": "DRAFT (pending review): budget-tier daily per-person cost in USD (accommodation+food+local transport+activities, excludes flights); not yet live"
+    },
+    "draft_daily_cost_mid": {
+      "type": "number",
+      "description": "DRAFT (pending review): mid-tier daily per-person cost in USD (excludes flights); not yet live"
+    },
+    "draft_daily_cost_high": {
+      "type": "number",
+      "description": "DRAFT (pending review): comfort/luxury-tier daily per-person cost in USD (excludes flights); not yet live"
+    },
+    "draft_airport_transfer_note": {
+      "type": "string",
+      "description": "DRAFT (pending review): 1-2 sentences on getting from the gateway airport to the city center; not yet live"
+    },
+    "draft_local_transport_note": {
+      "type": "string",
+      "description": "DRAFT (pending review): 1-2 sentences on getting around town locally; not yet live"
+    },
+    "draft_intercity_note": {
+      "type": "string",
+      "description": "DRAFT (pending review): optional 1-2 sentences on intercity travel; empty for single-city/island trips; not yet live"
+    },
     "top_experiences": {
       "type": "array",
       "items": {
