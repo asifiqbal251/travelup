@@ -11,6 +11,7 @@ import { TRAVEL_FALLBACK_IMAGE } from "@/lib/fallbackImage";
 import TravelFitRing from "@/components/TravelFitRing";
 import { Trash2, Plane, ArrowRight } from "lucide-react";
 import { flagForCountry } from "@/lib/countryFlag";
+import GuestSaveBanner from "@/components/guest/GuestSaveBanner";
 
 const FIT_BADGE = {
   Practical: { label: "Good fit", cls: "bg-teal text-cinema" },
@@ -86,12 +87,14 @@ export default function SavedTrips() {
         Saved trips
       </h1>
 
-      <div className="flex items-start gap-3 mb-8 text-sm text-muted-foreground">
+      <div className="flex items-start gap-3 mb-6 text-sm text-muted-foreground">
         <Plane className="w-5 h-5 text-muted-foreground flex-shrink-0 mt-0.5" />
         <p>
           Saved trips stay on this browser and device. They are not synced to an account.
         </p>
       </div>
+
+      <GuestSaveBanner className="mb-8" />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
         {trips.map((t) => {

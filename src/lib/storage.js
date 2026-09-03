@@ -159,6 +159,57 @@ export function setActiveTripPacking(fingerprint, packing) {
   return res.ok ? { ok: true } : res;
 }
 
+// ---- Guest trip limit ----
+
+// A guest (no account) may save exactly one trip locally before hitting the
+// sign-up prompt. This is independent of MAX_SAVED_TRIPS, which remains a
+// general storage sanity cap (relevant once signed-in accounts exist).
+// Deliberately NOT enforced retroactively: a guest who already has more than
+// one saved trip from before this limit existed keeps every one of them —
+// this only gates NEW additions. See docs/wherenova-guest-flow-brief.md.
+export const GUEST_TRIP_LIMIT = 1;
+
+// ---- Pending trip (hard-prompt safety net) ----
+//
+// When a guest at the trip limit attempts to save an additional trip, that
+// attempt is preserved here instead of being saved or discarded, so it
+// survives a page reload / the user leaving to check email mid-sign-up and
+// coming back later. Cleared only once trip migration confirms it has been
+// written to the user's account (see src/lib/tripMigration.js) — never on
+// mere dismissal of the sign-up prompt.
+
+export function getPendingTripSnapshot() {
+  const p = loadState().pendingTripSnapshot;
+  return isValidSavedTrip(p) ? p : null;
+}
+
+export function setPendingTripSnapshot(snapshot) {
+  const s = loadState();
+  s.pendingTripSnapshot = snapshot;
+  return persistState(s);
+}
+
+export function clearPendingTripSnapshot() {
+  const s = loadState();
+  delete s.pendingTripSnapshot;
+  return persistState(s);
+}
+
+// ---- Guest soft-prompt dismissal ----
+//
+// Persisted so the "create an account" banner never re-appears once a guest
+// has dismissed it, across reloads and sessions.
+
+export function isGuestSavePromptDismissed() {
+  return !!loadState().guestSavePromptDismissed;
+}
+
+export function dismissGuestSavePrompt() {
+  const s = loadState();
+  s.guestSavePromptDismissed = true;
+  return persistState(s);
+}
+
 // ---- Saved trips ----
 
 function genId() {

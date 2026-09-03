@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, Outlet, useNavigate, useLocation } from "react-router-dom";
-import { Menu, Trash2 } from "lucide-react";
+import { Menu, Trash2, LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import WherenovaLogo from "@/components/WherenovaLogo";
 import {
@@ -8,6 +8,7 @@ import {
   AlertDialogTitle, AlertDialogDescription, AlertDialogAction, AlertDialogCancel
 } from "@/components/ui/alert-dialog";
 import { clearState } from "@/lib/storage";
+import { useAccountIdentity, beginGoogleSignIn } from "@/lib/auth";
 
 const NAV_HEIGHT = 68;
 
@@ -45,6 +46,7 @@ function useScrolledPastHero(active) {
 export default function TravelUpLayout() {
   const navigate = useNavigate();
   const { pathname } = useLocation();
+  const { isSignedIn } = useAccountIdentity();
   const [menuOpen, setMenuOpen] = useState(false);
   const [clearOpen, setClearOpen] = useState(false);
   const [resetKey, setResetKey] = useState(0);
@@ -125,10 +127,20 @@ export default function TravelUpLayout() {
             <Button asChild variant="ghost" className={`hover:bg-transparent ${linkCls} focus-visible:!ring-wn-cyan ${ringOffset}`}>
               <Link to="/about">About</Link>
             </Button>
+            {!isSignedIn && (
+              <button
+                type="button"
+                onClick={beginGoogleSignIn}
+                className={`ml-2 inline-flex items-center gap-1.5 h-9 px-3 rounded-lg text-xs font-medium motion-safe:transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-wn-cyan ${ringOffset} ${linkCls}`}
+                aria-label="Sign in"
+              >
+                <LogIn className="w-3.5 h-3.5" /> Sign in
+              </button>
+            )}
             <button
               type="button"
               onClick={openClear}
-              className={`ml-2 inline-flex items-center gap-1.5 h-9 px-3 rounded-lg text-xs font-medium motion-safe:transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-wn-cyan ${ringOffset} ${linkCls}`}
+              className={`inline-flex items-center gap-1.5 h-9 px-3 rounded-lg text-xs font-medium motion-safe:transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-wn-cyan ${ringOffset} ${linkCls}`}
               aria-label="Clear my data"
             >
               <Trash2 className="w-3.5 h-3.5" /> Clear my data
@@ -161,6 +173,15 @@ export default function TravelUpLayout() {
             <Button asChild variant="ghost" className={`hover:bg-transparent justify-start min-h-11 ${linkCls} focus-visible:!ring-wn-cyan ${ringOffset}`} onClick={close}>
               <Link to="/about">About</Link>
             </Button>
+            {!isSignedIn && (
+              <Button
+                onClick={() => { close(); beginGoogleSignIn(); }}
+                variant="ghost"
+                className={`hover:bg-transparent justify-start min-h-11 ${linkCls} focus-visible:!ring-wn-cyan ${ringOffset}`}
+              >
+                <LogIn className="w-4 h-4 mr-2" /> Sign in
+              </Button>
+            )}
             <Button
               onClick={() => { close(); openClear(); }}
               variant="ghost"
@@ -201,8 +222,11 @@ export default function TravelUpLayout() {
             <AlertDialogTitle>Clear all local data?</AlertDialogTitle>
             <AlertDialogDescription>
               This permanently deletes from this browser: your questionnaire answers, current destination
-              selection, current and active-trip packing progress, and every saved trip with its packing
-              progress. This cannot be undone.
+              selection, current and active-trip packing progress, every saved trip with its packing
+              progress, and any trip still waiting on sign-up to save. This cannot be undone.
+              {isSignedIn
+                ? " Trips already saved to your account are not affected."
+                : " You don't have an account yet, so nothing outside this browser is affected."}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

@@ -179,6 +179,14 @@
   color: #FFFFFF !important;
 }
 .wn-cta-light:hover { filter: brightness(1.12); }
+/* Account/sign-up CTAs only (guest -> account flow). Coral is otherwise
+   reserved for the "Best fit" match marker (Results.jsx) — do not use this
+   class for itinerary actions (save/replace use wn-cta-dark/-light). */
+.wn-cta-coral {
+  background-image: linear-gradient(180deg, #FF8465, #FF6B4A) !important;
+  color: #FFFFFF !important;
+}
+.wn-cta-coral:hover { filter: brightness(1.06); }
 /* Hide scrollbars on snap-scrollers. */
 .no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
 .no-scrollbar::-webkit-scrollbar { display: none; }

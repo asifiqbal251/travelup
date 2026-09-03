@@ -10,7 +10,7 @@ import {
   getSelectedDestinationId, getPrefs, tripFingerprint, seedActiveTripPacking,
   setActiveTripPacking, findSavedTripByFingerprint, getSavedTripCount,
   saveNewTrip, replaceSavedTrip, buildTripSnapshot, normalizeDestinationDisplay,
-  MAX_SAVED_TRIPS
+  setPendingTripSnapshot, MAX_SAVED_TRIPS, GUEST_TRIP_LIMIT
 } from "@/lib/storage";
 import { generateItinerary } from "@/lib/itinerary";
 import { generatePackingList } from "@/lib/packing";
@@ -19,12 +19,16 @@ import { scoreWithPracticality } from "@/lib/scoring";
 import TripView, { TripHeader } from "@/components/TripView";
 import { toast } from "@/components/ui/use-toast";
 import { Bookmark, BookmarkCheck } from "lucide-react";
+import { useAccountIdentity } from "@/lib/auth";
+import GuestUpgradeModal from "@/components/guest/GuestUpgradeModal";
+import GuestSaveBanner from "@/components/guest/GuestSaveBanner";
 
 const QUOTA_MSG = "This browser is out of space for another saved trip. Delete an older saved trip and try again.";
 const GENERIC_MSG = "We couldn't save this itinerary in this browser. Check your browser storage settings and try again.";
 
 export default function TripDetail() {
   const navigate = useNavigate();
+  const { isSignedIn } = useAccountIdentity();
   const [dest, setDest] = useState(null);
   const [prefs, setPrefsState] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -32,6 +36,7 @@ export default function TripDetail() {
   const [alreadySaved, setAlreadySaved] = useState(false);
   const [dupOpen, setDupOpen] = useState(false);
   const [limitOpen, setLimitOpen] = useState(false);
+  const [upgradeOpen, setUpgradeOpen] = useState(false);
 
   useEffect(() => {
     const id = getSelectedDestinationId();
@@ -112,6 +117,20 @@ export default function TripDetail() {
       setDupOpen(true);
       return;
     }
+    // Guest one-trip limit: a signed-out visitor may save exactly one trip
+    // locally. Attempting a second is preserved as a pending trip (survives
+    // reload / leaving to check email) rather than saved or dropped, and the
+    // sign-up prompt opens instead. Pre-existing guests who already have
+    // more than one saved trip are never blocked from replacing/deleting
+    // those — this only gates NEW additions once the limit is already met.
+    if (!isSignedIn && getSavedTripCount() >= GUEST_TRIP_LIMIT) {
+      const snapshot = buildTripSnapshot({
+        dest, prefs, fingerprint, itinerary, packingGroups, packingState, travelFit, score
+      });
+      setPendingTripSnapshot(snapshot);
+      setUpgradeOpen(true);
+      return;
+    }
     if (getSavedTripCount() >= MAX_SAVED_TRIPS) {
       setLimitOpen(true);
       return;
@@ -151,6 +170,8 @@ export default function TripDetail() {
                 : <><Bookmark className="w-4 h-4 mr-2" /> Save itinerary</>}
             </Button>
           </div>
+
+          {alreadySaved && <GuestSaveBanner className="mb-6" />}
 
           <TripView
             display={display}
@@ -201,6 +222,8 @@ export default function TripDetail() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <GuestUpgradeModal open={upgradeOpen} onOpenChange={setUpgradeOpen} />
     </div>
   );
 }
