@@ -391,7 +391,14 @@ export function buildTripSnapshot({
       dailyCostHigh: dest.daily_cost_high,
       airportTransferNote: dest.airport_transfer_note || "",
       localTransportNote: dest.local_transport_note || "",
-      intercityNote: dest.intercity_note || ""
+      intercityNote: dest.intercity_note || "",
+      entryOverview: dest.entry_overview || "",
+      passportValidity: dest.passport_validity || "",
+      typicalTouristStay: dest.typical_tourist_stay || "",
+      entryRequirementsNotes: dest.entry_requirements_notes || [],
+      officialSourceName: dest.official_source_name || "",
+      officialSourceUrl: dest.official_source_url || "",
+      entryLastReviewed: dest.entry_last_reviewed || ""
     },
     preferences: {
       residenceCountry: prefs.residenceCountry,
@@ -468,6 +475,13 @@ export function normalizeDestinationDisplay(d) {
     dailyCostHigh: d.daily_cost_high != null ? d.daily_cost_high : d.dailyCostHigh,
     airportTransferNote: d.airport_transfer_note != null ? d.airport_transfer_note : (d.airportTransferNote || ""),
     localTransportNote: d.local_transport_note != null ? d.local_transport_note : (d.localTransportNote || ""),
-    intercityNote: d.intercity_note != null ? d.intercity_note : (d.intercityNote || "")
+    intercityNote: d.intercity_note != null ? d.intercity_note : (d.intercityNote || ""),
+    entryOverview: d.entry_overview != null ? d.entry_overview : (d.entryOverview || ""),
+    passportValidity: d.passport_validity != null ? d.passport_validity : (d.passportValidity || ""),
+    typicalTouristStay: d.typical_tourist_stay != null ? d.typical_tourist_stay : (d.typicalTouristStay || ""),
+    entryRequirementsNotes: d.entry_requirements_notes || d.entryRequirementsNotes || [],
+    officialSourceName: d.official_source_name != null ? d.official_source_name : (d.officialSourceName || ""),
+    officialSourceUrl: d.official_source_url != null ? d.official_source_url : (d.officialSourceUrl || ""),
+    entryLastReviewed: d.entry_last_reviewed != null ? d.entry_last_reviewed : (d.entryLastReviewed || "")
   };
 }

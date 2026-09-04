@@ -19,7 +19,7 @@ import { TRAVEL_FALLBACK_IMAGE } from "@/lib/fallbackImage";
 import { nameWithCountry } from "@/lib/destinationLabel";
 import { flagForCountry } from "@/lib/countryFlag";
 import { BUDGET_ORDER } from "@/lib/options";
-import { Check, Plus, Trash2, RotateCcw, Info, ArrowLeft } from "lucide-react";
+import { Check, Plus, Trash2, RotateCcw, ArrowLeft, ShieldCheck, ExternalLink } from "lucide-react";
 
 // Single-entry arrays labelled "Emergency" are the common case (a unified
 // number) -- show just the number since the "Emergency" label is redundant
@@ -30,6 +30,17 @@ function formatEmergencyNumbers(list) {
     return list[0].number;
   }
   return list.map((e) => `${e.service} ${e.number}`).join(" · ");
+}
+
+// entry_last_reviewed is an ISO date string; presented as "Checked <Month
+// Year>" per product decision so users can judge staleness at a glance
+// rather than parsing a raw date. timeZone: "UTC" avoids the review month
+// shifting backward a day in negative-UTC-offset browsers.
+function formatReviewedDate(iso) {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  return `Checked ${d.toLocaleString("en-US", { month: "long", year: "numeric", timeZone: "UTC" })}`;
 }
 
 // budget_categories arrays aren't stored in canonical order in the backend
@@ -396,14 +407,7 @@ function OverviewView({ display }) {
 
       <TravelEssentials display={display} />
 
-      <div className="rounded-2xl bg-wn-surface-2-l ring-1 ring-wn-line-l p-4 flex gap-3">
-        <Info className="w-5 h-5 text-wn-text-2-l flex-shrink-0 mt-0.5" />
-        <p className="text-sm text-wn-text-l/75">
-          Visa &amp; entry: This is general guidance only. Always confirm visa requirements, entry
-          conditions, safety and travel advisories through official government sources for your
-          citizenship before booking.
-        </p>
-      </div>
+      <EntryRequirements display={display} />
     </div>
   );
 }
@@ -482,6 +486,83 @@ function TravelEssentials({ display }) {
             </ul>
           )}
         </div>
+      )}
+    </div>
+  );
+}
+
+// This is the one panel where acting on stale or wrong info has real
+// consequences (denied boarding, turned away at the border), so the "verify
+// with an official source" instruction gets its own emphasized callout
+// rather than trailing disclaimer text -- prominent without reading as
+// alarming or legally defensive. Morocco/Uruguay have no official source;
+// the callout still shows the reviewed date and just omits the link line.
+// Same hide-when-empty rules as TravelEssentials above.
+function EntryRequirements({ display }) {
+  const {
+    entryOverview, passportValidity, typicalTouristStay, entryRequirementsNotes,
+    officialSourceName, officialSourceUrl, entryLastReviewed
+  } = display;
+
+  const factRows = [
+    passportValidity && ["Passport validity", passportValidity],
+    typicalTouristStay && ["Typical stay", typicalTouristStay]
+  ].filter(Boolean);
+
+  const hasNotes = Array.isArray(entryRequirementsNotes) && entryRequirementsNotes.length > 0;
+  const reviewedLabel = formatReviewedDate(entryLastReviewed);
+
+  if (!entryOverview && !factRows.length && !hasNotes && !reviewedLabel) return null;
+
+  return (
+    <div>
+      <h3 className="font-display font-bold text-wn-text-l mb-3">Visa &amp; entry</h3>
+
+      {entryOverview && (
+        <p className="text-sm text-wn-text-l/80 leading-relaxed mb-4">{entryOverview}</p>
+      )}
+
+      {reviewedLabel && (
+        <div className="rounded-xl bg-wn-surface-2-l ring-1 ring-wn-line-l p-4 mb-4">
+          <div className="flex items-start gap-3">
+            <ShieldCheck className="w-5 h-5 text-wn-text-l flex-shrink-0 mt-0.5" aria-hidden="true" />
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-wn-text-l">
+                Confirm entry requirements with an official source before you travel
+              </p>
+              <p className="text-xs text-wn-text-2-l mt-1">{reviewedLabel}</p>
+              {officialSourceUrl && (
+                <a
+                  href={officialSourceUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 -ml-1 mt-2 px-1 py-2 min-h-11 text-sm font-semibold text-wn-text-l underline decoration-wn-line-2-l underline-offset-2 hover:decoration-wn-text-l focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-wn-cyan rounded"
+                >
+                  {officialSourceName || "Official source"}
+                  <ExternalLink className="w-3.5 h-3.5 flex-shrink-0" aria-hidden="true" />
+                </a>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {factRows.length > 0 && (
+        <div className="space-y-2.5 text-sm">
+          {factRows.map(([label, text]) => (
+            <p key={label} className="text-wn-text-l/80 leading-relaxed">
+              <span className="font-medium text-wn-text-l">{label}: </span>{text}
+            </p>
+          ))}
+        </div>
+      )}
+
+      {hasNotes && (
+        <ul className={`space-y-1.5 text-sm ${factRows.length ? "mt-4" : ""}`}>
+          {entryRequirementsNotes.map((note, i) => (
+            <li key={i} className="flex gap-2 text-wn-text-l/80"><span className="text-wn-text-l/40">•</span>{note}</li>
+          ))}
+        </ul>
       )}
     </div>
   );
