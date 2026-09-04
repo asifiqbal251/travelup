@@ -265,6 +265,38 @@
       "type": "string",
       "description": "DRAFT (pending review): ISO date on which the entry guidance was last reviewed; not yet live"
     },
+    "entry_overview": {
+      "type": "string",
+      "description": "1-2 sentence nationality-neutral overview of the destination's entry/visa rules, ending by directing readers to check their own government's travel advice"
+    },
+    "passport_validity": {
+      "type": "string",
+      "description": "Passport validity rule that applies to entry"
+    },
+    "typical_tourist_stay": {
+      "type": "string",
+      "description": "Typical permitted tourist stay for the destination"
+    },
+    "entry_requirements_notes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 3,
+      "description": "Up to 3 short, concrete entry-requirement notes that gate entry (e.g. onward tickets, health certificates, pre-travel forms)"
+    },
+    "official_source_name": {
+      "type": "string",
+      "description": "Name of the destination government's official entry/immigration source; empty when no reliable source exists"
+    },
+    "official_source_url": {
+      "type": "string",
+      "description": "URL of the destination government's official entry/immigration page; empty when no reliable source exists"
+    },
+    "entry_last_reviewed": {
+      "type": "string",
+      "description": "ISO date on which the entry guidance was last reviewed"
+    },
     "top_experiences": {
       "type": "array",
       "items": {
