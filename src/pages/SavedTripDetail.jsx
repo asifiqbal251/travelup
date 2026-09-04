@@ -11,6 +11,9 @@ import {
 import TripView, { TripHeader } from "@/components/TripView";
 import { toast } from "@/components/ui/use-toast";
 import { Trash2, Plane } from "lucide-react";
+import { useAccountIdentity, getAccountSavedTrips, updateTripSnapshotInAccount, deleteTripFromAccount } from "@/lib/auth";
+
+const ACCOUNT_ERROR_MSG = "Check your connection and try again.";
 
 // Renders a saved trip purely from its immutable snapshot. It never calls the
 // Destination entity API, regenerates itinerary/packing/overview, or changes
@@ -18,19 +21,42 @@ import { Trash2, Plane } from "lucide-react";
 export default function SavedTripDetail() {
   const { savedTripId } = useParams();
   const navigate = useNavigate();
+  const identity = useAccountIdentity();
+  const { isSignedIn } = identity;
   const [trip, setTrip] = useState(null);
   const [loading, setLoading] = useState(true);
   const [deleteOpen, setDeleteOpen] = useState(false);
 
   useEffect(() => {
-    const t = getSavedTrip(savedTripId);
-    if (!t) {
+    let cancelled = false;
+
+    async function load() {
+      setLoading(true);
+      const local = getSavedTrip(savedTripId);
+      if (!isSignedIn) {
+        if (!cancelled) { setTrip(local); setLoading(false); }
+        return;
+      }
+      // Signed in: the account may hold this trip even if it's not (or no
+      // longer) present locally. Fall back to the local copy, if any, on a
+      // fetch failure -- degrade gracefully rather than reporting "not
+      // found" for a trip that genuinely exists, just unreachable right now.
+      const res = await getAccountSavedTrips(identity);
+      if (cancelled) return;
+      if (res.ok) {
+        const match = res.trips.find((t) => t.id === savedTripId);
+        setTrip(match || local);
+      } else {
+        setTrip(local);
+      }
       setLoading(false);
-      return;
     }
-    setTrip(t);
-    setLoading(false);
-  }, [savedTripId]);
+
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, [savedTripId, isSignedIn, identity.email]);
 
   if (loading) {
     return (
@@ -67,8 +93,28 @@ export default function SavedTripDetail() {
   };
   const packingGroups = (trip.packing && trip.packing.groups) || [];
 
-  // Saved packing writes update only this saved trip's snapshot.
-  const persistPacking = (next) => {
+  // Saved packing writes update only this saved trip's snapshot -- in the
+  // account if this trip is account-backed, otherwise in local storage.
+  const persistPacking = async (next) => {
+    if (trip.accountRecordId) {
+      const { accountRecordId, ...snapshot } = trip;
+      const updated = {
+        ...snapshot,
+        packing: {
+          ...(snapshot.packing || {}),
+          checkedItemIds: Array.isArray(next.checkedItemIds) ? next.checkedItemIds : [],
+          customItems: Array.isArray(next.customItems) ? next.customItems : []
+        },
+        updatedAt: new Date().toISOString()
+      };
+      const res = await updateTripSnapshotInAccount(accountRecordId, updated);
+      if (res.ok) {
+        setTrip({ ...updated, accountRecordId });
+      } else {
+        toast({ title: "Couldn't update", description: ACCOUNT_ERROR_MSG });
+      }
+      return;
+    }
     const res = updateSavedTripPacking(trip.id, next);
     if (res.ok) {
       setTrip(res.value);
@@ -100,9 +146,12 @@ export default function SavedTripDetail() {
   };
   const handleReset = () => persistPacking({ checkedItemIds: [], customItems: [] });
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     setDeleteOpen(false);
-    deleteSavedTrip(trip.id);
+    if (trip.accountRecordId) {
+      await deleteTripFromAccount(trip.accountRecordId);
+    }
+    deleteSavedTrip(trip.id); // no-op if this id has no local copy
     navigate("/saved-trips");
   };
 

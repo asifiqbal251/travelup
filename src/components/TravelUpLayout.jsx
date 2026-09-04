@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, Outlet, useNavigate, useLocation } from "react-router-dom";
-import { Menu, Trash2, LogIn } from "lucide-react";
+import { Menu, Trash2, LogIn, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import WherenovaLogo from "@/components/WherenovaLogo";
 import {
@@ -8,7 +8,7 @@ import {
   AlertDialogTitle, AlertDialogDescription, AlertDialogAction, AlertDialogCancel
 } from "@/components/ui/alert-dialog";
 import { clearState } from "@/lib/storage";
-import { useAccountIdentity, beginGoogleSignIn } from "@/lib/auth";
+import { useAccountIdentity, beginGoogleSignIn, useSignOut } from "@/lib/auth";
 
 const NAV_HEIGHT = 68;
 
@@ -46,9 +46,11 @@ function useScrolledPastHero(active) {
 export default function TravelUpLayout() {
   const navigate = useNavigate();
   const { pathname } = useLocation();
-  const { isSignedIn } = useAccountIdentity();
+  const { isSignedIn, email } = useAccountIdentity();
+  const signOut = useSignOut();
   const [menuOpen, setMenuOpen] = useState(false);
   const [clearOpen, setClearOpen] = useState(false);
+  const [signOutOpen, setSignOutOpen] = useState(false);
   const [resetKey, setResetKey] = useState(0);
   const logoRef = useRef(null);
 
@@ -59,6 +61,13 @@ export default function TravelUpLayout() {
   const surface = theme === "hero" ? (scrolledPastHero ? "light" : "transparent") : theme;
 
   const openClear = () => setClearOpen(true);
+  const openSignOut = () => setSignOutOpen(true);
+
+  const confirmSignOut = () => {
+    setSignOutOpen(false);
+    setMenuOpen(false);
+    signOut();
+  };
 
   const confirmClear = () => {
     setClearOpen(false);
@@ -127,7 +136,27 @@ export default function TravelUpLayout() {
             <Button asChild variant="ghost" className={`hover:bg-transparent ${linkCls} focus-visible:!ring-wn-cyan ${ringOffset}`}>
               <Link to="/about">About</Link>
             </Button>
-            {!isSignedIn && (
+            {isSignedIn ? (
+              <>
+                {email && (
+                  <span
+                    className={`hidden md:inline-block ml-2 max-w-[160px] truncate text-xs ${linkCls}`}
+                    title={email}
+                    aria-label={`Signed in as ${email}`}
+                  >
+                    {email}
+                  </span>
+                )}
+                <button
+                  type="button"
+                  onClick={openSignOut}
+                  className={`inline-flex items-center gap-1.5 h-9 px-3 rounded-lg text-xs font-medium motion-safe:transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-wn-cyan ${ringOffset} ${linkCls}`}
+                  aria-label="Sign out"
+                >
+                  <LogOut className="w-3.5 h-3.5" /> Sign out
+                </button>
+              </>
+            ) : (
               <button
                 type="button"
                 onClick={beginGoogleSignIn}
@@ -173,7 +202,22 @@ export default function TravelUpLayout() {
             <Button asChild variant="ghost" className={`hover:bg-transparent justify-start min-h-11 ${linkCls} focus-visible:!ring-wn-cyan ${ringOffset}`} onClick={close}>
               <Link to="/about">About</Link>
             </Button>
-            {!isSignedIn && (
+            {isSignedIn ? (
+              <>
+                {email && (
+                  <p className={`px-3 pt-1 text-xs truncate ${linkCls}`} title={email} aria-label={`Signed in as ${email}`}>
+                    Signed in as {email}
+                  </p>
+                )}
+                <Button
+                  onClick={openSignOut}
+                  variant="ghost"
+                  className={`hover:bg-transparent justify-start min-h-11 ${linkCls} focus-visible:!ring-wn-cyan ${ringOffset}`}
+                >
+                  <LogOut className="w-4 h-4 mr-2" /> Sign out
+                </Button>
+              </>
+            ) : (
               <Button
                 onClick={() => { close(); beginGoogleSignIn(); }}
                 variant="ghost"
@@ -215,6 +259,24 @@ export default function TravelUpLayout() {
           </div>
         </div>
       </footer>
+
+      <AlertDialog open={signOutOpen} onOpenChange={setSignOutOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Sign out?</AlertDialogTitle>
+            <AlertDialogDescription>
+              You'll be signed out of your account on this device. Trips saved to your account
+              become inaccessible until you sign back in, but nothing is deleted -- they'll be
+              there when you return. Trips saved locally on this browser are not affected either
+              way.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmSignOut}>Sign out</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <AlertDialog open={clearOpen} onOpenChange={setClearOpen}>
         <AlertDialogContent>

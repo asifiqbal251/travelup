@@ -86,3 +86,70 @@ export async function saveTripToAccount(identity, tripSnapshot) {
     return { ok: false, reason: "write_failed" };
   }
 }
+
+// ---- Account read/update/delete (the other half of portability) ----
+//
+// saveTripToAccount() above had no matching read until now, which is what
+// let account trips be written but never shown back to the user. These
+// mirror it: same fail-safe discriminated-result shape, same "email is the
+// portable key" rule -- explicitly filtered by created_by rather than relying
+// on the SDK's default current-user scoping, so this keeps working the same
+// way if that default's scope ever changes.
+//
+// Every returned trip carries `accountRecordId` (the Base44 record id, NOT
+// tripSnapshot.id/client_id) alongside the snapshot fields, since update and
+// delete need it and nothing else in the snapshot identifies the record.
+
+export async function getAccountSavedTrips(identity) {
+  if (!identity || !identity.isSignedIn) {
+    return { ok: false, reason: "not_signed_in", trips: [] };
+  }
+  try {
+    const records = await base44.entities.SavedTrip.filter(
+      { created_by: identity.email },
+      "-updated_at",
+      5000
+    );
+    const trips = records
+      .filter((r) => r && r.snapshot && typeof r.snapshot === "object")
+      .map((r) => ({ ...r.snapshot, accountRecordId: r.id }));
+    return { ok: true, trips };
+  } catch (e) {
+    return { ok: false, reason: "fetch_failed", trips: [] };
+  }
+}
+
+// Overwrites an existing account record's snapshot (used for both "replace
+// saved itinerary" and packing-progress edits on an account-backed trip).
+export async function updateTripSnapshotInAccount(accountRecordId, tripSnapshot) {
+  try {
+    await base44.entities.SavedTrip.update(accountRecordId, {
+      snapshot: tripSnapshot,
+      updated_at: tripSnapshot.updatedAt
+    });
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, reason: "write_failed" };
+  }
+}
+
+export async function deleteTripFromAccount(accountRecordId) {
+  try {
+    await base44.entities.SavedTrip.delete(accountRecordId);
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, reason: "delete_failed" };
+  }
+}
+
+// ---- Sign-out ----
+//
+// Wraps AuthContext's logout (SDK token cleanup) so the nav routes through
+// this file like every other auth action. Redirects to "/" rather than
+// reloading the current URL: a signed-out user looking at e.g. an
+// account-only saved trip would otherwise land back on a page that no
+// longer applies to them.
+export function useSignOut() {
+  const { logout } = useAuth();
+  return () => logout("/");
+}

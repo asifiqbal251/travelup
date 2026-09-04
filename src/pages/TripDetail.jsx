@@ -19,21 +19,29 @@ import { scoreWithPracticality } from "@/lib/scoring";
 import TripView, { TripHeader } from "@/components/TripView";
 import { toast } from "@/components/ui/use-toast";
 import { Bookmark, BookmarkCheck } from "lucide-react";
-import { useAccountIdentity } from "@/lib/auth";
+import { useAccountIdentity, saveTripToAccount, getAccountSavedTrips, updateTripSnapshotInAccount } from "@/lib/auth";
 import GuestUpgradeModal from "@/components/guest/GuestUpgradeModal";
 import GuestSaveBanner from "@/components/guest/GuestSaveBanner";
 
 const QUOTA_MSG = "This browser is out of space for another saved trip. Delete an older saved trip and try again.";
 const GENERIC_MSG = "We couldn't save this itinerary in this browser. Check your browser storage settings and try again.";
+const ACCOUNT_SAVE_MSG = "Check your connection and try again.";
 
 export default function TripDetail() {
   const navigate = useNavigate();
-  const { isSignedIn } = useAccountIdentity();
+  const identity = useAccountIdentity();
+  const { isSignedIn } = identity;
   const [dest, setDest] = useState(null);
   const [prefs, setPrefsState] = useState(null);
   const [loading, setLoading] = useState(true);
   const [packingState, setPackingState] = useState({ checkedItemIds: [], customItems: [] });
   const [alreadySaved, setAlreadySaved] = useState(false);
+  // The account's existing record for this trip's fingerprint, once known --
+  // signed-in users save/replace directly against the account (see doSave/
+  // confirmReplace) rather than through local storage, so this is the thing
+  // that needs updating on a re-save, and the account record id delete/
+  // replace need.
+  const [accountMatch, setAccountMatch] = useState(null);
   const [dupOpen, setDupOpen] = useState(false);
   const [limitOpen, setLimitOpen] = useState(false);
   const [upgradeOpen, setUpgradeOpen] = useState(false);
@@ -47,15 +55,30 @@ export default function TripDetail() {
     }
     setPrefsState(p);
     base44.entities.Destination.get(id)
-      .then((d) => {
+      .then(async (d) => {
         setDest(d);
         const fp = tripFingerprint(p, d.id);
         setPackingState(seedActiveTripPacking(fp, d.id));
-        setAlreadySaved(!!findSavedTripByFingerprint(fp));
+        if (isSignedIn) {
+          const res = await getAccountSavedTrips(identity);
+          if (res.ok) {
+            const match = res.trips.find((t) => t.fingerprint === fp) || null;
+            setAccountMatch(match);
+            setAlreadySaved(!!match);
+          } else {
+            // Degrade gracefully: can't confirm account state, so fall back
+            // to whatever this device knows locally rather than blocking
+            // the save button or claiming falsely that nothing is saved.
+            setAccountMatch(null);
+            setAlreadySaved(!!findSavedTripByFingerprint(fp));
+          }
+        } else {
+          setAlreadySaved(!!findSavedTripByFingerprint(fp));
+        }
         setLoading(false);
       })
       .catch(() => { navigate("/results"); });
-  }, [navigate]);
+  }, [navigate, isSignedIn, identity.email]);
 
   if (loading) {
     return (
@@ -111,7 +134,35 @@ export default function TripDetail() {
     }
   };
 
+  // Signed-in users save straight to the account and are never subject to
+  // the guest one-trip limit or the local-storage MAX_SAVED_TRIPS cap --
+  // both are local-device concepts that don't apply once an account exists.
+  const saveNewAccountTrip = async () => {
+    const snapshot = buildTripSnapshot({
+      dest, prefs, fingerprint, itinerary, packingGroups, packingState, travelFit, score
+    });
+    const res = await saveTripToAccount(identity, snapshot);
+    if (res.ok) {
+      const refreshed = await getAccountSavedTrips(identity);
+      if (refreshed.ok) {
+        setAccountMatch(refreshed.trips.find((t) => t.fingerprint === fingerprint) || null);
+      }
+      setAlreadySaved(true);
+      toast({ title: "Itinerary saved" });
+    } else {
+      toast({ title: "Couldn't save", description: ACCOUNT_SAVE_MSG });
+    }
+  };
+
   const doSave = () => {
+    if (isSignedIn) {
+      if (accountMatch) {
+        setDupOpen(true);
+      } else {
+        saveNewAccountTrip();
+      }
+      return;
+    }
     const existing = findSavedTripByFingerprint(fingerprint);
     if (existing) {
       setDupOpen(true);
@@ -123,7 +174,7 @@ export default function TripDetail() {
     // sign-up prompt opens instead. Pre-existing guests who already have
     // more than one saved trip are never blocked from replacing/deleting
     // those — this only gates NEW additions once the limit is already met.
-    if (!isSignedIn && getSavedTripCount() >= GUEST_TRIP_LIMIT) {
+    if (getSavedTripCount() >= GUEST_TRIP_LIMIT) {
       const snapshot = buildTripSnapshot({
         dest, prefs, fingerprint, itinerary, packingGroups, packingState, travelFit, score
       });
@@ -141,8 +192,24 @@ export default function TripDetail() {
     reportSaveResult(saveNewTrip(snapshot));
   };
 
-  const confirmReplace = () => {
+  const confirmReplace = async () => {
     setDupOpen(false);
+    if (isSignedIn) {
+      if (!accountMatch) return;
+      const snapshot = buildTripSnapshot({
+        dest, prefs, fingerprint, itinerary, packingGroups, packingState, travelFit, score,
+        existingId: accountMatch.id, existingSavedAt: accountMatch.savedAt
+      });
+      const res = await updateTripSnapshotInAccount(accountMatch.accountRecordId, snapshot);
+      if (res.ok) {
+        setAccountMatch({ ...snapshot, accountRecordId: accountMatch.accountRecordId });
+        setAlreadySaved(true);
+        toast({ title: "Itinerary saved" });
+      } else {
+        toast({ title: "Couldn't save", description: ACCOUNT_SAVE_MSG });
+      }
+      return;
+    }
     const existing = findSavedTripByFingerprint(fingerprint);
     if (!existing) return;
     const snapshot = buildTripSnapshot({

@@ -1,46 +1,71 @@
 // Moves a guest's locally-saved trip(s) into their account after they sign
-// up or sign in. Not triggered anywhere yet — there is no working sign-up to
-// call it from. Once the AUTH INTEGRATION POINT (src/lib/auth.js) has a real
-// sign-up/sign-in, call migrateGuestTripsToAccount() immediately on success;
-// no user action should be required to trigger it.
+// up or sign in, AND reconciles local vs. account trips on every later call
+// (invoked again from SavedTrips.jsx / SavedTripDetail.jsx on load) so a
+// trip saved locally while already signed in — e.g. on a device where the
+// sign-up migration already ran once — still reaches the account.
 //
 // Fail-safe by construction: a local trip is deleted only after
-// saveTripToAccount() confirms it was written. Any failure — network error,
-// auth not configured, quota, anything — leaves the local copy exactly as it
-// was. A user must never lose a trip because a migration errored.
+// saveTripToAccount() confirms it was written, or after the account is
+// confirmed to already have that fingerprint. Any failure — network error,
+// quota, anything — leaves the local copy exactly as it was. A user must
+// never lose a trip because a migration errored.
 //
-// The same function serves both the sign-up case (the pending trip a guest
-// was blocked from saving, per storage.getPendingTripSnapshot) and the
-// sign-in case (a returning guest's already-saved local trip(s) merging into
-// an existing account) — the operation is identical: push whatever is local
-// into the account, fail-safe. One open product question flagged for
-// whoever wires real auth: if a guest's local trip and their existing
-// account already have a trip with the same fingerprint, this will attempt
-// to write both rather than detect the collision (no account-side read
-// exists yet to check). Recommend resolving that as "keep both" or "keep
-// the newer updatedAt" once the account side can actually be queried, rather
-// than guessing here.
+// Duplicate handling: the account is read first (getAccountSavedTrips) and
+// checked by fingerprint before any write. A local trip whose fingerprint
+// already exists in the account is dropped locally WITHOUT writing — the
+// account copy is treated as canonical and no second copy is created. This
+// resolves the collision this file used to only flag as an open question,
+// now that the account side can actually be queried.
+//
+// If the account can't be read at all, no writes are attempted — writing
+// blind risks duplicating a trip that's already there. Every local trip is
+// left untouched for the next call to retry.
 
 import {
   getSavedTrips, getPendingTripSnapshot, clearPendingTripSnapshot, deleteSavedTrip
 } from "@/lib/storage";
-import { saveTripToAccount } from "@/lib/auth";
+import { saveTripToAccount, getAccountSavedTrips } from "@/lib/auth";
 
 // identity: { email, stableId } from useAccountIdentity() — see the
 // portability requirements in src/lib/auth.js.
+//
+// Returns accountTrips (the reconciled, current account list) alongside the
+// usual counts so callers that need to display trips right after
+// reconciling don't have to issue a second fetch.
 export async function migrateGuestTripsToAccount(identity) {
+  const accountRes = await getAccountSavedTrips(identity);
+  const accountFetchFailed = !accountRes.ok;
+  let accountTrips = accountRes.trips;
+
   const pending = getPendingTripSnapshot();
   const localTrips = getSavedTrips().filter((t) => !pending || t.id !== pending.id);
   const toMigrate = pending ? [pending, ...localTrips] : localTrips;
 
-  if (toMigrate.length === 0) return { ok: true, migrated: 0, failed: 0 };
+  if (toMigrate.length === 0) {
+    return { ok: true, migrated: 0, failed: 0, skipped: 0, accountTrips, accountFetchFailed };
+  }
 
+  if (accountFetchFailed) {
+    return { ok: false, migrated: 0, failed: 0, skipped: 0, accountTrips, accountFetchFailed };
+  }
+
+  const accountFingerprints = new Set(accountTrips.map((t) => t.fingerprint));
   let migrated = 0;
   let failed = 0;
+  let skipped = 0;
+  let wroteAny = false;
+
   for (const trip of toMigrate) {
+    if (accountFingerprints.has(trip.fingerprint)) {
+      skipped += 1;
+      if (pending && trip.id === pending.id) clearPendingTripSnapshot();
+      else deleteSavedTrip(trip.id);
+      continue;
+    }
     const res = await saveTripToAccount(identity, trip);
     if (res && res.ok) {
       migrated += 1;
+      wroteAny = true;
       if (pending && trip.id === pending.id) clearPendingTripSnapshot();
       else deleteSavedTrip(trip.id);
     } else {
@@ -49,5 +74,10 @@ export async function migrateGuestTripsToAccount(identity) {
     }
   }
 
-  return { ok: failed === 0, migrated, failed };
+  if (wroteAny) {
+    const refreshed = await getAccountSavedTrips(identity);
+    if (refreshed.ok) accountTrips = refreshed.trips;
+  }
+
+  return { ok: failed === 0, migrated, failed, skipped, accountTrips, accountFetchFailed };
 }

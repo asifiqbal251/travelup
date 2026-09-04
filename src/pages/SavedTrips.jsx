@@ -9,9 +9,11 @@ import {
 import { getSavedTrips, deleteSavedTrip } from "@/lib/storage";
 import { TRAVEL_FALLBACK_IMAGE } from "@/lib/fallbackImage";
 import TravelFitRing from "@/components/TravelFitRing";
-import { Trash2, Plane, ArrowRight } from "lucide-react";
+import { Trash2, Plane, ArrowRight, AlertTriangle } from "lucide-react";
 import { flagForCountry } from "@/lib/countryFlag";
 import GuestSaveBanner from "@/components/guest/GuestSaveBanner";
+import { useAccountIdentity, deleteTripFromAccount } from "@/lib/auth";
+import { migrateGuestTripsToAccount } from "@/lib/tripMigration";
 
 const FIT_BADGE = {
   Practical: { label: "Good fit", cls: "bg-teal text-cinema" },
@@ -32,24 +34,75 @@ function formatDate(iso) {
 
 export default function SavedTrips() {
   const navigate = useNavigate();
+  const identity = useAccountIdentity();
+  const { isSignedIn } = identity;
   const [trips, setTrips] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [accountError, setAccountError] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
   const headingRef = useRef(null);
   const cardRefs = useRef({});
 
   useEffect(() => {
-    setTrips(getSavedTrips());
-  }, []);
+    let cancelled = false;
+
+    async function load() {
+      setLoading(true);
+      if (!isSignedIn) {
+        if (!cancelled) {
+          setTrips(getSavedTrips());
+          setAccountError(false);
+          setLoading(false);
+        }
+        return;
+      }
+      // Reconcile first (moves any not-yet-migrated local trip into the
+      // account, deduped by fingerprint against what's already there), then
+      // read the reconciled account list back.
+      const res = await migrateGuestTripsToAccount(identity);
+      if (cancelled) return;
+      if (res.accountFetchFailed) {
+        // Degrade gracefully: never show the "no saved trips" empty state on
+        // a network error -- that would read as "your trips are gone."
+        // Local trips (if any survived un-migrated) are still shown.
+        setTrips(getSavedTrips());
+        setAccountError(true);
+      } else {
+        // Merge: account trips (canonical) plus any local trip whose
+        // fingerprint genuinely failed to migrate just now (e.g. offline
+        // mid-write) -- so a failure never silently drops a trip from view.
+        const accountFingerprints = new Set(res.accountTrips.map((t) => t.fingerprint));
+        const stillLocalOnly = getSavedTrips().filter((t) => !accountFingerprints.has(t.fingerprint));
+        const merged = [...res.accountTrips, ...stillLocalOnly].sort((a, b) =>
+          String(b.updatedAt || "").localeCompare(String(a.updatedAt || ""))
+        );
+        setTrips(merged);
+        setAccountError(false);
+      }
+      setLoading(false);
+    }
+
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, [isSignedIn, identity.email]);
 
   const tripToDelete = trips.find((t) => t.id === deleteId) || null;
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (!deleteId) return;
     const id = deleteId;
     const idx = trips.findIndex((t) => t.id === id);
-    deleteSavedTrip(id);
+    const trip = tripToDelete;
+    // Account-backed trips must be deleted from the account too, or they
+    // reappear the next time this device (or another one) reads the account.
+    if (trip && trip.accountRecordId) {
+      await deleteTripFromAccount(trip.accountRecordId);
+    }
+    deleteSavedTrip(id); // no-op if this id has no local copy
     setDeleteId(null);
-    const next = getSavedTrips();
+    const next = trips.filter((t) => t.id !== id);
     setTrips(next);
     // Restore focus to the next surviving card, or the page heading if none remain.
     setTimeout(() => {
@@ -66,6 +119,14 @@ export default function SavedTrips() {
     }, 0);
   };
 
+  if (loading) {
+    return (
+      <div className="max-w-2xl mx-auto px-4 py-20 text-center">
+        <div className="w-8 h-8 mx-auto border-4 border-muted border-t-ink rounded-full animate-spin" />
+      </div>
+    );
+  }
+
   if (trips.length === 0) {
     return (
       <div className="max-w-2xl mx-auto px-4 py-16 text-center">
@@ -74,6 +135,13 @@ export default function SavedTrips() {
         <p className="text-muted-foreground mb-6">
           You can save any itinerary from its trip page to view it again here later.
         </p>
+        {accountError && (
+          <p className="flex items-center justify-center gap-2 text-sm text-destructive mb-6">
+            <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+            Couldn't reach your account just now. If you've saved trips before, they should still
+            be there -- try reloading.
+          </p>
+        )}
         <Button asChild className="wn-cta-dark min-h-11">
           <Link to="/questionnaire">Find my trip</Link>
         </Button>
@@ -87,10 +155,22 @@ export default function SavedTrips() {
         Saved trips
       </h1>
 
+      {accountError && (
+        <div className="flex items-start gap-3 mb-4 text-sm text-destructive">
+          <AlertTriangle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+          <p>
+            Couldn't reach your account just now, so this may not include every trip you've saved
+            elsewhere. Showing what's available on this device.
+          </p>
+        </div>
+      )}
+
       <div className="flex items-start gap-3 mb-6 text-sm text-muted-foreground">
         <Plane className="w-5 h-5 text-muted-foreground flex-shrink-0 mt-0.5" />
         <p>
-          Saved trips stay on this browser and device. They are not synced to an account.
+          {isSignedIn
+            ? "Saved trips are synced to your account and available on any device you sign in on."
+            : "Saved trips stay on this browser and device. Create a free account to access them anywhere."}
         </p>
       </div>
 

@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { useAuth } from "@/lib/AuthContext";
+import { useAccountIdentity } from "@/lib/auth";
 import { migrateGuestTripsToAccount } from "@/lib/tripMigration";
 import { clearPendingEmailVerification } from "@/lib/storage";
 
@@ -13,6 +14,7 @@ import { clearPendingEmailVerification } from "@/lib/storage";
 // — a local trip is only ever deleted after the account write is confirmed.
 export default function TripMigrationEffect() {
   const { isAuthenticated, user } = useAuth();
+  const identity = useAccountIdentity();
   const ranForEmail = useRef(null);
 
   useEffect(() => {
@@ -20,7 +22,7 @@ export default function TripMigrationEffect() {
     if (ranForEmail.current === user.email) return;
     ranForEmail.current = user.email;
     clearPendingEmailVerification();
-    migrateGuestTripsToAccount({ email: user.email, stableId: user.id || user.email });
+    migrateGuestTripsToAccount(identity);
   }, [isAuthenticated, user]);
 
   return null;
