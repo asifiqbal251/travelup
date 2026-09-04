@@ -10,14 +10,22 @@ import AuthLayout from "@/components/AuthLayout";
 import GoogleIcon from "@/components/GoogleIcon";
 import { toast } from "@/components/ui/use-toast";
 import { safeReturnTo } from "@/lib/authReturnTo";
+import {
+  getPendingEmailVerification, setPendingEmailVerification, clearPendingEmailVerification
+} from "@/lib/storage";
 
 export default function Register() {
-  const [email, setEmail] = useState("");
+  // Resume mid-verification after a reload, a closed/reopened tab, or
+  // several minutes away checking email -- rather than dumping the user
+  // back at the signup form. The password is intentionally never persisted,
+  // so a resumed session has no password in memory (see handleVerify).
+  const [pendingVerification] = useState(() => getPendingEmailVerification());
+  const [email, setEmail] = useState(pendingVerification?.email || "");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [showOtp, setShowOtp] = useState(false);
+  const [showOtp, setShowOtp] = useState(!!pendingVerification);
   const [otpCode, setOtpCode] = useState("");
 
   const handleSubmit = async (e) => {
@@ -30,6 +38,7 @@ export default function Register() {
     setLoading(true);
     try {
       await base44.auth.register({ email, password });
+      setPendingEmailVerification(email);
       setShowOtp(true);
     } catch (err) {
       setError(err.message || "Registration failed");
@@ -43,9 +52,30 @@ export default function Register() {
     setLoading(true);
     try {
       const result = await base44.auth.verifyOtp({ email, otpCode });
-      if (result?.access_token) {
-        base44.auth.setToken(result.access_token);
+      let accessToken = result?.access_token;
+      // The SDK's own docs disagree on whether verifyOtp's response includes
+      // a token (one doc string says it does; its own worked example follows
+      // verifyOtp with a separate loginViaEmailPassword call, and the return
+      // type is untyped `Promise<any>`). Never assume a session exists --
+      // if no token came back and we still have the password in memory
+      // (this run, not a resumed one), log in explicitly instead.
+      if (!accessToken && password) {
+        const loginResult = await base44.auth.loginViaEmailPassword(email, password);
+        accessToken = loginResult?.access_token;
       }
+      if (!accessToken) {
+        // Verified, but no usable session and no password in memory to get
+        // one (a resumed-after-reload run has no password) -- send the now-
+        // verified user to log in normally rather than redirecting as if a
+        // session exists. The pending trip is untouched; TripMigrationEffect
+        // runs once login actually succeeds.
+        clearPendingEmailVerification();
+        window.location.href =
+          "/login?verified=1&returnTo=" + encodeURIComponent(safeReturnTo());
+        return;
+      }
+      base44.auth.setToken(accessToken);
+      clearPendingEmailVerification();
       window.location.href = safeReturnTo();
     } catch (err) {
       setError(err.message || "Invalid verification code");
@@ -76,7 +106,11 @@ export default function Register() {
       <AuthLayout
         icon={Mail}
         title="Verify your email"
-        subtitle={`We sent a code to ${email}`}
+        subtitle={
+          pendingVerification
+            ? `Enter the code we sent to ${email}, or resend a new one`
+            : `We sent a code to ${email}`
+        }
       >
         {error && (
           <div className="mb-4 p-3 rounded-lg bg-destructive/10 text-destructive text-sm">
@@ -102,7 +136,7 @@ export default function Register() {
           </InputOTP>
         </div>
         <Button
-          className="w-full h-12 font-medium"
+          className="wn-cta-coral w-full h-12 font-medium"
           onClick={handleVerify}
           disabled={loading || otpCode.length < 6}
         >
@@ -143,8 +177,7 @@ export default function Register() {
       }
     >
       <Button
-        variant="outline"
-        className="w-full h-12 text-sm font-medium mb-6"
+        className="wn-cta-coral w-full h-12 text-sm font-medium mb-6"
         onClick={handleGoogle}
       >
         <GoogleIcon className="w-5 h-5 mr-2" />
@@ -216,7 +249,7 @@ export default function Register() {
             />
           </div>
         </div>
-        <Button type="submit" className="w-full h-12 font-medium" disabled={loading}>
+        <Button type="submit" variant="outline" className="w-full h-12 font-medium" disabled={loading}>
           {loading ? (
             <>
               <Loader2 className="w-4 h-4 mr-2 animate-spin" />

@@ -1,0 +1,32 @@
+{
+  "name": "SavedTrip",
+  "type": "object",
+  "properties": {
+    "client_id": {
+      "type": "string",
+      "description": "The trip's own portable id, generated client-side (storage.js) at save time. Independent of the Base44 record id and of created_by, so the trip stays identifiable across an account migration or platform change."
+    },
+    "fingerprint": {
+      "type": "string",
+      "description": "Canonical trip fingerprint (storage.js tripFingerprint) -- the destination plus the preferences that define the itinerary."
+    },
+    "snapshot": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "The full immutable trip snapshot as built by storage.js buildTripSnapshot(), stored verbatim so a saved trip renders identically later even if scoring, itinerary, or destination data change."
+    },
+    "saved_at": {
+      "type": "string",
+      "description": "ISO timestamp the trip was first saved (snapshot.savedAt), preserved across edits."
+    },
+    "updated_at": {
+      "type": "string",
+      "description": "ISO timestamp of the most recent snapshot write (snapshot.updatedAt)."
+    }
+  },
+  "required": [
+    "client_id",
+    "fingerprint",
+    "snapshot"
+  ]
+}

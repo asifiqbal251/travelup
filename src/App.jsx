@@ -8,6 +8,7 @@ import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import ScrollToTop from './components/ScrollToTop';
 // Add page imports here
 import TravelUpLayout from '@/components/TravelUpLayout';
+import TripMigrationEffect from '@/components/TripMigrationEffect';
 import Landing from '@/pages/Landing';
 import Questionnaire from '@/pages/Questionnaire';
 import Results from '@/pages/Results';
@@ -15,6 +16,10 @@ import TripDetail from '@/pages/TripDetail';
 import About from '@/pages/About';
 import SavedTrips from '@/pages/SavedTrips';
 import SavedTripDetail from '@/pages/SavedTripDetail';
+import Login from '@/pages/Login';
+import Register from '@/pages/Register';
+import ForgotPassword from '@/pages/ForgotPassword';
+import OAuthConsent from '@/pages/OAuthConsent';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -41,19 +46,26 @@ const AuthenticatedApp = () => {
 
   // Render the main app
   return (
-    <Routes>
-      {/* Full-bleed immersive route -- no site chrome (see docs/travelfit-visual-fidelity-pass.md #1) */}
-      <Route path="/questionnaire" element={<Questionnaire />} />
-      <Route element={<TravelUpLayout />}>
-        <Route path="/" element={<Landing />} />
-        <Route path="/results" element={<Results />} />
-        <Route path="/trip" element={<TripDetail />} />
-        <Route path="/about" element={<About />} />
-        <Route path="/saved-trips" element={<SavedTrips />} />
-        <Route path="/saved-trips/:savedTripId" element={<SavedTripDetail />} />
-        <Route path="*" element={<PageNotFound />} />
-      </Route>
-    </Routes>
+    <>
+      <TripMigrationEffect />
+      <Routes>
+        {/* Full-bleed immersive routes -- no site chrome (see docs/travelfit-visual-fidelity-pass.md #1) */}
+        <Route path="/questionnaire" element={<Questionnaire />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/oauth/consent" element={<OAuthConsent />} />
+        <Route element={<TravelUpLayout />}>
+          <Route path="/" element={<Landing />} />
+          <Route path="/results" element={<Results />} />
+          <Route path="/trip" element={<TripDetail />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/saved-trips" element={<SavedTrips />} />
+          <Route path="/saved-trips/:savedTripId" element={<SavedTripDetail />} />
+          <Route path="*" element={<PageNotFound />} />
+        </Route>
+      </Routes>
+    </>
   );
 };
 

@@ -195,6 +195,34 @@ export function clearPendingTripSnapshot() {
   return persistState(s);
 }
 
+// ---- Pending email verification (OTP resumability) ----
+//
+// Base44 requires mandatory OTP verification for email/password accounts:
+// register() sends a code and does not create a session, so the user leaves
+// the app to find it and may return minutes later, in a new tab, or after a
+// full reload. Set right after register() succeeds; cleared once a session
+// is confirmed (see TripMigrationEffect) or verification completes. Lets
+// Register.jsx resume at the OTP-entry screen instead of dumping a
+// mid-verification user back at the signup form. Deliberately excludes the
+// password -- it never gets persisted to localStorage.
+
+export function getPendingEmailVerification() {
+  const v = loadState().pendingEmailVerification;
+  return v && typeof v === "object" && typeof v.email === "string" ? v : null;
+}
+
+export function setPendingEmailVerification(email) {
+  const s = loadState();
+  s.pendingEmailVerification = { email, startedAt: new Date().toISOString() };
+  return persistState(s);
+}
+
+export function clearPendingEmailVerification() {
+  const s = loadState();
+  delete s.pendingEmailVerification;
+  return persistState(s);
+}
+
 // ---- Guest soft-prompt dismissal ----
 //
 // Persisted so the "create an account" banner never re-appears once a guest

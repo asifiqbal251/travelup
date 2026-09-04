@@ -17,6 +17,11 @@ export default function Login() {
   // Post-login destination (e.g. the MCP OAuth consent page sends users here
   // with returnTo so the grant flow can resume). Same-origin paths only.
   const returnTo = safeReturnTo();
+  // Set when Register.jsx verifies an OTP code but has no in-memory password
+  // to complete sign-in itself (e.g. verification was resumed after a
+  // reload, so the password was never re-entered) -- the account is
+  // verified, it just needs a normal login rather than assuming a session.
+  const justVerified = new URLSearchParams(window.location.search).get("verified") === "1";
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -54,8 +59,7 @@ export default function Login() {
       }
     >
       <Button
-        variant="outline"
-        className="w-full h-12 text-sm font-medium mb-6"
+        className="wn-cta-coral w-full h-12 text-sm font-medium mb-6"
         onClick={handleGoogle}
       >
         <GoogleIcon className="w-5 h-5 mr-2" />
@@ -70,6 +74,12 @@ export default function Login() {
           <span className="bg-card px-3 text-muted-foreground">or</span>
         </div>
       </div>
+
+      {justVerified && !error && (
+        <div className="mb-4 p-3 rounded-lg bg-accent text-accent-foreground text-sm">
+          Email verified — log in below to continue.
+        </div>
+      )}
 
       {error && (
         <div className="mb-4 p-3 rounded-lg bg-destructive/10 text-destructive text-sm">
@@ -116,7 +126,7 @@ export default function Login() {
             />
           </div>
         </div>
-        <Button type="submit" className="w-full h-12 font-medium" disabled={loading}>
+        <Button type="submit" variant="outline" className="w-full h-12 font-medium" disabled={loading}>
           {loading ? (
             <>
               <Loader2 className="w-4 h-4 mr-2 animate-spin" />
