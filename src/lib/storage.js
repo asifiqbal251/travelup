@@ -118,13 +118,18 @@ export function tripFingerprint(prefs, destinationId) {
 // ---- Active-trip packing (keyed by fingerprint) ----
 
 // Normalize any packing state (new shape or legacy) to the canonical shape.
+// removedItemIds is additive (see docs/wherenova-profile-packing-brief.md
+// Feature 2): a generated packing item a user has deleted for this trip.
+// Absent on any packing state saved before this field existed -- defaults to
+// [] so old saves keep working with nothing treated as removed.
 function normalizePackingState(p) {
-  if (!p || typeof p !== "object") return { checkedItemIds: [], customItems: [] };
+  if (!p || typeof p !== "object") return { checkedItemIds: [], customItems: [], removedItemIds: [] };
   const checked = Array.isArray(p.checkedItemIds) ? p.checkedItemIds
     : Array.isArray(p.checked) ? p.checked : [];
   const custom = Array.isArray(p.customItems) ? p.customItems
     : Array.isArray(p.custom) ? p.custom : [];
-  return { checkedItemIds: [...checked], customItems: [...custom] };
+  const removed = Array.isArray(p.removedItemIds) ? p.removedItemIds : [];
+  return { checkedItemIds: [...checked], customItems: [...custom], removedItemIds: [...removed] };
 }
 
 export function getActiveTripPacking(fingerprint) {
@@ -141,14 +146,14 @@ export function getActiveTripPacking(fingerprint) {
 export function seedActiveTripPacking(fingerprint, legacyDestinationId) {
   const existing = getActiveTripPacking(fingerprint);
   if (existing) return existing;
-  if (!legacyDestinationId) return { checkedItemIds: [], customItems: [] };
+  if (!legacyDestinationId) return { checkedItemIds: [], customItems: [], removedItemIds: [] };
   const s = loadState();
   if (s.packing && s.packing[legacyDestinationId]) {
     const seeded = normalizePackingState(s.packing[legacyDestinationId]);
     setActiveTripPacking(fingerprint, seeded);
     return seeded;
   }
-  return { checkedItemIds: [], customItems: [] };
+  return { checkedItemIds: [], customItems: [], removedItemIds: [] };
 }
 
 export function setActiveTripPacking(fingerprint, packing) {
@@ -320,7 +325,8 @@ export function updateSavedTripPacking(id, packing) {
     packing: {
       ...(arr[idx].packing || {}),
       checkedItemIds: Array.isArray(packing.checkedItemIds) ? packing.checkedItemIds : [],
-      customItems: Array.isArray(packing.customItems) ? packing.customItems : []
+      customItems: Array.isArray(packing.customItems) ? packing.customItems : [],
+      removedItemIds: Array.isArray(packing.removedItemIds) ? packing.removedItemIds : []
     },
     updatedAt: new Date().toISOString()
   };
@@ -434,7 +440,8 @@ export function buildTripSnapshot({
     packing: {
       groups: packingGroups,
       checkedItemIds: (packingState && packingState.checkedItemIds) || [],
-      customItems: (packingState && packingState.customItems) || []
+      customItems: (packingState && packingState.customItems) || [],
+      removedItemIds: (packingState && packingState.removedItemIds) || []
     }
   };
 }

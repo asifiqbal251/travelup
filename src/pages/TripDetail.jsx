@@ -34,7 +34,7 @@ export default function TripDetail() {
   const [dest, setDest] = useState(null);
   const [prefs, setPrefsState] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [packingState, setPackingState] = useState({ checkedItemIds: [], customItems: [] });
+  const [packingState, setPackingState] = useState({ checkedItemIds: [], customItems: [], removedItemIds: [] });
   const [alreadySaved, setAlreadySaved] = useState(false);
   // The account's existing record for this trip's fingerprint, once known --
   // signed-in users save/replace directly against the account (see doSave/
@@ -121,7 +121,26 @@ export default function TripDetail() {
       customItems: packingState.customItems.filter((c) => c.id !== id)
     });
   };
-  const handleReset = () => persistPacking({ checkedItemIds: [], customItems: [] });
+  const handleReset = () => persistPacking({ checkedItemIds: [], customItems: [], removedItemIds: packingState.removedItemIds });
+  // Deleting a generated item is a soft-delete: it drops off the checked list
+  // (nothing to pack that no longer exists) and is filtered from the visible
+  // list, but the id itself persists so a later itinerary regeneration for
+  // the same trip never brings it back silently.
+  const handleDeleteItem = (id) => {
+    persistPacking({
+      ...packingState,
+      checkedItemIds: packingState.checkedItemIds.filter((x) => x !== id),
+      removedItemIds: packingState.removedItemIds.includes(id)
+        ? packingState.removedItemIds
+        : [...packingState.removedItemIds, id]
+    });
+  };
+  const handleRestoreItem = (id) => {
+    persistPacking({
+      ...packingState,
+      removedItemIds: packingState.removedItemIds.filter((x) => x !== id)
+    });
+  };
 
   const reportSaveResult = (res) => {
     if (res.ok) {
@@ -250,7 +269,9 @@ export default function TripDetail() {
               onToggle: handleToggle,
               onAdd: handleAdd,
               onRemove: handleRemove,
-              onReset: handleReset
+              onReset: handleReset,
+              onDelete: handleDeleteItem,
+              onRestore: handleRestoreItem
             }}
           />
         </div>

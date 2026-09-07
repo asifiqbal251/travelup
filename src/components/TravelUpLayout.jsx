@@ -1,12 +1,16 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, Outlet, useNavigate, useLocation } from "react-router-dom";
-import { Menu, Trash2, LogIn, LogOut } from "lucide-react";
+import { Menu, Trash2, LogIn, LogOut, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import WherenovaLogo from "@/components/WherenovaLogo";
 import {
   AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogFooter,
   AlertDialogTitle, AlertDialogDescription, AlertDialogAction, AlertDialogCancel
 } from "@/components/ui/alert-dialog";
+import {
+  DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem,
+  DropdownMenuLabel, DropdownMenuSeparator
+} from "@/components/ui/dropdown-menu";
 import { clearState } from "@/lib/storage";
 import { useAccountIdentity, beginGoogleSignIn, useSignOut } from "@/lib/auth";
 
@@ -20,7 +24,7 @@ const NAV_HEIGHT = 68;
 function navThemeFor(pathname) {
   if (pathname === "/trip" || /^\/saved-trips\/[^/]+$/.test(pathname)) return "hero";
   if (pathname === "/about") return "light";
-  if (pathname === "/" || pathname === "/results" || pathname === "/saved-trips") return "dark";
+  if (pathname === "/" || pathname === "/results" || pathname === "/saved-trips" || pathname === "/profile") return "dark";
   return "light";
 }
 
@@ -137,43 +141,53 @@ export default function TravelUpLayout() {
               <Link to="/about">About</Link>
             </Button>
             {isSignedIn ? (
-              <>
-                {email && (
-                  <span
-                    className={`hidden md:inline-block ml-2 max-w-[160px] truncate text-xs ${linkCls}`}
-                    title={email}
-                    aria-label={`Signed in as ${email}`}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    type="button"
+                    className={`ml-2 inline-flex items-center gap-1.5 h-9 px-3 rounded-lg text-xs font-medium motion-safe:transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-wn-cyan ${ringOffset} ${linkCls}`}
+                    aria-label="My profile"
                   >
-                    {email}
-                  </span>
-                )}
+                    <User className="w-3.5 h-3.5" /> My profile
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="min-w-[220px]">
+                  {email && (
+                    <>
+                      <DropdownMenuLabel className="font-normal text-xs text-muted-foreground truncate" title={email}>
+                        Signed in as {email}
+                      </DropdownMenuLabel>
+                      <DropdownMenuSeparator />
+                    </>
+                  )}
+                  <DropdownMenuItem asChild className="min-h-11 cursor-pointer">
+                    <Link to="/profile">Profile</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={openSignOut} className="min-h-11 cursor-pointer">
+                    <LogOut className="w-4 h-4 mr-2" /> Sign out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <>
                 <button
                   type="button"
-                  onClick={openSignOut}
-                  className={`inline-flex items-center gap-1.5 h-9 px-3 rounded-lg text-xs font-medium motion-safe:transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-wn-cyan ${ringOffset} ${linkCls}`}
-                  aria-label="Sign out"
+                  onClick={beginGoogleSignIn}
+                  className={`ml-2 inline-flex items-center gap-1.5 h-9 px-3 rounded-lg text-xs font-medium motion-safe:transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-wn-cyan ${ringOffset} ${linkCls}`}
+                  aria-label="Sign in"
                 >
-                  <LogOut className="w-3.5 h-3.5" /> Sign out
+                  <LogIn className="w-3.5 h-3.5" /> Sign in
+                </button>
+                <button
+                  type="button"
+                  onClick={openClear}
+                  className={`inline-flex items-center gap-1.5 h-9 px-3 rounded-lg text-xs font-medium motion-safe:transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-wn-cyan ${ringOffset} ${linkCls}`}
+                  aria-label="Clear my data"
+                >
+                  <Trash2 className="w-3.5 h-3.5" /> Clear my data
                 </button>
               </>
-            ) : (
-              <button
-                type="button"
-                onClick={beginGoogleSignIn}
-                className={`ml-2 inline-flex items-center gap-1.5 h-9 px-3 rounded-lg text-xs font-medium motion-safe:transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-wn-cyan ${ringOffset} ${linkCls}`}
-                aria-label="Sign in"
-              >
-                <LogIn className="w-3.5 h-3.5" /> Sign in
-              </button>
             )}
-            <button
-              type="button"
-              onClick={openClear}
-              className={`inline-flex items-center gap-1.5 h-9 px-3 rounded-lg text-xs font-medium motion-safe:transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-wn-cyan ${ringOffset} ${linkCls}`}
-              aria-label="Clear my data"
-            >
-              <Trash2 className="w-3.5 h-3.5" /> Clear my data
-            </button>
           </nav>
           <button
             className={`sm:hidden p-2 min-h-11 min-w-11 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-wn-cyan rounded ${ringOffset} ${iconTextCls}`}
@@ -209,8 +223,13 @@ export default function TravelUpLayout() {
                     Signed in as {email}
                   </p>
                 )}
+                <Button asChild variant="ghost" className={`hover:bg-transparent justify-start min-h-11 ${linkCls} focus-visible:!ring-wn-cyan ${ringOffset}`} onClick={close}>
+                  <Link to="/profile">
+                    <User className="w-4 h-4 mr-2" /> My profile
+                  </Link>
+                </Button>
                 <Button
-                  onClick={openSignOut}
+                  onClick={() => { close(); openSignOut(); }}
                   variant="ghost"
                   className={`hover:bg-transparent justify-start min-h-11 ${linkCls} focus-visible:!ring-wn-cyan ${ringOffset}`}
                 >
@@ -218,21 +237,23 @@ export default function TravelUpLayout() {
                 </Button>
               </>
             ) : (
-              <Button
-                onClick={() => { close(); beginGoogleSignIn(); }}
-                variant="ghost"
-                className={`hover:bg-transparent justify-start min-h-11 ${linkCls} focus-visible:!ring-wn-cyan ${ringOffset}`}
-              >
-                <LogIn className="w-4 h-4 mr-2" /> Sign in
-              </Button>
+              <>
+                <Button
+                  onClick={() => { close(); beginGoogleSignIn(); }}
+                  variant="ghost"
+                  className={`hover:bg-transparent justify-start min-h-11 ${linkCls} focus-visible:!ring-wn-cyan ${ringOffset}`}
+                >
+                  <LogIn className="w-4 h-4 mr-2" /> Sign in
+                </Button>
+                <Button
+                  onClick={() => { close(); openClear(); }}
+                  variant="ghost"
+                  className={`hover:bg-transparent justify-start min-h-11 ${linkCls} focus-visible:!ring-wn-cyan ${ringOffset}`}
+                >
+                  <Trash2 className="w-4 h-4 mr-2" /> Clear my data
+                </Button>
+              </>
             )}
-            <Button
-              onClick={() => { close(); openClear(); }}
-              variant="ghost"
-              className={`hover:bg-transparent justify-start min-h-11 ${linkCls} focus-visible:!ring-wn-cyan ${ringOffset}`}
-            >
-              <Trash2 className="w-4 h-4 mr-2" /> Clear my data
-            </Button>
           </div>
         )}
       </header>

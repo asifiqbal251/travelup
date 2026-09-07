@@ -16,6 +16,7 @@ import TripDetail from '@/pages/TripDetail';
 import About from '@/pages/About';
 import SavedTrips from '@/pages/SavedTrips';
 import SavedTripDetail from '@/pages/SavedTripDetail';
+import Profile from '@/pages/Profile';
 import Login from '@/pages/Login';
 import Register from '@/pages/Register';
 import ForgotPassword from '@/pages/ForgotPassword';
@@ -62,6 +63,7 @@ const AuthenticatedApp = () => {
           <Route path="/about" element={<About />} />
           <Route path="/saved-trips" element={<SavedTrips />} />
           <Route path="/saved-trips/:savedTripId" element={<SavedTripDetail />} />
+          <Route path="/profile" element={<Profile />} />
           <Route path="*" element={<PageNotFound />} />
         </Route>
       </Routes>

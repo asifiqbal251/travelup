@@ -12,6 +12,8 @@ import {
   AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogFooter,
   AlertDialogTitle, AlertDialogDescription, AlertDialogAction, AlertDialogCancel
 } from "@/components/ui/alert-dialog";
+import { toast } from "@/components/ui/use-toast";
+import { ToastAction } from "@/components/ui/toast";
 import TravelFit from "@/components/TravelFit";
 import TravelFitRing from "@/components/TravelFitRing";
 import DayCard from "@/components/DayCard";
@@ -19,7 +21,7 @@ import { TRAVEL_FALLBACK_IMAGE } from "@/lib/fallbackImage";
 import { nameWithCountry } from "@/lib/destinationLabel";
 import { flagForCountry } from "@/lib/countryFlag";
 import { BUDGET_ORDER } from "@/lib/options";
-import { Check, Plus, Trash2, RotateCcw, ArrowLeft, ShieldCheck, ExternalLink } from "lucide-react";
+import { Check, Plus, Trash2, X, RotateCcw, ArrowLeft, ShieldCheck, ExternalLink } from "lucide-react";
 
 // Single-entry arrays labelled "Emergency" are the common case (a unified
 // number) -- show just the number since the "Emergency" label is redundant
@@ -199,7 +201,8 @@ function PackingView({ groups, state, handlers }) {
   const [resetOpen, setResetOpen] = useState(false);
   const [newItem, setNewItem] = useState("");
   const [newCat, setNewCat] = useState((groups && groups[0] && groups[0].category) || "Optional items");
-  const { onToggle, onAdd, onRemove, onReset } = handlers || {};
+  const [showRemoved, setShowRemoved] = useState(false);
+  const { onToggle, onAdd, onRemove, onReset, onDelete, onRestore } = handlers || {};
 
   const addCustom = () => {
     const label = newItem.trim();
@@ -211,10 +214,39 @@ function PackingView({ groups, state, handlers }) {
 
   const checkedItemIds = (state && state.checkedItemIds) || [];
   const customItems = (state && state.customItems) || [];
+  const removedItemIds = (state && state.removedItemIds) || [];
   const isChecked = (id) => checkedItemIds.includes(id);
-  const totalItems = (groups || []).reduce((n, g) => n + g.items.length, 0) + customItems.length;
-  const done = checkedItemIds.length;
+  const isRemoved = (id) => removedItemIds.includes(id);
+
+  // Generated items removed for this trip are filtered out of the main list
+  // but kept discoverable in the "removed" drawer below -- the deletion list
+  // is applied as a filter on top of the (unfiltered) generated groups, so a
+  // regenerated itinerary with the same stable item ids never brings a
+  // deleted item back.
+  const allGeneratedItems = (groups || []).flatMap((g) => g.items);
+  const removedEntries = removedItemIds
+    .map((id) => allGeneratedItems.find((it) => it.id === id))
+    .filter(Boolean);
+  const visibleGroups = (groups || []).map((g) => ({
+    ...g,
+    items: g.items.filter((it) => !isRemoved(it.id))
+  }));
+
+  const totalItems = visibleGroups.reduce((n, g) => n + g.items.length, 0) + customItems.length;
+  const done = checkedItemIds.filter((id) => !isRemoved(id)).length;
   const progress = totalItems ? Math.round((done / totalItems) * 100) : 0;
+
+  const handleDelete = (id, label) => {
+    onDelete(id);
+    toast({
+      description: `"${label}" removed from your packing list`,
+      action: (
+        <ToastAction altText="Undo remove" onClick={() => onRestore(id)}>
+          Undo
+        </ToastAction>
+      )
+    });
+  };
 
   return (
     <div>
@@ -254,8 +286,9 @@ function PackingView({ groups, state, handlers }) {
       </div>
 
       <div className="space-y-6">
-        {(groups || []).map((group) => {
+        {visibleGroups.map((group) => {
           const customInCat = customItems.filter((c) => c.category === group.category);
+          if (group.items.length === 0 && customInCat.length === 0) return null;
           return (
             <div key={group.category}>
               <h3 className="font-display text-sm font-bold text-wn-text-l mb-3">{group.category}</h3>
@@ -267,6 +300,7 @@ function PackingView({ groups, state, handlers }) {
                     label={item.label}
                     checked={isChecked(item.id)}
                     onToggle={onToggle}
+                    onDelete={() => handleDelete(item.id, item.label)}
                   />
                 ))}
                 {customInCat.map((c) => (
@@ -286,6 +320,35 @@ function PackingView({ groups, state, handlers }) {
         })}
       </div>
 
+      {removedEntries.length > 0 && (
+        <div className="mt-6 pt-4 border-t border-wn-line-l">
+          <button
+            type="button"
+            onClick={() => setShowRemoved((v) => !v)}
+            aria-expanded={showRemoved}
+            className="text-xs font-medium text-wn-text-2-l hover:text-wn-text-l underline decoration-wn-line-2-l underline-offset-2 min-h-9 py-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-wn-cyan rounded"
+          >
+            {removedEntries.length} item{removedEntries.length === 1 ? "" : "s"} removed — {showRemoved ? "hide" : "show"}
+          </button>
+          {showRemoved && (
+            <ul className="mt-2 divide-y divide-wn-line-l">
+              {removedEntries.map((item) => (
+                <li key={item.id} className="flex items-center justify-between gap-3 py-2.5 min-h-11">
+                  <span className="text-sm text-wn-text-2-l">{item.label}</span>
+                  <button
+                    type="button"
+                    onClick={() => onRestore(item.id)}
+                    className="flex-shrink-0 text-xs font-semibold text-wn-text-l underline decoration-wn-line-2-l underline-offset-2 min-h-9 px-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-wn-cyan rounded"
+                  >
+                    Add back
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
+
       <AlertDialog open={resetOpen} onOpenChange={setResetOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -304,7 +367,7 @@ function PackingView({ groups, state, handlers }) {
   );
 }
 
-function PackingRow({ id, label, checked, onToggle, custom, onRemove }) {
+function PackingRow({ id, label, checked, onToggle, custom, onRemove, onDelete }) {
   return (
     <li className="flex items-center gap-3 py-3 min-h-11">
       <button
@@ -328,6 +391,15 @@ function PackingRow({ id, label, checked, onToggle, custom, onRemove }) {
           className="text-wn-text-2-l hover:text-destructive p-1 min-h-9 min-w-9"
         >
           <Trash2 className="w-4 h-4" />
+        </button>
+      )}
+      {!custom && onDelete && (
+        <button
+          onClick={onDelete}
+          aria-label={`Remove ${label} from packing list`}
+          className="flex-shrink-0 flex items-center justify-center min-h-11 min-w-11 rounded-full text-wn-text-3-l hover:text-destructive hover:bg-wn-surface-2-l focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-wn-cyan"
+        >
+          <X className="w-4 h-4" />
         </button>
       )}
     </li>

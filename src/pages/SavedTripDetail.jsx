@@ -89,7 +89,8 @@ export default function SavedTripDetail() {
   const display = normalizeDestinationDisplay(trip.destination);
   const packingState = {
     checkedItemIds: (trip.packing && trip.packing.checkedItemIds) || [],
-    customItems: (trip.packing && trip.packing.customItems) || []
+    customItems: (trip.packing && trip.packing.customItems) || [],
+    removedItemIds: (trip.packing && trip.packing.removedItemIds) || []
   };
   const packingGroups = (trip.packing && trip.packing.groups) || [];
 
@@ -103,7 +104,8 @@ export default function SavedTripDetail() {
         packing: {
           ...(snapshot.packing || {}),
           checkedItemIds: Array.isArray(next.checkedItemIds) ? next.checkedItemIds : [],
-          customItems: Array.isArray(next.customItems) ? next.customItems : []
+          customItems: Array.isArray(next.customItems) ? next.customItems : [],
+          removedItemIds: Array.isArray(next.removedItemIds) ? next.removedItemIds : []
         },
         updatedAt: new Date().toISOString()
       };
@@ -144,7 +146,22 @@ export default function SavedTripDetail() {
       customItems: packingState.customItems.filter((c) => c.id !== id)
     });
   };
-  const handleReset = () => persistPacking({ checkedItemIds: [], customItems: [] });
+  const handleReset = () => persistPacking({ checkedItemIds: [], customItems: [], removedItemIds: packingState.removedItemIds });
+  const handleDeleteItem = (id) => {
+    persistPacking({
+      ...packingState,
+      checkedItemIds: packingState.checkedItemIds.filter((x) => x !== id),
+      removedItemIds: packingState.removedItemIds.includes(id)
+        ? packingState.removedItemIds
+        : [...packingState.removedItemIds, id]
+    });
+  };
+  const handleRestoreItem = (id) => {
+    persistPacking({
+      ...packingState,
+      removedItemIds: packingState.removedItemIds.filter((x) => x !== id)
+    });
+  };
 
   const confirmDelete = async () => {
     setDeleteOpen(false);
@@ -182,7 +199,9 @@ export default function SavedTripDetail() {
               onToggle: handleToggle,
               onAdd: handleAdd,
               onRemove: handleRemove,
-              onReset: handleReset
+              onReset: handleReset,
+              onDelete: handleDeleteItem,
+              onRestore: handleRestoreItem
             }}
           />
         </div>
