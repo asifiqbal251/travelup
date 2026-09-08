@@ -444,7 +444,7 @@ function TripBudget({ display, travelFit }) {
         ))}
       </dl>
       <p className="text-xs text-wn-text-2-l mt-3 pt-3 border-t border-wn-line-l">
-        Per-person daily estimate{days != null ? ` for ${days} day${days === 1 ? "" : "s"} at the destination` : ""} —
+        Per-person daily estimate in USD{days != null ? ` for ${days} day${days === 1 ? "" : "s"} at the destination` : ""} —
         accommodation, food, local transport and activities. <span className="font-semibold text-wn-text-l">Flights are not included.</span>
       </p>
     </section>

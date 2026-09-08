@@ -203,8 +203,8 @@ export default function TravelUpLayout() {
             className="sm:hidden px-4 pb-4 pt-2 flex flex-col gap-1"
             style={
               surface === "light"
-                ? { background: "rgba(246, 249, 252, .95)", borderTop: "1px solid rgb(var(--wn-line-l))" }
-                : { background: "rgba(8, 20, 40, .95)", borderTop: "1px solid var(--wn-line)" }
+                ? { background: "rgb(246, 249, 252)", borderTop: "1px solid rgb(var(--wn-line-l))" }
+                : { background: "rgb(8, 20, 40)", borderTop: "1px solid var(--wn-line)" }
             }
           >
             <Button asChild variant="ghost" className={`hover:bg-transparent justify-start min-h-11 ${linkCls} focus-visible:!ring-wn-cyan ${ringOffset}`} onClick={close}>
@@ -218,11 +218,6 @@ export default function TravelUpLayout() {
             </Button>
             {isSignedIn ? (
               <>
-                {email && (
-                  <p className={`px-3 pt-1 text-xs truncate ${linkCls}`} title={email} aria-label={`Signed in as ${email}`}>
-                    Signed in as {email}
-                  </p>
-                )}
                 <Button asChild variant="ghost" className={`hover:bg-transparent justify-start min-h-11 ${linkCls} focus-visible:!ring-wn-cyan ${ringOffset}`} onClick={close}>
                   <Link to="/profile">
                     <User className="w-4 h-4 mr-2" /> My profile
