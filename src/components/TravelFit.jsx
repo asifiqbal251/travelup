@@ -16,7 +16,7 @@ export default function TravelFit({ prac, prefs, notes }) {
   const badge = BADGE[prac.level] || BADGE.Practical;
   const rounded = roundedTravelHours(prac.oneWayHours);
   const mode = normalizeMode(prac.travelMode);
-  const eachWay = `About ${rounded} hour${rounded === 1 ? "" : "s"} each way`;
+  const eachWay = `About ${rounded} hour${rounded === 1 ? "" : "s"} door-to-door each way`;
   const timeThere = `About ${prac.usableDestinationDays} day${prac.usableDestinationDays === 1 ? "" : "s"}`;
 
   // Transportation guidance rows, integrated into the same "getting there"

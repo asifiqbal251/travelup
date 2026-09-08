@@ -1,6 +1,6 @@
 // Deterministic, destination-specific travel-practicality assessment.
 // One-way door-to-door time = flight-time band + airport/immigration overhead +
-// expected connection time + curated internal-access (onward ground) time.
+// distance-derived connection burden + curated internal-access (onward ground) time.
 // Regional-route overrides (driving, ferry, train, shuttle) replace the flight
 // estimate with a complete curated journey time for nearby destinations.
 // Practicality is based on the share of the total trip consumed by round-trip
@@ -127,11 +127,15 @@ export function assessPracticality(dest, prefs) {
     !!dest &&
     String(prefs.residenceCountry).toLowerCase().trim() ===
       String(dest.country).toLowerCase().trim();
-  // connection_hours and internal_access_penalty model the burden of reaching
-  // the destination from an international gateway. A domestic traveller reaches
-  // the destination directly, so these do not apply.
+  // internal_access_penalty models the onward ground transfer from the
+  // international gateway to the destination itself. A domestic traveller
+  // reaches the destination directly, so it does not apply.
+  //
+  // dest.connection_hours is intentionally not used: it's a flat, origin-blind
+  // guess at flight-connection burden, which connectionBurden(distanceKm)
+  // below already models per-origin. Adding both double-counts connection
+  // time whenever the real route is a nonstop the distance formula got right.
   const internalAccess = isDomestic ? 0 : Number((dest && dest.internal_access_penalty) || 0);
-  const connectionHours = isDomestic ? 0 : Number((dest && dest.connection_hours) || 0);
 
   let distanceKm = null;
   let baseHours;
@@ -149,7 +153,7 @@ export function assessPracticality(dest, prefs) {
 
   const overhead = isDomestic ? DOMESTIC_OVERHEAD : INTERNATIONAL_OVERHEAD;
   const routeConnection = distanceKm != null ? connectionBurden(distanceKm) : 4;
-  const oneWayHours = baseHours + overhead + connectionHours + routeConnection + internalAccess;
+  const oneWayHours = baseHours + overhead + routeConnection + internalAccess;
   const roundTripHours = oneWayHours * 2;
 
   const tripDays = Number((prefs && prefs.travelDays) || 0);

@@ -192,7 +192,7 @@ export default function DestinationPreviewDialog({
                       <div className="flex items-center gap-3">
                         <span className="inline-flex items-center gap-1 whitespace-nowrap">
                           <Clock className="w-3 h-3" />
-                          {roundedTravelHours(prac.oneWayHours)}h each way
+                          {roundedTravelHours(prac.oneWayHours)}h door-to-door each way
                         </span>
                         <span className="inline-flex items-center gap-1 whitespace-nowrap">
                           <Gauge className="w-3 h-3" />
