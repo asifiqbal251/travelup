@@ -110,7 +110,7 @@ export default function Results() {
                 ? "Your top match"
                 : `Your top ${top.length} matches`}
             </h1>
-            <p className="text-wn-text-2 max-w-[52ch] text-base">
+            <p className="text-wn-text-2 max-w-[46ch] lg:max-w-none text-base">
               Scored on how well each place fits you, and how practical it is for {prefs.travelDays} days.
             </p>
           </div>
