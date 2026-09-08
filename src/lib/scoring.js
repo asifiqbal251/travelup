@@ -294,9 +294,9 @@ export function buildReasons(dest, prefs, result) {
     reasons.push("Enjoyable in your chosen month");
   }
   if (result.breakdown.budget >= 15) {
-    reasons.push("Fits your selected budget level");
+    reasons.push("Daily costs on the ground fit your budget");
   } else if (result.breakdown.budget >= 8) {
-    reasons.push(`Close to your ${prefs.budget.toLowerCase()} budget`);
+    reasons.push(`On-the-ground costs close to your ${prefs.budget.toLowerCase()} budget`);
   }
   if (result.breakdown.length >= 15) {
     reasons.push(`Ideal for ${prefs.travelDays} total days`);

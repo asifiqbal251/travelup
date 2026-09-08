@@ -39,6 +39,7 @@ export default function Results() {
   const [allDestinations, setAllDestinations] = useState([]);
   const [prefs, setPrefsState] = useState(null);
   const [error, setError] = useState("");
+  const [showMore, setShowMore] = useState(false);
 
   useEffect(() => {
     const p = getPrefs();
@@ -85,6 +86,7 @@ export default function Results() {
   }
 
   const top = ranked.slice(0, 3);
+  const more = ranked.slice(3, 6);
   const withPills = withDedupedPills(top, prefs);
   const suggestions = buildSuggestions(ranked, prefs);
   const lowScore = top.some((r) => r.result.finalScore < 50);
@@ -189,6 +191,33 @@ export default function Results() {
                 {withPills.slice(1).map(({ dest, result, pills }) => (
                   <MatchCard key={dest.id} dest={dest} result={result} pills={pills} onSelect={selectDest} />
                 ))}
+              </div>
+            )}
+
+            {more.length > 0 && (
+              <div className="pt-3">
+                {!showMore ? (
+                  <div className="flex justify-center">
+                    <button
+                      type="button"
+                      onClick={() => setShowMore(true)}
+                      className="inline-flex items-center gap-1.5 text-[14px] font-medium text-wn-text-2 hover:text-wn-text rounded-lg px-4 py-2.5 ring-1 ring-wn-line-2 hover:ring-wn-cyan focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-wn-cyan"
+                    >
+                      More options <ChevronDown className="w-4 h-4" />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="border-t border-wn-line pt-6">
+                    <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-wn-text-3 mb-4">
+                      More options
+                    </p>
+                    <div className={`grid gap-5 ${more.length > 1 ? "sm:grid-cols-2 lg:grid-cols-3" : "sm:max-w-sm"}`}>
+                      {more.map(({ dest, result }) => (
+                        <AltMatchCard key={dest.id} dest={dest} result={result} onSelect={selectDest} />
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -360,6 +389,54 @@ function HeroMatchCard({ dest, result, pills, onSelect }) {
 
         <Button onClick={() => onSelect(dest.id)} className="self-start wn-cta-dark min-h-12 px-8">
           View my trip <ArrowRight className="w-4 h-4 ml-2" />
+        </Button>
+      </div>
+    </article>
+  );
+}
+
+// ---- Item 3: ranks 4-6, visually secondary to the top three (smaller card,
+// no score breakdown, no "Best fit" language, outline CTA instead of the
+// primary teal gradient) ----
+
+function AltMatchCard({ dest, result, onSelect }) {
+  const prac = result.practicality;
+  return (
+    <article className="flex flex-col rounded-xl bg-wn-surface ring-1 ring-wn-line overflow-hidden">
+      <div className="relative aspect-[16/10]">
+        <Image
+          src={dest.image_url}
+          alt={nameWithCountry(dest.name, dest.country)}
+          fittingType="fill"
+          fallbackSrc={TRAVEL_FALLBACK_IMAGE}
+          className="w-full h-full"
+        />
+        <span
+          className="absolute inset-0"
+          style={{ background: "linear-gradient(180deg, rgba(8,20,40,0) 45%, rgba(8,20,40,.85) 100%)" }}
+        />
+        <span className="absolute top-2.5 right-2.5" aria-hidden="true">
+          <TravelFitRing score={result.finalScore} size="md" />
+        </span>
+        <div className="absolute inset-x-0 bottom-0 p-3.5">
+          <h3 className="font-display font-bold text-white text-[16px] leading-tight">{dest.name}</h3>
+          <p className="flex items-center gap-1.5 mt-1 text-[12px]" style={{ color: "rgba(255,255,255,.8)" }}>
+            {flagForCountry(dest.country) && <span aria-hidden="true">{flagForCountry(dest.country)}</span>}
+            {dest.country}
+          </p>
+        </div>
+      </div>
+      <div className="p-3.5 flex items-center justify-between gap-3">
+        <p className="text-[13px] text-wn-text-2">
+          {roundedTravelHours(prac.oneWayHours)}h travel · {prac.usableDestinationDays}d on the ground
+        </p>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => onSelect(dest.id)}
+          className="flex-shrink-0 border-wn-line-2 bg-transparent text-wn-text hover:bg-wn-surface-2"
+        >
+          View trip
         </Button>
       </div>
     </article>
