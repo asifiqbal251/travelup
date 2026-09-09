@@ -58,11 +58,32 @@ function levelAndMessage(travelShare) {
   return { level: "Poor practical fit", message: "A large share of this trip would be spent travelling." };
 }
 
-function penaltyFor(travelShare) {
-  if (travelShare <= 0.2) return 0;
-  if (travelShare <= 0.3) return ((travelShare - 0.2) / 0.1) * 10;
-  if (travelShare <= 0.45) return 10 + ((travelShare - 0.3) / 0.15) * 20;
-  return Math.min(50, 30 + ((travelShare - 0.45) / 0.25) * 20);
+// Absolute one-way travel hours as the primary driver, modified (softened,
+// never eliminated) by trip length. Below PENALTY_FLOOR_HOURS, travel is
+// genuinely free; above it, the penalty grows continuously and saturates at
+// PENALTY_MAX by PENALTY_HOURS_CAP -- a ceiling reachable by real long-haul
+// routes in the catalogue, unlike the old travel-share cap which needed an
+// unreachable ~85% travel share. Trip length only softens the penalty: even
+// at PENALTY_LENGTH_REF_DAYS+ it still pays PENALTY_LENGTH_FLOOR of the
+// unmodified amount, so a long flight is never free just because the trip is
+// long.
+const PENALTY_FLOOR_HOURS = 3.5;
+const PENALTY_HOURS_CAP = 24;
+const PENALTY_MAX = 38;
+const PENALTY_LENGTH_FLOOR = 0.62;
+const PENALTY_LENGTH_REF_DAYS = 14;
+const PENALTY_LENGTH_MIN_DAYS = 3;
+
+function penaltyFor(oneWayHours, tripDays) {
+  const shape =
+    oneWayHours <= PENALTY_FLOOR_HOURS
+      ? 0
+      : Math.min(1, (oneWayHours - PENALTY_FLOOR_HOURS) / (PENALTY_HOURS_CAP - PENALTY_FLOOR_HOURS));
+  const clampedDays = Math.max(PENALTY_LENGTH_MIN_DAYS, Math.min(PENALTY_LENGTH_REF_DAYS, tripDays));
+  const lengthFactor =
+    (PENALTY_LENGTH_REF_DAYS - clampedDays) / (PENALTY_LENGTH_REF_DAYS - PENALTY_LENGTH_MIN_DAYS);
+  const modifier = PENALTY_LENGTH_FLOOR + (1 - PENALTY_LENGTH_FLOOR) * lengthFactor;
+  return PENALTY_MAX * shape * modifier;
 }
 
 // Override path: the curated one-way time already includes the full transport
@@ -75,7 +96,7 @@ function assessOverride(dest, prefs, override) {
   const tripHours = tripDays * 24;
   const travelShare = tripHours > 0 ? roundTripHours / tripHours : 0;
   const { level, message } = levelAndMessage(travelShare);
-  const penalty = penaltyFor(travelShare);
+  const penalty = penaltyFor(oneWayHours, tripDays);
 
   // Destination time = total days − (round-trip hours ÷ 24), rounded to the
   // nearest half day, never more than the total trip duration.
@@ -160,7 +181,7 @@ export function assessPracticality(dest, prefs) {
   const tripHours = tripDays * 24;
   const travelShare = tripHours > 0 ? roundTripHours / tripHours : 0;
   const { level, message } = levelAndMessage(travelShare);
-  const penalty = penaltyFor(travelShare);
+  const penalty = penaltyFor(oneWayHours, tripDays);
 
   // One source of truth for "time at destination": derive it from the SAME
   // travel-day allocation the itinerary uses, so the Travel Fit value agrees
