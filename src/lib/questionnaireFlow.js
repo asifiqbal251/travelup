@@ -5,11 +5,31 @@
 // Presentation only — every answer maps to the SAME controlled vocabulary the
 // scoring engine already consumes (src/lib/options.js, src/lib/scoring.js).
 // "No preference" maps to the literal "No preference" the engine already
-// recognises (climate -> full climate points; pace/activity/budget -> neutral,
-// since the engine treats an off-scale value as no contribution). No formula or
-// vocabulary changes.
+// recognises and awards full credit for on every scale question, budget
+// included (scoring.js). Budget is the one field here with no fixed option
+// list: it's a numeric dollars/day figure, not a key into QUESTIONS options
+// (see buildBudgetValue / hydrateBudget below).
 
 import { MONTHS } from "@/lib/options";
+
+// Slider stops for the budget question, USD/day, excluding flights. Dense
+// where the catalogue's daily_cost_low/mid/high figures actually cluster
+// ($65-$200 -- see docs/wherenova-numeric-budget-stage1-brief.md Step 1.5),
+// sparse at the extremes. The last stop is a "500+" ceiling: the scoring
+// model (scoring.js) already gives full marks to anything at or above a
+// destination's daily_cost_mid, so nothing above $500 needs its own stop.
+export const BUDGET_STOPS = [20, 30, 40, 50, 65, 80, 100, 125, 150, 200, 250, 300, 400, 500];
+
+// One-time migration anchors for a returning user's pre-numeric ordinal
+// budget tier (see hydrateBudget). Chosen to sit inside each old tier's
+// typical daily_cost_mid band from the catalogue, not derived from any
+// single destination.
+const LEGACY_BUDGET_ANCHORS = {
+  Budget: 40,
+  Moderate: 90,
+  Comfortable: 160,
+  Premium: 280,
+};
 
 // --- Question definitions -------------------------------------------------
 
@@ -71,17 +91,15 @@ export const QUESTIONS = [
   {
     id: "budget",
     field: "budget",
-    type: "single",
+    type: "budget",
     eyebrow: "Budget",
     noPref: true,
-    title: "What are you spending?",
-    options: [
-      { key: "budget", label: "Budget", value: "Budget" },
-      { key: "moderate", label: "Moderate", value: "Moderate" },
-      { key: "comfortable", label: "Comfortable", value: "Comfortable" },
-      { key: "premium", label: "Premium", value: "Premium" },
-      { key: "no-pref", label: "No preference", value: "No preference", noPref: true },
-    ],
+    title: "What's your daily budget?",
+    hint: "Not counting flights — just what you'd spend once you're there: hotels, food, getting around, activities.",
+    // Non-uniform stops: dense where the catalogue's daily_cost figures
+    // actually cluster ($65-$200), sparse at the extremes. The last stop is
+    // a "500+" ceiling, not a hard cap on spend -- see BUDGET_STOPS below.
+    budgetStops: BUDGET_STOPS,
   },
   {
     id: "climate",
@@ -251,6 +269,34 @@ function findLabel(question, key) {
   return opt ? opt.label : "";
 }
 
+// Budget's answer-state shape: a number (dollars/day), the literal string
+// "no-pref", or "" (unset) -- there's no fixed option list to key into, so it
+// gets its own hydrate/build pair instead of findKey/findValue.
+//
+// Translates a stored prefs.budget into the questionnaire's answer-state
+// shape. Three cases: already numeric (nothing to do), the current
+// "No preference" sentinel, or a legacy ordinal tier ("Budget" / "Moderate" /
+// "Comfortable" / "Premium") from before this change -- one-time-translated
+// via LEGACY_BUDGET_ANCHORS so a returning user resumes with a real slider
+// value instead of the question silently reverting to unanswered.
+function hydrateBudget(value) {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (value === "No preference") return "no-pref";
+  if (typeof value === "string" && LEGACY_BUDGET_ANCHORS[value] != null) {
+    return LEGACY_BUDGET_ANCHORS[value];
+  }
+  return "";
+}
+
+// Inverse of hydrateBudget for buildPrefs. Returns undefined (not "") for
+// "unset" so isReturningPrefs's `prefs.budget != null` check (see
+// discoveryCollections.js) treats it correctly as no signal.
+function buildBudgetValue(value) {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (value === "no-pref") return "No preference";
+  return undefined;
+}
+
 // Hydrate answers from stored prefs (returning users). Best-effort reverse
 // mapping via findKey (matches stored value back to its option key).
 export function hydrateAnswers(prefs) {
@@ -262,7 +308,7 @@ export function hydrateAnswers(prefs) {
     travelMonth: prefs.travelMonth || "",
     travellerType: findKey(byId("traveller"), prefs.travellerType),
     interests: (prefs.interests || []).map((v) => findKey(byId("interests"), v)).filter(Boolean),
-    budget: findKey(byId("budget"), prefs.budget),
+    budget: hydrateBudget(prefs.budget),
     climate: findKey(byId("climate"), prefs.climate),
     pace: findKey(byId("pace"), prefs.pace),
     activity: findKey(byId("activity"), prefs.activity),
@@ -276,6 +322,7 @@ export function isAnswered(qIndex, answers) {
     case "days": return typeof answers.travelDays === "number";
     case "months": return !!answers.travelMonth;
     case "single": return !!answers[q.field];
+    case "budget": return typeof answers.budget === "number" || answers.budget === "no-pref";
     case "multi": return (answers.interests || []).length > 0;
     default: return false;
   }
@@ -295,7 +342,7 @@ export function buildPrefs(answers) {
     travelMonth: answers.travelMonth || "",
     travelDays: answers.travelDays,
     travellerType: findValue(byId("traveller"), answers.travellerType),
-    budget: findValue(byId("budget"), answers.budget),
+    budget: buildBudgetValue(answers.budget),
     interests: (answers.interests || []).map((k) => findValue(byId("interests"), k)).filter(Boolean),
     climate: findValue(byId("climate"), answers.climate),
     pace: findValue(byId("pace"), answers.pace),
@@ -318,6 +365,10 @@ export function answerSummary(qIndex, answers) {
         ? "Flexible"
         : MONTHS[Number(answers.travelMonth) - 1];
     case "single": return findLabel(q, answers[q.field]) || "—";
+    case "budget":
+      if (answers.budget === "no-pref") return "No preference";
+      if (typeof answers.budget === "number") return `$${answers.budget}/day`;
+      return "—";
     case "multi":
       return (answers.interests || []).map((k) => findLabel(QUESTIONS[4], k)).join(", ") || "—";
     default: return "—";

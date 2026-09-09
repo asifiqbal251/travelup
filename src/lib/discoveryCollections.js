@@ -80,7 +80,7 @@ export function isReturningPrefs(prefs) {
   const hasCity = !!prefs.departureCity && String(prefs.departureCity).trim() !== "";
   const hasDays = Number.isFinite(Number(prefs.travelDays));
   const hasInterests = Array.isArray(prefs.interests) && prefs.interests.length > 0;
-  return !!prefs.residenceCountry && hasCity && hasDays && !!prefs.budget && hasInterests;
+  return !!prefs.residenceCountry && hasCity && hasDays && prefs.budget != null && hasInterests;
 }
 
 // Compact context line for the returning strip, e.g.

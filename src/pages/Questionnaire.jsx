@@ -194,6 +194,15 @@ export default function Questionnaire() {
     setField("departureCity", city);
     scheduleAdvance(300);
   };
+  const onBudget = (qIndex, value) => {
+    setField(QUESTIONS[qIndex].field, value);
+    const qs = screenQuestions(current);
+    const complete = qs.every((qi) => qi === qIndex || isAnswered(qi, answers));
+    // Slider drags fire onChange repeatedly; scheduleAdvance's clearAdvance()
+    // means only the LAST call in a drag actually starts the timer, so this
+    // only advances once the user has settled on a value.
+    if (complete) scheduleAdvance(value === "no-pref" ? 0 : 550);
+  };
   const onText = (v) => setField("departureCity", v);
   const onTextEnter = () => {
     if (String(answers.departureCity || "").trim()) scheduleAdvance(300);
@@ -331,6 +340,7 @@ export default function Questionnaire() {
                 onChip={onChip}
                 onText={onText}
                 onTextEnter={onTextEnter}
+                onBudget={onBudget}
               />
             ))
           )}

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { MONTHS } from "@/lib/options";
@@ -28,6 +28,7 @@ export default function QuestionView({
   onChip,
   onText,
   onTextEnter,
+  onBudget,
 }) {
   const q = QUESTIONS[qIndex];
 
@@ -57,6 +58,9 @@ export default function QuestionView({
         {q.type === "months" && <MonthGrid value={answers.travelMonth} onMonth={onMonth} />}
         {q.type === "single" && (
           <SingleGroup q={q} qIndex={qIndex} answers={answers} onSingle={onSingle} />
+        )}
+        {q.type === "budget" && (
+          <BudgetSlider q={q} qIndex={qIndex} answers={answers} onBudget={onBudget} />
         )}
         {q.type === "multi" && (
           <MultiGroup q={q} answers={answers} onToggle={onMultiToggle} />
@@ -167,6 +171,92 @@ function MonthGrid({ value, onMonth }) {
   );
 }
 
+// Budget (Q6) — a stepped slider over non-uniform dollar stops (see
+// BUDGET_STOPS in questionnaireFlow.js), replacing the old 4-tier segmented
+// control (which clipped "Premium" to "Pr" at 320px -- a single native
+// range input has no equivalent problem at any width, since it has no text
+// cells to clip). Local `localIdx` decouples the visual thumb position from
+// the committed answer: the slider needs *some* position to render before
+// the user has touched it, but touching it is what actually answers the
+// question (unlike DayScroller, where every position is already a valid,
+// pre-answered default).
+function BudgetSlider({ q, qIndex, answers, onBudget }) {
+  const stops = q.budgetStops;
+  const defaultIdx = Math.min(7, stops.length - 1); // ~$125, a neutral starting point
+  const committed = typeof answers.budget === "number" ? answers.budget : null;
+  const noPref = answers.budget === "no-pref";
+
+  const [localIdx, setLocalIdx] = useState(() => {
+    const i = committed != null ? stops.indexOf(committed) : -1;
+    return i >= 0 ? i : defaultIdx;
+  });
+
+  useEffect(() => {
+    if (committed != null) {
+      const i = stops.indexOf(committed);
+      if (i >= 0) setLocalIdx(i);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [committed]);
+
+  const dollars = stops[localIdx];
+  const isTop = localIdx === stops.length - 1;
+  const travelDays = answers.travelDays;
+  const hasTotal = committed != null && typeof travelDays === "number";
+
+  const commit = (idx) => {
+    setLocalIdx(idx);
+    onBudget(qIndex, stops[idx]);
+  };
+
+  return (
+    <div className="mx-auto max-w-[420px]">
+      <div className={cn("motion-safe:transition-opacity", noPref && "opacity-40")}>
+        <div className="text-center">
+          <span className="text-[40px] font-display font-extrabold tracking-[-0.02em] text-wn-text tabular-nums">
+            ${dollars}
+            {isTop && "+"}
+          </span>
+          <span className="ml-1 text-[15px] text-wn-text-2">/day</span>
+        </div>
+        <input
+          type="range"
+          min={0}
+          max={stops.length - 1}
+          step={1}
+          value={localIdx}
+          onChange={(e) => commit(Number(e.target.value))}
+          aria-label="Daily budget in US dollars, not counting flights"
+          className="mt-4 w-full h-2 rounded-full bg-wn-surface-2 accent-wn-cyan cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-wn-cyan"
+        />
+        <div className="flex justify-between mt-2 text-sm text-wn-text-3 tabular-nums">
+          <span>${stops[0]}</span>
+          <span>${stops[stops.length - 1]}+</span>
+        </div>
+        <div className="mt-3 min-h-[20px] text-center text-[14px] text-wn-text-2 tabular-nums">
+          {hasTotal
+            ? `About $${dollars * travelDays} for your ${travelDays} day${travelDays === 1 ? "" : "s"}`
+            : " "}
+        </div>
+      </div>
+      {q.noPref && (
+        <div className="text-center">
+          <button
+            type="button"
+            onClick={() => onBudget(qIndex, "no-pref")}
+            className={cn(
+              "mt-2 min-h-11 inline-flex items-center px-1 text-[15px] underline underline-offset-4 rounded focus:outline-none focus:ring-2 focus:ring-wn-cyan",
+              noPref ? "text-wn-cyan" : "text-wn-text-2 hover:text-wn-text"
+            )}
+          >
+            No preference
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // Pace/Activity (Q8/Q9) carry a one-line example under each option so the
 // two questions read as clearly different things (a tester couldn't tell
 // them apart -- see docs/wherenova-pace-activity-brief.md). A segmented
@@ -174,8 +264,9 @@ function MonthGrid({ value, onMonth }) {
 // equal columns in ~288px), so these two render as a full-width stacked
 // list instead. Detected via `option.description` presence rather than a
 // separate id allowlist, mirroring how `noPref` already flags "this is a
-// scale question" below -- Budget/Climate carry no descriptions and keep
-// the segmented control untouched.
+// scale question" below -- Climate carries no descriptions and keeps
+// the segmented control untouched (Budget is its own slider, see
+// BudgetSlider above).
 function DescriptiveOptionList({ q, qIndex, answers, onSingle }) {
   const selected = answers[q.field];
   const opts = q.options.filter((o) => !o.noPref);
@@ -230,9 +321,11 @@ function DescriptiveOptionList({ q, qIndex, answers, onSingle }) {
   );
 }
 
-// Q6-9 (Budget/Climate/Pace/Activity) use a segmented control instead of
-// loose chips: one bordered container, equal-width cells, divided by
-// hairlines. All four of these questions carry noPref -- that's already a
+// Q7-9 (Climate/Pace/Activity) use a segmented control instead of loose
+// chips: one bordered container, equal-width cells, divided by hairlines.
+// (Budget/Q6 used to be a fourth segmented-control question here too, but
+// its 4-cell layout clipped "Premium" to "Pr" at 320px -- it's now the
+// BudgetSlider above instead.) These three carry noPref -- that's already a
 // reliable, existing signal for "this is a scale question" so no separate
 // id allowlist is needed.
 function SegmentedGroup({ q, qIndex, answers, onSingle }) {

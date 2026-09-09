@@ -3,7 +3,7 @@
 // interests 25, budget 15, trip length 15, climate 10, pace/activity/traveller 10).
 // A continuous travel-practicality penalty (from the round-trip travel share)
 // then produces the final score. No artificial score caps.
-import { MONTHS, BUDGET_ORDER, PACE_ORDER, ACTIVITY_ORDER, CLIMATE_ORDER } from "@/lib/options";
+import { MONTHS, PACE_ORDER, ACTIVITY_ORDER, CLIMATE_ORDER } from "@/lib/options";
 import { assessPracticality } from "@/lib/practicality";
 import { norm } from "@/lib/regionalRoutes";
 
@@ -72,16 +72,28 @@ export function scoreDestination(dest, prefs) {
     (dest.interest_tags || []).includes(i)
   );
 
-  // 3. Budget fit — 15 pts
+  // 3. Budget fit — 15 pts. prefs.budget is a number (dollars/day the
+  // traveller would spend on the ground, excluding flights), the literal
+  // "No preference" (full credit, same as every other no-preference field),
+  // or unset (no signal, no credit). Compared against the destination's own
+  // daily_cost_low/mid: at or above mid is always full marks -- having more
+  // money than a destination needs is never a mismatch -- between low and
+  // mid is a slight, linear reduction, and below low is a real, linear
+  // penalty toward zero (see docs/wherenova-numeric-budget-stage1-brief.md).
   let budget = 0;
-  const bi = BUDGET_ORDER.indexOf(prefs.budget);
-  if (bi >= 0) {
-    if ((dest.budget_categories || []).includes(prefs.budget)) budget = 15;
-    else {
-      const adjacent = (dest.budget_categories || []).some(
-        (c) => Math.abs(BUDGET_ORDER.indexOf(c) - bi) === 1
-      );
-      budget = adjacent ? 8 : 0;
+  if (prefs.budget === "No preference") {
+    budget = 15;
+  } else if (typeof prefs.budget === "number" && Number.isFinite(prefs.budget)) {
+    const low = dest.daily_cost_low;
+    const mid = dest.daily_cost_mid;
+    if (low == null || mid == null) {
+      budget = 15; // no cost data to compare against -- neutral, not penalised
+    } else if (prefs.budget >= mid) {
+      budget = 15;
+    } else if (prefs.budget >= low) {
+      budget = 10 + (5 * (prefs.budget - low)) / (mid - low);
+    } else {
+      budget = 10 * Math.max(0, prefs.budget / low);
     }
   }
 
@@ -295,8 +307,8 @@ export function buildReasons(dest, prefs, result) {
   }
   if (result.breakdown.budget >= 15) {
     reasons.push("Daily costs on the ground fit your budget");
-  } else if (result.breakdown.budget >= 8) {
-    reasons.push(`On-the-ground costs close to your ${prefs.budget.toLowerCase()} budget`);
+  } else if (result.breakdown.budget >= 10) {
+    reasons.push("On-the-ground costs close to your daily budget");
   }
   if (result.breakdown.length >= 15) {
     reasons.push(`Ideal for ${prefs.travelDays} total days`);
@@ -333,7 +345,9 @@ export function buildSuggestions(ranked, prefs) {
   const anyPoor = top.some((r) => r.result.practicality.level === "Poor practical fit");
   const anyStretch = top.some((r) => r.result.practicality.level === "Stretch");
   const anyLen0 = top.some((r) => r.result.breakdown.length === 0);
-  const anyBudget0 = top.some((r) => r.result.breakdown.budget === 0);
+  // Budget is now a continuous 0-15 score (see scoreDestination), so "poor
+  // fit" is a low range rather than the old exact-0 ordinal case.
+  const anyBudgetLow = top.some((r) => r.result.breakdown.budget < 8);
   const anySeason0 = top.some((r) => r.result.breakdown.season === 0);
   const anyClimate0 = top.some((r) => r.result.breakdown.climate === 0);
   const anyPace0 = top.some((r) => r.result.breakdown.pace === 0);
@@ -342,8 +356,8 @@ export function buildSuggestions(ranked, prefs) {
   const out = [];
   if ((anyPoor || anyStretch || anyLen0) && Number(prefs.travelDays) < 7)
     out.push({ label: "Increase your trip to at least 7 days.", step: 1 });
-  if (anyBudget0 && prefs.budget !== "Premium")
-    out.push({ label: "Increase your budget category.", step: 2 });
+  if (anyBudgetLow && typeof prefs.budget === "number")
+    out.push({ label: "Increase your daily budget.", step: 2 });
   if (anyInterestLow && (prefs.interests || []).length < 3)
     out.push({ label: "Select more interests that appeal to you.", step: 3 });
   if (travelScope(prefs) === "international")
