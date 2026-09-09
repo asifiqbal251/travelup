@@ -167,6 +167,69 @@ function MonthGrid({ value, onMonth }) {
   );
 }
 
+// Pace/Activity (Q8/Q9) carry a one-line example under each option so the
+// two questions read as clearly different things (a tester couldn't tell
+// them apart -- see docs/wherenova-pace-activity-brief.md). A segmented
+// control has no room for that second line at mobile widths (measured: 3-4
+// equal columns in ~288px), so these two render as a full-width stacked
+// list instead. Detected via `option.description` presence rather than a
+// separate id allowlist, mirroring how `noPref` already flags "this is a
+// scale question" below -- Budget/Climate carry no descriptions and keep
+// the segmented control untouched.
+function DescriptiveOptionList({ q, qIndex, answers, onSingle }) {
+  const selected = answers[q.field];
+  const opts = q.options.filter((o) => !o.noPref);
+  return (
+    <div>
+      <div
+        role="radiogroup"
+        aria-label={q.title}
+        className="mx-auto max-w-[420px] flex flex-col gap-2.5"
+      >
+        {opts.map((o) => {
+          const on = selected === o.key;
+          return (
+            <button
+              key={o.key}
+              type="button"
+              role="radio"
+              aria-checked={on}
+              onClick={() => onSingle(qIndex, o.key)}
+              style={on ? SELECTED_FILL : undefined}
+              className={cn(
+                "w-full text-left rounded-xl border px-4 py-3 motion-safe:transition focus:outline-none focus-visible:ring-2 focus-visible:ring-wn-cyan",
+                on ? "border-wn-cyan" : "border-wn-line hover:border-wn-line-2"
+              )}
+            >
+              <span className="flex items-center justify-between gap-2">
+                <span className={cn("text-[15px] font-semibold", on ? "text-wn-cyan" : "text-wn-text")}>
+                  {o.label}
+                </span>
+                {on && <Check className="w-4 h-4 text-wn-cyan shrink-0" aria-hidden="true" />}
+              </span>
+              <span className="mt-0.5 block text-[13px] leading-snug text-wn-text-2">
+                {o.description}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+      {q.noPref && (
+        <button
+          type="button"
+          onClick={() => onSingle(qIndex, "no-pref")}
+          className={cn(
+            "mt-4 min-h-11 inline-flex items-center px-1 text-[15px] underline underline-offset-4 rounded focus:outline-none focus:ring-2 focus:ring-wn-cyan",
+            selected === "no-pref" ? "text-wn-cyan" : "text-wn-text-2 hover:text-wn-text"
+          )}
+        >
+          No preference
+        </button>
+      )}
+    </div>
+  );
+}
+
 // Q6-9 (Budget/Climate/Pace/Activity) use a segmented control instead of
 // loose chips: one bordered container, equal-width cells, divided by
 // hairlines. All four of these questions carry noPref -- that's already a
@@ -246,6 +309,9 @@ function OptionChip({ label, on, onClick, role, ariaState }) {
 
 function SingleGroup({ q, qIndex, answers, onSingle }) {
   const selected = answers[q.field];
+  if (q.options.some((o) => o.description)) {
+    return <DescriptiveOptionList q={q} qIndex={qIndex} answers={answers} onSingle={onSingle} />;
+  }
   if (q.noPref) {
     return <SegmentedGroup q={q} qIndex={qIndex} answers={answers} onSingle={onSingle} />;
   }

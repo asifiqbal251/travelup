@@ -26,6 +26,16 @@ Separately: 15 of 54 destinations are tagged `["Balanced"]` only — pace data
 is thin across the catalogue regardless of tier count. Worth a content pass
 independent of whether a 4th tier ever ships.
 
+The real obstacle above is #2: `itinerary.js` reads `prefs.pace` as literal
+strings (`=== "Fast-paced"`, `paceWantsRecovery`, `fastPace`) instead of a
+scale position. Confirmed 2026-09-08 while checking whether Activity had the
+same problem (`docs/wherenova-pace-activity-brief.md`) — it doesn't:
+`itinerary.js` already reads activity via
+`ACTIVITY_ORDER.indexOf(prefs.activity)`, so all 4 activity tiers (including
+the thin `"Highly active"` tier, 9/54 destinations) work end-to-end today.
+Whoever picks up the 4th pace tier should port pace to the same
+position-based pattern activity already uses, rather than re-deriving it.
+
 ## Desktop question pairing
 
 Removed in `docs/wherenova-polish-pass-v3.md` Part E1 —
