@@ -226,7 +226,7 @@ function BudgetSlider({ q, qIndex, answers, onBudget, onBudgetGrab, onBudgetRele
             ${dollar}
             {isTop && "+"}
           </span>
-          <span className="ml-1 text-[15px] text-wn-text-2">/day</span>
+          <span className="ml-1 text-[15px] text-wn-text-2">USD/day</span>
         </div>
         <input
           type="range"

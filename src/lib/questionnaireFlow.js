@@ -175,7 +175,7 @@ export const QUESTIONS = [
     eyebrow: "Budget",
     noPref: true,
     title: "What's your daily budget?",
-    hint: "Not counting flights — just what you'd spend once you're there: hotels, food, getting around, activities.",
+    hint: "Not counting flights — just what you'd spend in USD once you're there: hotels, food, getting around, activities.",
     // Last question, deliberately: auto-advance is kept even though the
     // slider is now continuous (no discrete "settled" stop to signal
     // completion -- see BudgetSlider in QuestionView.jsx), so landing here
