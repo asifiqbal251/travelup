@@ -1,12 +1,14 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogFooter,
   AlertDialogTitle, AlertDialogDescription, AlertDialogAction, AlertDialogCancel
 } from "@/components/ui/alert-dialog";
 import { User, LogIn, LogOut, Compass, Plane, Trash2, ArrowRight, AlertTriangle } from "lucide-react";
-import { getPrefs, getSavedTrips, clearState } from "@/lib/storage";
+import {
+  getPrefs, getSavedTrips, clearState, getPrefsHistory, switchToPrefsHistoryEntry, tripFingerprint
+} from "@/lib/storage";
 import { isReturningPrefs, returningContext } from "@/lib/discoveryCollections";
 import { useAccountIdentity, beginGoogleSignIn, beginEmailSignIn, useSignOut } from "@/lib/auth";
 import { migrateGuestTripsToAccount } from "@/lib/tripMigration";
@@ -44,6 +46,7 @@ function SignedOutProfile() {
 }
 
 function SignedInProfile({ email, identity }) {
+  const navigate = useNavigate();
   const signOut = useSignOut();
   const [signOutOpen, setSignOutOpen] = useState(false);
   const [clearOpen, setClearOpen] = useState(false);
@@ -56,6 +59,16 @@ function SignedInProfile({ email, identity }) {
   // Landing.jsx uses for its lazy-initial prefs/saved reads.
   const prefs = getPrefs();
   const returning = isReturningPrefs(prefs);
+  const history = getPrefsHistory();
+
+  // Switching recomputes recommendations for the newly-active preferences --
+  // that's the actual point of switching -- so this takes the user to
+  // Results rather than leaving them on Profile with just the summary
+  // line updated.
+  const switchToHistoryEntry = (entry) => {
+    const res = switchToPrefsHistoryEntry(entry);
+    if (res.ok) navigate("/results");
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -128,6 +141,27 @@ function SignedInProfile({ email, identity }) {
                 <Link to="/questionnaire">Set my preferences</Link>
               </Button>
             </>
+          )}
+
+          {history.length > 0 && (
+            <div className="mt-5 pt-4 border-t border-border">
+              <p className="text-xs font-medium text-muted-foreground mb-2">
+                Recent Travel Fits
+              </p>
+              <ul>
+                {history.map((entry) => (
+                  <li key={tripFingerprint(entry, "")}>
+                    <button
+                      type="button"
+                      onClick={() => switchToHistoryEntry(entry)}
+                      className="w-full text-left text-sm text-muted-foreground hover:text-ink py-1.5 rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-ink motion-safe:transition-colors"
+                    >
+                      {returningContext(entry)}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
           )}
         </section>
 

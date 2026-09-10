@@ -13,7 +13,7 @@ import {
   BLANK_ANSWERS,
   resumeSummary,
 } from "@/lib/questionnaireFlow";
-import { getPrefs, setPrefs, setSelectedDestinationId } from "@/lib/storage";
+import { getPrefs, setPrefsWithHistory, setSelectedDestinationId } from "@/lib/storage";
 import ProgressRail from "@/components/questionnaire/ProgressRail";
 import QuestionView from "@/components/questionnaire/QuestionView";
 import CompletionScreen from "@/components/questionnaire/CompletionScreen";
@@ -252,7 +252,7 @@ export default function Questionnaire() {
   };
 
   const reveal = () => {
-    setPrefs(buildPrefs(answers));
+    setPrefsWithHistory(buildPrefs(answers));
     setSelectedDestinationId(null);
     navigate("/results");
   };

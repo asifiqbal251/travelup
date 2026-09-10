@@ -115,6 +115,75 @@ export function tripFingerprint(prefs, destinationId) {
   return "v1:" + JSON.stringify(fields);
 }
 
+// ---- Preferences history ----
+//
+// Automatic memory, not a filing system (see docs/wherenova-travelfit-history-brief.md):
+// the last MAX_PREFS_HISTORY sets of preferences that were current before the
+// present one, most-recent-first. No naming, no manual save/delete -- entries
+// are pushed and dropped automatically on questionnaire completion and on
+// switching. Stored in the same whole-state blob as `prefs`, so
+// clearState() clears history for free.
+export const MAX_PREFS_HISTORY = 3;
+
+export function getPrefsHistory() {
+  const h = loadState().prefsHistory;
+  return Array.isArray(h) ? h : [];
+}
+
+function setPrefsHistoryRaw(history) {
+  const s = loadState();
+  s.prefsHistory = history;
+  return persistState(s);
+}
+
+// destinationId is deliberately omitted (passed as "") -- at questionnaire
+// completion no destination has been chosen yet (setSelectedDestinationId(null)
+// runs right after), and history dedup only cares about the preferences
+// themselves.
+function prefsFingerprint(prefs) {
+  return tripFingerprint(prefs, "");
+}
+
+// Move `outgoing` into `history` (most-recent-first, capped, deduped by
+// fingerprint against its own current occurrence) unless it's already
+// identical to `skipIfMatches`.
+function pushIntoHistory(history, outgoing, skipIfMatches) {
+  if (!outgoing) return history;
+  const outgoingFp = prefsFingerprint(outgoing);
+  if (skipIfMatches && prefsFingerprint(skipIfMatches) === outgoingFp) return history;
+  const deduped = history.filter((p) => prefsFingerprint(p) !== outgoingFp);
+  return [outgoing, ...deduped].slice(0, MAX_PREFS_HISTORY);
+}
+
+// Call at questionnaire completion instead of setPrefs(). Moves the outgoing
+// current preferences into history (deduped, capped at three) before writing
+// the new ones as current. A user with no prior preferences (first-ever
+// completion) has nothing to push -- history stays empty.
+export function setPrefsWithHistory(newPrefs) {
+  const outgoing = getPrefs();
+  const history = pushIntoHistory(getPrefsHistory(), outgoing, newPrefs);
+  setPrefsHistoryRaw(history);
+  setPrefs(newPrefs);
+}
+
+// Make a history entry the current preferences; what was current moves into
+// history in its place, so switching is non-destructive in both directions.
+// Looked up by fingerprint (not array index) so a stale index can't swap the
+// wrong entry. Returns { ok: false, reason: "invalid" } if the entry is no
+// longer in history (already switched away by another tab, etc).
+export function switchToPrefsHistoryEntry(entry) {
+  const targetFp = prefsFingerprint(entry);
+  const history = getPrefsHistory();
+  const idx = history.findIndex((p) => prefsFingerprint(p) === targetFp);
+  if (idx < 0) return { ok: false, reason: "invalid" };
+  const remaining = history.filter((_, i) => i !== idx);
+  const outgoing = getPrefs();
+  const nextHistory = pushIntoHistory(remaining, outgoing, entry);
+  setPrefsHistoryRaw(nextHistory);
+  setPrefs(history[idx]);
+  return { ok: true, value: history[idx] };
+}
+
 // ---- Active-trip packing (keyed by fingerprint) ----
 
 // Normalize any packing state (new shape or legacy) to the canonical shape.
