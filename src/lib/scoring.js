@@ -18,6 +18,22 @@ export function travelScope(prefs) {
 
 const VISITED_PENALTY = 12; // lower priority, not exclusion
 
+// Multi-select climate breadth cap (docs/wherenova-climate-stage1-brief.md
+// Step 3, Model B). Selecting more climates narrows the ceiling so breadth
+// can never silently behave like "No preference" -- n=1 (today's
+// single-select shape) is uncapped at 10, matching current behaviour
+// exactly. Selecting 0 or all CLIMATE_ORDER.length options is handled
+// separately below as the same full-credit path as "No preference".
+const CLIMATE_BREADTH_CAP = { 1: 10, 2: 8, 3: 6 };
+
+// Joins a list with "or" before the last item ("warm", "warm or mild",
+// "warm, mild or cool") -- used for buildReasons() climate copy below.
+function joinOr(list) {
+  if (list.length <= 1) return list[0] || "";
+  if (list.length === 2) return `${list[0]} or ${list[1]}`;
+  return `${list.slice(0, -1).join(", ")} or ${list[list.length - 1]}`;
+}
+
 function climateDistance(a, b) {
   const ia = CLIMATE_ORDER.indexOf(a);
   const ib = CLIMATE_ORDER.indexOf(b);
@@ -108,17 +124,26 @@ export function scoreDestination(dest, prefs) {
     else length = 0;
   }
 
-  // 5. Climate preference — 10 pts
+  // 5. Climate preference — 10 pts. prefs.climate is an array of selected
+  // CLIMATE_ORDER values (see docs/wherenova-climate-stage1-brief.md). Both
+  // "nothing selected" and an explicit "No preference" choice arrive here as
+  // [] (see buildClimateValue in questionnaireFlow.js) -- checked via
+  // .length, NOT truthiness: an empty array is truthy in JS ([] && x is x),
+  // so `!prefs.climate` alone would silently fall through to the match
+  // branch below instead of awarding full credit.
   let climate = 0;
-  if (!prefs.climate || prefs.climate === "No preference") {
+  const climateSelected = Array.isArray(prefs.climate) ? prefs.climate : [];
+  if (climateSelected.length === 0 || climateSelected.length >= CLIMATE_ORDER.length) {
     climate = 10;
   } else {
     let best = 0;
     (dest.climate_tags || []).forEach((c) => {
-      if (c === prefs.climate) best = Math.max(best, 10);
-      else if (climateDistance(prefs.climate, c) === 1) best = Math.max(best, 5);
+      climateSelected.forEach((s) => {
+        if (c === s) best = Math.max(best, 10);
+        else if (climateDistance(s, c) === 1) best = Math.max(best, 5);
+      });
     });
-    climate = best;
+    climate = Math.min(best, CLIMATE_BREADTH_CAP[climateSelected.length] ?? 10);
   }
 
   // 6. Pace (4) + physical activity (4) + traveller suitability (2) = 10
@@ -313,8 +338,11 @@ export function buildReasons(dest, prefs, result) {
   if (result.breakdown.length >= 15) {
     reasons.push(`Ideal for ${prefs.travelDays} total days`);
   }
-  if (result.breakdown.climate >= 10 && prefs.climate && prefs.climate !== "No preference") {
-    reasons.push(`${prefs.climate.toLowerCase()} climate as you prefer`);
+  const climateChoice = Array.isArray(prefs.climate) ? prefs.climate : [];
+  const climateIsPreference = climateChoice.length > 0 && climateChoice.length < CLIMATE_ORDER.length;
+  const climateCap = climateIsPreference ? (CLIMATE_BREADTH_CAP[climateChoice.length] ?? 10) : 0;
+  if (climateIsPreference && result.breakdown.climate >= climateCap) {
+    reasons.push(`${joinOr(climateChoice.map((c) => c.toLowerCase()))} climate as you prefer`);
   }
   if (result.breakdown.pace >= 7) {
     reasons.push("Pace, activity and group type suit you");
@@ -368,7 +396,7 @@ export function buildSuggestions(ranked, prefs) {
     out.push({ label: "Choose a flexible travel month.", step: 1 });
   if (anyPoor || anyStretch)
     out.push({ label: "Consider a closer region.", step: 0 });
-  if (anyClimate0 && prefs.climate && prefs.climate !== "No preference")
+  if (anyClimate0 && Array.isArray(prefs.climate) && prefs.climate.length > 0)
     out.push({ label: "Select 'No preference' for climate.", step: 4 });
   if (anyPace0)
     out.push({ label: "Revise your pace or activity preference.", step: 4 });

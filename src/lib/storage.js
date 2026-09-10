@@ -106,7 +106,7 @@ export function tripFingerprint(prefs, destinationId) {
     travellerType: normStr(prefs.travellerType),
     budget: normStr(prefs.budget),
     interests: dedupeSort(prefs.interests),
-    climate: normStr(prefs.climate),
+    climate: dedupeSort(prefs.climate), // now an array, same pattern as interests
     pace: normStr(prefs.pace),
     activity: normStr(prefs.activity),
     dietary: normStr(prefs.dietary),

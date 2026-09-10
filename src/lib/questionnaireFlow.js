@@ -127,10 +127,11 @@ export const QUESTIONS = [
   {
     id: "climate",
     field: "climate",
-    type: "single",
+    type: "multi",
     eyebrow: "Climate",
     noPref: true,
     title: "What weather do you want?",
+    hint: "Pick as many as you like — the more you choose, the less climate affects your matches.",
     options: [
       { key: "warm", label: "Warm", value: "Warm" },
       { key: "mild", label: "Mild", value: "Mild" },
@@ -286,7 +287,7 @@ export const BLANK_ANSWERS = {
   travellerType: "",
   interests: [],
   budget: "",
-  climate: "",
+  climate: [],
   pace: "",
   activity: "",
 };
@@ -335,6 +336,37 @@ function buildBudgetValue(value) {
   return undefined;
 }
 
+// Climate's answer-state shape: an array of option KEYS, e.g. ["warm"] or
+// ["warm","mild"] -- or ["no-pref"] on its own, mutually exclusive with real
+// climate keys (enforced by onMultiToggle in Questionnaire.jsx, not here).
+// Needs its own hydrate/build pair (like budget) to translate a returning
+// user's legacy single-string prefs.climate (from before multi-select
+// shipped -- see docs/wherenova-climate-stage1-brief.md) into the new array
+// shape, one-time, same spirit as LEGACY_BUDGET_ANCHORS above.
+function hydrateClimate(value) {
+  const q = QUESTIONS.find((x) => x.id === "climate");
+  if (Array.isArray(value)) {
+    return value.map((v) => findKey(q, v)).filter(Boolean);
+  }
+  if (value === "No preference") return ["no-pref"];
+  if (typeof value === "string" && value) {
+    const key = findKey(q, value);
+    return key ? [key] : [];
+  }
+  return [];
+}
+
+// Inverse of hydrateClimate for buildPrefs. Drops the "no-pref" sentinel key
+// (and any unrecognised key) so the engine-facing value is a plain array of
+// real climate strings -- [] for both "nothing selected" and an explicit
+// "No preference" choice, which scoring.js treats identically (full credit).
+function buildClimateValue(keys) {
+  const q = QUESTIONS.find((x) => x.id === "climate");
+  return (Array.isArray(keys) ? keys : [])
+    .map((k) => findValue(q, k))
+    .filter((v) => v && v !== "No preference");
+}
+
 // Hydrate answers from stored prefs (returning users). Best-effort reverse
 // mapping via findKey (matches stored value back to its option key).
 export function hydrateAnswers(prefs) {
@@ -347,7 +379,7 @@ export function hydrateAnswers(prefs) {
     travellerType: findKey(byId("traveller"), prefs.travellerType),
     interests: (prefs.interests || []).map((v) => findKey(byId("interests"), v)).filter(Boolean),
     budget: hydrateBudget(prefs.budget),
-    climate: findKey(byId("climate"), prefs.climate),
+    climate: hydrateClimate(prefs.climate),
     pace: findKey(byId("pace"), prefs.pace),
     activity: findKey(byId("activity"), prefs.activity),
   };
@@ -361,7 +393,7 @@ export function isAnswered(qIndex, answers) {
     case "months": return !!answers.travelMonth;
     case "single": return !!answers[q.field];
     case "budget": return typeof answers.budget === "number" || answers.budget === "no-pref";
-    case "multi": return (answers.interests || []).length > 0;
+    case "multi": return (answers[q.field] || []).length > 0;
     default: return false;
   }
 }
@@ -382,7 +414,7 @@ export function buildPrefs(answers) {
     travellerType: findValue(byId("traveller"), answers.travellerType),
     budget: buildBudgetValue(answers.budget),
     interests: (answers.interests || []).map((k) => findValue(byId("interests"), k)).filter(Boolean),
-    climate: findValue(byId("climate"), answers.climate),
+    climate: buildClimateValue(answers.climate),
     pace: findValue(byId("pace"), answers.pace),
     activity: findValue(byId("activity"), answers.activity),
     dietary: "None",
@@ -408,7 +440,7 @@ export function answerSummary(qIndex, answers) {
       if (typeof answers.budget === "number") return `$${answers.budget}/day`;
       return "—";
     case "multi":
-      return (answers.interests || []).map((k) => findLabel(QUESTIONS[4], k)).join(", ") || "—";
+      return (answers[q.field] || []).map((k) => findLabel(q, k)).join(", ") || "—";
     default: return "—";
   }
 }

@@ -277,9 +277,8 @@ function BudgetSlider({ q, qIndex, answers, onBudget, onBudgetGrab, onBudgetRele
 // equal columns in ~288px), so these two render as a full-width stacked
 // list instead. Detected via `option.description` presence rather than a
 // separate id allowlist, mirroring how `noPref` already flags "this is a
-// scale question" below -- Climate carries no descriptions and keeps
-// the segmented control untouched (Budget is its own slider, see
-// BudgetSlider above).
+// scale question" below (Budget is its own slider, see BudgetSlider above;
+// Climate is multi-select, see MultiGroup below).
 function DescriptiveOptionList({ q, qIndex, answers, onSingle }) {
   const selected = answers[q.field];
   const opts = q.options.filter((o) => !o.noPref);
@@ -334,11 +333,13 @@ function DescriptiveOptionList({ q, qIndex, answers, onSingle }) {
   );
 }
 
-// Q6-8 (Climate/Pace/Activity) use a segmented control instead of loose
+// Pace/Activity (single-select) use a segmented control instead of loose
 // chips: one bordered container, equal-width cells, divided by hairlines.
 // (Budget used to be a fourth segmented-control question here too, but its
 // 4-cell layout clipped "Premium" to "Pr" at 320px -- it's now the
-// BudgetSlider above instead.) These three carry noPref -- that's already a
+// BudgetSlider above instead. Climate moved to MultiGroup below when it
+// became multi-select -- a segmented control implies mutually-exclusive
+// choices, which no longer fits.) These carry noPref -- that's already a
 // reliable, existing signal for "this is a scale question" so no separate
 // id allowlist is needed.
 function SegmentedGroup({ q, qIndex, answers, onSingle }) {
@@ -438,18 +439,37 @@ function SingleGroup({ q, qIndex, answers, onSingle }) {
 }
 
 function MultiGroup({ q, answers, onToggle }) {
-  const arr = answers.interests || [];
+  const arr = answers[q.field] || [];
+  const opts = q.options.filter((o) => !o.noPref);
+  const noPrefOpt = q.options.find((o) => o.noPref);
+  const noPrefOn = !!noPrefOpt && arr.length === 1 && arr[0] === noPrefOpt.key;
   return (
-    <div role="group" aria-label={q.title} className="flex flex-wrap gap-[10px] justify-center">
-      {q.options.map((o) => (
-        <OptionChip
-          key={o.key}
-          label={o.label}
-          on={arr.includes(o.key)}
-          onClick={() => onToggle(o.key)}
-          ariaState={{ "aria-pressed": arr.includes(o.key) }}
-        />
-      ))}
+    <div>
+      <div role="group" aria-label={q.title} className="flex flex-wrap gap-[10px] justify-center">
+        {opts.map((o) => (
+          <OptionChip
+            key={o.key}
+            label={o.label}
+            on={arr.includes(o.key)}
+            onClick={() => onToggle(q.field, o.key)}
+            ariaState={{ "aria-pressed": arr.includes(o.key) }}
+          />
+        ))}
+      </div>
+      {noPrefOpt && (
+        <div className="text-center">
+          <button
+            type="button"
+            onClick={() => onToggle(q.field, noPrefOpt.key)}
+            className={cn(
+              "mt-4 min-h-11 inline-flex items-center px-1 text-[15px] underline underline-offset-4 rounded focus:outline-none focus:ring-2 focus:ring-wn-cyan",
+              noPrefOn ? "text-wn-cyan" : "text-wn-text-2 hover:text-wn-text"
+            )}
+          >
+            No preference
+          </button>
+        </div>
+      )}
     </div>
   );
 }

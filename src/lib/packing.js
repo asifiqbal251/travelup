@@ -58,18 +58,25 @@ export function generatePackingList(dest, prefs) {
   add("Optional items", "Notebook and pen");
   add("Optional items", "Snacks for travel");
 
-  // Climate
-  const climate = prefs.climate;
-  if (climate === "Warm") {
+  // Climate. prefs.climate is an array of selected climates (possibly more
+  // than one, see docs/wherenova-climate-stage1-brief.md) -- independent
+  // `if`s rather than `else if` so a traveller who picked both ends (e.g.
+  // Warm + Cold or snowy) gets packing items for both, not just the first
+  // match. A single selection packs exactly as before.
+  const climates = Array.isArray(prefs.climate) ? prefs.climate : [];
+  if (climates.includes("Warm")) {
     add("Clothing", "Light breathable clothing");
     add("Clothing", "Sun hat");
     add("Toiletries and health", "Insect repellent");
-  } else if (climate === "Mild") {
+  }
+  if (climates.includes("Mild")) {
     add("Clothing", "Layers for cool evenings");
-  } else if (climate === "Cool") {
+  }
+  if (climates.includes("Cool")) {
     add("Clothing", "Warm jacket");
     add("Clothing", "Scarf");
-  } else if (climate === "Cold or snowy") {
+  }
+  if (climates.includes("Cold or snowy")) {
     add("Clothing", "Insulated winter coat");
     add("Clothing", "Thermal base layers");
     add("Clothing", "Gloves");

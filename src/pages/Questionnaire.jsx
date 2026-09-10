@@ -182,12 +182,29 @@ export default function Questionnaire() {
     setField("travelDays", n);
     scheduleAdvance(420);
   };
-  const onMultiToggle = (key) => {
+  // Generic multi-select toggle, used by Interests and Climate. An option
+  // flagged `noPref` (climate's "No preference") is mutually exclusive with
+  // every real option on that question: selecting it replaces the whole
+  // array with just itself, and selecting any real option drops it first.
+  // Interests has no noPref option, so this reduces to a plain toggle there
+  // -- unchanged behaviour.
+  const onMultiToggle = (field, key) => {
+    const q = QUESTIONS.find((x) => x.field === field);
+    const opt = q.options.find((o) => o.key === key);
     setAnswers((a) => {
-      const arr = a.interests.includes(key)
-        ? a.interests.filter((k) => k !== key)
-        : [...a.interests, key];
-      return { ...a, interests: arr };
+      const current = a[field] || [];
+      if (opt && opt.noPref) {
+        const arr = current.length === 1 && current[0] === key ? [] : [key];
+        return { ...a, [field]: arr };
+      }
+      const withoutNoPref = current.filter((k) => {
+        const co = q.options.find((o) => o.key === k);
+        return !(co && co.noPref);
+      });
+      const arr = withoutNoPref.includes(key)
+        ? withoutNoPref.filter((k) => k !== key)
+        : [...withoutNoPref, key];
+      return { ...a, [field]: arr };
     });
   };
   const onChip = (city) => {
@@ -256,7 +273,7 @@ export default function Questionnaire() {
   const showContinue = !resuming && !done && (() => {
     const q = sQuestions.length ? QUESTIONS[sQuestions[0]] : null;
     if (!q) return false;
-    if (q.type === "multi") return answers.interests.length > 0;
+    if (q.type === "multi") return (answers[q.field] || []).length > 0;
     if (q.type === "text") return !!String(answers.departureCity || "").trim();
     return screenComplete && mountedComplete;
   })();
