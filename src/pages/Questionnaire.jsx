@@ -43,10 +43,10 @@ const QUESTION_HUES = [
   "#2E4C74", // 3 Month
   "#3A4A78", // 4 Company
   "#46426F", // 5 Interests
-  "#57406A", // 6 Budget
-  "#5E4160", // 7 Climate
-  "#664253", // 8 Pace
-  "#6B4448"  // 9 Activity
+  "#57406A", // 6 Climate
+  "#5E4160", // 7 Pace
+  "#664253", // 8 Activity
+  "#6B4448"  // 9 Budget
 ];
 const COMPLETION_HUE = "#2E6B6E";
 
@@ -196,12 +196,30 @@ export default function Questionnaire() {
   };
   const onBudget = (qIndex, value) => {
     setField(QUESTIONS[qIndex].field, value);
+    // Numeric drag/keyboard updates commit here but don't schedule an
+    // advance -- the continuous slider has no discrete "settled" stop, so
+    // scheduling off onChange (which fires on every pixel of drag) risked
+    // firing mid-drag during a pause. onBudgetGrab/onBudgetRelease below
+    // schedule off actual pointer/key release instead. "No preference" has
+    // no release gesture of its own, so it still advances immediately here.
+    if (value === "no-pref") {
+      const qs = screenQuestions(current);
+      const complete = qs.every((qi) => qi === qIndex || isAnswered(qi, answers));
+      if (complete) scheduleAdvance(0);
+    }
+  };
+  // Budget (last question) auto-advance: schedule only on pointer-up/key-up
+  // (a real release), and cancel on pointer-down/key-down (grabbing the
+  // slider again) so a still-held, paused drag can never fire it -- the
+  // risk is higher here than elsewhere since advancing lands on the
+  // completion screen, not just the next question.
+  const onBudgetGrab = () => {
+    clearAdvance();
+  };
+  const onBudgetRelease = (qIndex) => {
     const qs = screenQuestions(current);
     const complete = qs.every((qi) => qi === qIndex || isAnswered(qi, answers));
-    // Slider drags fire onChange repeatedly; scheduleAdvance's clearAdvance()
-    // means only the LAST call in a drag actually starts the timer, so this
-    // only advances once the user has settled on a value.
-    if (complete) scheduleAdvance(value === "no-pref" ? 0 : 550);
+    if (complete) scheduleAdvance(650);
   };
   const onText = (v) => setField("departureCity", v);
   const onTextEnter = () => {
@@ -341,6 +359,8 @@ export default function Questionnaire() {
                 onText={onText}
                 onTextEnter={onTextEnter}
                 onBudget={onBudget}
+                onBudgetGrab={onBudgetGrab}
+                onBudgetRelease={onBudgetRelease}
               />
             ))
           )}

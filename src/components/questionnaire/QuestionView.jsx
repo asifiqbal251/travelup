@@ -7,6 +7,8 @@ import {
   ORIGIN_CHIPS,
   suggestOrigins,
   inferCountry,
+  budgetPositionToDollar,
+  budgetDollarToPosition,
 } from "@/lib/questionnaireFlow";
 import DayScroller from "@/components/questionnaire/DayScroller";
 
@@ -29,6 +31,8 @@ export default function QuestionView({
   onText,
   onTextEnter,
   onBudget,
+  onBudgetGrab,
+  onBudgetRelease,
 }) {
   const q = QUESTIONS[qIndex];
 
@@ -60,7 +64,14 @@ export default function QuestionView({
           <SingleGroup q={q} qIndex={qIndex} answers={answers} onSingle={onSingle} />
         )}
         {q.type === "budget" && (
-          <BudgetSlider q={q} qIndex={qIndex} answers={answers} onBudget={onBudget} />
+          <BudgetSlider
+            q={q}
+            qIndex={qIndex}
+            answers={answers}
+            onBudget={onBudget}
+            onBudgetGrab={onBudgetGrab}
+            onBudgetRelease={onBudgetRelease}
+          />
         )}
         {q.type === "multi" && (
           <MultiGroup q={q} answers={answers} onToggle={onMultiToggle} />
@@ -171,50 +182,48 @@ function MonthGrid({ value, onMonth }) {
   );
 }
 
-// Budget (Q6) — a stepped slider over non-uniform dollar stops (see
-// BUDGET_STOPS in questionnaireFlow.js), replacing the old 4-tier segmented
-// control (which clipped "Premium" to "Pr" at 320px -- a single native
-// range input has no equivalent problem at any width, since it has no text
-// cells to clip). Local `localIdx` decouples the visual thumb position from
-// the committed answer: the slider needs *some* position to render before
-// the user has touched it, but touching it is what actually answers the
-// question (unlike DayScroller, where every position is already a valid,
+// Budget (Q9, the last question) -- a continuous slider over a normalized
+// 0-1 position, converted to dollars via budgetPositionToDollar (piecewise-
+// linear across the non-uniform BUDGET_STOPS breakpoints in
+// questionnaireFlow.js -- see the comment there for why that keeps the
+// dense $65-$200 catalogue band getting proportionally more of the travel).
+// Local `dollar` decouples the visual thumb position from the committed
+// answer: the slider needs *some* position to render before the user has
+// touched it, but touching it is what actually answers the question
+// (unlike DayScroller, where every position is already a valid,
 // pre-answered default).
-function BudgetSlider({ q, qIndex, answers, onBudget }) {
+const DEFAULT_BUDGET = 125; // neutral starting point, mid-way through the dense band
+
+function BudgetSlider({ q, qIndex, answers, onBudget, onBudgetGrab, onBudgetRelease }) {
   const stops = q.budgetStops;
-  const defaultIdx = Math.min(7, stops.length - 1); // ~$125, a neutral starting point
   const committed = typeof answers.budget === "number" ? answers.budget : null;
   const noPref = answers.budget === "no-pref";
 
-  const [localIdx, setLocalIdx] = useState(() => {
-    const i = committed != null ? stops.indexOf(committed) : -1;
-    return i >= 0 ? i : defaultIdx;
-  });
+  const [dollar, setDollar] = useState(() => (committed != null ? committed : DEFAULT_BUDGET));
 
   useEffect(() => {
-    if (committed != null) {
-      const i = stops.indexOf(committed);
-      if (i >= 0) setLocalIdx(i);
-    }
+    if (committed != null) setDollar(committed);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [committed]);
 
-  const dollars = stops[localIdx];
-  const isTop = localIdx === stops.length - 1;
+  const position = budgetDollarToPosition(dollar);
+  const isTop = dollar >= stops[stops.length - 1];
   const travelDays = answers.travelDays;
   const hasTotal = committed != null && typeof travelDays === "number";
 
-  const commit = (idx) => {
-    setLocalIdx(idx);
-    onBudget(qIndex, stops[idx]);
+  const handleChange = (e) => {
+    const next = budgetPositionToDollar(Number(e.target.value));
+    setDollar(next);
+    onBudget(qIndex, next);
   };
+  const release = () => onBudgetRelease(qIndex);
 
   return (
     <div className="mx-auto max-w-[420px]">
       <div className={cn("motion-safe:transition-opacity", noPref && "opacity-40")}>
         <div className="text-center">
           <span className="text-[40px] font-display font-extrabold tracking-[-0.02em] text-wn-text tabular-nums">
-            ${dollars}
+            ${dollar}
             {isTop && "+"}
           </span>
           <span className="ml-1 text-[15px] text-wn-text-2">/day</span>
@@ -222,10 +231,14 @@ function BudgetSlider({ q, qIndex, answers, onBudget }) {
         <input
           type="range"
           min={0}
-          max={stops.length - 1}
-          step={1}
-          value={localIdx}
-          onChange={(e) => commit(Number(e.target.value))}
+          max={1}
+          step="any"
+          value={position}
+          onChange={handleChange}
+          onPointerDown={onBudgetGrab}
+          onPointerUp={release}
+          onKeyDown={onBudgetGrab}
+          onKeyUp={release}
           aria-label="Daily budget in US dollars, not counting flights"
           className="mt-4 w-full h-2 rounded-full bg-wn-surface-2 accent-wn-cyan cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-wn-cyan"
         />
@@ -235,7 +248,7 @@ function BudgetSlider({ q, qIndex, answers, onBudget }) {
         </div>
         <div className="mt-3 min-h-[20px] text-center text-[14px] text-wn-text-2 tabular-nums">
           {hasTotal
-            ? `About $${dollars * travelDays} for your ${travelDays} day${travelDays === 1 ? "" : "s"}`
+            ? `About $${dollar * travelDays} for your ${travelDays} day${travelDays === 1 ? "" : "s"}`
             : " "}
         </div>
       </div>
@@ -257,7 +270,7 @@ function BudgetSlider({ q, qIndex, answers, onBudget }) {
   );
 }
 
-// Pace/Activity (Q8/Q9) carry a one-line example under each option so the
+// Pace/Activity (Q7/Q8) carry a one-line example under each option so the
 // two questions read as clearly different things (a tester couldn't tell
 // them apart -- see docs/wherenova-pace-activity-brief.md). A segmented
 // control has no room for that second line at mobile widths (measured: 3-4
@@ -321,10 +334,10 @@ function DescriptiveOptionList({ q, qIndex, answers, onSingle }) {
   );
 }
 
-// Q7-9 (Climate/Pace/Activity) use a segmented control instead of loose
+// Q6-8 (Climate/Pace/Activity) use a segmented control instead of loose
 // chips: one bordered container, equal-width cells, divided by hairlines.
-// (Budget/Q6 used to be a fourth segmented-control question here too, but
-// its 4-cell layout clipped "Premium" to "Pr" at 320px -- it's now the
+// (Budget used to be a fourth segmented-control question here too, but its
+// 4-cell layout clipped "Premium" to "Pr" at 320px -- it's now the
 // BudgetSlider above instead.) These three carry noPref -- that's already a
 // reliable, existing signal for "this is a scale question" so no separate
 // id allowlist is needed.

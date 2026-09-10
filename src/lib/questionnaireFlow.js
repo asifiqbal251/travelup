@@ -1,6 +1,6 @@
-// Travel Fit flow. One question per screen on mobile; desktop (>=1024px)
-// deliberately pairs Q6+Q7 and Q8+Q9 on a shared screen (see screenOrderFor)
-// so related preferences sit side by side on wider viewports.
+// Travel Fit flow. One question per screen on every viewport (see
+// screenOrderFor) -- desktop used to pair two questions per screen, reversed
+// in docs/wherenova-polish-pass-v3.md Part E1.
 //
 // Presentation only — every answer maps to the SAME controlled vocabulary the
 // scoring engine already consumes (src/lib/options.js, src/lib/scoring.js).
@@ -12,13 +12,49 @@
 
 import { MONTHS } from "@/lib/options";
 
-// Slider stops for the budget question, USD/day, excluding flights. Dense
+// Breakpoints for the budget slider, USD/day, excluding flights. Dense
 // where the catalogue's daily_cost_low/mid/high figures actually cluster
 // ($65-$200 -- see docs/wherenova-numeric-budget-stage1-brief.md Step 1.5),
 // sparse at the extremes. The last stop is a "500+" ceiling: the scoring
 // model (scoring.js) already gives full marks to anything at or above a
 // destination's daily_cost_mid, so nothing above $500 needs its own stop.
+//
+// The slider itself moves continuously (see budgetPositionToDollar /
+// budgetDollarToPosition below) rather than snapping to these points, but
+// they still do the same job as before: they're the anchors of a
+// piecewise-linear position<->dollar mapping, so the dense $65-$200 band
+// (six of the thirteen intervals here) still claims proportionally more of
+// the slider's travel than the sparse $200-$500 band (three wider
+// intervals) -- roughly 46% of the travel vs 23%, despite covering a
+// smaller dollar span.
 export const BUDGET_STOPS = [20, 30, 40, 50, 65, 80, 100, 125, 150, 200, 250, 300, 400, 500];
+
+// Continuous slider position (0-1) -> dollars, piecewise-linear across
+// BUDGET_STOPS. Equal slider-travel per interval, so a dense run of small
+// intervals (the $65-$200 band) gets more travel per dollar than a sparse
+// run of wide ones (see BUDGET_STOPS comment above).
+export function budgetPositionToDollar(t) {
+  const stops = BUDGET_STOPS;
+  const segments = stops.length - 1;
+  const clamped = Math.min(1, Math.max(0, t));
+  const scaled = clamped * segments;
+  const i = Math.min(segments - 1, Math.floor(scaled));
+  const frac = scaled - i;
+  return Math.round(stops[i] + frac * (stops[i + 1] - stops[i]));
+}
+
+// Inverse of budgetPositionToDollar -- used to place the thumb for a
+// committed/hydrated dollar value (including legacy-anchor and resumed
+// values, which aren't necessarily one of the BUDGET_STOPS themselves).
+export function budgetDollarToPosition(dollar) {
+  const stops = BUDGET_STOPS;
+  const segments = stops.length - 1;
+  const d = Math.min(stops[segments], Math.max(stops[0], dollar));
+  let i = 0;
+  while (i < segments - 1 && d > stops[i + 1]) i++;
+  const frac = (d - stops[i]) / (stops[i + 1] - stops[i]);
+  return (i + frac) / segments;
+}
 
 // One-time migration anchors for a returning user's pre-numeric ordinal
 // budget tier (see hydrateBudget). Chosen to sit inside each old tier's
@@ -89,19 +125,6 @@ export const QUESTIONS = [
     ],
   },
   {
-    id: "budget",
-    field: "budget",
-    type: "budget",
-    eyebrow: "Budget",
-    noPref: true,
-    title: "What's your daily budget?",
-    hint: "Not counting flights — just what you'd spend once you're there: hotels, food, getting around, activities.",
-    // Non-uniform stops: dense where the catalogue's daily_cost figures
-    // actually cluster ($65-$200), sparse at the extremes. The last stop is
-    // a "500+" ceiling, not a hard cap on spend -- see BUDGET_STOPS below.
-    budgetStops: BUDGET_STOPS,
-  },
-  {
     id: "climate",
     field: "climate",
     type: "single",
@@ -145,10 +168,25 @@ export const QUESTIONS = [
       { key: "no-pref", label: "No preference", value: "No preference", noPref: true },
     ],
   },
+  {
+    id: "budget",
+    field: "budget",
+    type: "budget",
+    eyebrow: "Budget",
+    noPref: true,
+    title: "What's your daily budget?",
+    hint: "Not counting flights — just what you'd spend once you're there: hotels, food, getting around, activities.",
+    // Last question, deliberately: auto-advance is kept even though the
+    // slider is now continuous (no discrete "settled" stop to signal
+    // completion -- see BudgetSlider in QuestionView.jsx), so landing here
+    // means an early/accidental advance reaches the completion screen
+    // instead of silently skipping a real question.
+    budgetStops: BUDGET_STOPS,
+  },
 ];
 
-// One question per screen on every viewport -- desktop used to pair Q6+Q7
-// and Q8+Q9 above 1024px, but that was reversed
+// One question per screen on every viewport -- desktop used to pair two
+// questions per screen above 1024px, but that was reversed
 // (docs/wherenova-polish-pass-v3.md Part E1): it produced 7 screens on
 // desktop vs. 9 on mobile, forced an extra Continue click, and cramped
 // headlines. Parked for a possible deliberate revisit later
