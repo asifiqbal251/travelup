@@ -1,65 +1,38 @@
-import { cn } from "@/lib/utils";
-
-// 9 thin dashes — one per question. On desktop each answered dash is a button
-// that jumps to that question; the current dash carries a soft glow. On mobile
-// the dashes are too small to tap, so the whole rail opens a review sheet.
-export default function ProgressRail({ currentSet, answered, desktop, onJump, onOpenSheet }) {
-  const dashes = Array.from({ length: 9 });
-  const dash = (i) => {
-    const cur = currentSet.includes(i);
-    const on = answered[i];
-    return cn(
-      "h-[3px] w-[22px] rounded-full",
-      cur
-        ? "bg-wn-cyan shadow-[0_0_10px_0_rgba(63,216,224,0.7)]"
-        : on
-        ? "bg-wn-cyan"
-        : "bg-wn-line"
-    );
-  };
-
-  if (desktop) {
-    return (
-      <div
-        className="mx-auto flex w-full max-w-3xl items-center gap-2"
-        role="group"
-        aria-label="Question progress"
-      >
-        {dashes.map((_, i) => {
-          const on = answered[i];
-          const cur = currentSet.includes(i);
-          return (
-            <button
-              key={i}
-              type="button"
-              disabled={!on}
-              aria-label={`Question ${i + 1}${on ? ", answered" : ""}${cur ? ", current" : ""}`}
-              onClick={() => on && onJump(i)}
-              className={cn(
-                "h-[3px] w-[22px] rounded-full motion-safe:transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-wn-cyan focus-visible:ring-offset-2 focus-visible:ring-offset-wn-page",
-                cur
-                  ? "bg-wn-cyan shadow-[0_0_10px_0_rgba(63,216,224,0.7)]"
-                  : on
-                  ? "bg-wn-cyan"
-                  : "bg-wn-line cursor-default"
-              )}
-            />
-          );
-        })}
-      </div>
-    );
-  }
+// Full-width progress rail beneath the questionnaire header row. Replaces
+// the old nine floating dashes (Build A #5, docs/wherenova-fixes brief) --
+// a single filled track with nine equal tick dividers overlaid so the
+// discrete step count stays readable. The whole rail opens the answer
+// review sheet on tap/click, preserving the old dashes' jump-to-question
+// affordance (now via the sheet's per-question rows) instead of dropping it.
+export default function ProgressRail({ step, total, onOpenSheet }) {
+  const pct = total > 0 ? Math.max(0, Math.min(100, (step / total) * 100)) : 0;
 
   return (
     <button
       type="button"
       onClick={onOpenSheet}
       aria-label="Review your answers"
-      className="mx-auto flex w-full max-w-3xl items-center gap-2 py-1 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-wn-cyan"
+      role="progressbar"
+      aria-valuenow={step}
+      aria-valuemin={1}
+      aria-valuemax={total}
+      className="relative w-full h-1 rounded-full block focus:outline-none focus-visible:ring-2 focus-visible:ring-wn-cyan focus-visible:ring-offset-2 focus-visible:ring-offset-wn-page"
+      style={{ background: "#16283E" }}
     >
-      {dashes.map((_, i) => (
-        <span key={i} className={dash(i)} />
-      ))}
+      <span
+        aria-hidden="true"
+        className="absolute inset-y-0 left-0 rounded-full motion-safe:transition-[width] motion-safe:duration-[450ms] motion-safe:ease-[cubic-bezier(.4,0,.2,1)]"
+        style={{ width: `${pct}%`, background: "linear-gradient(90deg,#2C97A6,#5FC9D6)" }}
+      />
+      <span aria-hidden="true" className="absolute inset-0 flex">
+        {Array.from({ length: total }).map((_, i) => (
+          <span
+            key={i}
+            className="flex-1"
+            style={i < total - 1 ? { borderRight: "1px solid rgba(10,22,40,.85)" } : undefined}
+          />
+        ))}
+      </span>
     </button>
   );
 }

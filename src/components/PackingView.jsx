@@ -13,7 +13,7 @@ import { toast } from "@/components/ui/use-toast";
 import { ToastAction } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
 import PackingRing from "@/components/PackingRing";
-import { Check, Plus, Trash2, X, RotateCcw } from "lucide-react";
+import { Check, Plus, Trash2, X } from "lucide-react";
 
 function slug(s) {
   return s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
@@ -110,19 +110,17 @@ export default function PackingView({ groups, state, handlers, nav, scrollOffset
 
   return (
     <div>
-      <div className="rounded-2xl bg-wn-surface-l p-6 sm:p-8 flex flex-col items-center mb-6">
-        <PackingRing percent={progress} />
-        <p className="text-sm text-wn-text-2-l mt-2">
-          <span className="font-semibold text-wn-text-l">{done}</span> of {totalItems} items packed
-        </p>
+      {/* Sticky on mobile only, pinned below the L1/L2/L3 stack (scrollOffset
+          already accounts for that stack's measured height) -- see docs/
+          wherenova-fixes brief, Build A #1. */}
+      <div
+        className="sticky md:static z-10 bg-wn-page-l -mx-4 px-4 md:mx-0 md:px-0 mb-4"
+        style={{ top: scrollOffset }}
+      >
+        <PackingRing percent={progress} done={done} total={totalItems} onReset={() => setResetOpen(true)} />
       </div>
 
-      <div className="flex items-center justify-between mb-4 gap-3">
-        <h2 className="font-display text-sm font-bold text-wn-text-l">Packing list</h2>
-        <Button variant="outline" size="sm" onClick={() => setResetOpen(true)} className="min-h-9">
-          <RotateCcw className="w-4 h-4 mr-2" /> Reset
-        </Button>
-      </div>
+      <h2 className="font-display text-sm font-bold text-wn-text-l mb-4">Packing list</h2>
 
       <div className="mb-6">
         <Label>Add a custom item</Label>

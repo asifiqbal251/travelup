@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link, Outlet, useNavigate, useLocation } from "react-router-dom";
 import { Menu, Trash2, LogIn, LogOut, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import WherenovaLogo from "@/components/WherenovaLogo";
+import Logo from "@/components/Logo";
 import {
   AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogFooter,
   AlertDialogTitle, AlertDialogDescription, AlertDialogAction, AlertDialogCancel
@@ -128,7 +128,10 @@ export default function TravelUpLayout() {
             aria-label="WhereNova home"
             className={`flex items-center rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-wn-cyan ${ringOffset}`}
           >
-            <WherenovaLogo onDark widthClass="w-[38px] sm:w-[42px]" wordmarkClass="h-[22px] sm:h-[24px]" />
+            {/* wherenova-wordmark.png is white lettering, illegible on the
+                "light"/"transparent" nav states -- only the true dark nav
+                gets the real asset; see Logo.jsx's temporary-gap note. */}
+            <Logo surface={surface === "dark" ? "dark" : "light"} size={34} />
           </Link>
           <nav className="hidden sm:flex items-center gap-1">
             <Button asChild variant="ghost" className={`hover:bg-transparent ${linkCls} focus-visible:!ring-wn-cyan ${ringOffset}`}>
@@ -260,7 +263,7 @@ export default function TravelUpLayout() {
       <footer className="bg-cinema text-on-dark/70">
         <div className="max-w-5xl mx-auto px-4 py-10 text-sm">
           <p className="mb-3 flex items-center gap-2">
-            <WherenovaLogo onDark widthClass="w-[34px]" wordmarkClass="h-[18px]" />
+            <Logo surface="dark" size={30} />
           </p>
           <p className="mb-3">Helping unsure travellers discover where to go next.</p>
           <p className="text-xs max-w-2xl leading-relaxed">

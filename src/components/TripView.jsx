@@ -78,7 +78,7 @@ function overviewSectionFlags(display) {
     typeof display.dailyCostLow === "number" &&
     typeof display.dailyCostMid === "number" &&
     typeof display.dailyCostHigh === "number";
-  const hasWeather = (display.climateTags || []).length > 0;
+  const hasClimate = (display.climateTags || []).length > 0;
   const hasPractical = !!(
     display.currencyCode || display.currencyName ||
     (display.languages || []).length ||
@@ -87,7 +87,7 @@ function overviewSectionFlags(display) {
     display.connectivityNote || display.paymentNorm || display.tippingNorm ||
     (Array.isArray(display.etiquetteNotes) && display.etiquetteNotes.length > 0)
   );
-  return { summary: !!display.intro, visa: hasVisa, budget: hasBudget, weather: hasWeather, practical: hasPractical };
+  return { summary: !!display.intro, visa: hasVisa, budget: hasBudget, climate: hasClimate, practical: hasPractical };
 }
 
 // Full-bleed dark hero -- the trip page's entry point, so the destination
@@ -145,13 +145,20 @@ export function TripHeader({ display, score, backHref, backLabel }) {
 // Sticky jump-nav pill row shared by all three tabs. `items` is
 // [{id, label, filled}] -- `filled` renders a small teal dot (Packing's
 // fully-packed-category indicator; unused by Overview/Itinerary).
-function JumpNav({ items, activeId, onSelect, ariaLabel }) {
+//
+// `level` picks the tab-hierarchy weight (see docs/wherenova-fixes brief,
+// Build A #3): "section" is L2 (Overview pills, Packing category pills),
+// "day" is L3 (Itinerary day chips). Both stay inside the same left/right
+// edges as the L1 bar and the content column -- no `-mx-4` bleed, which is
+// what let the old day-chip row render wider than the tab bar above it.
+function JumpNav({ items, activeId, onSelect, ariaLabel, level = "section" }) {
   if (!items.length) return null;
+  const isDay = level === "day";
   return (
     <div
       role="tablist"
       aria-label={ariaLabel}
-      className="overflow-x-auto no-scrollbar -mx-4 px-4 pt-2"
+      className="w-full overflow-x-auto no-scrollbar pt-2"
     >
       <div className="flex gap-2 w-max pb-0.5">
         {items.map((item) => {
@@ -164,10 +171,20 @@ function JumpNav({ items, activeId, onSelect, ariaLabel }) {
               aria-selected={active}
               onClick={() => onSelect(item.id)}
               className={cn(
-                "flex items-center gap-1.5 whitespace-nowrap rounded-full px-3.5 py-1.5 text-sm font-medium min-h-9 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-wn-cyan",
-                active
-                  ? "bg-wn-text-l text-white"
-                  : "bg-wn-surface-l text-wn-text-2-l hover:bg-wn-surface-2-l"
+                "flex items-center gap-1.5 whitespace-nowrap font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-wn-cyan focus-visible:ring-offset-2",
+                isDay
+                  ? cn(
+                      "h-7 px-3 rounded-[7px] text-[12.5px] border",
+                      active
+                        ? "border-wn-cyan-2 bg-[#F0FAFB] text-wn-cyan-2"
+                        : "border-wn-line-2-l bg-wn-surface-l text-wn-text-2-l hover:bg-wn-surface-2-l"
+                    )
+                  : cn(
+                      "h-8 px-3.5 rounded-lg text-[13px] border",
+                      active
+                        ? "border-wn-text-l bg-wn-text-l text-white"
+                        : "border-wn-line-l bg-transparent text-wn-text-2-l hover:bg-wn-surface-2-l"
+                    )
               )}
             >
               {item.label}
@@ -198,12 +215,17 @@ export default function TripView({
   const scrollOffset = TAB_BAR_STICKY_TOP + stickyHeight;
 
   const overviewFlags = overviewSectionFlags(display);
+  // Pill order must equal DOM section order (the pills are scroll anchors) --
+  // Summary, Budget, Travel essentials, Visa & entry. The Weather pill was
+  // removed: its content (a month-resolved weather string) doesn't exist in
+  // the destination data model today -- only an annual climateTags label
+  // does, and that already renders as the "Climate" row inside Summary's
+  // Good to know block. Nothing to relocate without fabricating data.
   const overviewItems = [
     overviewFlags.summary && { id: "ov-summary", label: "Summary" },
-    overviewFlags.visa && { id: "ov-visa", label: "Visa & entry" },
     overviewFlags.budget && { id: "ov-budget", label: "Budget" },
-    overviewFlags.weather && { id: "ov-weather", label: "Weather" },
-    overviewFlags.practical && { id: "ov-practical", label: "Practical info" }
+    overviewFlags.practical && { id: "ov-practical", label: "Travel essentials" },
+    overviewFlags.visa && { id: "ov-visa", label: "Visa & entry" }
   ].filter(Boolean);
 
   const itineraryItems = (itinerary || []).map((d) => ({ id: `day-${d.day}`, label: `Day ${d.day}` }));
@@ -255,6 +277,7 @@ export default function TripView({
           jumpTo(id, setItineraryActiveId);
         }}
         ariaLabel="Jump to day"
+        level="day"
       />
     );
   } else if (activeTab === "packing" && showPackingPillRow) {
@@ -282,11 +305,31 @@ export default function TripView({
           />
         </div>
       )}
-      <div ref={stickyRef} className="sticky top-16 z-20 -mx-4 px-4 py-2 bg-wn-page-l border-b border-wn-line-l">
-        <TabsList className="grid grid-cols-3 w-full max-w-md mx-auto">
-          <TabsTrigger value="itinerary">Itinerary</TabsTrigger>
-          <TabsTrigger value="packing">Packing</TabsTrigger>
-          <TabsTrigger value="overview">Overview</TabsTrigger>
+      {/* L1/L2/L3 sticky stack: all three bars share the content column's own
+          left/right edges (no -mx-4 bleed) so nothing below L1 can render
+          wider than it -- see docs/wherenova-fixes brief, Build A #3. */}
+      <div ref={stickyRef} className="sticky top-16 z-20 py-2 bg-wn-page-l border-b border-wn-line-l">
+        <TabsList
+          className="grid grid-cols-3 w-full h-11 p-1 rounded-xl bg-wn-surface-2-l"
+        >
+          <TabsTrigger
+            value="itinerary"
+            className="h-full rounded-[9px] text-[14px] font-medium text-wn-text-2-l data-[state=active]:bg-white data-[state=active]:text-wn-text-l data-[state=active]:font-semibold data-[state=active]:shadow-[0_1px_3px_rgba(15,27,45,.13)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-wn-cyan focus-visible:ring-offset-2"
+          >
+            Itinerary
+          </TabsTrigger>
+          <TabsTrigger
+            value="packing"
+            className="h-full rounded-[9px] text-[14px] font-medium text-wn-text-2-l data-[state=active]:bg-white data-[state=active]:text-wn-text-l data-[state=active]:font-semibold data-[state=active]:shadow-[0_1px_3px_rgba(15,27,45,.13)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-wn-cyan focus-visible:ring-offset-2"
+          >
+            Packing
+          </TabsTrigger>
+          <TabsTrigger
+            value="overview"
+            className="h-full rounded-[9px] text-[14px] font-medium text-wn-text-2-l data-[state=active]:bg-white data-[state=active]:text-wn-text-l data-[state=active]:font-semibold data-[state=active]:shadow-[0_1px_3px_rgba(15,27,45,.13)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-wn-cyan focus-visible:ring-offset-2"
+          >
+            Overview
+          </TabsTrigger>
         </TabsList>
         {currentJumpNav}
       </div>
@@ -434,8 +477,8 @@ function OverviewView({ display, scrollOffset, flags, travelFit }) {
           <div className="flex justify-between gap-4 py-2 border-b border-wn-line-l"><dt className="text-wn-text-2-l">Best for</dt><dd className="text-wn-text-l text-right">{display.bestForSummary}</dd></div>
           <div className="flex justify-between gap-4 py-2 border-b border-wn-line-l"><dt className="text-wn-text-2-l">Suggested length</dt><dd className="text-wn-text-l">{display.minDays}–{display.maxDays} days</dd></div>
           <div className="flex justify-between gap-4 py-2 border-b border-wn-line-l"><dt className="text-wn-text-2-l">Budget</dt><dd className="text-wn-text-l text-right">{orderedBudgetLabel(display.budgetCategories)}</dd></div>
-          {flags.weather && (
-            <div id="ov-weather" style={{ scrollMarginTop: scrollOffset + 12 }} className="flex justify-between gap-4 py-2 border-b border-wn-line-l">
+          {flags.climate && (
+            <div className="flex justify-between gap-4 py-2 border-b border-wn-line-l">
               <dt className="text-wn-text-2-l">Climate</dt><dd className="text-wn-text-l text-right">{(display.climateTags || []).join(", ")}</dd>
             </div>
           )}

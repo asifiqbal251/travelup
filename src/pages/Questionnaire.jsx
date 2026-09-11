@@ -17,7 +17,7 @@ import { getPrefs, setPrefsWithHistory, setSelectedDestinationId } from "@/lib/s
 import ProgressRail from "@/components/questionnaire/ProgressRail";
 import QuestionView from "@/components/questionnaire/QuestionView";
 import CompletionScreen from "@/components/questionnaire/CompletionScreen";
-import WherenovaLogo from "@/components/WherenovaLogo";
+import Logo from "@/components/Logo";
 
 function useMinWidth(px) {
   const [ok, setOk] = useState(() =>
@@ -278,9 +278,10 @@ export default function Questionnaire() {
     return screenComplete && mountedComplete;
   })();
 
-  const counter = resuming || done
-    ? ""
-    : `${sQuestions.map((qi) => qi + 1).join("–")} of 9`;
+  // Step label lives once now, in the header row (Build A #5) -- the
+  // footer's old duplicate "N of 9" counter is gone.
+  const stepNumber = done ? QUESTIONS.length : order.indexOf(current) + 1;
+  const stepLabel = resuming ? "" : `Step ${stepNumber} of ${QUESTIONS.length}`;
 
   const glowHue = done ? COMPLETION_HUE : (QUESTION_HUES[current] || QUESTION_HUES[0]);
 
@@ -297,58 +298,28 @@ export default function Questionnaire() {
       {/* screen-reader live region */}
       <div ref={liveRef} aria-live="polite" aria-atomic="true" className="sr-only" />
 
-      {/* header: wordmark + progress rail. Full-bleed immersive route -- no
-          site chrome, see docs/travelfit-visual-fidelity-pass.md #1. */}
+      {/* header: logo + step label on one row, full-width progress rail
+          beneath it. Full-bleed immersive route -- no site chrome, see
+          docs/travelfit-visual-fidelity-pass.md #1. Real logo assets (Build
+          A #5) replace the old inline text wordmark on this screen. */}
       <header className="relative px-4 sm:px-6 pt-5 pb-3">
-        {desktop ? (
-          // Desktop (lg+, >=1024px): unchanged from before this fix — the
-          // wordmark absolutely overlaid on the centered rail never
-          // collided here, so this branch is untouched.
-          <>
-            <ProgressRail
-              currentSet={sQuestions}
-              answered={answeredFlags}
-              desktop={desktop}
-              onJump={jumpTo}
-              onOpenSheet={() => setSheetOpen(true)}
-            />
-            <Link
-              to="/"
-              aria-label="WhereNova home"
-              className="absolute z-10 left-4 sm:left-6 top-5 leading-none focus:outline-none focus-visible:ring-2 focus-visible:ring-wn-cyan rounded"
-            >
-              <span
-                className="font-display font-extrabold whitespace-nowrap text-wn-text"
-                style={{ fontSize: 17, letterSpacing: "-0.01em" }}
-              >
-                Where<span className="text-wn-cyan">N</span>ova
-              </span>
-            </Link>
-          </>
-        ) : (
-          // Below lg: the rail is full-width (`w-full max-w-3xl`), so an
-          // absolutely-positioned logo in the same corner collided with it.
-          // Lay them out side-by-side instead, and use the real logo asset
-          // (mark + wordmark) to match the rest of the app.
-          <div className="flex items-center gap-3">
-            <Link
-              to="/"
-              aria-label="WhereNova home"
-              className="shrink-0 leading-none focus:outline-none focus-visible:ring-2 focus-visible:ring-wn-cyan rounded"
-            >
-              <WherenovaLogo onDark widthClass="w-[28px]" wordmarkClass="h-[16px]" />
-            </Link>
-            <div className="min-w-0 flex-1">
-              <ProgressRail
-                currentSet={sQuestions}
-                answered={answeredFlags}
-                desktop={desktop}
-                onJump={jumpTo}
-                onOpenSheet={() => setSheetOpen(true)}
-              />
-            </div>
-          </div>
-        )}
+        <div className="flex items-center justify-between gap-3 mb-3">
+          <Link
+            to="/"
+            aria-label="WhereNova home"
+            className="shrink-0 leading-none focus:outline-none focus-visible:ring-2 focus-visible:ring-wn-cyan rounded"
+          >
+            <Logo surface="dark" size={desktop ? 30 : 26} />
+          </Link>
+          {stepLabel && (
+            <span className="text-[12.5px] text-wn-text-2 tabular-nums shrink-0">{stepLabel}</span>
+          )}
+        </div>
+        <ProgressRail
+          step={stepNumber}
+          total={QUESTIONS.length}
+          onOpenSheet={() => setSheetOpen(true)}
+        />
       </header>
 
       {/* main — optically centred (grid row 2, 1fr, place-items:center) */}
@@ -405,7 +376,6 @@ export default function Questionnaire() {
               Continue <ArrowRight className="w-4 h-4" />
             </button>
           )}
-          {counter && <span className="text-sm text-wn-text-2 tabular-nums">{counter}</span>}
         </div>
       </footer>
 
