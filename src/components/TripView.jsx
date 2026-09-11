@@ -15,7 +15,7 @@ import { scrollToId } from "@/lib/scrollNav";
 import { useScrollSpy } from "@/hooks/useScrollSpy";
 import { useMeasuredHeight } from "@/hooks/useMeasuredHeight";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { ArrowLeft, ShieldCheck, ExternalLink } from "lucide-react";
+import { ArrowLeft, ShieldCheck, ExternalLink, PlaneTakeoff, Footprints } from "lucide-react";
 
 // The shared tab bar sticks at top-16 (see the wrapper below) -- 64px,
 // matching TravelUpLayout's fixed header. Kept as a literal here rather than
@@ -338,7 +338,13 @@ function ItineraryView({ itinerary, openDay, setOpenDay, scrollOffset }) {
                 className="relative z-10 flex-shrink-0 w-8 h-8 rounded-full bg-wn-surface-l ring-1 ring-wn-line-l flex items-center justify-center font-display text-xs font-bold text-wn-text-l"
                 aria-hidden="true"
               >
-                {d.day}
+                {d.isTravel ? (
+                  <PlaneTakeoff className="w-4 h-4" />
+                ) : d.flexible ? (
+                  <Footprints className="w-4 h-4" />
+                ) : (
+                  d.day
+                )}
               </span>
               <div className="flex-1 min-w-0">
                 <DayCard
