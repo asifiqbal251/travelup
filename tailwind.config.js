@@ -87,6 +87,8 @@ module.exports = {
   			'wn-cyan-bright': 'rgb(var(--wn-cyan-bright) / <alpha-value>)',
   			'wn-coral': 'rgb(var(--wn-coral) / <alpha-value>)',
   			'wn-ink-deep': 'rgb(var(--wn-ink-deep) / <alpha-value>)',
+  			'wn-amber': 'rgb(var(--wn-amber) / <alpha-value>)',
+  			'wn-green': 'rgb(var(--wn-green) / <alpha-value>)',
   			sidebar: {
   				DEFAULT: 'hsl(var(--sidebar-background))',
   				foreground: 'hsl(var(--sidebar-foreground))',

@@ -147,6 +147,16 @@ export default function SavedTripDetail() {
     });
   };
   const handleReset = () => persistPacking({ checkedItemIds: [], customItems: [], removedItemIds: packingState.removedItemIds });
+  // See TripDetail.jsx's handleSetChecked for why this can't be N calls to
+  // handleToggle (stale packingState closure).
+  const handleSetChecked = (ids, checked) => {
+    const idSet = new Set(ids);
+    const withoutThese = packingState.checkedItemIds.filter((x) => !idSet.has(x));
+    persistPacking({
+      ...packingState,
+      checkedItemIds: checked ? [...withoutThese, ...ids] : withoutThese
+    });
+  };
   const handleDeleteItem = (id) => {
     persistPacking({
       ...packingState,
@@ -176,7 +186,9 @@ export default function SavedTripDetail() {
     <div>
       <TripHeader display={display} score={typeof trip.score === "number" ? trip.score : null} backHref="/saved-trips" backLabel="Back to saved trips" />
 
-      <div className="relative -mt-6 sm:-mt-8 rounded-t-[28px] sm:rounded-t-[32px] bg-wn-page-l overflow-hidden">
+      {/* overflow-clip, not overflow-hidden -- see TripDetail.jsx for why
+          (hidden breaks position:sticky on every descendant, clip doesn't). */}
+      <div className="relative -mt-6 sm:-mt-8 rounded-t-[28px] sm:rounded-t-[32px] bg-wn-page-l overflow-clip">
         <div className="max-w-3xl mx-auto px-4 pt-8 pb-8">
           <div className="mb-6">
             <Button
@@ -201,7 +213,8 @@ export default function SavedTripDetail() {
               onRemove: handleRemove,
               onReset: handleReset,
               onDelete: handleDeleteItem,
-              onRestore: handleRestoreItem
+              onRestore: handleRestoreItem,
+              onSetChecked: handleSetChecked
             }}
           />
         </div>

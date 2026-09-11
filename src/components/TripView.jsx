@@ -1,27 +1,28 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Image } from "@/components/ui/image";
-import {
-  Select, SelectTrigger, SelectValue, SelectContent, SelectItem
-} from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import {
-  AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogFooter,
-  AlertDialogTitle, AlertDialogDescription, AlertDialogAction, AlertDialogCancel
-} from "@/components/ui/alert-dialog";
-import { toast } from "@/components/ui/use-toast";
-import { ToastAction } from "@/components/ui/toast";
 import TravelFit from "@/components/TravelFit";
 import TravelFitRing from "@/components/TravelFitRing";
 import DayCard from "@/components/DayCard";
+import PackingView, { packingCategorySummaries } from "@/components/PackingView";
 import { TRAVEL_FALLBACK_IMAGE } from "@/lib/fallbackImage";
 import { nameWithCountry } from "@/lib/destinationLabel";
 import { flagForCountry } from "@/lib/countryFlag";
 import { BUDGET_ORDER } from "@/lib/options";
-import { Check, Plus, Trash2, X, RotateCcw, ArrowLeft, ShieldCheck, ExternalLink } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { scrollToId } from "@/lib/scrollNav";
+import { useScrollSpy } from "@/hooks/useScrollSpy";
+import { useMeasuredHeight } from "@/hooks/useMeasuredHeight";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { ArrowLeft, ShieldCheck, ExternalLink } from "lucide-react";
+
+// The shared tab bar sticks at top-16 (see the wrapper below) -- 64px,
+// matching TravelUpLayout's fixed header. Kept as a literal here rather than
+// importing NAV_HEIGHT from that layout component: this is a Tailwind
+// utility value (top-16), not a runtime measurement, and the two are
+// independent surfaces that happen to agree today.
+const TAB_BAR_STICKY_TOP = 64;
 
 // Single-entry arrays labelled "Emergency" are the common case (a unified
 // number) -- show just the number since the "Emergency" label is redundant
@@ -61,6 +62,33 @@ const INTENSITY_COLOR = {
   High: "bg-wn-text-l text-white",
   "Highly active": "bg-wn-text-l text-white"
 };
+
+// Which Overview subsections actually have content for this destination --
+// mirrors each section's own hide-when-empty check below so the jump-nav
+// pill list never points at a section that would render nothing.
+function overviewSectionFlags(display) {
+  const hasVisa = !!(
+    display.entryOverview ||
+    display.passportValidity ||
+    display.typicalTouristStay ||
+    (Array.isArray(display.entryRequirementsNotes) && display.entryRequirementsNotes.length > 0) ||
+    formatReviewedDate(display.entryLastReviewed)
+  );
+  const hasBudget =
+    typeof display.dailyCostLow === "number" &&
+    typeof display.dailyCostMid === "number" &&
+    typeof display.dailyCostHigh === "number";
+  const hasWeather = (display.climateTags || []).length > 0;
+  const hasPractical = !!(
+    display.currencyCode || display.currencyName ||
+    (display.languages || []).length ||
+    (display.plugTypes || []).length || display.voltage ||
+    formatEmergencyNumbers(display.emergencyNumbers) ||
+    display.connectivityNote || display.paymentNorm || display.tippingNorm ||
+    (Array.isArray(display.etiquetteNotes) && display.etiquetteNotes.length > 0)
+  );
+  return { summary: !!display.intro, visa: hasVisa, budget: hasBudget, weather: hasWeather, practical: hasPractical };
+}
 
 // Full-bleed dark hero -- the trip page's entry point, so the destination
 // name lives here as a real H1 on a real route (not only inside a modal).
@@ -114,14 +142,134 @@ export function TripHeader({ display, score, backHref, backLabel }) {
   );
 }
 
+// Sticky jump-nav pill row shared by all three tabs. `items` is
+// [{id, label, filled}] -- `filled` renders a small teal dot (Packing's
+// fully-packed-category indicator; unused by Overview/Itinerary).
+function JumpNav({ items, activeId, onSelect, ariaLabel }) {
+  if (!items.length) return null;
+  return (
+    <div
+      role="tablist"
+      aria-label={ariaLabel}
+      className="overflow-x-auto no-scrollbar -mx-4 px-4 pt-2"
+    >
+      <div className="flex gap-2 w-max pb-0.5">
+        {items.map((item) => {
+          const active = activeId === item.id;
+          return (
+            <button
+              key={item.id}
+              type="button"
+              role="tab"
+              aria-selected={active}
+              onClick={() => onSelect(item.id)}
+              className={cn(
+                "flex items-center gap-1.5 whitespace-nowrap rounded-full px-3.5 py-1.5 text-sm font-medium min-h-9 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-wn-cyan",
+                active
+                  ? "bg-wn-text-l text-white"
+                  : "bg-wn-surface-l text-wn-text-2-l hover:bg-wn-surface-2-l"
+              )}
+            >
+              {item.label}
+              {item.filled && (
+                <span
+                  aria-hidden="true"
+                  className={cn("w-1.5 h-1.5 rounded-full flex-shrink-0", active ? "bg-white" : "bg-wn-cyan")}
+                />
+              )}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 // Shared Itinerary / Packing / Overview tabs. Both the live Trip Detail page and
 // the Saved Trip detail page render through this component. `travelFit` is
 // optional and, when present, renders the Travel Fit summary strip.
 export default function TripView({
   display, itinerary, packingGroups, packingState, packingHandlers, travelFit
 }) {
+  const [activeTab, setActiveTab] = useState("itinerary");
+  const [openDay, setOpenDay] = useState(1);
+  const isMobile = useIsMobile();
+  const [stickyRef, stickyHeight] = useMeasuredHeight();
+  const scrollOffset = TAB_BAR_STICKY_TOP + stickyHeight;
+
+  const overviewFlags = overviewSectionFlags(display);
+  const overviewItems = [
+    overviewFlags.summary && { id: "ov-summary", label: "Summary" },
+    overviewFlags.visa && { id: "ov-visa", label: "Visa & entry" },
+    overviewFlags.budget && { id: "ov-budget", label: "Budget" },
+    overviewFlags.weather && { id: "ov-weather", label: "Weather" },
+    overviewFlags.practical && { id: "ov-practical", label: "Practical info" }
+  ].filter(Boolean);
+
+  const itineraryItems = (itinerary || []).map((d) => ({ id: `day-${d.day}`, label: `Day ${d.day}` }));
+
+  const packingSummaries = packingCategorySummaries(packingGroups, packingState);
+  const packingItems = packingSummaries.map((g) => ({ id: g.id, label: g.category, filled: g.allPacked }));
+
+  const [overviewActiveId, setOverviewActiveId] = useScrollSpy(
+    overviewItems.map((i) => i.id),
+    { active: activeTab === "overview", offsetPx: scrollOffset }
+  );
+  const [itineraryActiveId, setItineraryActiveId] = useScrollSpy(
+    itineraryItems.map((i) => i.id),
+    { active: activeTab === "itinerary", offsetPx: scrollOffset }
+  );
+  const [packingActiveId, setPackingActiveId] = useScrollSpy(
+    packingItems.map((i) => i.id),
+    { active: activeTab === "packing", offsetPx: scrollOffset }
+  );
+
+  const jumpTo = (id, setter) => {
+    setter(id);
+    scrollToId(id);
+  };
+
+  // On desktop the Packing tab uses a scroll-to-anchor sidebar instead of
+  // the top pill row (see PackingView) -- showing both would be redundant
+  // navigation for the same five-category list.
+  const showPackingPillRow = isMobile;
+
+  let currentJumpNav = null;
+  if (activeTab === "overview") {
+    currentJumpNav = (
+      <JumpNav
+        items={overviewItems}
+        activeId={overviewActiveId}
+        onSelect={(id) => jumpTo(id, setOverviewActiveId)}
+        ariaLabel="Jump to Overview section"
+      />
+    );
+  } else if (activeTab === "itinerary") {
+    currentJumpNav = (
+      <JumpNav
+        items={itineraryItems}
+        activeId={itineraryActiveId}
+        onSelect={(id) => {
+          const day = Number(id.replace("day-", ""));
+          if (!Number.isNaN(day)) setOpenDay(day);
+          jumpTo(id, setItineraryActiveId);
+        }}
+        ariaLabel="Jump to day"
+      />
+    );
+  } else if (activeTab === "packing" && showPackingPillRow) {
+    currentJumpNav = (
+      <JumpNav
+        items={packingItems}
+        activeId={packingActiveId}
+        onSelect={(id) => jumpTo(id, setPackingActiveId)}
+        ariaLabel="Jump to packing category"
+      />
+    );
+  }
+
   return (
-    <Tabs defaultValue="itinerary" className="w-full">
+    <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
       {travelFit && (
         <div className="mb-6">
           <TravelFit
@@ -132,35 +280,41 @@ export default function TripView({
               intercityNote: display.intercityNote
             }}
           />
-          <TripBudget display={display} travelFit={travelFit} />
         </div>
       )}
-      <div className="sticky top-16 z-20 -mx-4 px-4 py-2 bg-wn-page-l border-b border-wn-line-l">
+      <div ref={stickyRef} className="sticky top-16 z-20 -mx-4 px-4 py-2 bg-wn-page-l border-b border-wn-line-l">
         <TabsList className="grid grid-cols-3 w-full max-w-md mx-auto">
           <TabsTrigger value="itinerary">Itinerary</TabsTrigger>
           <TabsTrigger value="packing">Packing</TabsTrigger>
           <TabsTrigger value="overview">Overview</TabsTrigger>
         </TabsList>
+        {currentJumpNav}
       </div>
       <TabsContent value="itinerary" className="mt-6">
-        <ItineraryView itinerary={itinerary} />
+        <ItineraryView
+          itinerary={itinerary}
+          openDay={openDay}
+          setOpenDay={setOpenDay}
+          scrollOffset={scrollOffset}
+        />
       </TabsContent>
       <TabsContent value="packing" className="mt-6">
         <PackingView
           groups={packingGroups}
           state={packingState}
           handlers={packingHandlers}
+          scrollOffset={scrollOffset}
+          nav={{ items: packingItems, activeId: packingActiveId, onSelect: (id) => jumpTo(id, setPackingActiveId) }}
         />
       </TabsContent>
       <TabsContent value="overview" className="mt-6">
-        <OverviewView display={display} />
+        <OverviewView display={display} scrollOffset={scrollOffset} flags={overviewFlags} travelFit={travelFit} />
       </TabsContent>
     </Tabs>
   );
 }
 
-function ItineraryView({ itinerary }) {
-  const [openDay, setOpenDay] = useState(1);
+function ItineraryView({ itinerary, openDay, setOpenDay, scrollOffset }) {
   if (!itinerary || !itinerary.length) {
     return <p className="text-wn-text-2-l">No itinerary available for this combination.</p>;
   }
@@ -174,7 +328,12 @@ function ItineraryView({ itinerary }) {
         <span className="absolute left-4 top-4 bottom-4 w-px bg-wn-line-l" aria-hidden="true" />
         <div className="space-y-5">
           {itinerary.map((d) => (
-            <div key={d.day} className="relative flex gap-4">
+            <div
+              key={d.day}
+              id={`day-${d.day}`}
+              style={{ scrollMarginTop: scrollOffset + 12 }}
+              className="relative flex gap-4"
+            >
               <span
                 className="relative z-10 flex-shrink-0 w-8 h-8 rounded-full bg-wn-surface-l ring-1 ring-wn-line-l flex items-center justify-center font-display text-xs font-bold text-wn-text-l"
                 aria-hidden="true"
@@ -197,225 +356,16 @@ function ItineraryView({ itinerary }) {
   );
 }
 
-function PackingView({ groups, state, handlers }) {
-  const [resetOpen, setResetOpen] = useState(false);
-  const [newItem, setNewItem] = useState("");
-  const [newCat, setNewCat] = useState((groups && groups[0] && groups[0].category) || "Optional items");
-  const [showRemoved, setShowRemoved] = useState(false);
-  const { onToggle, onAdd, onRemove, onReset, onDelete, onRestore } = handlers || {};
-
-  const addCustom = () => {
-    const label = newItem.trim();
-    if (!label) return;
-    onAdd(label, newCat);
-    setNewItem("");
-  };
-  const confirmReset = () => { onReset(); setResetOpen(false); };
-
-  const checkedItemIds = (state && state.checkedItemIds) || [];
-  const customItems = (state && state.customItems) || [];
-  const removedItemIds = (state && state.removedItemIds) || [];
-  const isChecked = (id) => checkedItemIds.includes(id);
-  const isRemoved = (id) => removedItemIds.includes(id);
-
-  // Generated items removed for this trip are filtered out of the main list
-  // but kept discoverable in the "removed" drawer below -- the deletion list
-  // is applied as a filter on top of the (unfiltered) generated groups, so a
-  // regenerated itinerary with the same stable item ids never brings a
-  // deleted item back.
-  const allGeneratedItems = (groups || []).flatMap((g) => g.items);
-  const removedEntries = removedItemIds
-    .map((id) => allGeneratedItems.find((it) => it.id === id))
-    .filter(Boolean);
-  const visibleGroups = (groups || []).map((g) => ({
-    ...g,
-    items: g.items.filter((it) => !isRemoved(it.id))
-  }));
-
-  const totalItems = visibleGroups.reduce((n, g) => n + g.items.length, 0) + customItems.length;
-  const done = checkedItemIds.filter((id) => !isRemoved(id)).length;
-  const progress = totalItems ? Math.round((done / totalItems) * 100) : 0;
-
-  const handleDelete = (id, label) => {
-    onDelete(id);
-    toast({
-      description: `"${label}" removed from your packing list`,
-      action: (
-        <ToastAction altText="Undo remove" onClick={() => onRestore(id)}>
-          Undo
-        </ToastAction>
-      )
-    });
-  };
-
-  return (
-    <div>
-      <div className="flex items-center justify-between mb-4 gap-3">
-        <div className="text-sm text-wn-text-2-l">
-          <span className="font-semibold text-wn-text-l">{done}</span> / {totalItems} packed · {progress}%
-        </div>
-        <Button variant="outline" size="sm" onClick={() => setResetOpen(true)} className="min-h-9">
-          <RotateCcw className="w-4 h-4 mr-2" /> Reset
-        </Button>
-      </div>
-
-      <div className="mb-6">
-        <Label>Add a custom item</Label>
-        <div className="flex flex-col sm:flex-row gap-2 mt-2">
-          <Input
-            value={newItem}
-            onChange={(e) => setNewItem(e.target.value)}
-            placeholder="e.g. Travel pillow"
-            className="min-h-11 flex-1 bg-wn-surface-l"
-            onKeyDown={(e) => e.key === "Enter" && addCustom()}
-          />
-          <Select value={newCat} onValueChange={setNewCat}>
-            <SelectTrigger className="min-h-11 sm:w-48 bg-wn-surface-l" aria-label="Category">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {(groups || []).map((g) => (
-                <SelectItem key={g.category} value={g.category}>{g.category}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Button onClick={addCustom} className="bg-wn-text-l hover:bg-wn-text-l/90 text-white min-h-11">
-            <Plus className="w-4 h-4 mr-1" /> Add
-          </Button>
-        </div>
-      </div>
-
-      <div className="space-y-6">
-        {visibleGroups.map((group) => {
-          const customInCat = customItems.filter((c) => c.category === group.category);
-          if (group.items.length === 0 && customInCat.length === 0) return null;
-          return (
-            <div key={group.category}>
-              <h3 className="font-display text-sm font-bold text-wn-text-l mb-3">{group.category}</h3>
-              <ul className="divide-y divide-wn-line-l">
-                {group.items.map((item) => (
-                  <PackingRow
-                    key={item.id}
-                    id={item.id}
-                    label={item.label}
-                    checked={isChecked(item.id)}
-                    onToggle={onToggle}
-                    onDelete={() => handleDelete(item.id, item.label)}
-                  />
-                ))}
-                {customInCat.map((c) => (
-                  <PackingRow
-                    key={c.id}
-                    id={c.id}
-                    label={c.label}
-                    custom
-                    checked={isChecked(c.id)}
-                    onToggle={onToggle}
-                    onRemove={onRemove}
-                  />
-                ))}
-              </ul>
-            </div>
-          );
-        })}
-      </div>
-
-      {removedEntries.length > 0 && (
-        <div className="mt-6 pt-4 border-t border-wn-line-l">
-          <button
-            type="button"
-            onClick={() => setShowRemoved((v) => !v)}
-            aria-expanded={showRemoved}
-            className="text-xs font-medium text-wn-text-2-l hover:text-wn-text-l underline decoration-wn-line-2-l underline-offset-2 min-h-9 py-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-wn-cyan rounded"
-          >
-            {removedEntries.length} item{removedEntries.length === 1 ? "" : "s"} removed — {showRemoved ? "hide" : "show"}
-          </button>
-          {showRemoved && (
-            <ul className="mt-2 divide-y divide-wn-line-l">
-              {removedEntries.map((item) => (
-                <li key={item.id} className="flex items-center justify-between gap-3 py-2.5 min-h-11">
-                  <span className="text-sm text-wn-text-2-l">{item.label}</span>
-                  <button
-                    type="button"
-                    onClick={() => onRestore(item.id)}
-                    className="flex-shrink-0 text-xs font-semibold text-wn-text-l underline decoration-wn-line-2-l underline-offset-2 min-h-9 px-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-wn-cyan rounded"
-                  >
-                    Add back
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-      )}
-
-      <AlertDialog open={resetOpen} onOpenChange={setResetOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Reset packing progress?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This clears all checked items and custom items for this trip.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmReset}>Reset</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </div>
-  );
-}
-
-function PackingRow({ id, label, checked, onToggle, custom, onRemove, onDelete }) {
-  return (
-    <li className="flex items-center gap-3 py-3 min-h-11">
-      <button
-        onClick={() => onToggle(id)}
-        role="checkbox"
-        aria-checked={checked}
-        aria-label={label}
-        className={`w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-wn-cyan ${
-          checked ? "bg-wn-text-l text-white" : "ring-1 ring-wn-line-l bg-wn-surface-l hover:ring-wn-cyan"
-        }`}
-      >
-        {checked && <Check className="w-4 h-4" />}
-      </button>
-      <span className={`text-sm flex-1 ${checked ? "line-through text-wn-text-2-l" : "text-wn-text-l"}`}>
-        {label}
-      </span>
-      {custom && (
-        <button
-          onClick={() => onRemove(id)}
-          aria-label={`Remove ${label}`}
-          className="text-wn-text-2-l hover:text-destructive p-1 min-h-9 min-w-9"
-        >
-          <Trash2 className="w-4 h-4" />
-        </button>
-      )}
-      {!custom && onDelete && (
-        <button
-          onClick={onDelete}
-          aria-label={`Remove ${label} from packing list`}
-          className="flex-shrink-0 flex items-center justify-center min-h-11 min-w-11 rounded-full text-wn-text-3-l hover:text-destructive hover:bg-wn-surface-2-l focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-wn-cyan"
-        >
-          <X className="w-4 h-4" />
-        </button>
-      )}
-    </li>
-  );
-}
-
 // Three daily cost tiers plus an estimated total for the trip. All-or-nothing:
 // any missing tier hides the whole panel rather than showing partial data.
 // Trip total reuses usableDestinationDays from practicality.js (assessed
 // once in TripDetail/SavedTripDetail) rather than recalculating travel time.
-function TripBudget({ display, travelFit }) {
+function TripBudget({ display, travelFit, scrollOffset }) {
   const { dailyCostLow, dailyCostMid, dailyCostHigh } = display;
   if (typeof dailyCostLow !== "number" || typeof dailyCostMid !== "number" || typeof dailyCostHigh !== "number") {
     return null;
   }
-  const days = typeof travelFit.usableDestinationDays === "number" ? travelFit.usableDestinationDays : null;
+  const days = travelFit && typeof travelFit.usableDestinationDays === "number" ? travelFit.usableDestinationDays : null;
   const tiers = [
     { label: "Budget", daily: dailyCostLow },
     { label: "Mid-range", daily: dailyCostMid },
@@ -423,7 +373,12 @@ function TripBudget({ display, travelFit }) {
   ];
 
   return (
-    <section aria-label="Estimated trip budget" className="rounded-2xl bg-wn-surface-l p-4">
+    <section
+      id="ov-budget"
+      style={{ scrollMarginTop: scrollOffset + 12 }}
+      aria-label="Estimated trip budget"
+      className="rounded-2xl bg-wn-surface-l p-4"
+    >
       <div className="flex items-center justify-between mb-3">
         <h3 className="font-display text-sm font-bold text-wn-text-l">Estimated trip budget</h3>
         <span className="text-[11px] font-semibold uppercase tracking-wide text-wn-text-2-l">Estimate</span>
@@ -451,10 +406,12 @@ function TripBudget({ display, travelFit }) {
   );
 }
 
-function OverviewView({ display }) {
+function OverviewView({ display, scrollOffset, flags, travelFit }) {
   return (
     <div className="space-y-6">
-      <p className="text-wn-text-l/80 leading-relaxed">{display.intro}</p>
+      <div id="ov-summary" style={{ scrollMarginTop: scrollOffset + 12 }}>
+        <p className="text-wn-text-l/80 leading-relaxed">{display.intro}</p>
+      </div>
 
       <div>
         <h3 className="font-display font-bold text-wn-text-l mb-3">Top experiences</h3>
@@ -471,15 +428,21 @@ function OverviewView({ display }) {
           <div className="flex justify-between gap-4 py-2 border-b border-wn-line-l"><dt className="text-wn-text-2-l">Best for</dt><dd className="text-wn-text-l text-right">{display.bestForSummary}</dd></div>
           <div className="flex justify-between gap-4 py-2 border-b border-wn-line-l"><dt className="text-wn-text-2-l">Suggested length</dt><dd className="text-wn-text-l">{display.minDays}–{display.maxDays} days</dd></div>
           <div className="flex justify-between gap-4 py-2 border-b border-wn-line-l"><dt className="text-wn-text-2-l">Budget</dt><dd className="text-wn-text-l text-right">{orderedBudgetLabel(display.budgetCategories)}</dd></div>
-          <div className="flex justify-between gap-4 py-2 border-b border-wn-line-l"><dt className="text-wn-text-2-l">Climate</dt><dd className="text-wn-text-l text-right">{(display.climateTags || []).join(", ")}</dd></div>
+          {flags.weather && (
+            <div id="ov-weather" style={{ scrollMarginTop: scrollOffset + 12 }} className="flex justify-between gap-4 py-2 border-b border-wn-line-l">
+              <dt className="text-wn-text-2-l">Climate</dt><dd className="text-wn-text-l text-right">{(display.climateTags || []).join(", ")}</dd>
+            </div>
+          )}
           <div className="flex justify-between gap-4 py-2 border-b border-wn-line-l"><dt className="text-wn-text-2-l">Suited to</dt><dd className="text-wn-text-l text-right">{(display.travellerTypes || []).join(", ")}</dd></div>
           <div className="flex justify-between gap-4 py-2"><dt className="text-wn-text-2-l">Dietary notes</dt><dd className="text-wn-text-l text-right">{display.dietaryNotes}</dd></div>
         </dl>
       </div>
 
-      <TravelEssentials display={display} />
+      {flags.budget && <TripBudget display={display} scrollOffset={scrollOffset} travelFit={travelFit} />}
 
-      <EntryRequirements display={display} />
+      <TravelEssentials display={display} scrollOffset={scrollOffset} />
+
+      <EntryRequirements display={display} scrollOffset={scrollOffset} />
     </div>
   );
 }
@@ -491,7 +454,7 @@ function OverviewView({ display }) {
 // reads badly. Every field, and the whole section, hides independently when
 // empty -- destinations can be filled in incrementally without ever looking
 // broken.
-function TravelEssentials({ display }) {
+function TravelEssentials({ display, scrollOffset }) {
   const {
     currencyCode, currencyName, languages, plugTypes, voltage,
     emergencyNumbers, connectivityNote, etiquetteNotes, tippingNorm, paymentNorm
@@ -522,7 +485,7 @@ function TravelEssentials({ display }) {
   if (!glanceRows.length && !emergencyLine && !proseRows.length && !hasEtiquette) return null;
 
   return (
-    <div>
+    <div id="ov-practical" style={{ scrollMarginTop: scrollOffset + 12 }}>
       <h3 className="font-display font-bold text-wn-text-l mb-3">Travel essentials</h3>
 
       {glanceRows.length > 0 && (
@@ -570,7 +533,7 @@ function TravelEssentials({ display }) {
 // alarming or legally defensive. Morocco/Uruguay have no official source;
 // the callout still shows the reviewed date and just omits the link line.
 // Same hide-when-empty rules as TravelEssentials above.
-function EntryRequirements({ display }) {
+function EntryRequirements({ display, scrollOffset }) {
   const {
     entryOverview, passportValidity, typicalTouristStay, entryRequirementsNotes,
     officialSourceName, officialSourceUrl, entryLastReviewed
@@ -587,7 +550,7 @@ function EntryRequirements({ display }) {
   if (!entryOverview && !factRows.length && !hasNotes && !reviewedLabel) return null;
 
   return (
-    <div>
+    <div id="ov-visa" style={{ scrollMarginTop: scrollOffset + 12 }}>
       <h3 className="font-display font-bold text-wn-text-l mb-3">Visa &amp; entry</h3>
 
       {entryOverview && (

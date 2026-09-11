@@ -122,6 +122,18 @@ export default function TripDetail() {
     });
   };
   const handleReset = () => persistPacking({ checkedItemIds: [], customItems: [], removedItemIds: packingState.removedItemIds });
+  // Bulk pack/unpack for a category's "Pack all" / "Unpack all" button.
+  // Written as a direct set-membership computation (not N calls to
+  // handleToggle) because handleToggle reads packingState from this
+  // render's closure -- looping it would only ever apply the last call.
+  const handleSetChecked = (ids, checked) => {
+    const idSet = new Set(ids);
+    const withoutThese = packingState.checkedItemIds.filter((x) => !idSet.has(x));
+    persistPacking({
+      ...packingState,
+      checkedItemIds: checked ? [...withoutThese, ...ids] : withoutThese
+    });
+  };
   // Deleting a generated item is a soft-delete: it drops off the checked list
   // (nothing to pack that no longer exists) and is filtered from the visible
   // list, but the id itself persists so a later itinerary regeneration for
@@ -242,7 +254,14 @@ export default function TripDetail() {
     <div>
       <TripHeader display={display} score={score} backHref="/results" backLabel="Back to recommendations" />
 
-      <div className="relative -mt-6 sm:-mt-8 rounded-t-[28px] sm:rounded-t-[32px] bg-wn-page-l overflow-hidden">
+      {/* overflow-clip (not overflow-hidden) -- hidden establishes a scroll
+          container per the CSS Overflow spec, which silently breaks
+          position:sticky for every descendant (the tab bar and the new
+          jump-nav pill row included): sticky then computes against this
+          div's own non-scrolling box instead of the viewport and never
+          actually pins. clip gives the same rounded-corner clipping without
+          that side effect. Found live-testing the jump-nav sticky pills. */}
+      <div className="relative -mt-6 sm:-mt-8 rounded-t-[28px] sm:rounded-t-[32px] bg-wn-page-l overflow-clip">
         <div className="max-w-3xl mx-auto px-4 pt-8 pb-8">
           <div className="mb-6">
             <Button
@@ -271,7 +290,8 @@ export default function TripDetail() {
               onRemove: handleRemove,
               onReset: handleReset,
               onDelete: handleDeleteItem,
-              onRestore: handleRestoreItem
+              onRestore: handleRestoreItem,
+              onSetChecked: handleSetChecked
             }}
           />
         </div>

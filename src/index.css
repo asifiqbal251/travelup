@@ -54,6 +54,12 @@
     --wn-cyan-bright: 72 226 232;
     --wn-coral: 255 107 74;
     --wn-ink-deep: 6 32 43;
+    /* Packing-ring progress states only (Overview/Itinerary/Packing jump-nav
+       work) -- amber for the 50-74% band, green for 100%. Neither existed
+       as a semantic color before this; every other ring band reuses
+       --wn-coral / --wn-cyan already defined above. */
+    --wn-amber: 242 169 59;
+    --wn-green: 47 182 124;
 
     /* ---- Semantic shadcn tokens (light workflow surface) ---- */
     --background: var(--workflow);
