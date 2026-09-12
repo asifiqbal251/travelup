@@ -110,8 +110,10 @@ export default function TripDetail() {
   };
   const handleAdd = (label, category) => {
     const id = `custom-${Date.now()}`;
+    // Custom items start unchecked (B8 bug fix: previous code erroneously
+    // added the new id to checkedItemIds, pre-ticking every custom item).
     persistPacking({
-      checkedItemIds: [...packingState.checkedItemIds, id],
+      ...packingState,
       customItems: [...packingState.customItems, { id, label, category }]
     });
   };

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Image } from "@/components/ui/image";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -151,16 +151,37 @@ export function TripHeader({ display, score, backHref, backLabel }) {
 // "day" is L3 (Itinerary day chips). Both stay inside the same left/right
 // edges as the L1 bar and the content column -- no `-mx-4` bleed, which is
 // what let the old day-chip row render wider than the tab bar above it.
+// Shared jump-nav pill row for all three tabs.
+// B2: outer container uses px-3 padding + scroll-padding-inline so the
+//   active pill is never flush-clipped at either edge; the inner track uses
+//   mx-auto so pills centre when they fit and scroll normally when they don't
+//   (replaces the reported "Summary pill sliced off at the left" on mobile).
+// B3: active day chip (L3) gets a stronger treatment — fill, cyan border,
+//   halo, weight 700 — so it's clearly readable at arm's length.
+// B5: active L2 section pill adds .wn-pill-sweep for the conic ring sweep.
 function JumpNav({ items, activeId, onSelect, ariaLabel, level = "section" }) {
-  if (!items.length) return null;
   const isDay = level === "day";
+  const containerRef = useRef(null);
+
+  // Scroll the active pill into view (inline-nearest) whenever the active
+  // id changes, so activating a pill that's off-screen brings it fully in.
+  useEffect(() => {
+    if (!containerRef.current) return;
+    const active = containerRef.current.querySelector('[aria-selected="true"]');
+    if (active) active.scrollIntoView({ block: "nearest", inline: "nearest" });
+  }, [activeId]);
+
+  if (!items.length) return null;
+
   return (
     <div
       role="tablist"
       aria-label={ariaLabel}
-      className="w-full overflow-x-auto no-scrollbar pt-2"
+      ref={containerRef}
+      className="w-full overflow-x-auto no-scrollbar pt-2 px-3"
+      style={{ scrollPaddingInline: "12px" }}
     >
-      <div className="flex gap-2 w-max pb-0.5">
+      <div className="flex gap-2 pb-0.5 w-max mx-auto">
         {items.map((item) => {
           const active = activeId === item.id;
           return (
@@ -171,18 +192,18 @@ function JumpNav({ items, activeId, onSelect, ariaLabel, level = "section" }) {
               aria-selected={active}
               onClick={() => onSelect(item.id)}
               className={cn(
-                "flex items-center gap-1.5 whitespace-nowrap font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-wn-cyan focus-visible:ring-offset-2",
+                "flex items-center gap-1.5 whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-wn-cyan focus-visible:ring-offset-2",
                 isDay
                   ? cn(
                       "h-7 px-3 rounded-[7px] text-[12.5px] border",
                       active
-                        ? "border-wn-cyan-2 bg-[#F0FAFB] text-wn-cyan-2"
-                        : "border-wn-line-2-l bg-wn-surface-l text-wn-text-2-l hover:bg-wn-surface-2-l"
+                        ? "border-wn-cyan bg-[#E9FAFC] text-wn-cyan font-bold shadow-[0_0_0_3px_rgba(22,196,216,.16)]"
+                        : "border-wn-line-2-l bg-wn-surface-l text-wn-text-2-l font-medium hover:bg-wn-surface-2-l"
                     )
                   : cn(
-                      "h-8 px-3.5 rounded-lg text-[13px] border",
+                      "h-8 px-3.5 rounded-lg text-[13px] border font-medium",
                       active
-                        ? "border-wn-text-l bg-wn-text-l text-white"
+                        ? "wn-pill-sweep border-wn-text-l bg-wn-text-l text-white"
                         : "border-wn-line-l bg-transparent text-wn-text-2-l hover:bg-wn-surface-2-l"
                     )
               )}
@@ -233,21 +254,44 @@ export default function TripView({
   const packingSummaries = packingCategorySummaries(packingGroups, packingState);
   const packingItems = packingSummaries.map((g) => ({ id: g.id, label: g.category, filled: g.allPacked }));
 
+  // B1: suppress scroll-spy during programmatic smooth-scroll so the
+  // click's optimistic active-state is never overwritten by an intermediate
+  // scroll position. Cleared on scrollend or after a 700ms fallback.
+  const programmaticScrollRef = useRef(false);
+  const programmaticScrollTimer = useRef(null);
+
   const [overviewActiveId, setOverviewActiveId] = useScrollSpy(
     overviewItems.map((i) => i.id),
-    { active: activeTab === "overview", offsetPx: scrollOffset }
+    { active: activeTab === "overview", offsetPx: scrollOffset, pauseRef: programmaticScrollRef }
   );
   const [itineraryActiveId, setItineraryActiveId] = useScrollSpy(
     itineraryItems.map((i) => i.id),
-    { active: activeTab === "itinerary", offsetPx: scrollOffset }
+    { active: activeTab === "itinerary", offsetPx: scrollOffset, pauseRef: programmaticScrollRef }
   );
   const [packingActiveId, setPackingActiveId] = useScrollSpy(
     packingItems.map((i) => i.id),
-    { active: activeTab === "packing", offsetPx: scrollOffset }
+    { active: activeTab === "packing", offsetPx: scrollOffset, pauseRef: programmaticScrollRef }
   );
 
   const jumpTo = (id, setter) => {
+    // Set active state immediately (optimistic) before the scroll begins.
     setter(id);
+    // Arm suppression and clear it on scrollend / 700ms fallback.
+    if (programmaticScrollTimer.current) clearTimeout(programmaticScrollTimer.current);
+    programmaticScrollRef.current = true;
+    const clear = () => {
+      programmaticScrollRef.current = false;
+      programmaticScrollTimer.current = null;
+    };
+    const onScrollEnd = () => {
+      window.removeEventListener("scrollend", onScrollEnd);
+      clear();
+    };
+    window.addEventListener("scrollend", onScrollEnd, { once: true });
+    programmaticScrollTimer.current = setTimeout(() => {
+      window.removeEventListener("scrollend", onScrollEnd);
+      clear();
+    }, 700);
     scrollToId(id);
   };
 
@@ -405,33 +449,46 @@ function ItineraryView({ itinerary, openDay, setOpenDay, scrollOffset }) {
   );
 }
 
-// Three daily cost tiers plus an estimated total for the trip. All-or-nothing:
-// any missing tier hides the whole panel rather than showing partial data.
-// Trip total reuses usableDestinationDays from practicality.js (assessed
-// once in TripDetail/SavedTripDetail) rather than recalculating travel time.
-function TripBudget({ display, travelFit, scrollOffset }) {
+// B4: Shared card wrapper for the four Overview sections. Carries its own
+// scroll anchor, a titled header with a 3px left gradient rule (cyan→orange,
+// matching the logo palette), and consistent white card framing.
+function OverviewCard({ id, title, scrollOffset, children }) {
+  return (
+    <section
+      id={id}
+      style={{ scrollMarginTop: scrollOffset + 12 }}
+      className="bg-wn-surface-l border border-wn-line-l rounded-xl p-4 sm:p-[18px]"
+    >
+      <div className="flex items-center gap-2.5 mb-4">
+        <span
+          aria-hidden="true"
+          className="flex-shrink-0 rounded-full"
+          style={{
+            width: 3,
+            alignSelf: "stretch",
+            background: "linear-gradient(to bottom, rgb(var(--wn-cyan)), #F97316)"
+          }}
+        />
+        <h3 style={{ fontSize: "15.5px" }} className="font-bold text-wn-text-l leading-snug">{title}</h3>
+      </div>
+      {children}
+    </section>
+  );
+}
+
+// Budget content: three daily cost tiers + trip-total estimate. All-or-nothing:
+// any missing tier causes the Budget card to be skipped by OverviewView's
+// flags.budget check, so this component can assume all three values exist.
+function TripBudgetContent({ display, travelFit }) {
   const { dailyCostLow, dailyCostMid, dailyCostHigh } = display;
-  if (typeof dailyCostLow !== "number" || typeof dailyCostMid !== "number" || typeof dailyCostHigh !== "number") {
-    return null;
-  }
   const days = travelFit && typeof travelFit.usableDestinationDays === "number" ? travelFit.usableDestinationDays : null;
   const tiers = [
     { label: "Budget", daily: dailyCostLow },
     { label: "Mid-range", daily: dailyCostMid },
     { label: "Comfort", daily: dailyCostHigh }
   ];
-
   return (
-    <section
-      id="ov-budget"
-      style={{ scrollMarginTop: scrollOffset + 12 }}
-      aria-label="Estimated trip budget"
-      className="rounded-2xl bg-wn-surface-l p-4"
-    >
-      <div className="flex items-center justify-between mb-3">
-        <h3 className="font-display text-sm font-bold text-wn-text-l">Estimated trip budget</h3>
-        <span className="text-[11px] font-semibold uppercase tracking-wide text-wn-text-2-l">Estimate</span>
-      </div>
+    <div>
       <dl className="grid grid-cols-3 gap-2 sm:gap-4">
         {tiers.map((t) => (
           <div key={t.label} className="min-w-0">
@@ -451,59 +508,72 @@ function TripBudget({ display, travelFit, scrollOffset }) {
         Per-person daily estimate in USD{days != null ? ` for ${days} day${days === 1 ? "" : "s"} at the destination` : ""} —
         accommodation, food, local transport and activities. <span className="font-semibold text-wn-text-l">Flights are not included.</span>
       </p>
-    </section>
-  );
-}
-
-function OverviewView({ display, scrollOffset, flags, travelFit }) {
-  return (
-    <div className="space-y-6">
-      <div id="ov-summary" style={{ scrollMarginTop: scrollOffset + 12 }}>
-        <p className="text-wn-text-l/80 leading-relaxed">{display.intro}</p>
-      </div>
-
-      <div>
-        <h3 className="font-display font-bold text-wn-text-l mb-3">Top experiences</h3>
-        <ul className="space-y-2 text-sm text-wn-text-l/80">
-          {(display.topExperiences || []).map((e, i) => (
-            <li key={i} className="flex gap-2"><span className="text-wn-text-l/40">•</span>{e}</li>
-          ))}
-        </ul>
-      </div>
-
-      <div>
-        <h3 className="font-display font-bold text-wn-text-l mb-3">Good to know</h3>
-        <dl className="space-y-2 text-sm">
-          <div className="flex justify-between gap-4 py-2 border-b border-wn-line-l"><dt className="text-wn-text-2-l">Best for</dt><dd className="text-wn-text-l text-right">{display.bestForSummary}</dd></div>
-          <div className="flex justify-between gap-4 py-2 border-b border-wn-line-l"><dt className="text-wn-text-2-l">Suggested length</dt><dd className="text-wn-text-l">{display.minDays}–{display.maxDays} days</dd></div>
-          <div className="flex justify-between gap-4 py-2 border-b border-wn-line-l"><dt className="text-wn-text-2-l">Budget</dt><dd className="text-wn-text-l text-right">{orderedBudgetLabel(display.budgetCategories)}</dd></div>
-          {flags.climate && (
-            <div className="flex justify-between gap-4 py-2 border-b border-wn-line-l">
-              <dt className="text-wn-text-2-l">Climate</dt><dd className="text-wn-text-l text-right">{(display.climateTags || []).join(", ")}</dd>
-            </div>
-          )}
-          <div className="flex justify-between gap-4 py-2 border-b border-wn-line-l"><dt className="text-wn-text-2-l">Suited to</dt><dd className="text-wn-text-l text-right">{(display.travellerTypes || []).join(", ")}</dd></div>
-          <div className="flex justify-between gap-4 py-2"><dt className="text-wn-text-2-l">Dietary notes</dt><dd className="text-wn-text-l text-right">{display.dietaryNotes}</dd></div>
-        </dl>
-      </div>
-
-      {flags.budget && <TripBudget display={display} scrollOffset={scrollOffset} travelFit={travelFit} />}
-
-      <TravelEssentials display={display} scrollOffset={scrollOffset} />
-
-      <EntryRequirements display={display} scrollOffset={scrollOffset} />
     </div>
   );
 }
 
-// Grouped rather than one flat list of 8 rows: short facts (currency,
-// languages, power) as at-a-glance rows, emergency numbers called out on
-// their own, longer sentence fields (connectivity/payment/tipping/etiquette)
-// as stacked prose since right-aligning a full sentence next to a label
-// reads badly. Every field, and the whole section, hides independently when
-// empty -- destinations can be filled in incrementally without ever looking
-// broken.
-function TravelEssentials({ display, scrollOffset }) {
+// Overview: four titled cards (Summary, Budget, Travel essentials, Visa & entry).
+// The Budget card guards on flags.budget; the other three are always rendered
+// when the tab is active (each content component is empty-safe).
+function OverviewView({ display, scrollOffset, flags, travelFit }) {
+  return (
+    <div className="space-y-3">
+      {flags.summary && (
+        <OverviewCard id="ov-summary" title="Summary" scrollOffset={scrollOffset}>
+          <div className="space-y-5">
+            <p className="text-wn-text-l/80 leading-relaxed">{display.intro}</p>
+            <div>
+              <h4 className="font-display font-bold text-wn-text-l mb-3">Top experiences</h4>
+              <ul className="space-y-2 text-sm text-wn-text-l/80">
+                {(display.topExperiences || []).map((e, i) => (
+                  <li key={i} className="flex gap-2"><span className="text-wn-text-l/40">•</span>{e}</li>
+                ))}
+              </ul>
+            </div>
+            <div>
+              <h4 className="font-display font-bold text-wn-text-l mb-3">Good to know</h4>
+              <dl className="space-y-2 text-sm">
+                <div className="flex justify-between gap-4 py-2 border-b border-wn-line-l"><dt className="text-wn-text-2-l">Best for</dt><dd className="text-wn-text-l text-right">{display.bestForSummary}</dd></div>
+                <div className="flex justify-between gap-4 py-2 border-b border-wn-line-l"><dt className="text-wn-text-2-l">Suggested length</dt><dd className="text-wn-text-l">{display.minDays}–{display.maxDays} days</dd></div>
+                <div className="flex justify-between gap-4 py-2 border-b border-wn-line-l"><dt className="text-wn-text-2-l">Budget</dt><dd className="text-wn-text-l text-right">{orderedBudgetLabel(display.budgetCategories)}</dd></div>
+                {flags.climate && (
+                  <div className="flex justify-between gap-4 py-2 border-b border-wn-line-l">
+                    <dt className="text-wn-text-2-l">Climate</dt><dd className="text-wn-text-l text-right">{(display.climateTags || []).join(", ")}</dd>
+                  </div>
+                )}
+                <div className="flex justify-between gap-4 py-2 border-b border-wn-line-l"><dt className="text-wn-text-2-l">Suited to</dt><dd className="text-wn-text-l text-right">{(display.travellerTypes || []).join(", ")}</dd></div>
+                <div className="flex justify-between gap-4 py-2"><dt className="text-wn-text-2-l">Dietary notes</dt><dd className="text-wn-text-l text-right">{display.dietaryNotes}</dd></div>
+              </dl>
+            </div>
+          </div>
+        </OverviewCard>
+      )}
+
+      {flags.budget && (
+        <OverviewCard id="ov-budget" title="Budget" scrollOffset={scrollOffset}>
+          <TripBudgetContent display={display} travelFit={travelFit} />
+        </OverviewCard>
+      )}
+
+      {flags.practical && (
+        <OverviewCard id="ov-practical" title="Travel essentials" scrollOffset={scrollOffset}>
+          <TravelEssentialsContent display={display} />
+        </OverviewCard>
+      )}
+
+      {flags.visa && (
+        <OverviewCard id="ov-visa" title="Visa &amp; entry" scrollOffset={scrollOffset}>
+          <EntryRequirementsContent display={display} />
+        </OverviewCard>
+      )}
+    </div>
+  );
+}
+
+// Travel essentials content: currency, language, power, emergency numbers,
+// connectivity/payment/tipping prose, etiquette notes. Rendered inside an
+// OverviewCard; the null-guard lives in OverviewView's flags.practical check.
+function TravelEssentialsContent({ display }) {
   const {
     currencyCode, currencyName, languages, plugTypes, voltage,
     emergencyNumbers, connectivityNote, etiquetteNotes, tippingNorm, paymentNorm
@@ -531,12 +601,8 @@ function TravelEssentials({ display, scrollOffset }) {
 
   const hasEtiquette = Array.isArray(etiquetteNotes) && etiquetteNotes.length > 0;
 
-  if (!glanceRows.length && !emergencyLine && !proseRows.length && !hasEtiquette) return null;
-
   return (
-    <div id="ov-practical" style={{ scrollMarginTop: scrollOffset + 12 }}>
-      <h3 className="font-display font-bold text-wn-text-l mb-3">Travel essentials</h3>
-
+    <div>
       {glanceRows.length > 0 && (
         <dl className="space-y-2 text-sm">
           {glanceRows.map(([label, value]) => (
@@ -547,14 +613,12 @@ function TravelEssentials({ display, scrollOffset }) {
           ))}
         </dl>
       )}
-
       {emergencyLine && (
         <div className="flex items-center justify-between gap-4 rounded-xl bg-wn-surface-2-l ring-1 ring-wn-line-l px-4 py-3 mt-3">
           <span className="text-sm text-wn-text-2-l">Emergency</span>
           <span className="text-sm font-semibold text-wn-text-l text-right">{emergencyLine}</span>
         </div>
       )}
-
       {(proseRows.length > 0 || hasEtiquette) && (
         <div className={`space-y-2.5 text-sm ${glanceRows.length || emergencyLine ? "mt-4" : ""}`}>
           {proseRows.map(([label, text]) => (
@@ -575,14 +639,10 @@ function TravelEssentials({ display, scrollOffset }) {
   );
 }
 
-// This is the one panel where acting on stale or wrong info has real
-// consequences (denied boarding, turned away at the border), so the "verify
-// with an official source" instruction gets its own emphasized callout
-// rather than trailing disclaimer text -- prominent without reading as
-// alarming or legally defensive. Morocco/Uruguay have no official source;
-// the callout still shows the reviewed date and just omits the link line.
-// Same hide-when-empty rules as TravelEssentials above.
-function EntryRequirements({ display, scrollOffset }) {
+// Visa & entry content: entry overview, official-source callout, fact rows,
+// notes list. The "verify before you travel" callout is its own section so
+// it's prominent without looking legally defensive.
+function EntryRequirementsContent({ display }) {
   const {
     entryOverview, passportValidity, typicalTouristStay, entryRequirementsNotes,
     officialSourceName, officialSourceUrl, entryLastReviewed
@@ -596,16 +656,11 @@ function EntryRequirements({ display, scrollOffset }) {
   const hasNotes = Array.isArray(entryRequirementsNotes) && entryRequirementsNotes.length > 0;
   const reviewedLabel = formatReviewedDate(entryLastReviewed);
 
-  if (!entryOverview && !factRows.length && !hasNotes && !reviewedLabel) return null;
-
   return (
-    <div id="ov-visa" style={{ scrollMarginTop: scrollOffset + 12 }}>
-      <h3 className="font-display font-bold text-wn-text-l mb-3">Visa &amp; entry</h3>
-
+    <div>
       {entryOverview && (
         <p className="text-sm text-wn-text-l/80 leading-relaxed mb-4">{entryOverview}</p>
       )}
-
       {reviewedLabel && (
         <div className="rounded-xl bg-wn-surface-2-l ring-1 ring-wn-line-l p-4 mb-4">
           <div className="flex items-start gap-3">
@@ -630,7 +685,6 @@ function EntryRequirements({ display, scrollOffset }) {
           </div>
         </div>
       )}
-
       {factRows.length > 0 && (
         <div className="space-y-2.5 text-sm">
           {factRows.map(([label, text]) => (
@@ -640,7 +694,6 @@ function EntryRequirements({ display, scrollOffset }) {
           ))}
         </div>
       )}
-
       {hasNotes && (
         <ul className={`space-y-1.5 text-sm ${factRows.length ? "mt-4" : ""}`}>
           {entryRequirementsNotes.map((note, i) => (

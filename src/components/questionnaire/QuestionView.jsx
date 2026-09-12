@@ -192,7 +192,10 @@ function MonthGrid({ value, onMonth }) {
 // touched it, but touching it is what actually answers the question
 // (unlike DayScroller, where every position is already a valid,
 // pre-answered default).
-const DEFAULT_BUDGET = 125; // neutral starting point, mid-way through the dense band
+// Floor value — $0 is not a real input and skews scoring. The slider opens
+// here unset (no committed answer) so the app doesn't pre-choose for the
+// user before they've touched it (B7 fix). Reversible product call; see commit.
+const DEFAULT_BUDGET = 20;
 
 function BudgetSlider({ q, qIndex, answers, onBudget, onBudgetGrab, onBudgetRelease }) {
   const stops = q.budgetStops;
@@ -200,9 +203,15 @@ function BudgetSlider({ q, qIndex, answers, onBudget, onBudgetGrab, onBudgetRele
   const noPref = answers.budget === "no-pref";
 
   const [dollar, setDollar] = useState(() => (committed != null ? committed : DEFAULT_BUDGET));
+  // Track whether the user has interacted so we can show an unset prompt
+  // instead of a pre-filled dollar amount before they've touched the slider.
+  const [hasInteracted, setHasInteracted] = useState(committed != null);
 
   useEffect(() => {
-    if (committed != null) setDollar(committed);
+    if (committed != null) {
+      setDollar(committed);
+      setHasInteracted(true);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [committed]);
 
@@ -214,6 +223,7 @@ function BudgetSlider({ q, qIndex, answers, onBudget, onBudgetGrab, onBudgetRele
   const handleChange = (e) => {
     const next = budgetPositionToDollar(Number(e.target.value));
     setDollar(next);
+    setHasInteracted(true);
     onBudget(qIndex, next);
   };
   const release = () => onBudgetRelease(qIndex);
@@ -222,11 +232,19 @@ function BudgetSlider({ q, qIndex, answers, onBudget, onBudgetGrab, onBudgetRele
     <div className="mx-auto max-w-[420px]">
       <div className={cn("motion-safe:transition-opacity", noPref && "opacity-40")}>
         <div className="text-center">
-          <span className="text-[40px] font-display font-extrabold tracking-[-0.02em] text-wn-text tabular-nums">
-            ${dollar}
-            {isTop && "+"}
-          </span>
-          <span className="ml-1 text-[15px] text-wn-text-2">USD/day</span>
+          {hasInteracted ? (
+            <>
+              <span className="text-[40px] font-display font-extrabold tracking-[-0.02em] text-wn-text tabular-nums">
+                ${dollar}
+                {isTop && "+"}
+              </span>
+              <span className="ml-1 text-[15px] text-wn-text-2">USD/day</span>
+            </>
+          ) : (
+            <span className="text-[26px] font-display font-semibold text-wn-text-3">
+              Choose an amount
+            </span>
+          )}
         </div>
         <input
           type="range"

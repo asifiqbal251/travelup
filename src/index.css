@@ -197,6 +197,43 @@
 .no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
 .no-scrollbar::-webkit-scrollbar { display: none; }
 
+/* B5: Conic gradient ring sweep on the active L2 Overview pill. Fires once
+   on activation (750ms), then holds static at the final angle position.
+   @property registers --pill-ang as a typed angle so CSS can interpolate it;
+   browsers that don't support @property see a static gradient ring instead
+   (the animation can't interpolate an untyped custom property, so --pill-ang
+   stays at 0deg and the ring is stationary — an acceptable fallback).
+   The global prefers-reduced-motion block below reduces all animation
+   durations to 0.001ms so no per-rule reduced-motion guard is needed. */
+@property --pill-ang {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+@keyframes wn-pill-sweep {
+  from { --pill-ang: 0deg; }
+  to   { --pill-ang: 360deg; }
+}
+.wn-pill-sweep {
+  position: relative;
+}
+.wn-pill-sweep::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 2px;
+  background: conic-gradient(from var(--pill-ang), #3FD8E0, #F97316, #FF6B4A, #3FD8E0);
+  /* mask-composite: exclude reveals only the 2px padding band (the ring),
+     making the content-box area transparent so the pill's text stays visible. */
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: destination-out;
+  mask-composite: exclude;
+  pointer-events: none;
+  animation: wn-pill-sweep 750ms cubic-bezier(.4, 0, .2, 1) forwards;
+}
+
 /* Lightweight questionnaire step transition (fade + slight rise). The global
    reduced-motion guard below collapses this to near-instant. */
 @keyframes wn-step-enter {

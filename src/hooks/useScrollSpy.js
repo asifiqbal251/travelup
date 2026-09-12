@@ -16,7 +16,12 @@ import { useEffect, useState } from "react";
 // Re-binds whenever the id list changes (different trip -> different day
 // count / packing categories) or `active` flips (tab switches unmount/
 // remount the target elements, so a stale binding would watch nothing).
-export function useScrollSpy(ids, { active = true, offsetPx = 0 } = {}) {
+//
+// `pauseRef` — when truthy, suppresses scroll-spy updates. Used by the
+// click handler in TripView to prevent intermediate scroll positions during
+// a programmatic smooth-scroll from overwriting the optimistic active-state
+// set on click (B1 fix).
+export function useScrollSpy(ids, { active = true, offsetPx = 0, pauseRef = null } = {}) {
   const idsKey = ids.join("|");
   const [activeId, setActiveId] = useState(ids[0] || null);
 
@@ -29,6 +34,7 @@ export function useScrollSpy(ids, { active = true, offsetPx = 0 } = {}) {
 
     const compute = () => {
       ticking = false;
+      if (pauseRef && pauseRef.current) return;
       const elements = ids.map((id) => document.getElementById(id)).filter(Boolean);
       if (!elements.length) return;
 
