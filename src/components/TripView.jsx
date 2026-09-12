@@ -274,25 +274,66 @@ export default function TripView({
   );
 
   const jumpTo = (id, setter) => {
-    // Set active state immediately (optimistic) before the scroll begins.
     setter(id);
-    // Arm suppression and clear it on scrollend / 700ms fallback.
     if (programmaticScrollTimer.current) clearTimeout(programmaticScrollTimer.current);
     programmaticScrollRef.current = true;
+    // C1: Settle-and-correct — after the smooth scroll ends, check whether
+    // layout shift (an expanding/collapsing DayCard above the target) moved
+    // the element. If it drifted more than 8px from the expected position,
+    // one instant corrective scroll snaps it back. Never loops.
+    const correct = () => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      const top = el.getBoundingClientRect().top;
+      const expected = scrollOffset + 12; // mirrors scrollMarginTop on anchors
+      if (Math.abs(top - expected) > 8) {
+        window.scrollBy({ top: top - expected, behavior: "instant" });
+      }
+    };
     const clear = () => {
       programmaticScrollRef.current = false;
       programmaticScrollTimer.current = null;
     };
     const onScrollEnd = () => {
       window.removeEventListener("scrollend", onScrollEnd);
+      correct();
       clear();
     };
     window.addEventListener("scrollend", onScrollEnd, { once: true });
     programmaticScrollTimer.current = setTimeout(() => {
       window.removeEventListener("scrollend", onScrollEnd);
+      correct();
       clear();
     }, 700);
     scrollToId(id);
+  };
+
+  // C3: Switching L1 tabs resets scroll to the top of the new tab and resets
+  // the secondary row to its first item. Instant (no smooth scroll) so a tab
+  // switch feels like a new screen. Uses the same pauseRef mechanism as B1.
+  const handleTabChange = (newTab) => {
+    const firstOverviewId = overviewItems[0]?.id ?? null;
+    const firstItineraryId = itineraryItems[0]?.id ?? null;
+    const firstPackingId = packingItems[0]?.id ?? null;
+
+    if (newTab === "overview") setOverviewActiveId(firstOverviewId);
+    else if (newTab === "itinerary") {
+      setItineraryActiveId(firstItineraryId);
+      setOpenDay(1);
+    } else if (newTab === "packing") setPackingActiveId(firstPackingId);
+
+    if (programmaticScrollTimer.current) clearTimeout(programmaticScrollTimer.current);
+    programmaticScrollRef.current = true;
+
+    setActiveTab(newTab);
+
+    const sentinelId = `tab-top-${newTab}`;
+    requestAnimationFrame(() => {
+      const el = document.getElementById(sentinelId);
+      if (el) el.scrollIntoView({ behavior: "instant", block: "start" });
+      programmaticScrollRef.current = false;
+      programmaticScrollTimer.current = null;
+    });
   };
 
   // On desktop the Packing tab uses a scroll-to-anchor sidebar instead of
@@ -336,7 +377,7 @@ export default function TripView({
   }
 
   return (
-    <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+    <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
       {travelFit && (
         <div className="mb-6">
           <TravelFit
@@ -378,6 +419,8 @@ export default function TripView({
         {currentJumpNav}
       </div>
       <TabsContent value="itinerary" className="mt-6">
+        {/* C3 sentinel: instant-scroll target for tab switch, zero height */}
+        <div id="tab-top-itinerary" style={{ scrollMarginTop: scrollOffset + 12, height: 0 }} />
         <ItineraryView
           itinerary={itinerary}
           openDay={openDay}
@@ -386,6 +429,8 @@ export default function TripView({
         />
       </TabsContent>
       <TabsContent value="packing" className="mt-6">
+        {/* C3 sentinel */}
+        <div id="tab-top-packing" style={{ scrollMarginTop: scrollOffset + 12, height: 0 }} />
         <PackingView
           groups={packingGroups}
           state={packingState}
@@ -395,6 +440,8 @@ export default function TripView({
         />
       </TabsContent>
       <TabsContent value="overview" className="mt-6">
+        {/* C3 sentinel */}
+        <div id="tab-top-overview" style={{ scrollMarginTop: scrollOffset + 12, height: 0 }} />
         <OverviewView display={display} scrollOffset={scrollOffset} flags={overviewFlags} travelFit={travelFit} />
       </TabsContent>
     </Tabs>
@@ -449,9 +496,8 @@ function ItineraryView({ itinerary, openDay, setOpenDay, scrollOffset }) {
   );
 }
 
-// B4: Shared card wrapper for the four Overview sections. Carries its own
-// scroll anchor, a titled header with a 3px left gradient rule (cyan→orange,
-// matching the logo palette), and consistent white card framing.
+// C2: Plain navy title — matches "Top experiences" / "Good to know" style;
+// gradient accent rule removed.
 function OverviewCard({ id, title, scrollOffset, children }) {
   return (
     <section
@@ -459,18 +505,7 @@ function OverviewCard({ id, title, scrollOffset, children }) {
       style={{ scrollMarginTop: scrollOffset + 12 }}
       className="bg-wn-surface-l border border-wn-line-l rounded-xl p-4 sm:p-[18px]"
     >
-      <div className="flex items-center gap-2.5 mb-4">
-        <span
-          aria-hidden="true"
-          className="flex-shrink-0 rounded-full"
-          style={{
-            width: 3,
-            alignSelf: "stretch",
-            background: "linear-gradient(to bottom, rgb(var(--wn-cyan)), #F97316)"
-          }}
-        />
-        <h3 style={{ fontSize: "15.5px" }} className="font-bold text-wn-text-l leading-snug">{title}</h3>
-      </div>
+      <h3 style={{ fontSize: "15.5px" }} className="font-display font-bold text-wn-text-l leading-snug mb-4">{title}</h3>
       {children}
     </section>
   );
