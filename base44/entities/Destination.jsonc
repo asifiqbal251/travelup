@@ -83,6 +83,34 @@
         "type": "string"
       }
     },
+    "climateByMonth": {
+      "type": "array",
+      "minItems": 12,
+      "maxItems": 12,
+      "description": "One entry per month, January to December: month-resolved climate snapshot (additive; climate_tags remains the annual summary)",
+      "items": {
+        "type": "object",
+        "properties": {
+          "avgTempC": {
+            "type": "number",
+            "description": "Approximate average daily temperature for the month in Celsius"
+          },
+          "conditions": {
+            "type": "string",
+            "description": "Short conditions label, e.g. 'hot and dry', 'cold and snowy', 'mild and rainy', 'warm and humid'"
+          },
+          "isColdOrSnowy": {
+            "type": "boolean",
+            "description": "True if that month is genuinely cold or snowy at this destination"
+          }
+        },
+        "required": [
+          "avgTempC",
+          "conditions",
+          "isColdOrSnowy"
+        ]
+      }
+    },
     "pace_tags": {
       "type": "array",
       "items": {
