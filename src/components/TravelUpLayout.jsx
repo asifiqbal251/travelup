@@ -185,9 +185,9 @@ export default function TravelUpLayout() {
                   type="button"
                   onClick={openClear}
                   className={`inline-flex items-center gap-1.5 h-9 px-3 rounded-lg text-xs font-medium motion-safe:transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-wn-cyan ${ringOffset} ${linkCls}`}
-                  aria-label="Clear my data"
+                  aria-label="Clear this device"
                 >
-                  <Trash2 className="w-3.5 h-3.5" /> Clear my data
+                  <Trash2 className="w-3.5 h-3.5" /> Clear this device
                 </button>
               </>
             )}
@@ -248,7 +248,7 @@ export default function TravelUpLayout() {
                   variant="ghost"
                   className={`hover:bg-transparent justify-start min-h-11 ${linkCls} focus-visible:!ring-wn-cyan ${ringOffset}`}
                 >
-                  <Trash2 className="w-4 h-4 mr-2" /> Clear my data
+                  <Trash2 className="w-4 h-4 mr-2" /> Clear this device
                 </Button>
               </>
             )}

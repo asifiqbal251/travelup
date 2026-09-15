@@ -194,7 +194,7 @@ function SignedInProfile({ email, identity }) {
             Permanently delete your questionnaire answers and everything saved locally on this browser.
           </p>
           <Button variant="outline" onClick={() => setClearOpen(true)} className="min-h-11">
-            <Trash2 className="w-4 h-4 mr-2" /> Clear my data
+            <Trash2 className="w-4 h-4 mr-2" /> Clear this device
           </Button>
         </section>
       </div>
