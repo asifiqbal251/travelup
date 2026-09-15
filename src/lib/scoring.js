@@ -131,13 +131,48 @@ export function scoreDestination(dest, prefs) {
   // .length, NOT truthiness: an empty array is truthy in JS ([] && x is x),
   // so `!prefs.climate` alone would silently fall through to the match
   // branch below instead of awarding full credit.
+  //
+  // When a specific travel month is given and the destination has climateByMonth
+  // data (added in da5dc0e), we derive the effective climate tag for that month
+  // from climateByMonth[monthIndex] instead of using the annual climate_tags
+  // summary. This makes the match hemisphere-aware: a Southern Hemisphere
+  // destination tagged "Cold or snowy" for its winter months no longer earns
+  // climate credit for a cold preference when the user is traveling in its
+  // summer. Falls back to climate_tags when no month is set or climateByMonth
+  // is absent.
   let climate = 0;
   const climateSelected = Array.isArray(prefs.climate) ? prefs.climate : [];
   if (climateSelected.length === 0 || climateSelected.length >= CLIMATE_ORDER.length) {
     climate = 10;
   } else {
+    // Resolve month-specific climate tags when possible.
+    const monthNum = prefs.travelMonth && prefs.travelMonth !== "flexible"
+      ? Number(prefs.travelMonth)
+      : null;
+    let effectiveClimateTags = dest.climate_tags || [];
+    if (
+      monthNum >= 1 && monthNum <= 12 &&
+      Array.isArray(dest.climateByMonth) && dest.climateByMonth.length === 12
+    ) {
+      const mc = dest.climateByMonth[monthNum - 1];
+      if (mc) {
+        let label;
+        if (mc.isColdOrSnowy) {
+          label = "Cold or snowy";
+        } else if (mc.avgTempC >= 24) {
+          label = "Warm";
+        } else if (mc.avgTempC >= 15) {
+          label = "Mild";
+        } else if (mc.avgTempC >= 5) {
+          label = "Cool";
+        } else {
+          label = "Cold or snowy";
+        }
+        effectiveClimateTags = [label];
+      }
+    }
     let best = 0;
-    (dest.climate_tags || []).forEach((c) => {
+    effectiveClimateTags.forEach((c) => {
       climateSelected.forEach((s) => {
         if (c === s) best = Math.max(best, 10);
         else if (climateDistance(s, c) === 1) best = Math.max(best, 5);
