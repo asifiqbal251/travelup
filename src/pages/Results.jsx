@@ -13,11 +13,11 @@ import {
   climateMismatch,
   suggestAlternatives,
 } from "@/lib/scoring";
-import { MONTHS } from "@/lib/options";
 import { nameWithCountry } from "@/lib/destinationLabel";
 import { flagForCountry } from "@/lib/countryFlag";
 import { normalizeMode, roundedTravelHours } from "@/lib/travelMode";
 import TravelFitRing from "@/components/TravelFitRing";
+import ClimateMismatchBanner from "@/components/ClimateMismatchBanner";
 import { ArrowLeft, ArrowRight, Info, ChevronDown, Compass, Clock, Gauge } from "lucide-react";
 
 // Sibling-deduplication for the fit-reason pills (C4): walk the three cards
@@ -79,6 +79,10 @@ export default function Results() {
     setRanked(rankDestinations(allDestinations, newPrefs));
   };
 
+  // Patch-based wrapper used by ClimateMismatchBanner's onNudge: accepts a
+  // partial field object and merges it onto current prefs before applying.
+  const applyNudge = (patch) => applyPrefsInPlace({ ...prefs, ...patch });
+
   const restoreOriginal = () => {
     setPrefsState(prevPrefs);
     setRanked(rankDestinations(allDestinations, prevPrefs));
@@ -117,14 +121,9 @@ export default function Results() {
   const practicalityExcluded = practicalityExcludedCount(allDestinations, prefs);
   const hasTripLengthHint = suggestions.some((s) => /increase your trip|longer|7 days/i.test(s.label));
   const showPracticalityNote = practicalityExcluded > 0 && !hasTripLengthHint;
-  const hasMismatch = climateMismatch(prefs, ranked);
-  const mismatchAlts = hasMismatch ? suggestAlternatives(prefs, allDestinations) : [];
+  const mismatch = climateMismatch(ranked, prefs);
+  const nudges = mismatch ? suggestAlternatives(allDestinations, prefs) : null;
 
-  // Which suggestion chips can be applied in-place (no questionnaire navigation needed).
-  const SELF_CONTAINED = new Set([
-    "Select 'No preference' for climate.",
-    "Choose a flexible travel month.",
-  ]);
   const inPlacePrefs = (label) => {
     if (label === "Select 'No preference' for climate.") return { ...prefs, climate: [] };
     if (label === "Choose a flexible travel month.") return { ...prefs, travelMonth: "flexible" };
@@ -196,26 +195,7 @@ export default function Results() {
           </div>
         )}
 
-        {/* Climate-mismatch banner: fires when top results all score 0 on climate */}
-        {hasMismatch && mismatchAlts.length > 0 && (
-          <div className="rounded-2xl bg-wn-surface ring-1 ring-wn-line p-4 mb-6">
-            <p className="text-[15px] font-medium text-wn-text">
-              Your climate preference doesn't match well with {MONTHS[Number(prefs.travelMonth) - 1]}. Try adjusting:
-            </p>
-            <div className="mt-3 flex flex-wrap gap-2">
-              {mismatchAlts.map((alt, i) => (
-                <button
-                  key={i}
-                  onClick={() => applyPrefsInPlace(alt.newPrefs)}
-                  className="inline-flex items-center gap-2 text-[15px] font-medium bg-wn-surface-2 ring-1 ring-wn-line-2 hover:ring-wn-cyan rounded-lg px-3 py-2 min-h-9 text-wn-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-wn-cyan"
-                >
-                  {alt.label}
-                  <span className="text-wn-text-3 text-[13px]">({alt.count})</span>
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
+        <ClimateMismatchBanner mismatch={mismatch} nudges={nudges} onNudge={applyNudge} />
 
         {suggestions.length > 0 && (
           <div className="rounded-2xl bg-wn-surface ring-1 ring-wn-line p-4 mb-6">

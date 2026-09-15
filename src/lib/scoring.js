@@ -446,101 +446,99 @@ export function buildSuggestions(ranked, prefs) {
   return out.slice(0, 3);
 }
 
-// Resolve the effective climate tags for a destination in a given month,
-// applying the same climateByMonth logic that scoreDestination uses.
-// Not refactored into scoreDestination itself (brief constraint: no edits to
-// that function), so duplicated here as a private helper.
-function resolveClimateTags(dest, monthNum) {
+// Month-resolved effective climate label for a destination — mirrors the
+// derivation scoreDestination() applies for its own climate scoring.
+// Returns null when no month-resolved climateByMonth data exists; callers
+// fall back to the annual climate_tags.
+export function monthClimateLabel(dest, monthNum) {
   if (
     monthNum >= 1 && monthNum <= 12 &&
     Array.isArray(dest.climateByMonth) && dest.climateByMonth.length === 12
   ) {
     const mc = dest.climateByMonth[monthNum - 1];
     if (mc) {
-      let label;
-      if (mc.isColdOrSnowy) label = "Cold or snowy";
-      else if (mc.avgTempC >= 24) label = "Warm";
-      else if (mc.avgTempC >= 15) label = "Mild";
-      else if (mc.avgTempC >= 5) label = "Cool";
-      else label = "Cold or snowy";
-      return [label];
+      if (mc.isColdOrSnowy) return "Cold or snowy";
+      if (mc.avgTempC >= 24) return "Warm";
+      if (mc.avgTempC >= 15) return "Mild";
+      if (mc.avgTempC >= 5) return "Cool";
+      return "Cold or snowy";
     }
   }
-  return dest.climate_tags || [];
+  return null;
 }
 
-// Returns true when the user's climate preference is a real mismatch with
-// the selected travel month: all top results score zero on climate AND a
-// specific month is set AND the user expressed a real climate preference
-// (non-empty, not "No preference").
-export function climateMismatch(prefs, ranked) {
-  const monthNum =
-    prefs && prefs.travelMonth && prefs.travelMonth !== "flexible"
-      ? Number(prefs.travelMonth)
-      : null;
-  if (!monthNum) return false;
-  const climateSelected = Array.isArray(prefs.climate) ? prefs.climate : [];
-  if (!climateSelected.length || climateSelected.length >= CLIMATE_ORDER.length) return false;
+function climateTagsForMonth(dest, monthNum) {
+  const label = monthClimateLabel(dest, monthNum);
+  return label ? [label] : dest.climate_tags || [];
+}
+
+// Below this climate score a shown result "effectively ignored" the climate
+// preference: 0 = no credit at all, and 5 is only adjacent-climate partial
+// credit on a single selection — neither is a real climate match.
+export const CLIMATE_MISMATCH_THRESHOLD = 5;
+
+// Returns the banner payload when the honesty banner should fire, else null.
+// Fires only for a real climate preference (not "No preference"/all options)
+// combined with a specific travel month, when every top-3 shown result
+// scored below CLIMATE_MISMATCH_THRESHOLD on climate.
+export function climateMismatch(ranked, prefs) {
+  const selected = Array.isArray(prefs.climate) ? prefs.climate : [];
+  if (!selected.length || selected.length >= CLIMATE_ORDER.length) return null;
+  if (!prefs.travelMonth || prefs.travelMonth === "flexible") return null;
   const top = ranked.slice(0, 3);
-  if (!top.length) return false;
-  // Fire when no top result has a direct climate match (score at the cap).
-  // A score of 0 (no match) or 5 (adjacent only) both indicate the user's
-  // exact preference is poorly served -- the banner should appear for both.
-  const cap = CLIMATE_BREADTH_CAP[climateSelected.length] ?? 10;
-  return top.every((r) => r.result.breakdown.climate < cap);
+  if (!top.length) return null;
+  if (!top.every((r) => r.result.breakdown.climate < CLIMATE_MISMATCH_THRESHOLD)) return null;
+  return {
+    preference: joinOr(selected),
+    monthName: MONTHS[Number(prefs.travelMonth) - 1],
+  };
 }
 
-// Returns alternative chips for the climate-mismatch banner.
-// Climate-swap entries: a different CLIMATE_ORDER value that fits more
-// destinations in this month. Month-swap entries: a different month where
-// the user's current climate preference fits more destinations.
-// Each entry: { type:"climate"|"month", label, count, newPrefs }
-export function suggestAlternatives(prefs, allDestinations) {
-  const monthNum =
-    prefs && prefs.travelMonth && prefs.travelMonth !== "flexible"
-      ? Number(prefs.travelMonth)
-      : null;
-  if (!monthNum) return [];
-  const climateSelected = Array.isArray(prefs.climate) ? prefs.climate : [];
-  if (!climateSelected.length || climateSelected.length >= CLIMATE_ORDER.length) return [];
+// Cross-month / cross-climate nudge suggestions, only meaningful once the
+// honesty banner has fired. Both directions check REACHABLE destinations —
+// same exclusions AND practicality gate as the real ranking — so every
+// suggestion is backed by at least one destination the traveller could
+// actually visit on this trip.
+//   months:   same climate preference, other months where reachable
+//             destinations match it
+//   climates: same month, other climate preferences reachable destinations
+//             actually deliver then
+// Each entry carries a count so chips can display it as social proof.
+export function suggestAlternatives(destinations, prefs) {
+  const selected = Array.isArray(prefs.climate) ? prefs.climate : [];
+  const monthNum = Number(prefs.travelMonth);
+  if (!selected.length || !(monthNum >= 1 && monthNum <= 12)) {
+    return { months: [], climates: [] };
+  }
+  const tripDays = Number((prefs && prefs.travelDays) || 0);
+  const reachable = destinations
+    .filter((d) => !isExcluded(d, prefs))
+    .filter((d) => isPractical(assessPracticality(d, prefs), tripDays));
+  if (!reachable.length) return { months: [], climates: [] };
 
-  const monthName = MONTHS[monthNum - 1];
-  const eligible = allDestinations.filter((d) => !isExcluded(d, prefs));
+  const monthCounts = [];
+  for (let m = 1; m <= 12; m++) {
+    if (m === monthNum) continue;
+    const count = reachable.filter((d) =>
+      climateTagsForMonth(d, m).some((c) => selected.includes(c))
+    ).length;
+    monthCounts.push({ month: m, count });
+  }
+  const months = monthCounts
+    .filter((x) => x.count > 0)
+    .sort((a, b) => b.count - a.count || a.month - b.month)
+    .slice(0, 2)
+    .map((x) => ({ month: x.month, monthName: MONTHS[x.month - 1], count: x.count }));
 
-  const climateAlts = CLIMATE_ORDER.filter((c) => !climateSelected.includes(c))
-    .map((c) => {
-      const count = eligible.filter((d) =>
-        resolveClimateTags(d, monthNum).some((t) => t === c)
-      ).length;
-      return {
-        type: "climate",
-        label: `For ${monthName}, try "${c}"`,
-        count,
-        newPrefs: { ...prefs, climate: [c] },
-      };
-    })
-    .filter((a) => a.count >= 3)
+  const climates = CLIMATE_ORDER
+    .filter((c) => !selected.includes(c))
+    .map((c) => ({
+      climate: c,
+      count: reachable.filter((d) => climateTagsForMonth(d, monthNum).includes(c)).length,
+    }))
+    .filter((x) => x.count > 0)
     .sort((a, b) => b.count - a.count)
     .slice(0, 2);
 
-  const monthAlts = [];
-  for (let m = 1; m <= 12; m++) {
-    if (m === monthNum) continue;
-    const count = eligible.filter((d) =>
-      climateSelected.some((s) =>
-        resolveClimateTags(d, m).some((t) => t === s)
-      )
-    ).length;
-    if (count >= 3) {
-      monthAlts.push({
-        type: "month",
-        label: `Try ${MONTHS[m - 1]} instead`,
-        count,
-        newPrefs: { ...prefs, travelMonth: String(m) },
-      });
-    }
-  }
-  monthAlts.sort((a, b) => b.count - a.count);
-
-  return [...climateAlts, ...monthAlts.slice(0, 2)].slice(0, 3);
+  return { months, climates };
 }
