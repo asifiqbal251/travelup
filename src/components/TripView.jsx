@@ -277,10 +277,18 @@ export default function TripView({
     setter(id);
     if (programmaticScrollTimer.current) clearTimeout(programmaticScrollTimer.current);
     programmaticScrollRef.current = true;
-    // C1: Settle-and-correct — after the smooth scroll ends, check whether
-    // layout shift (an expanding/collapsing DayCard above the target) moved
-    // the element. If it drifted more than 8px from the expected position,
-    // one instant corrective scroll snaps it back. Never loops.
+    // E1: Defer scrollToId one frame so React has already flushed the
+    // setOpenDay render (closing/opening DayCards) before scrollIntoView
+    // measures the target. Without the defer, scrollIntoView computes the
+    // anchor's pre-render offset, then the layout shifts as cards open/close,
+    // and the scroll lands one card off. One rAF is enough — React flushes
+    // user-event state updates synchronously before the browser paints.
+    //
+    // C1: After the scroll ends, one instant corrective scroll fixes any
+    // remaining drift (e.g. a card further up the page also changed height).
+    // The 700ms fallback covers browsers that never fire scrollend (iOS < 16).
+    // clear() now cancels the fallback timer when scrollend fires first, so
+    // correct() is never called twice on the same jump.
     const correct = () => {
       const el = document.getElementById(id);
       if (!el) return;
@@ -292,7 +300,10 @@ export default function TripView({
     };
     const clear = () => {
       programmaticScrollRef.current = false;
-      programmaticScrollTimer.current = null;
+      if (programmaticScrollTimer.current) {
+        clearTimeout(programmaticScrollTimer.current);
+        programmaticScrollTimer.current = null;
+      }
     };
     const onScrollEnd = () => {
       window.removeEventListener("scrollend", onScrollEnd);
@@ -305,7 +316,7 @@ export default function TripView({
       correct();
       clear();
     }, 700);
-    scrollToId(id);
+    requestAnimationFrame(() => scrollToId(id));
   };
 
   // C3: Switching L1 tabs resets scroll to the top of the new tab and resets
