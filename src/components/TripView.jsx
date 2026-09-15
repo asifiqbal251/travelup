@@ -203,7 +203,7 @@ function JumpNav({ items, activeId, onSelect, ariaLabel, level = "section" }) {
                   : cn(
                       "h-8 px-3.5 rounded-lg text-[13px] border font-medium",
                       active
-                        ? "wn-pill-sweep border-wn-text-l bg-wn-text-l text-white"
+                        ? "border-wn-text-l bg-wn-text-l text-white"
                         : "border-wn-line-l bg-transparent text-wn-text-2-l hover:bg-wn-surface-2-l"
                     )
               )}
@@ -260,17 +260,22 @@ export default function TripView({
   const programmaticScrollRef = useRef(false);
   const programmaticScrollTimer = useRef(null);
 
+  // F1: offsetPx passed here must include the 12px scrollMarginTop gap so the
+  // reference line (offsetPx + 1) sits just inside the anchored element after
+  // scrollIntoView, not 11px above it. Without this, rect.top (scrollOffset+12)
+  // > referenceLine (scrollOffset+1) → target falls into firstBelow, previous
+  // section wins as lastAbove → consistent N-1 highlight bug.
   const [overviewActiveId, setOverviewActiveId] = useScrollSpy(
     overviewItems.map((i) => i.id),
-    { active: activeTab === "overview", offsetPx: scrollOffset, pauseRef: programmaticScrollRef }
+    { active: activeTab === "overview", offsetPx: scrollOffset + 12, pauseRef: programmaticScrollRef }
   );
   const [itineraryActiveId, setItineraryActiveId] = useScrollSpy(
     itineraryItems.map((i) => i.id),
-    { active: activeTab === "itinerary", offsetPx: scrollOffset, pauseRef: programmaticScrollRef }
+    { active: activeTab === "itinerary", offsetPx: scrollOffset + 12, pauseRef: programmaticScrollRef }
   );
   const [packingActiveId, setPackingActiveId] = useScrollSpy(
     packingItems.map((i) => i.id),
-    { active: activeTab === "packing", offsetPx: scrollOffset, pauseRef: programmaticScrollRef }
+    { active: activeTab === "packing", offsetPx: scrollOffset + 12, pauseRef: programmaticScrollRef }
   );
 
   const jumpTo = (id, setter) => {
