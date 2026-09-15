@@ -5,7 +5,15 @@ import { Image } from "@/components/ui/image";
 import { base44 } from "@/api/base44Client";
 import { getPrefs, setSelectedDestinationId } from "@/lib/storage";
 import { TRAVEL_FALLBACK_IMAGE } from "@/lib/fallbackImage";
-import { rankDestinations, buildReasons, buildSuggestions, practicalityExcludedCount } from "@/lib/scoring";
+import {
+  rankDestinations,
+  buildReasons,
+  buildSuggestions,
+  practicalityExcludedCount,
+  climateMismatch,
+  suggestAlternatives,
+} from "@/lib/scoring";
+import { MONTHS } from "@/lib/options";
 import { nameWithCountry } from "@/lib/destinationLabel";
 import { flagForCountry } from "@/lib/countryFlag";
 import { normalizeMode, roundedTravelHours } from "@/lib/travelMode";
@@ -40,6 +48,7 @@ export default function Results() {
   const [prefs, setPrefsState] = useState(null);
   const [error, setError] = useState("");
   const [showMore, setShowMore] = useState(false);
+  const [prevPrefs, setPrevPrefs] = useState(null);
 
   useEffect(() => {
     const p = getPrefs();
@@ -60,6 +69,21 @@ export default function Results() {
         setLoading(false);
       });
   }, [navigate]);
+
+  // Apply a prefs change in-place: re-ranks without navigating away.
+  // Captures the original prefs on the first call so restoreOriginal() can
+  // recover them. Does NOT write to localStorage — chip exploration is ephemeral.
+  const applyPrefsInPlace = (newPrefs) => {
+    setPrevPrefs((p) => p ?? prefs);
+    setPrefsState(newPrefs);
+    setRanked(rankDestinations(allDestinations, newPrefs));
+  };
+
+  const restoreOriginal = () => {
+    setPrefsState(prevPrefs);
+    setRanked(rankDestinations(allDestinations, prevPrefs));
+    setPrevPrefs(null);
+  };
 
   const selectDest = (id) => {
     setSelectedDestinationId(id);
@@ -93,6 +117,19 @@ export default function Results() {
   const practicalityExcluded = practicalityExcludedCount(allDestinations, prefs);
   const hasTripLengthHint = suggestions.some((s) => /increase your trip|longer|7 days/i.test(s.label));
   const showPracticalityNote = practicalityExcluded > 0 && !hasTripLengthHint;
+  const hasMismatch = climateMismatch(prefs, ranked);
+  const mismatchAlts = hasMismatch ? suggestAlternatives(prefs, allDestinations) : [];
+
+  // Which suggestion chips can be applied in-place (no questionnaire navigation needed).
+  const SELF_CONTAINED = new Set([
+    "Select 'No preference' for climate.",
+    "Choose a flexible travel month.",
+  ]);
+  const inPlacePrefs = (label) => {
+    if (label === "Select 'No preference' for climate.") return { ...prefs, climate: [] };
+    if (label === "Choose a flexible travel month.") return { ...prefs, travelMonth: "flexible" };
+    return null;
+  };
 
   return (
     <div className="min-h-[100dvh] bg-wn-page text-wn-text">
@@ -137,12 +174,46 @@ export default function Results() {
           </p>
         </details>
 
+        {/* "Back to original results" — appears after any in-place chip application */}
+        {prevPrefs && (
+          <div className="rounded-2xl bg-wn-surface ring-1 ring-wn-line px-4 py-3 mb-6 flex items-center justify-between gap-4 flex-wrap">
+            <p className="text-[14px] text-wn-text-2">Showing updated results. Changes aren't saved.</p>
+            <button
+              onClick={restoreOriginal}
+              className="inline-flex items-center gap-1.5 text-[14px] font-medium text-wn-cyan hover:underline shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-wn-cyan rounded"
+            >
+              <ArrowLeft className="w-3.5 h-3.5" /> Back to original results
+            </button>
+          </div>
+        )}
+
         {showPracticalityNote && (
           <div className="rounded-2xl bg-wn-surface ring-1 ring-wn-line p-4 mb-6">
             <p className="text-[15px] text-wn-text-2">
               Some longer-distance destinations weren't included because this trip length doesn't leave
               enough time to make the travel worthwhile — a longer trip would open up more options.
             </p>
+          </div>
+        )}
+
+        {/* Climate-mismatch banner: fires when top results all score 0 on climate */}
+        {hasMismatch && mismatchAlts.length > 0 && (
+          <div className="rounded-2xl bg-wn-surface ring-1 ring-wn-line p-4 mb-6">
+            <p className="text-[15px] font-medium text-wn-text">
+              Your climate preference doesn't match well with {MONTHS[Number(prefs.travelMonth) - 1]}. Try adjusting:
+            </p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {mismatchAlts.map((alt, i) => (
+                <button
+                  key={i}
+                  onClick={() => applyPrefsInPlace(alt.newPrefs)}
+                  className="inline-flex items-center gap-2 text-[15px] font-medium bg-wn-surface-2 ring-1 ring-wn-line-2 hover:ring-wn-cyan rounded-lg px-3 py-2 min-h-9 text-wn-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-wn-cyan"
+                >
+                  {alt.label}
+                  <span className="text-wn-text-3 text-[13px]">({alt.count})</span>
+                </button>
+              ))}
+            </div>
           </div>
         )}
 
@@ -154,15 +225,29 @@ export default function Results() {
                 : "Want more options to choose from? Here's what you could adjust."}
             </p>
             <div className="mt-3 flex flex-wrap gap-2">
-              {suggestions.map((s, i) => (
-                <Link
-                  key={i}
-                  to={`/questionnaire?step=${s.step}`}
-                  className="inline-flex items-center gap-1.5 text-[15px] font-medium bg-wn-surface-2 ring-1 ring-wn-line-2 hover:ring-wn-cyan rounded-lg px-3 py-2 min-h-9 text-wn-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-wn-cyan"
-                >
-                  {s.label} <ArrowRight className="w-3.5 h-3.5" />
-                </Link>
-              ))}
+              {suggestions.map((s, i) => {
+                const newPrefs = inPlacePrefs(s.label);
+                if (newPrefs) {
+                  return (
+                    <button
+                      key={i}
+                      onClick={() => applyPrefsInPlace(newPrefs)}
+                      className="inline-flex items-center gap-1.5 text-[15px] font-medium bg-wn-surface-2 ring-1 ring-wn-line-2 hover:ring-wn-cyan rounded-lg px-3 py-2 min-h-9 text-wn-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-wn-cyan"
+                    >
+                      {s.label} <ArrowRight className="w-3.5 h-3.5" />
+                    </button>
+                  );
+                }
+                return (
+                  <Link
+                    key={i}
+                    to={`/questionnaire?step=${s.step}`}
+                    className="inline-flex items-center gap-1.5 text-[15px] font-medium bg-wn-surface-2 ring-1 ring-wn-line-2 hover:ring-wn-cyan rounded-lg px-3 py-2 min-h-9 text-wn-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-wn-cyan"
+                  >
+                    {s.label} <ArrowRight className="w-3.5 h-3.5" />
+                  </Link>
+                );
+              })}
             </div>
           </div>
         )}

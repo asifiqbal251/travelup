@@ -420,21 +420,21 @@ export function buildSuggestions(ranked, prefs) {
   if ((anyPoor || anyStretch || anyLen0) && Number(prefs.travelDays) < 7)
     out.push({ label: "Increase your trip to at least 7 days.", step: 1 });
   if (anyBudgetLow && typeof prefs.budget === "number")
-    out.push({ label: "Increase your daily budget.", step: 2 });
+    out.push({ label: "Increase your daily budget.", step: 8 });
   if (anyInterestLow && (prefs.interests || []).length < 3)
-    out.push({ label: "Select more interests that appeal to you.", step: 3 });
+    out.push({ label: "Select more interests that appeal to you.", step: 4 });
   if (travelScope(prefs) === "international")
-    out.push({ label: "Allow domestic destinations.", step: 1 });
+    out.push({ label: "Allow domestic destinations.", step: 0 });
   if (travelScope(prefs) === "domestic")
-    out.push({ label: "Allow international destinations.", step: 1 });
+    out.push({ label: "Allow international destinations.", step: 0 });
   if (anySeason0 && prefs.travelMonth && prefs.travelMonth !== "flexible")
-    out.push({ label: "Choose a flexible travel month.", step: 1 });
+    out.push({ label: "Choose a flexible travel month.", step: 2 });
   if (anyPoor || anyStretch)
     out.push({ label: "Consider a closer region.", step: 0 });
   if (anyClimate0 && Array.isArray(prefs.climate) && prefs.climate.length > 0)
-    out.push({ label: "Select 'No preference' for climate.", step: 4 });
+    out.push({ label: "Select 'No preference' for climate.", step: 5 });
   if (anyPace0)
-    out.push({ label: "Revise your pace or activity preference.", step: 4 });
+    out.push({ label: "Revise your pace or activity preference.", step: 6 });
 
   // Fewer than 3 results but nothing above fired (every preference is
   // already at its most permissive setting) -- still offer the one lever
@@ -444,4 +444,103 @@ export function buildSuggestions(ranked, prefs) {
     out.push({ label: "Increase your trip length.", step: 1 });
 
   return out.slice(0, 3);
+}
+
+// Resolve the effective climate tags for a destination in a given month,
+// applying the same climateByMonth logic that scoreDestination uses.
+// Not refactored into scoreDestination itself (brief constraint: no edits to
+// that function), so duplicated here as a private helper.
+function resolveClimateTags(dest, monthNum) {
+  if (
+    monthNum >= 1 && monthNum <= 12 &&
+    Array.isArray(dest.climateByMonth) && dest.climateByMonth.length === 12
+  ) {
+    const mc = dest.climateByMonth[monthNum - 1];
+    if (mc) {
+      let label;
+      if (mc.isColdOrSnowy) label = "Cold or snowy";
+      else if (mc.avgTempC >= 24) label = "Warm";
+      else if (mc.avgTempC >= 15) label = "Mild";
+      else if (mc.avgTempC >= 5) label = "Cool";
+      else label = "Cold or snowy";
+      return [label];
+    }
+  }
+  return dest.climate_tags || [];
+}
+
+// Returns true when the user's climate preference is a real mismatch with
+// the selected travel month: all top results score zero on climate AND a
+// specific month is set AND the user expressed a real climate preference
+// (non-empty, not "No preference").
+export function climateMismatch(prefs, ranked) {
+  const monthNum =
+    prefs && prefs.travelMonth && prefs.travelMonth !== "flexible"
+      ? Number(prefs.travelMonth)
+      : null;
+  if (!monthNum) return false;
+  const climateSelected = Array.isArray(prefs.climate) ? prefs.climate : [];
+  if (!climateSelected.length || climateSelected.length >= CLIMATE_ORDER.length) return false;
+  const top = ranked.slice(0, 3);
+  if (!top.length) return false;
+  // Fire when no top result has a direct climate match (score at the cap).
+  // A score of 0 (no match) or 5 (adjacent only) both indicate the user's
+  // exact preference is poorly served -- the banner should appear for both.
+  const cap = CLIMATE_BREADTH_CAP[climateSelected.length] ?? 10;
+  return top.every((r) => r.result.breakdown.climate < cap);
+}
+
+// Returns alternative chips for the climate-mismatch banner.
+// Climate-swap entries: a different CLIMATE_ORDER value that fits more
+// destinations in this month. Month-swap entries: a different month where
+// the user's current climate preference fits more destinations.
+// Each entry: { type:"climate"|"month", label, count, newPrefs }
+export function suggestAlternatives(prefs, allDestinations) {
+  const monthNum =
+    prefs && prefs.travelMonth && prefs.travelMonth !== "flexible"
+      ? Number(prefs.travelMonth)
+      : null;
+  if (!monthNum) return [];
+  const climateSelected = Array.isArray(prefs.climate) ? prefs.climate : [];
+  if (!climateSelected.length || climateSelected.length >= CLIMATE_ORDER.length) return [];
+
+  const monthName = MONTHS[monthNum - 1];
+  const eligible = allDestinations.filter((d) => !isExcluded(d, prefs));
+
+  const climateAlts = CLIMATE_ORDER.filter((c) => !climateSelected.includes(c))
+    .map((c) => {
+      const count = eligible.filter((d) =>
+        resolveClimateTags(d, monthNum).some((t) => t === c)
+      ).length;
+      return {
+        type: "climate",
+        label: `For ${monthName}, try "${c}"`,
+        count,
+        newPrefs: { ...prefs, climate: [c] },
+      };
+    })
+    .filter((a) => a.count >= 3)
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 2);
+
+  const monthAlts = [];
+  for (let m = 1; m <= 12; m++) {
+    if (m === monthNum) continue;
+    const count = eligible.filter((d) =>
+      climateSelected.some((s) =>
+        resolveClimateTags(d, m).some((t) => t === s)
+      )
+    ).length;
+    if (count >= 3) {
+      monthAlts.push({
+        type: "month",
+        label: `Try ${MONTHS[m - 1]} instead`,
+        count,
+        newPrefs: { ...prefs, travelMonth: String(m) },
+      });
+    }
+  }
+  monthAlts.sort((a, b) => b.count - a.count);
+
+  return [...climateAlts, ...monthAlts.slice(0, 2)].slice(0, 3);
 }

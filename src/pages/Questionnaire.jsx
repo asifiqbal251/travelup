@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { ArrowLeft, ArrowRight, X } from "lucide-react";
 import {
   QUESTIONS,
@@ -57,6 +57,15 @@ function glowFor(hue) {
 export default function Questionnaire() {
   const navigate = useNavigate();
   const desktop = useMinWidth(1024);
+  const [searchParams] = useSearchParams();
+
+  // A ?step=N param (from Results suggestion chips) jumps directly to question
+  // N and skips the resume interstitial, so the user lands on the relevant
+  // question rather than the "picking up where you left off" screen.
+  const urlStep = (() => {
+    const v = parseInt(searchParams.get("step"), 10);
+    return Number.isFinite(v) && v >= 0 && v < QUESTIONS.length ? v : null;
+  })();
 
   const [answers, setAnswers] = useState(() => hydrateAnswers(getPrefs()));
   // Partial saved sets resume silently at the first unanswered question
@@ -64,6 +73,7 @@ export default function Questionnaire() {
   // handled separately below via the resume interstitial, so this only
   // matters for the partial case.
   const [current, setCurrent] = useState(() => {
+    if (urlStep !== null) return urlStep;
     const h = hydrateAnswers(getPrefs());
     const firstUnanswered = QUESTIONS.findIndex((_, i) => !isAnswered(i, h));
     return firstUnanswered >= 0 ? firstUnanswered : 0;
@@ -71,8 +81,11 @@ export default function Questionnaire() {
   const [done, setDone] = useState(false);
   // A complete saved answer set shows a "picking up where you left off"
   // interstitial before Q1 rather than silently re-presenting every
-  // question pre-answered, which read as broken (Part E3).
+  // question pre-answered, which read as broken (Part E3). Skipped when a
+  // chip-navigation ?step param is present -- the user came from Results to
+  // edit a specific answer, not to resume from scratch.
   const [resuming, setResuming] = useState(() => {
+    if (urlStep !== null) return false;
     const h = hydrateAnswers(getPrefs());
     return QUESTIONS.every((_, i) => isAnswered(i, h));
   });
