@@ -31,7 +31,7 @@ export default function Logo({ variant = "full", surface = "dark", size = 32, cl
         alt=""
         aria-hidden="true"
         draggable="false"
-        style={{ height: size * 0.56, width: "auto" }}
+        style={{ width: size * 3.35, height: "auto" }}
         className="object-contain"
       />
     </span>
