@@ -129,6 +129,42 @@ independent of `min_days`.
 would worsen the already-thin result counts. The travel-time gate already
 covers the real safety case.
 
+**⚠️ Superseded (2026-09-17):** `min_days` is now a **hard exclusion gate**.
+`isMinDaysExcluded(dest, prefs)` in `scoring.js` filters out any destination
+whose `min_days > prefs.travelDays` before scoring. Pipeline order:
+`isExcluded` → `isPractical` → **`isMinDaysExcluded`** → `scoreWithPracticality`.
+A `minDaysExcludedCount()` helper feeds a UI note in `Results.jsx`.
+The L3/K8 regression cases now pass. S1 (Delhi 5d) and S2 (Delhi 4d) have
+changed top-3 compositions accordingly — this is accepted expected behaviour.
+
+## Known Scoring Gaps (permanent log)
+
+These are confirmed gaps in scoring/UX logic with no fix planned yet. Each
+entry becomes a permanent case in the regression suite to prevent unintended
+future fixes from silently closing — or re-opening — the gap without review.
+
+### Extreme-heat / extreme-conditions warning (logged 2026-09-17)
+
+**Gap:** No warning is shown when a destination matches the user's climate
+*category* (e.g. "Warm") but sits at an extreme within that category (e.g.
+Dubai at 37°C in July). The climate-mismatch banner only fires when there are
+no top-3 destinations with a matching label — it does not fire for
+within-category extremes.
+
+**Regression case:** Run `Dubai` for any origin with `travelMonth: 7`
+(July) and `climate: ['Warm']`. Dubai should appear in results (it is
+technically Warm), and **no banner should appear** — this is the correct
+current behaviour. The gap is that there is also no contextual "extreme heat"
+note anywhere in the result. This case is a permanent PASS under current
+code; any future attempt to fix the gap must ensure this case still produces
+results (it must not be suppressed by the fix).
+
+**Intentionally not fixed now.** Adding a second within-category warning
+carries real risk of false positives across the 57-destination catalogue.
+Revisit when the recommender round adds per-destination contextual warnings.
+
+---
+
 ## "No preference" (climate)
 
 "No preference" on climate awards **full credit** to every destination

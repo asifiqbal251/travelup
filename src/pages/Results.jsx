@@ -10,6 +10,7 @@ import {
   buildReasons,
   buildSuggestions,
   practicalityExcludedCount,
+  minDaysExcludedCount,
   climateMismatch,
   suggestAlternatives,
 } from "@/lib/scoring";
@@ -116,11 +117,13 @@ export default function Results() {
   const top = ranked.slice(0, 3);
   const more = ranked.slice(3, 6);
   const withPills = withDedupedPills(top, prefs);
-  const suggestions = buildSuggestions(ranked, prefs);
+  const minDaysExcluded = minDaysExcludedCount(allDestinations, prefs);
+  const suggestions = buildSuggestions(ranked, prefs, minDaysExcluded);
   const lowScore = top.some((r) => r.result.finalScore < 50);
   const practicalityExcluded = practicalityExcludedCount(allDestinations, prefs);
   const hasTripLengthHint = suggestions.some((s) => /increase your trip|longer|7 days/i.test(s.label));
   const showPracticalityNote = practicalityExcluded > 0 && !hasTripLengthHint;
+  const showMinDaysNote = minDaysExcluded > 0 && !hasTripLengthHint;
   const mismatch = climateMismatch(ranked, prefs);
   const nudges = mismatch ? suggestAlternatives(allDestinations, prefs) : null;
 
@@ -191,6 +194,18 @@ export default function Results() {
             <p className="text-[15px] text-wn-text-2">
               Some longer-distance destinations weren't included because this trip length doesn't leave
               enough time to make the travel worthwhile — a longer trip would open up more options.
+            </p>
+          </div>
+        )}
+
+        {showMinDaysNote && (
+          <div className="rounded-2xl bg-wn-surface ring-1 ring-wn-line p-4 mb-6">
+            <p className="text-[15px] text-wn-text-2">
+              {minDaysExcluded === 1
+                ? "1 destination"
+                : `${minDaysExcluded} destinations`}{" "}
+              needs more time than this trip allows — a longer trip would include{" "}
+              {minDaysExcluded === 1 ? "it" : "them"}.
             </p>
           </div>
         )}

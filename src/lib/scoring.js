@@ -236,6 +236,12 @@ export function scoreDestination(dest, prefs) {
   };
 }
 
+export function isMinDaysExcluded(dest, prefs) {
+  const tripDays = Number((prefs && prefs.travelDays) || 0);
+  const minDays = Number((dest && dest.min_days) || 0);
+  return minDays > 0 && tripDays > 0 && minDays > tripDays;
+}
+
 export function isExcluded(dest, prefs) {
   // Accent-insensitive matching: "Montreal, Quebec City" excludes
   // "Montréal and Québec City" because both sides are normalized before the
@@ -314,6 +320,7 @@ export function rankDestinations(destinations, prefs) {
     .filter((d) => !isExcluded(d, prefs))
     .map((d) => ({ dest: d, practicality: assessPracticality(d, prefs) }))
     .filter((r) => isPractical(r.practicality, tripDays))
+    .filter((r) => !isMinDaysExcluded(r.dest, prefs))
     .map((r) => ({ dest: r.dest, result: scoreWithPracticality(r.dest, prefs, r.practicality) }))
     .sort((a, b) => {
       if (b.result.finalRaw !== a.result.finalRaw)
@@ -341,6 +348,18 @@ export function practicalityExcludedCount(destinations, prefs) {
     if (isExcluded(d, prefs)) return;
     const prac = assessPracticality(d, prefs);
     if (!isPractical(prac, tripDays)) count += 1;
+  });
+  return count;
+}
+
+export function minDaysExcludedCount(destinations, prefs) {
+  const tripDays = Number((prefs && prefs.travelDays) || 0);
+  let count = 0;
+  destinations.forEach((d) => {
+    if (isExcluded(d, prefs)) return;
+    const prac = assessPracticality(d, prefs);
+    if (!isPractical(prac, tripDays)) return;
+    if (isMinDaysExcluded(d, prefs)) count += 1;
   });
   return count;
 }
@@ -394,7 +413,7 @@ export function buildReasons(dest, prefs, result) {
 
 // Relevant revision suggestions when results are weak. Only suggests inputs
 // that actually lost points and aren't already flexible.
-export function buildSuggestions(ranked, prefs) {
+export function buildSuggestions(ranked, prefs, minDaysExcluded = 0) {
   const top = ranked.slice(0, 3);
   if (!top.length) return [];
   // Fire when at least one shown result is genuinely weak (below 50), OR
@@ -417,7 +436,7 @@ export function buildSuggestions(ranked, prefs) {
   const anyInterestLow = top.some((r) => r.result.breakdown.interest < 25);
 
   const out = [];
-  if ((anyPoor || anyStretch || anyLen0) && Number(prefs.travelDays) < 7)
+  if ((anyPoor || anyStretch || anyLen0 || minDaysExcluded > 0) && Number(prefs.travelDays) < 7)
     out.push({ label: "Increase your trip to at least 7 days.", step: 1 });
   if (anyBudgetLow && typeof prefs.budget === "number")
     out.push({ label: "Increase your daily budget.", step: 8 });
@@ -485,9 +504,22 @@ export function climateMismatch(ranked, prefs) {
   const selected = Array.isArray(prefs.climate) ? prefs.climate : [];
   if (!selected.length || selected.length >= CLIMATE_ORDER.length) return null;
   if (!prefs.travelMonth || prefs.travelMonth === "flexible") return null;
+  const monthNum = Number(prefs.travelMonth);
   const top = ranked.slice(0, 3);
   if (!top.length) return null;
-  if (!top.every((r) => r.result.breakdown.climate < CLIMATE_MISMATCH_THRESHOLD)) return null;
+  const allBelowThreshold = top.every((r) => r.result.breakdown.climate < CLIMATE_MISMATCH_THRESHOLD);
+  // Independent hemisphere/season check: fires when "Cold or snowy" is selected
+  // and no top-3 destination has isColdOrSnowy=true for this month. This prevents
+  // a "Cool but not cold" adjacent-credit score (5 pts) from suppressing the banner
+  // for a user who wants winter conditions but is being shown summer-hemisphere results.
+  const wantsCold = selected.includes("Cold or snowy");
+  const noExactColdMatch = wantsCold && !top.some((r) => {
+    const mc = Array.isArray(r.dest.climateByMonth) &&
+               r.dest.climateByMonth.length === 12 &&
+               r.dest.climateByMonth[monthNum - 1];
+    return mc && mc.isColdOrSnowy;
+  });
+  if (!allBelowThreshold && !noExactColdMatch) return null;
   return {
     preference: joinOr(selected),
     monthName: MONTHS[Number(prefs.travelMonth) - 1],
@@ -513,7 +545,8 @@ export function suggestAlternatives(destinations, prefs) {
   const tripDays = Number((prefs && prefs.travelDays) || 0);
   const reachable = destinations
     .filter((d) => !isExcluded(d, prefs))
-    .filter((d) => isPractical(assessPracticality(d, prefs), tripDays));
+    .filter((d) => isPractical(assessPracticality(d, prefs), tripDays))
+    .filter((d) => !isMinDaysExcluded(d, prefs));
   if (!reachable.length) return { months: [], climates: [] };
 
   const monthCounts = [];
