@@ -254,6 +254,9 @@ const CITY_COUNTRY = {
   "buenos aires": "Argentina", santiago: "Chile", lima: "Peru", cusco: "Peru",
   bogota: "Colombia", cartagena: "Colombia", quito: "Ecuador",
   dhaka: "Bangladesh", karachi: "Pakistan", lahore: "Pakistan", islamabad: "Pakistan",
+  bengaluru: "India", bangalore: "India",
+  kolkata: "India", chennai: "India", hyderabad: "India",
+  chittagong: "Bangladesh", chattogram: "Bangladesh",
 };
 
 export const ORIGIN_CHIPS = ["Vancouver", "Los Angeles", "San Francisco", "Paris"];
@@ -265,7 +268,8 @@ export const ORIGIN_SUGGESTIONS = [
   "Amsterdam", "Berlin", "Rome", "Madrid", "Barcelona", "Lisbon",
   "Tokyo", "Seoul", "Sydney", "Auckland", "Dubai", "Istanbul",
   "Buenos Aires", "São Paulo", "Lima", "Cape Town", "Reykjavik",
-  "Singapore", "Bangkok", "Delhi", "Hong Kong",
+  "Singapore", "Bangkok", "Delhi", "Mumbai", "Bengaluru", "Kolkata",
+  "Chennai", "Hyderabad", "Dhaka", "Chittagong", "Hong Kong",
 ];
 
 export function inferCountry(city) {

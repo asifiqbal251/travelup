@@ -101,6 +101,13 @@ const CITIES = {
   manila: { lat: 14.6, lng: 120.98 },
   delhi: { lat: 28.61, lng: 77.21 },
   mumbai: { lat: 19.08, lng: 72.88 },
+  bengaluru: { lat: 12.97, lng: 77.59 },
+  bangalore: { lat: 12.97, lng: 77.59 },
+  kolkata: { lat: 22.57, lng: 88.36 },
+  chennai: { lat: 13.08, lng: 80.27 },
+  hyderabad: { lat: 17.39, lng: 78.49 },
+  chittagong: { lat: 22.36, lng: 91.78 },
+  chattogram: { lat: 22.36, lng: 91.78 },
   // Africa / Oceania
   "cape town": { lat: -33.97, lng: 18.6 },
   johannesburg: { lat: -26.2, lng: 28.05 },

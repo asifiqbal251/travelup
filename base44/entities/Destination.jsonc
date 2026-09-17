@@ -12,6 +12,15 @@
     "region": {
       "type": "string"
     },
+    "destination_type": {
+      "type": "string",
+      "description": "Structural type of this record: single_base (one city/area), region (a broader area covered as one trip), or multi_stop (an itinerary spanning multiple distinct cities)",
+      "enum": [
+        "single_base",
+        "region",
+        "multi_stop"
+      ]
+    },
     "image_url": {
       "type": "string"
     },
