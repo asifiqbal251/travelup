@@ -41,7 +41,7 @@ function destShort(dest) {
   return i > 0 ? n.slice(0, i).trim() : n;
 }
 
-const TRAVELISH = /\b(arrival|arrive|depart|departure|return|onward|rest|recovery|free day)\b/i;
+const TRAVELISH = /\b(arrival|arrive|depart|departure|return|onward|recovery|free day)\b/i;
 function isTravelish(t) {
   return TRAVELISH.test(t.title || "");
 }
