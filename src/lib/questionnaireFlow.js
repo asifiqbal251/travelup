@@ -256,6 +256,7 @@ const CITY_COUNTRY = {
   dhaka: "Bangladesh", karachi: "Pakistan", lahore: "Pakistan", islamabad: "Pakistan",
   bengaluru: "India", bangalore: "India",
   kolkata: "India", chennai: "India", hyderabad: "India",
+  kochi: "India", cochin: "India",
   chittagong: "Bangladesh", chattogram: "Bangladesh",
 };
 
@@ -269,7 +270,7 @@ export const ORIGIN_SUGGESTIONS = [
   "Tokyo", "Seoul", "Sydney", "Auckland", "Dubai", "Istanbul",
   "Buenos Aires", "São Paulo", "Lima", "Cape Town", "Reykjavik",
   "Singapore", "Bangkok", "Delhi", "Mumbai", "Bengaluru", "Kolkata",
-  "Chennai", "Hyderabad", "Dhaka", "Chittagong", "Hong Kong",
+  "Chennai", "Hyderabad", "Kochi", "Dhaka", "Chittagong", "Hong Kong",
 ];
 
 export function inferCountry(city) {

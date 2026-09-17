@@ -106,6 +106,8 @@ const CITIES = {
   kolkata: { lat: 22.57, lng: 88.36 },
   chennai: { lat: 13.08, lng: 80.27 },
   hyderabad: { lat: 17.39, lng: 78.49 },
+  kochi: { lat: 9.93, lng: 76.26 },
+  cochin: { lat: 9.93, lng: 76.26 },
   chittagong: { lat: 22.36, lng: 91.78 },
   chattogram: { lat: 22.36, lng: 91.78 },
   // Africa / Oceania
