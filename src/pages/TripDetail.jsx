@@ -20,7 +20,7 @@ import { assessPracticality } from "@/lib/practicality";
 import { scoreWithPracticality } from "@/lib/scoring";
 import TripView, { TripHeader } from "@/components/TripView";
 import { toast } from "@/components/ui/use-toast";
-import { Bookmark, BookmarkCheck } from "lucide-react";
+import { Bookmark, BookmarkCheck, AlertCircle } from "lucide-react";
 import { useAccountIdentity, saveTripToAccount, getAccountSavedTrips, updateTripSnapshotInAccount } from "@/lib/auth";
 import GuestUpgradeModal from "@/components/guest/GuestUpgradeModal";
 import GuestSaveBanner from "@/components/guest/GuestSaveBanner";
@@ -156,6 +156,13 @@ export default function TripDetail() {
     : dest;
   const display = normalizeDestinationDisplay(tripDest);
   const shownLegs = isMultiStop ? builtLegs : null;
+  // Legs the generator couldn't fit onto this route at all (§3.2 of the
+  // drop-redistribution brief) -- undefined on trips built before this field
+  // existed, so this always normalizes to an array.
+  const droppedLegs = multi?.droppedLegs || [];
+  const survivorNames = shownLegs?.length
+    ? shownLegs.map((l) => l.name).join(" and ")
+    : (tripDest ? display.name : "");
 
   const packingGroups = generatePackingList(tripDest, prefs);
   const travelFit = plannedMultiStop ? null : assessPracticality(dest, prefs);
@@ -358,6 +365,23 @@ export default function TripDetail() {
           </div>
 
           {alreadySaved && <GuestSaveBanner className="mb-6" />}
+
+          {droppedLegs.length > 0 && (
+            <div className="mb-6 rounded-xl bg-wn-amber/10 border border-wn-amber/30 px-4 py-3 flex items-start gap-2.5 text-[13px] text-wn-text-2">
+              <AlertCircle className="w-4 h-4 text-wn-amber shrink-0 mt-px" aria-hidden="true" />
+              <span>
+                {droppedLegs.map((d, i) => (
+                  <span key={d.destinationId}>
+                    <span className="font-semibold text-wn-amber">
+                      {`Couldn't fit ${d.destinationName}.`}
+                    </span>{" "}
+                    {`It needed at least ${d.minDays} day${d.minDays === 1 ? "" : "s"} on this route; the time went to ${survivorNames || "the rest of the trip"} instead.`}
+                    {i < droppedLegs.length - 1 && " "}
+                  </span>
+                ))}
+              </span>
+            </div>
+          )}
 
           <TripView
             display={display}
