@@ -20,18 +20,50 @@ function transitModeLabel(distanceKm) {
   return distanceKm >= FLIGHT_THRESHOLD_KM ? "flight" : "overland";
 }
 
-// Strip isTravel days from the start (outbound travel — assumes departure from home).
-function dropLeadingTravel(days) {
-  let i = 0;
-  while (i < days.length && days[i].isTravel) i++;
-  return days.slice(i);
+// A fold/partialFold-tier leg embeds its outbound/return travel as seq() entries
+// (time: null) inside a normal activity day (isTravel: false). Detect these.
+function isFoldBoundaryDay(day) {
+  return day.isTravel === false
+    && Array.isArray(day.timeline)
+    && day.timeline.some((e) => e.time == null);
 }
 
-// Strip isTravel days from the end (return travel — assumes return to home).
-function dropTrailingTravel(days) {
-  let i = days.length - 1;
-  while (i >= 0 && days[i].isTravel) i--;
-  return days.slice(0, i + 1);
+// Strip the journey seq() lines from a fold-boundary day, fix overnight, clear journey.
+// Returns null if no real activity entries remain (caller should drop the day entirely).
+function stripFoldBoundaryDay(day, destName) {
+  const activities = day.timeline.filter((e) => e.time != null);
+  if (activities.length === 0) return null;
+  return { ...day, timeline: activities, overnight: destName, journey: null };
+}
+
+// Trim the leading edge of a non-first leg's day array.
+// Drops pure isTravel days (medium/long tiers, unchanged behaviour), then
+// strips seq journey lines from a fold-boundary day if one sits at the new start.
+function trimLeadingEdge(days, destName) {
+  let start = 0;
+  while (start < days.length && days[start].isTravel) start++;
+  const d = start > 0 ? days.slice(start) : days;
+  if (d.length > 0 && isFoldBoundaryDay(d[0])) {
+    const stripped = stripFoldBoundaryDay(d[0], destName);
+    if (stripped === null) return d.slice(1);
+    return [stripped, ...d.slice(1)];
+  }
+  return d;
+}
+
+// Trim the trailing edge of a non-last leg's day array.
+// Drops pure isTravel days (medium/long tiers, unchanged behaviour), then
+// strips seq journey lines from a fold-boundary day if one sits at the new end.
+function trimTrailingEdge(days, destName) {
+  let end = days.length - 1;
+  while (end >= 0 && days[end].isTravel) end--;
+  const d = days.slice(0, end + 1);
+  if (d.length > 0 && isFoldBoundaryDay(d[d.length - 1])) {
+    const stripped = stripFoldBoundaryDay(d[d.length - 1], destName);
+    if (stripped === null) return d.slice(0, -1);
+    return [...d.slice(0, -1), stripped];
+  }
+  return d;
 }
 
 function makeTransitDay(fromDest, toDest) {
@@ -109,8 +141,8 @@ export function generateMultiDestItinerary(legs, prefs) {
   // Trim each leg: drop outbound days from non-first, drop return days from non-last
   const trimmed = perLeg.map((days, i) => {
     let d = days;
-    if (i > 0) d = dropLeadingTravel(d);
-    if (i < legs.length - 1) d = dropTrailingTravel(d);
+    if (i > 0) d = trimLeadingEdge(d, legs[i].destination.name);
+    if (i < legs.length - 1) d = trimTrailingEdge(d, legs[i].destination.name);
     // Tag every day with the leg it belongs to
     return d.map((day) => ({ ...day, legDestinationId: legs[i].destination.id }));
   });
