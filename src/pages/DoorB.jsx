@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { ArrowLeft, ArrowRight, Check, MapPin, SlidersHorizontal } from "lucide-react";
+import { AlertTriangle, ArrowLeft, ArrowRight, Check, Info, MapPin, SlidersHorizontal } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import {
   BLANK_ANSWERS, buildPrefs, QUESTIONS,
@@ -246,6 +246,50 @@ function SearchStep({ destinations, loading, error, onSelect }) {
   );
 }
 
+// ---- Climate alert ----
+
+const ALERT_KEYWORDS = [
+  "wet season", "monsoon", "extreme heat", "very hot", "cold", "snowy",
+  "snow", "hurricane", "typhoon", "rainy season", "cold and",
+];
+
+function ClimateAlert({ dest, monthValue }) {
+  const monthIdx = parseInt(monthValue, 10) - 1;
+  if (!Number.isFinite(monthIdx) || monthIdx < 0 || monthIdx > 11) return null;
+  const entry = Array.isArray(dest.climateByMonth) ? dest.climateByMonth[monthIdx] : null;
+  if (!entry) return null;
+
+  const conditions = entry.conditions || "";
+  const tempC = entry.avgTempC;
+  const low = conditions.toLowerCase();
+  const isAlert = ALERT_KEYWORDS.some((kw) => low.includes(kw));
+
+  const tempStr =
+    Number.isFinite(tempC)
+      ? ` · avg ${Math.round(tempC)}°C`
+      : "";
+
+  return (
+    <div
+      className={cn(
+        "mt-4 flex items-start gap-2.5 rounded-xl px-4 py-3 text-[13px] leading-snug",
+        isAlert
+          ? "bg-wn-amber/10 border border-wn-amber/30 text-wn-text-2"
+          : "bg-wn-surface border border-wn-line text-wn-text-3"
+      )}
+    >
+      {isAlert
+        ? <AlertTriangle className="shrink-0 mt-px w-4 h-4 text-wn-amber" aria-hidden="true" />
+        : <Info className="shrink-0 mt-px w-4 h-4 text-wn-text-3" aria-hidden="true" />
+      }
+      <span>
+        <span className="font-medium text-wn-text-2">{conditions}</span>
+        {tempStr && <span className="text-wn-text-3">{tempStr}</span>}
+      </span>
+    </div>
+  );
+}
+
 // ---- Step: Essentials ----
 
 function EssentialsStep({ dest, answers, minDaysWarning, setField, onRefine }) {
@@ -272,6 +316,9 @@ function EssentialsStep({ dest, answers, minDaysWarning, setField, onRefine }) {
       {/* When? */}
       <EssentialSection eyebrow="Timing" title="When are you going?">
         <MonthGridInline value={answers.travelMonth} onMonth={(v) => setField("travelMonth", v)} />
+        {answers.travelMonth && answers.travelMonth !== "flexible" && (
+          <ClimateAlert dest={dest} monthValue={answers.travelMonth} />
+        )}
       </EssentialSection>
 
       {/* How long? */}

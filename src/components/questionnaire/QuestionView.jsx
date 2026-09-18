@@ -1,15 +1,17 @@
 import { useEffect, useState } from "react";
 import { Check } from "lucide-react";
+import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { MONTHS } from "@/lib/options";
 import {
   QUESTIONS,
-  ORIGIN_CHIPS,
   suggestOrigins,
   inferCountry,
   budgetPositionToDollar,
   budgetDollarToPosition,
 } from "@/lib/questionnaireFlow";
+import { resolveOriginChips } from "@/lib/originSuggest";
+import { getPrefs } from "@/lib/storage";
 import DayScroller from "@/components/questionnaire/DayScroller";
 
 const HEADLINE_STYLE = { fontSize: "clamp(30px, 4.6vw, 50px)" };
@@ -51,12 +53,25 @@ export default function QuestionView({
 
       <div className="mt-7">
         {q.type === "text" && (
-          <OriginInput
-            value={answers.departureCity}
-            onText={onText}
-            onChip={onChip}
-            onTextEnter={onTextEnter}
-          />
+          <>
+            <OriginInput
+              value={answers.departureCity}
+              onText={onText}
+              onChip={onChip}
+              onTextEnter={onTextEnter}
+            />
+            {qIndex === 0 && (
+              <p className="mt-5 text-[13px] text-wn-text-3">
+                Already know where you're going?{" "}
+                <Link
+                  to="/find"
+                  className="text-wn-text-2 underline underline-offset-2 hover:text-wn-text focus:outline-none focus-visible:ring-2 focus-visible:ring-wn-cyan rounded"
+                >
+                  Skip straight to the dates →
+                </Link>
+              </p>
+            )}
+          </>
         )}
         {q.type === "days" && <DayScroller value={answers.travelDays} onSelect={onDay} />}
         {q.type === "months" && <MonthGrid value={answers.travelMonth} onMonth={onMonth} />}
@@ -85,6 +100,16 @@ function OriginInput({ value, onText, onChip, onTextEnter }) {
   const [focused, setFocused] = useState(false);
   const suggestions = suggestOrigins(value);
   const inferred = inferCountry(value);
+
+  // Resolve chips once on mount: saved city → timezone → static fallback
+  const [chips] = useState(() => {
+    try {
+      const saved = getPrefs()?.departureCity || null;
+      return resolveOriginChips(saved);
+    } catch {
+      return resolveOriginChips(null);
+    }
+  });
 
   return (
     <div className="relative">
@@ -127,7 +152,7 @@ function OriginInput({ value, onText, onChip, onTextEnter }) {
         </ul>
       )}
       <div className="mt-4 flex flex-wrap gap-2 justify-center">
-        {ORIGIN_CHIPS.map((c) => (
+        {chips.map((c) => (
           <button
             key={c}
             type="button"

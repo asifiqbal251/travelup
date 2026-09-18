@@ -1,0 +1,38 @@
+{
+  "name": "DestinationRequest",
+  "type": "object",
+  "description": "Demand signal — records a visitor's request for a destination WhereNova does not yet cover. Treat as a product asset for prioritising future curation.",
+  "properties": {
+    "query_text": {
+      "type": "string",
+      "description": "Exactly what the user typed in the search field"
+    },
+    "resolved_country": {
+      "type": "string",
+      "description": "Country inferred by inferCountry(); empty string when unresolvable"
+    },
+    "user_note": {
+      "type": "string",
+      "description": "Optional free text added by the user — additional context or a different destination suggestion"
+    },
+    "trip_month": {
+      "type": "string",
+      "description": "Travel month if already answered in the session; omitted otherwise"
+    },
+    "trip_days": {
+      "type": "integer",
+      "description": "Travel day count if already answered in the session; omitted otherwise"
+    },
+    "requested_at": {
+      "type": "string",
+      "description": "ISO timestamp of the request"
+    }
+  },
+  "required": ["query_text", "requested_at"],
+  "rls": {
+    "create": {},
+    "read": { "user_condition": { "role": "admin" } },
+    "update": { "user_condition": { "role": "admin" } },
+    "delete": { "user_condition": { "role": "admin" } }
+  }
+}
