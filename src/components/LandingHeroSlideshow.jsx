@@ -111,11 +111,11 @@ export default function LandingHeroSlideshow() {
           then turns your pick into a plan.
         </p>
 
-        <div className="mt-8 flex flex-col sm:flex-row gap-3">
+        <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-4 items-stretch">
           <Button
             asChild
             size="lg"
-            className="bg-ink text-on-dark ring-1 ring-teal/40 shadow-[0_10px_30px_-12px_rgba(2,218,227,0.55)] hover:bg-surface-dark hover:ring-teal/70 min-h-12 px-8 text-base focus-visible:!ring-teal focus-visible:ring-offset-cinema"
+            className="w-full bg-ink text-on-dark ring-1 ring-teal/40 shadow-[0_10px_30px_-12px_rgba(2,218,227,0.55)] hover:bg-surface-dark hover:ring-teal/70 min-h-12 px-8 text-base focus-visible:!ring-teal focus-visible:ring-offset-cinema"
           >
             <Link to="/questionnaire">
               Find my Travel Fit <ArrowRight className="w-4 h-4 ml-2" />
@@ -124,7 +124,7 @@ export default function LandingHeroSlideshow() {
           <Button
             asChild
             size="lg"
-            className="bg-ink text-on-dark ring-1 ring-teal/40 hover:bg-surface-dark hover:ring-teal/70 min-h-12 px-8 text-base focus-visible:!ring-teal focus-visible:ring-offset-cinema"
+            className="w-full bg-ink text-on-dark ring-1 ring-teal/40 hover:bg-surface-dark hover:ring-teal/70 min-h-12 px-8 text-base focus-visible:!ring-teal focus-visible:ring-offset-cinema"
           >
             <Link to="/find">
               <MapPin className="w-4 h-4 mr-2" /> I know where I&apos;m going
