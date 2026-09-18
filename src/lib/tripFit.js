@@ -43,7 +43,9 @@ export function nearestNeighborOrder(dests, departureCity, residenceCountry) {
 
 // Shared round-robin growth loop: grows each leg toward its max_days cap,
 // earlier legs get priority each pass. Returns new legs array + leftover days.
-function distributeLeftovers(legs, remaining) {
+// Exported so multiDestItinerary.js can reuse the same allocation strategy
+// when redistributing a dropped leg's days (§2 of the drop-redistribution brief).
+export function distributeLeftovers(legs, remaining) {
   const result = legs.map((l) => ({ ...l }));
   let rem = remaining;
   while (rem > 0) {
