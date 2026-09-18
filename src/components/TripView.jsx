@@ -90,18 +90,38 @@ function overviewSectionFlags(display) {
   return { summary: !!display.intro, visa: hasVisa, budget: hasBudget, climate: hasClimate, practical: hasPractical };
 }
 
+// Multi-stop strip: "Delhi · 3d → Agra · 2d → Jaipur · 3d"
+function MultiStopStrip({ legs }) {
+  if (!legs || legs.length === 0) return null;
+  return (
+    <p className="text-wn-text-2 text-[14px] sm:text-[15px] mt-2 leading-snug">
+      {legs.map((l, i) => (
+        <span key={l.destinationId || l.name || i}>
+          {i > 0 && <span className="mx-1.5 text-wn-text-3" aria-hidden="true">→</span>}
+          <span className="text-wn-text font-medium">{l.name}</span>
+          <span className="text-wn-text-3 ml-1">· {l.days}d</span>
+        </span>
+      ))}
+    </p>
+  );
+}
+
 // Full-bleed dark hero -- the trip page's entry point, so the destination
 // name lives here as a real H1 on a real route (not only inside a modal).
 // Same treatment as the Results page hero card: photo, scrim, Travel Fit
 // ring, name. The light tab content (rendered by the caller, below this)
 // overlaps its top edge with a negative margin so it visually slides up
 // over the hero instead of cutting to light abruptly.
-export function TripHeader({ display, score, backHref, backLabel }) {
+//
+// Multi-stop extension (§6): pass `legs` ([{name, days, country}]) to branch
+// into the multi-stop header. The single-destination branch is unchanged.
+export function TripHeader({ display, score, backHref, backLabel, legs }) {
+  const isMultiStop = Array.isArray(legs) && legs.length >= 2;
   return (
     <div data-trip-hero className="relative w-full h-[52vh] sm:h-[58vh] min-h-[380px] max-h-[620px] bg-wn-page overflow-hidden">
       <Image
         src={display.imageUrl}
-        alt={nameWithCountry(display.name, display.country)}
+        alt={isMultiStop ? (display.country || "Multi-stop trip") : nameWithCountry(display.name, display.country)}
         fittingType="fill"
         fallbackSrc={TRAVEL_FALLBACK_IMAGE}
         className="w-full h-full"
@@ -122,20 +142,31 @@ export function TripHeader({ display, score, backHref, backLabel }) {
           <ArrowLeft className="w-5 h-5" />
         </Link>
       )}
-      {typeof score === "number" && (
+      {!isMultiStop && typeof score === "number" && (
         <span className="absolute top-4 right-4 sm:right-6">
           <TravelFitRing score={score} size="lg" />
         </span>
       )}
       <div className="absolute bottom-0 left-0 right-0 px-4 sm:px-6 pb-8 sm:pb-10">
         <div className="max-w-3xl mx-auto">
-          <h1 className="font-display font-extrabold tracking-[-0.02em] text-wn-text text-4xl sm:text-5xl">
-            {display.name}
-          </h1>
-          <p className="text-wn-text-2 text-[15px] sm:text-base mt-2 flex items-center gap-2">
-            {flagForCountry(display.country) && <span aria-hidden="true">{flagForCountry(display.country)}</span>}
-            {display.country} · {display.region}
-          </p>
+          {isMultiStop ? (
+            <>
+              <h1 className="font-display font-extrabold tracking-[-0.02em] text-wn-text text-4xl sm:text-5xl">
+                {display.country || "Multi-stop trip"}
+              </h1>
+              <MultiStopStrip legs={legs} />
+            </>
+          ) : (
+            <>
+              <h1 className="font-display font-extrabold tracking-[-0.02em] text-wn-text text-4xl sm:text-5xl">
+                {display.name}
+              </h1>
+              <p className="text-wn-text-2 text-[15px] sm:text-base mt-2 flex items-center gap-2">
+                {flagForCountry(display.country) && <span aria-hidden="true">{flagForCountry(display.country)}</span>}
+                {display.country} · {display.region}
+              </p>
+            </>
+          )}
         </div>
       </div>
     </div>
@@ -226,8 +257,10 @@ function JumpNav({ items, activeId, onSelect, ariaLabel, level = "section" }) {
 // Shared Itinerary / Packing / Overview tabs. Both the live Trip Detail page and
 // the Saved Trip detail page render through this component. `travelFit` is
 // optional and, when present, renders the Travel Fit summary strip.
+// `legs` is optional: [{name, days, destinationId}] for multi-stop trips —
+// passed to ItineraryView to render leg-boundary dividers (§6).
 export default function TripView({
-  display, itinerary, packingGroups, packingState, packingHandlers, travelFit
+  display, itinerary, packingGroups, packingState, packingHandlers, travelFit, legs
 }) {
   const [activeTab, setActiveTab] = useState("itinerary");
   const [openDay, setOpenDay] = useState(1);
@@ -442,6 +475,7 @@ export default function TripView({
           openDay={openDay}
           setOpenDay={setOpenDay}
           scrollOffset={scrollOffset}
+          legs={legs}
         />
       </TabsContent>
       <TabsContent value="packing" className="mt-6">
@@ -464,10 +498,24 @@ export default function TripView({
   );
 }
 
-function ItineraryView({ itinerary, openDay, setOpenDay, scrollOffset }) {
+// Build a lookup of destinationId → name for leg-boundary labels
+function buildLegNameMap(legs) {
+  if (!Array.isArray(legs)) return {};
+  const map = {};
+  for (const l of legs) {
+    if (l.destinationId) map[l.destinationId] = l.name;
+  }
+  return map;
+}
+
+function ItineraryView({ itinerary, openDay, setOpenDay, scrollOffset, legs }) {
   if (!itinerary || !itinerary.length) {
     return <p className="text-wn-text-2-l">No itinerary available for this combination.</p>;
   }
+
+  const isMultiStop = Array.isArray(legs) && legs.length >= 2;
+  const legNameMap = isMultiStop ? buildLegNameMap(legs) : {};
+
   return (
     <div>
       <p className="text-[15px] text-wn-text-2-l mb-5">
@@ -477,35 +525,58 @@ function ItineraryView({ itinerary, openDay, setOpenDay, scrollOffset }) {
       <div className="relative">
         <span className="absolute left-4 top-4 bottom-4 w-px bg-wn-line-l" aria-hidden="true" />
         <div className="space-y-5">
-          {itinerary.map((d) => (
-            <div
-              key={d.day}
-              id={`day-${d.day}`}
-              style={{ scrollMarginTop: scrollOffset + 12 }}
-              className="relative flex gap-4"
-            >
-              <span
-                className="relative z-10 flex-shrink-0 w-8 h-8 rounded-full bg-wn-surface-l ring-1 ring-wn-line-l flex items-center justify-center font-display text-xs font-bold text-wn-text-l"
-                aria-hidden="true"
-              >
-                {d.isTravel ? (
-                  <PlaneTakeoff className="w-4 h-4" />
-                ) : d.flexible ? (
-                  <Footprints className="w-4 h-4" />
-                ) : (
-                  d.day
+          {itinerary.map((d, idx) => {
+            // Show a leg-boundary label before the first day of a new leg,
+            // but not before transit days (they already name both cities) and
+            // not before the very first day.
+            const prevDay = idx > 0 ? itinerary[idx - 1] : null;
+            const showLegLabel =
+              isMultiStop &&
+              d.legDestinationId &&
+              !d.isTransitBoundary &&
+              (idx === 0 || !prevDay || prevDay.isTransitBoundary || prevDay.legDestinationId !== d.legDestinationId);
+            const legName = showLegLabel ? (legNameMap[d.legDestinationId] || null) : null;
+
+            return (
+              <div key={d.day}>
+                {legName && (
+                  <div className="flex items-center gap-2 mb-3 px-1" aria-label={`${legName} leg`}>
+                    <span className="h-px flex-1 bg-wn-line-l" aria-hidden="true" />
+                    <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-wn-cyan px-2">
+                      {legName}
+                    </span>
+                    <span className="h-px flex-1 bg-wn-line-l" aria-hidden="true" />
+                  </div>
                 )}
-              </span>
-              <div className="flex-1 min-w-0">
-                <DayCard
-                  day={d}
-                  isOpen={openDay === d.day}
-                  badge={INTENSITY_COLOR[d.intensity] || ""}
-                  onToggle={() => setOpenDay((cur) => (cur === d.day ? null : d.day))}
-                />
+                <div
+                  id={`day-${d.day}`}
+                  style={{ scrollMarginTop: scrollOffset + 12 }}
+                  className="relative flex gap-4"
+                >
+                  <span
+                    className="relative z-10 flex-shrink-0 w-8 h-8 rounded-full bg-wn-surface-l ring-1 ring-wn-line-l flex items-center justify-center font-display text-xs font-bold text-wn-text-l"
+                    aria-hidden="true"
+                  >
+                    {d.isTravel ? (
+                      <PlaneTakeoff className="w-4 h-4" />
+                    ) : d.flexible ? (
+                      <Footprints className="w-4 h-4" />
+                    ) : (
+                      d.day
+                    )}
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <DayCard
+                      day={d}
+                      isOpen={openDay === d.day}
+                      badge={INTENSITY_COLOR[d.intensity] || ""}
+                      onToggle={() => setOpenDay((cur) => (cur === d.day ? null : d.day))}
+                    />
+                  </div>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </div>

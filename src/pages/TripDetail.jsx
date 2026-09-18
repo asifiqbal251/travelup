@@ -10,9 +10,11 @@ import {
   getSelectedDestinationId, getPrefs, tripFingerprint, seedActiveTripPacking,
   setActiveTripPacking, findSavedTripByFingerprint, getSavedTripCount,
   saveNewTrip, replaceSavedTrip, buildTripSnapshot, normalizeDestinationDisplay,
-  setPendingTripSnapshot, MAX_SAVED_TRIPS, GUEST_TRIP_LIMIT
+  setPendingTripSnapshot, MAX_SAVED_TRIPS, GUEST_TRIP_LIMIT,
+  getMultiStopLegs,
 } from "@/lib/storage";
 import { generateItinerary } from "@/lib/itinerary";
+import { generateMultiDestItinerary } from "@/lib/multiDestItinerary";
 import { generatePackingList } from "@/lib/packing";
 import { assessPracticality } from "@/lib/practicality";
 import { scoreWithPracticality } from "@/lib/scoring";
@@ -36,6 +38,10 @@ export default function TripDetail() {
   const [loading, setLoading] = useState(true);
   const [packingState, setPackingState] = useState({ checkedItemIds: [], customItems: [], removedItemIds: [] });
   const [alreadySaved, setAlreadySaved] = useState(false);
+  // Multi-stop state: fullLegs holds [{destination, days}] with full dest objects.
+  // snapshotLegs holds [{destinationId, days, name, country}] for the saved snapshot.
+  const [fullLegs, setFullLegs] = useState(null);
+  const [snapshotLegs, setSnapshotLegs] = useState(null);
   // The account's existing record for this trip's fingerprint, once known --
   // signed-in users save/replace directly against the account (see doSave/
   // confirmReplace) rather than through local storage, so this is the thing
@@ -47,13 +53,49 @@ export default function TripDetail() {
   const [upgradeOpen, setUpgradeOpen] = useState(false);
 
   useEffect(() => {
-    const id = getSelectedDestinationId();
+    const storedLegs = getMultiStopLegs();
+    const id = storedLegs ? null : getSelectedDestinationId();
     const p = getPrefs();
-    if (!id || !p) {
-      navigate("/results");
+
+    if (!storedLegs && !id) { navigate("/results"); return; }
+    if (!p) { navigate("/results"); return; }
+    setPrefsState(p);
+
+    if (storedLegs) {
+      // Multi-stop: fetch all destinations then assemble legs
+      Promise.all(storedLegs.map((l) => base44.entities.Destination.get(l.destinationId)))
+        .then(async (dests) => {
+          const assembled = storedLegs.map((l, i) => ({ destination: dests[i], days: l.days }));
+          setFullLegs(assembled);
+          setSnapshotLegs(storedLegs.map((l, i) => ({
+            destinationId: l.destinationId,
+            days: l.days,
+            name: dests[i].name,
+            country: dests[i].country,
+          })));
+          setDest(dests[0]); // first destination provides display, image, packing
+          const fp = tripFingerprint(p, storedLegs);
+          setPackingState(seedActiveTripPacking(fp, dests[0].id));
+          if (isSignedIn) {
+            const res = await getAccountSavedTrips(identity);
+            if (res.ok) {
+              const match = res.trips.find((t) => t.fingerprint === fp) || null;
+              setAccountMatch(match);
+              setAlreadySaved(!!match);
+            } else {
+              setAccountMatch(null);
+              setAlreadySaved(!!findSavedTripByFingerprint(fp));
+            }
+          } else {
+            setAlreadySaved(!!findSavedTripByFingerprint(fp));
+          }
+          setLoading(false);
+        })
+        .catch(() => { navigate("/results"); });
       return;
     }
-    setPrefsState(p);
+
+    // Single-destination path (unchanged)
     base44.entities.Destination.get(id)
       .then(async (d) => {
         setDest(d);
@@ -92,11 +134,19 @@ export default function TripDetail() {
   }
 
   const display = normalizeDestinationDisplay(dest);
-  const itinerary = generateItinerary(dest, prefs);
+  const isMultiStop = Array.isArray(fullLegs) && fullLegs.length >= 2;
+
+  // Itinerary: multi-stop uses the stitched generator; single uses existing path.
+  const itinerary = isMultiStop
+    ? generateMultiDestItinerary(fullLegs, prefs)
+    : generateItinerary(dest, prefs);
+
   const packingGroups = generatePackingList(dest, prefs);
-  const travelFit = assessPracticality(dest, prefs);
-  const score = scoreWithPracticality(dest, prefs, travelFit).finalScore;
-  const fingerprint = tripFingerprint(prefs, dest.id);
+  const travelFit = isMultiStop ? null : assessPracticality(dest, prefs);
+  const score = isMultiStop ? null : scoreWithPracticality(dest, prefs, travelFit).finalScore;
+  const fingerprint = isMultiStop
+    ? tripFingerprint(prefs, snapshotLegs)
+    : tripFingerprint(prefs, dest.id);
 
   const persistPacking = (next) => {
     setPackingState(next);
@@ -172,7 +222,8 @@ export default function TripDetail() {
   // both are local-device concepts that don't apply once an account exists.
   const saveNewAccountTrip = async () => {
     const snapshot = buildTripSnapshot({
-      dest, prefs, fingerprint, itinerary, packingGroups, packingState, travelFit, score
+      dest, prefs, fingerprint, itinerary, packingGroups, packingState, travelFit, score,
+      legs: isMultiStop ? snapshotLegs : undefined,
     });
     const res = await saveTripToAccount(identity, snapshot);
     if (res.ok) {
@@ -209,7 +260,8 @@ export default function TripDetail() {
     // those — this only gates NEW additions once the limit is already met.
     if (getSavedTripCount() >= GUEST_TRIP_LIMIT) {
       const snapshot = buildTripSnapshot({
-        dest, prefs, fingerprint, itinerary, packingGroups, packingState, travelFit, score
+        dest, prefs, fingerprint, itinerary, packingGroups, packingState, travelFit, score,
+        legs: isMultiStop ? snapshotLegs : undefined,
       });
       setPendingTripSnapshot(snapshot);
       setUpgradeOpen(true);
@@ -220,7 +272,8 @@ export default function TripDetail() {
       return;
     }
     const snapshot = buildTripSnapshot({
-      dest, prefs, fingerprint, itinerary, packingGroups, packingState, travelFit, score
+      dest, prefs, fingerprint, itinerary, packingGroups, packingState, travelFit, score,
+      legs: isMultiStop ? snapshotLegs : undefined,
     });
     reportSaveResult(saveNewTrip(snapshot));
   };
@@ -231,7 +284,8 @@ export default function TripDetail() {
       if (!accountMatch) return;
       const snapshot = buildTripSnapshot({
         dest, prefs, fingerprint, itinerary, packingGroups, packingState, travelFit, score,
-        existingId: accountMatch.id, existingSavedAt: accountMatch.savedAt
+        existingId: accountMatch.id, existingSavedAt: accountMatch.savedAt,
+        legs: isMultiStop ? snapshotLegs : undefined,
       });
       const res = await updateTripSnapshotInAccount(accountMatch.accountRecordId, snapshot);
       if (res.ok) {
@@ -247,14 +301,21 @@ export default function TripDetail() {
     if (!existing) return;
     const snapshot = buildTripSnapshot({
       dest, prefs, fingerprint, itinerary, packingGroups, packingState, travelFit, score,
-      existingId: existing.id, existingSavedAt: existing.savedAt
+      existingId: existing.id, existingSavedAt: existing.savedAt,
+      legs: isMultiStop ? snapshotLegs : undefined,
     });
     reportSaveResult(replaceSavedTrip(existing.id, snapshot));
   };
 
   return (
     <div>
-      <TripHeader display={display} score={score} backHref="/results" backLabel="Back to recommendations" />
+      <TripHeader
+        display={display}
+        score={isMultiStop ? null : score}
+        backHref="/results"
+        backLabel="Back to recommendations"
+        legs={isMultiStop ? snapshotLegs : null}
+      />
 
       {/* overflow-clip (not overflow-hidden) -- hidden establishes a scroll
           container per the CSS Overflow spec, which silently breaks
@@ -286,6 +347,7 @@ export default function TripDetail() {
             packingGroups={packingGroups}
             packingState={packingState}
             travelFit={travelFit}
+            legs={isMultiStop ? snapshotLegs : null}
             packingHandlers={{
               onToggle: handleToggle,
               onAdd: handleAdd,

@@ -94,10 +94,21 @@ function dedupeSort(arr) {
 // that define the itinerary. Discovery filters (travelScope, visitedCountries,
 // excludedDestinations) are intentionally excluded — they shape ranking, not
 // the selected trip. Stored as "v1:" + canonical JSON so changes are auditable.
+//
+// Multi-stop extension (§7): when destinationId is an array of {destinationId,
+// days} objects the fingerprint is built from the ordered leg list so two
+// different orderings or splits produce different fingerprints. Existing
+// single-destination callers pass a plain string and are unaffected.
 export function tripFingerprint(prefs, destinationId) {
   if (!prefs) return "v1:";
+  let destField;
+  if (Array.isArray(destinationId)) {
+    destField = destinationId.map((l) => `${l.destinationId}:${l.days}`).join("|");
+  } else {
+    destField = String(destinationId || "");
+  }
   const fields = {
-    destinationId: String(destinationId || ""),
+    destinationId: destField,
     residenceCountry: normStr(prefs.residenceCountry),
     departureCity: normStr(prefs.departureCity),
     citizenship: normStr(prefs.citizenship),
@@ -419,9 +430,15 @@ export function deleteSavedTrip(id) {
 // record, preferences, practicality result, generated itinerary and packing
 // groups plus the current trip-specific packing progress. Stored verbatim so a
 // saved trip renders identically later even if data or code change.
+//
+// Multi-stop extension (§7): pass `legs` ([{destinationId, days, name,
+// country}]) for a multi-stop trip. The snapshot gains `isMultiStop: true`
+// and `legs`. The `dest` param remains the first leg's destination for
+// isValidSavedTrip compatibility — behavior for existing single-destination
+// calls is completely unchanged.
 export function buildTripSnapshot({
   dest, prefs, fingerprint, itinerary, packingGroups, packingState, travelFit,
-  score, existingId, existingSavedAt
+  score, existingId, existingSavedAt, legs
 }) {
   const now = new Date().toISOString();
   const id = existingId || genId();
@@ -490,7 +507,7 @@ export function buildTripSnapshot({
       dietary: prefs.dietary,
       dietaryOther: prefs.dietaryOther
     },
-    travelFit: {
+    travelFit: travelFit ? {
       level: travelFit.level,
       tier: travelFit.tier,
       message: travelFit.message,
@@ -504,15 +521,40 @@ export function buildTripSnapshot({
       known: travelFit.known,
       isDomestic: travelFit.isDomestic,
       isOverride: travelFit.isOverride
-    },
+    } : null,
     itinerary,
     packing: {
       groups: packingGroups,
       checkedItemIds: (packingState && packingState.checkedItemIds) || [],
       customItems: (packingState && packingState.customItems) || [],
       removedItemIds: (packingState && packingState.removedItemIds) || []
-    }
+    },
+    ...(legs ? { isMultiStop: true, legs } : {})
   };
+}
+
+// ---- Multi-stop legs ----
+//
+// Stores the ordered leg list [{destinationId, days}] for a multi-stop trip
+// built via Door 2's "combine" path. Consumed by TripDetail to fetch each
+// destination and assemble the stitched itinerary. Cleared when a new trip is
+// built (single or multi-stop) so stale legs never bleed into a subsequent trip.
+
+export function setMultiStopLegs(legs) {
+  const s = loadState();
+  s.multiStopLegs = legs;
+  persistState(s);
+}
+
+export function getMultiStopLegs() {
+  const legs = loadState().multiStopLegs;
+  return Array.isArray(legs) && legs.length > 0 ? legs : null;
+}
+
+export function clearMultiStopLegs() {
+  const s = loadState();
+  delete s.multiStopLegs;
+  persistState(s);
 }
 
 // ---- Destination display normalization ----

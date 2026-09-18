@@ -182,9 +182,17 @@ export default function SavedTripDetail() {
     navigate("/saved-trips");
   };
 
+  const isMultiStop = !!trip.isMultiStop && Array.isArray(trip.legs) && trip.legs.length >= 2;
+
   return (
     <div>
-      <TripHeader display={display} score={typeof trip.score === "number" ? trip.score : null} backHref="/saved-trips" backLabel="Back to saved trips" />
+      <TripHeader
+        display={display}
+        score={!isMultiStop && typeof trip.score === "number" ? trip.score : null}
+        backHref="/saved-trips"
+        backLabel="Back to saved trips"
+        legs={isMultiStop ? trip.legs : null}
+      />
 
       {/* overflow-clip, not overflow-hidden -- see TripDetail.jsx for why
           (hidden breaks position:sticky on every descendant, clip doesn't). */}
@@ -195,7 +203,7 @@ export default function SavedTripDetail() {
               variant="outline"
               onClick={() => setDeleteOpen(true)}
               className="min-h-11"
-              aria-label={`Delete saved trip to ${trip.destination.name}`}
+              aria-label={isMultiStop ? "Delete saved multi-stop trip" : `Delete saved trip to ${trip.destination.name}`}
             >
               <Trash2 className="w-4 h-4 mr-2" /> Delete saved trip
             </Button>
@@ -206,7 +214,8 @@ export default function SavedTripDetail() {
             itinerary={trip.itinerary}
             packingGroups={packingGroups}
             packingState={packingState}
-            travelFit={trip.travelFit}
+            travelFit={isMultiStop ? null : trip.travelFit}
+            legs={isMultiStop ? trip.legs : null}
             packingHandlers={{
               onToggle: handleToggle,
               onAdd: handleAdd,

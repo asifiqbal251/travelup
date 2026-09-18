@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { AlertCircle, ChevronDown, ChevronUp, Globe, MapPin, Send } from "lucide-react";
+import { AlertCircle, ChevronDown, ChevronUp, Globe, MapPin, Send, Route } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { norm } from "@/lib/regionalRoutes";
 import { inferCountry } from "@/lib/questionnaireFlow";
@@ -348,7 +348,7 @@ function BrowsePanel({ destinations, onSelect, onClose }) {
 
 // ---- Country group dropdown ----
 
-function CountryGroup({ country, dests, onSelect }) {
+function CountryGroup({ country, dests, onSelect, onCombine }) {
   return (
     <li className="px-0">
       <div className="px-4 pt-3 pb-1">
@@ -370,6 +370,20 @@ function CountryGroup({ country, dests, onSelect }) {
           <TypeBadge dest={d} />
         </button>
       ))}
+      {onCombine && dests.length >= 2 && (
+        <button
+          type="button"
+          onMouseDown={(e) => e.preventDefault()}
+          onClick={() => onCombine(dests)}
+          className="w-full text-left min-h-11 px-6 py-2.5 flex items-center gap-2.5 hover:bg-[rgba(63,216,224,0.12)] focus:bg-[rgba(63,216,224,0.12)] focus:outline-none border-t border-wn-line/50"
+        >
+          <Route className="w-3.5 h-3.5 text-wn-cyan shrink-0" aria-hidden="true" />
+          <span className="text-wn-text-2 text-[13px]">
+            Combine {dests.length} of these into one trip across{" "}
+            <span className="font-semibold text-wn-text">{country}</span>
+          </span>
+        </button>
+      )}
       <p className="px-4 pb-3 pt-1 text-[12px] text-wn-text-3 leading-snug border-t border-wn-line/50 mt-1">
         These are the locations WhereNova covers in {country}. A trip you build
         here will be based on one of them, not the whole country.
@@ -380,7 +394,7 @@ function CountryGroup({ country, dests, onSelect }) {
 
 // ---- Main component ----
 
-export default function DestinationSearch({ destinations, loading, error, onSelect }) {
+export default function DestinationSearch({ destinations, loading, error, onSelect, onCombine }) {
   const [query, setQuery] = useState("");
   const [focused, setFocused] = useState(false);
   const [selected, setSelected] = useState(null);
@@ -484,6 +498,7 @@ export default function DestinationSearch({ destinations, loading, error, onSele
                 country={countryGroup.country}
                 dests={countryGroup.dests}
                 onSelect={pick}
+                onCombine={onCombine}
               />
             ) : (
               filtered.map((d) => (

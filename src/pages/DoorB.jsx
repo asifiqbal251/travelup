@@ -3,28 +3,89 @@ import { useNavigate, Link } from "react-router-dom";
 import { AlertTriangle, ArrowLeft, ArrowRight, Check, Info, MapPin, SlidersHorizontal } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import {
-  BLANK_ANSWERS, buildPrefs, QUESTIONS,
+  BLANK_ANSWERS, buildPrefs, QUESTIONS, inferCountry,
 } from "@/lib/questionnaireFlow";
-import { setPrefsWithHistory, setSelectedDestinationId } from "@/lib/storage";
+import {
+  setPrefsWithHistory, setSelectedDestinationId,
+  setMultiStopLegs, clearMultiStopLegs, getPrefs,
+} from "@/lib/storage";
+import { getCityCoords } from "@/lib/coordinates";
+import { getDestinationCoords } from "@/lib/coordinates";
+import { haversineKm } from "@/lib/practicality";
 import DayScroller from "@/components/questionnaire/DayScroller";
 import DestinationSearch from "@/components/doorb/DestinationSearch";
+import LegPlanner from "@/components/doorb/LegPlanner";
 import RefineSheet from "@/components/doorb/RefineSheet";
 import Logo from "@/components/Logo";
 import { MONTHS } from "@/lib/options";
 import { cn } from "@/lib/utils";
 
+// ---- Multi-stop helpers ----
+
+// Nearest-neighbor greedy route: starting from the destination nearest the user's
+// departure city (if coords resolve), visit each remaining destination in order
+// of proximity to the current position.
+function nearestNeighborOrder(dests, departureCity, residenceCountry) {
+  if (dests.length <= 1) return [...dests];
+
+  const depCoords = getCityCoords(departureCity || "", residenceCountry || "");
+
+  // Find the starting destination
+  let startIdx = 0;
+  if (depCoords) {
+    let nearestDist = Infinity;
+    dests.forEach((d, i) => {
+      const dc = getDestinationCoords(d);
+      if (!dc) return;
+      const dist = haversineKm(depCoords, dc);
+      if (dist != null && dist < nearestDist) { nearestDist = dist; startIdx = i; }
+    });
+  }
+
+  const remaining = dests.filter((_, i) => i !== startIdx);
+  const ordered = [dests[startIdx]];
+
+  while (remaining.length > 0) {
+    const lastCoords = getDestinationCoords(ordered[ordered.length - 1]);
+    let nearestIdx = 0;
+    let nearestDist = Infinity;
+    remaining.forEach((d, i) => {
+      if (!lastCoords) return;
+      const dc = getDestinationCoords(d);
+      if (!dc) return;
+      const dist = haversineKm(lastCoords, dc);
+      if (dist != null && dist < nearestDist) { nearestDist = dist; nearestIdx = i; }
+    });
+    ordered.push(remaining[nearestIdx]);
+    remaining.splice(nearestIdx, 1);
+  }
+
+  return ordered;
+}
+
+// Default day split: each leg gets its min_days as the initial allocation,
+// which sums to the default trip total per the brief.
+function defaultDaySplit(orderedDests) {
+  return orderedDests.map((dest) => ({
+    destination: dest,
+    days: dest.min_days || 3,
+  }));
+}
+
 // ---- Step machine ----
 
 const STEP = {
   SEARCH: "search",
+  LEG_PLANNER: "leg_planner",
   ESSENTIALS: "essentials",
   REGION: "region",
 };
 
 const STEP_GLOW = {
-  [STEP.SEARCH]:     "#1E4E6B",
-  [STEP.ESSENTIALS]: "#2E4C74",
-  [STEP.REGION]:     "#2E4C74",
+  [STEP.SEARCH]:      "#1E4E6B",
+  [STEP.LEG_PLANNER]: "#1E4E6B",
+  [STEP.ESSENTIALS]:  "#2E4C74",
+  [STEP.REGION]:      "#2E4C74",
 };
 
 function glowFor(hue) {
@@ -48,6 +109,7 @@ export default function DoorB() {
 
   const [step, setStep] = useState(STEP.SEARCH);
   const [selectedDest, setSelectedDest] = useState(null);
+  const [multiLegs, setMultiLegs] = useState(null); // [{destination, days}] for combine path
   const [answers, setAnswers] = useState({ ...BLANK_ANSWERS });
   const [refineOpen, setRefineOpen] = useState(false);
 
@@ -71,7 +133,20 @@ export default function DoorB() {
 
   const handleDestinationSelect = (dest) => {
     setSelectedDest(dest);
+    setMultiLegs(null);
     setStep(STEP.ESSENTIALS);
+  };
+
+  const handleCombine = (dests) => {
+    // Use stored departure city if present; answers.departureCity is empty at this point
+    const storedPrefs = getPrefs();
+    const depCity = answers.departureCity || storedPrefs?.departureCity || "";
+    const residenceCountry = inferCountry(depCity);
+    const ordered = nearestNeighborOrder(dests, depCity, residenceCountry);
+    const legs = defaultDaySplit(ordered);
+    setMultiLegs(legs);
+    setSelectedDest(null);
+    setStep(STEP.LEG_PLANNER);
   };
 
   const essentialsComplete = !!answers.travelMonth && !!answers.travellerType;
@@ -79,11 +154,23 @@ export default function DoorB() {
   const buildAndGo = () => {
     const prefs = buildPrefs(answers);
     setPrefsWithHistory(prefs);
-    setSelectedDestinationId(selectedDest.id);
+    if (multiLegs) {
+      // Multi-stop: store the ordered leg IDs + days; TripDetail fetches full objects.
+      setMultiStopLegs(multiLegs.map((l) => ({ destinationId: l.destination.id, days: l.days })));
+      setSelectedDestinationId(null);
+    } else {
+      clearMultiStopLegs();
+      setSelectedDestinationId(selectedDest.id);
+    }
     navigate("/trip");
   };
 
   const handleEssentialsContinue = () => {
+    if (multiLegs) {
+      // Multi-stop: no region sub-step, go straight to build
+      buildAndGo();
+      return;
+    }
     // Region sub-step only for region-type destinations with an intercity note
     if (
       selectedDest.destination_type === "region" &&
@@ -98,8 +185,10 @@ export default function DoorB() {
   const goPrev = () => {
     if (step === STEP.SEARCH) {
       navigate("/");
-    } else if (step === STEP.ESSENTIALS) {
+    } else if (step === STEP.LEG_PLANNER) {
       setStep(STEP.SEARCH);
+    } else if (step === STEP.ESSENTIALS) {
+      setStep(multiLegs ? STEP.LEG_PLANNER : STEP.SEARCH);
     } else if (step === STEP.REGION) {
       setStep(STEP.ESSENTIALS);
     }
@@ -126,6 +215,8 @@ export default function DoorB() {
       <div aria-live="polite" aria-atomic="true" className="sr-only">
         {step === STEP.SEARCH
           ? "Where are you going?"
+          : step === STEP.LEG_PLANNER
+          ? "Plan your multi-stop trip"
           : step === STEP.ESSENTIALS
           ? "Plan the essentials"
           : "About this region"}
@@ -143,6 +234,7 @@ export default function DoorB() {
           </Link>
           <span className="text-[12px] text-wn-text-2 tabular-nums shrink-0">
             {step === STEP.SEARCH && "I know where I'm going"}
+            {step === STEP.LEG_PLANNER && "Multi-stop planner"}
             {step === STEP.ESSENTIALS && "Plan the essentials"}
             {step === STEP.REGION && "About this region"}
           </span>
@@ -158,11 +250,19 @@ export default function DoorB() {
               loading={loadingDests}
               error={errorDests}
               onSelect={handleDestinationSelect}
+              onCombine={handleCombine}
+            />
+          )}
+          {step === STEP.LEG_PLANNER && multiLegs && (
+            <LegPlannerStep
+              legs={multiLegs}
+              setLegs={setMultiLegs}
             />
           )}
           {step === STEP.ESSENTIALS && (
             <EssentialsStep
               dest={selectedDest}
+              multiLegs={multiLegs}
               answers={answers}
               minDaysWarning={minDaysWarning}
               setField={setField}
@@ -187,6 +287,15 @@ export default function DoorB() {
         </button>
 
         <div>
+          {step === STEP.LEG_PLANNER && (
+            <button
+              type="button"
+              onClick={() => setStep(STEP.ESSENTIALS)}
+              className="wn-cta-dark inline-flex items-center gap-2 h-12 px-7 rounded-xl font-semibold focus:outline-none focus-visible:ring-2 focus-visible:ring-wn-cyan focus-visible:ring-offset-2 focus-visible:ring-offset-wn-page motion-safe:transition"
+            >
+              Continue <ArrowRight className="w-4 h-4" />
+            </button>
+          )}
           {step === STEP.ESSENTIALS && (
             <button
               type="button"
@@ -224,7 +333,7 @@ export default function DoorB() {
 
 // ---- Step: Search ----
 
-function SearchStep({ destinations, loading, error, onSelect }) {
+function SearchStep({ destinations, loading, error, onSelect, onCombine }) {
   return (
     <section className="step-enter text-center pt-4">
       <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-wn-cyan mb-3">
@@ -241,7 +350,28 @@ function SearchStep({ destinations, loading, error, onSelect }) {
         loading={loading}
         error={error}
         onSelect={onSelect}
+        onCombine={onCombine}
       />
+    </section>
+  );
+}
+
+// ---- Step: Leg Planner ----
+
+function LegPlannerStep({ legs, setLegs }) {
+  const country = legs[0]?.destination?.country || "";
+  return (
+    <section className="step-enter pt-4 pb-4">
+      <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-wn-cyan mb-3 text-center">
+        Multi-stop
+      </p>
+      <h2
+        className="font-display font-extrabold tracking-[-0.03em] leading-[1.08] text-wn-text mb-7 text-center"
+        style={{ fontSize: "clamp(24px, 3.8vw, 42px)" }}
+      >
+        {country ? `Plan your ${country} trip` : "Plan your route"}
+      </h2>
+      <LegPlanner legs={legs} setLegs={setLegs} />
     </section>
   );
 }
@@ -292,20 +422,29 @@ function ClimateAlert({ dest, monthValue }) {
 
 // ---- Step: Essentials ----
 
-function EssentialsStep({ dest, answers, minDaysWarning, setField, onRefine }) {
+function EssentialsStep({ dest, multiLegs, answers, minDaysWarning, setField, onRefine }) {
   return (
     <section className="step-enter pt-2 pb-4">
-      {/* Destination pill */}
+      {/* Destination pill — single or multi-stop */}
       <div className="text-center mb-6">
-        <span className="inline-flex items-center gap-2 bg-wn-surface/70 ring-1 ring-wn-line rounded-full px-4 py-2 text-[13px] text-wn-text-2">
-          <MapPin className="w-3.5 h-3.5 text-wn-cyan shrink-0" aria-hidden="true" />
-          <span className="font-medium text-wn-text">{dest.name}</span>
-          {dest.country && <span className="text-wn-text-3">{dest.country}</span>}
-        </span>
+        {multiLegs ? (
+          <span className="inline-flex items-center gap-2 bg-wn-surface/70 ring-1 ring-wn-line rounded-full px-4 py-2 text-[13px] text-wn-text-2">
+            <MapPin className="w-3.5 h-3.5 text-wn-cyan shrink-0" aria-hidden="true" />
+            <span className="font-medium text-wn-text">
+              {multiLegs.map((l) => l.destination.name).join(" → ")}
+            </span>
+          </span>
+        ) : dest ? (
+          <span className="inline-flex items-center gap-2 bg-wn-surface/70 ring-1 ring-wn-line rounded-full px-4 py-2 text-[13px] text-wn-text-2">
+            <MapPin className="w-3.5 h-3.5 text-wn-cyan shrink-0" aria-hidden="true" />
+            <span className="font-medium text-wn-text">{dest.name}</span>
+            {dest.country && <span className="text-wn-text-3">{dest.country}</span>}
+          </span>
+        ) : null}
       </div>
 
       {/* min_days warning — non-blocking, information only */}
-      {minDaysWarning && (
+      {!multiLegs && minDaysWarning && (
         <div className="mb-5 rounded-xl bg-wn-surface border border-wn-line px-4 py-3 text-[13px] text-wn-text-2 text-center">
           <span className="font-semibold text-wn-amber">Note:</span>{" "}
           {dest.name} is typically recommended for at least {dest.min_days} days.
@@ -316,7 +455,7 @@ function EssentialsStep({ dest, answers, minDaysWarning, setField, onRefine }) {
       {/* When? */}
       <EssentialSection eyebrow="Timing" title="When are you going?">
         <MonthGridInline value={answers.travelMonth} onMonth={(v) => setField("travelMonth", v)} />
-        {answers.travelMonth && answers.travelMonth !== "flexible" && (
+        {!multiLegs && dest && answers.travelMonth && answers.travelMonth !== "flexible" && (
           <ClimateAlert dest={dest} monthValue={answers.travelMonth} />
         )}
       </EssentialSection>
