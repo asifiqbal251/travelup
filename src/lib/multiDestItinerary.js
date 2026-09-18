@@ -161,22 +161,19 @@ function legTier(leg, prefs) {
 // after it, and the last leg contributes `days` (keeping its return home). The
 // total is sum(leg.days) — never more.
 //
-// A leg that would contribute zero days is dropped with a console warning and the
-// remaining legs are regenerated, because dropping a first/last leg changes which
-// neighbour keeps the outbound/return travel. The dropped leg's allocated days are
-// not lost: they're redistributed round-robin to the surviving legs (same
-// distribute-to-max_days strategy tripFit.js uses pre-build), up to each leg's own
-// max_days and never below any leg's own min_days (redistribution only grows legs,
-// it never shrinks one). This keeps the trip's total length equal to the
-// traveller's original day budget even when a destination doesn't make the cut.
-// Every drop is strictly one fewer active leg, so the retry loop below always
-// terminates.
+// A leg that would contribute zero days is dropped and its days are handed
+// round-robin to the surviving legs (the same growth rule as the proposal step,
+// capped at each leg's max_days). The remaining legs are then regenerated,
+// because dropping a first/last leg changes which neighbour keeps the
+// outbound/return travel. Surviving legs only ever grow, so none falls below
+// the min_days floor it was proposed at.
 //
 // Returns { days, legDays, droppedLegs }. legDays is [{destinationId, days}] for
 // the legs that were actually built, each non-last leg counting its outgoing
 // transit day, so sum(legDays[].days) === days.length. droppedLegs is
-// [{destinationId, destinationName, allocatedDays, minDays}] for any leg removed
-// during the retry loop (empty array if nothing was dropped).
+// [{destinationId, destinationName, allocatedDays, absorbedBy, unplacedDays}]:
+// absorbedBy lists the destination ids that grew to take the dropped leg's
+// days, and unplacedDays counts any that no survivor had max_days room for.
 export function generateMultiDestItinerary(legs, prefs) {
   if (!legs || legs.length === 0) return { days: [], legDays: [], droppedLegs: [] };
 
@@ -210,21 +207,20 @@ export function generateMultiDestItinerary(legs, prefs) {
     const emptyIdx = trimmed.findIndex((d) => d.length === 0);
     if (emptyIdx === -1) break;
     const dropped = active[emptyIdx];
+    const survivors = active.filter((_, i) => i !== emptyIdx);
+    const { legs: grown, freeDays } = distributeLeftovers(survivors, dropped.days);
     console.warn(
-      `[multiDestItinerary] Dropping ${dropped.destination.name} from the trip: allocated ${dropped.days}d (tier ${legTier(dropped, prefs)}) but it produced no days.`
+      `[multiDestItinerary] Dropping ${dropped.destination.name} from the trip: allocated ${dropped.days}d (tier ${legTier(dropped, prefs)}) but it produced no days. Redistributed ${dropped.days - freeDays}d to the remaining legs${freeDays ? `; ${freeDays}d unplaced (all at max_days)` : ""}.`
     );
     droppedLegs.push({
       destinationId: dropped.destination.id,
       destinationName: dropped.destination.name,
       allocatedDays: dropped.days,
-      minDays: dropped.destination.min_days || 1,
+      absorbedBy: grown
+        .filter((leg, i) => leg.days > survivors[i].days)
+        .map((leg) => leg.destination.id),
+      unplacedDays: freeDays,
     });
-    const survivors = active.filter((_, i) => i !== emptyIdx);
-    // Give the dropped leg's days back to the trip: round-robin them onto the
-    // remaining legs up to each one's own max_days cap. distributeLeftovers only
-    // grows legs (never below their own min_days) and strictly shrinks
-    // active.length above, so this loop is guaranteed to terminate.
-    const { legs: grown } = distributeLeftovers(survivors, dropped.days);
     active = grown;
   }
 

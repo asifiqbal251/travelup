@@ -20,7 +20,7 @@ import { assessPracticality } from "@/lib/practicality";
 import { scoreWithPracticality } from "@/lib/scoring";
 import TripView, { TripHeader } from "@/components/TripView";
 import { toast } from "@/components/ui/use-toast";
-import { Bookmark, BookmarkCheck, AlertCircle } from "lucide-react";
+import { AlertCircle, Bookmark, BookmarkCheck } from "lucide-react";
 import { useAccountIdentity, saveTripToAccount, getAccountSavedTrips, updateTripSnapshotInAccount } from "@/lib/auth";
 import GuestUpgradeModal from "@/components/guest/GuestUpgradeModal";
 import GuestSaveBanner from "@/components/guest/GuestSaveBanner";
@@ -28,6 +28,12 @@ import GuestSaveBanner from "@/components/guest/GuestSaveBanner";
 const QUOTA_MSG = "This browser is out of space for another saved trip. Delete an older saved trip and try again.";
 const GENERIC_MSG = "We couldn't save this itinerary in this browser. Check your browser storage settings and try again.";
 const ACCOUNT_SAVE_MSG = "Check your connection and try again.";
+
+// "Kerala", "Kerala and Goa", "Kerala, Goa and Jaipur"
+function formatNameList(names) {
+  if (names.length <= 1) return names.join("");
+  return `${names.slice(0, -1).join(", ")} and ${names[names.length - 1]}`;
+}
 
 export default function TripDetail() {
   const navigate = useNavigate();
@@ -156,13 +162,18 @@ export default function TripDetail() {
     : dest;
   const display = normalizeDestinationDisplay(tripDest);
   const shownLegs = isMultiStop ? builtLegs : null;
-  // Legs the generator couldn't fit onto this route at all (§3.2 of the
-  // drop-redistribution brief) -- undefined on trips built before this field
-  // existed, so this always normalizes to an array.
-  const droppedLegs = multi?.droppedLegs || [];
-  const survivorNames = shownLegs?.length
-    ? shownLegs.map((l) => l.name).join(" and ")
-    : (tripDest ? display.name : "");
+  // Legs the generator had to cut after the proposal step. This page is the
+  // traveller's only record of them, so each one is named with where its days
+  // went -- only to legs that were actually built, since a leg that absorbed
+  // days can itself be dropped on a later pass.
+  const droppedNotes = multi
+    ? multi.droppedLegs.map((d) => ({
+        ...d,
+        absorbedNames: builtLegs
+          .filter((l) => d.absorbedBy.includes(l.destinationId))
+          .map((l) => l.name),
+      }))
+    : [];
 
   const packingGroups = generatePackingList(tripDest, prefs);
   const travelFit = plannedMultiStop ? null : assessPracticality(dest, prefs);
@@ -366,22 +377,20 @@ export default function TripDetail() {
 
           {alreadySaved && <GuestSaveBanner className="mb-6" />}
 
-          {droppedLegs.length > 0 && (
-            <div className="mb-6 rounded-xl bg-wn-amber/10 border border-wn-amber/30 px-4 py-3 flex items-start gap-2.5 text-[13px] text-wn-text-2">
+          {droppedNotes.map((d) => (
+            <div
+              key={d.destinationId}
+              className="mb-5 rounded-xl bg-wn-amber/10 border border-wn-amber/30 px-4 py-3 flex items-start gap-2.5 text-[13px] text-wn-text-2-l"
+            >
               <AlertCircle className="w-4 h-4 text-wn-amber shrink-0 mt-px" aria-hidden="true" />
               <span>
-                {droppedLegs.map((d, i) => (
-                  <span key={d.destinationId}>
-                    <span className="font-semibold text-wn-amber">
-                      {`Couldn't fit ${d.destinationName}.`}
-                    </span>{" "}
-                    {`It needed at least ${d.minDays} day${d.minDays === 1 ? "" : "s"} on this route; the time went to ${survivorNames || "the rest of the trip"} instead.`}
-                    {i < droppedLegs.length - 1 && " "}
-                  </span>
-                ))}
+                <span className="font-semibold text-wn-amber">Couldn't fit {d.destinationName}.</span>
+                {" "}{d.allocatedDays} {d.allocatedDays === 1 ? "day" : "days"} there wasn't enough once travel time was taken out.
+                {d.absorbedNames.length > 0 && ` The time went to ${formatNameList(d.absorbedNames)} instead.`}
+                {d.unplacedDays > 0 && ` ${d.unplacedDays} ${d.unplacedDays === 1 ? "day" : "days"} couldn't be reused — your other stops are already at their longest recommended stay.`}
               </span>
             </div>
-          )}
+          ))}
 
           <TripView
             display={display}
