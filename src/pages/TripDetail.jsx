@@ -133,18 +133,36 @@ export default function TripDetail() {
     );
   }
 
-  const display = normalizeDestinationDisplay(dest);
-  const isMultiStop = Array.isArray(fullLegs) && fullLegs.length >= 2;
+  const plannedMultiStop = Array.isArray(fullLegs) && fullLegs.length >= 2;
 
   // Itinerary: multi-stop uses the stitched generator; single uses existing path.
-  const itinerary = isMultiStop
-    ? generateMultiDestItinerary(fullLegs, prefs)
-    : generateItinerary(dest, prefs);
+  const multi = plannedMultiStop ? generateMultiDestItinerary(fullLegs, prefs) : null;
+  const itinerary = multi ? multi.days : generateItinerary(dest, prefs);
 
-  const packingGroups = generatePackingList(dest, prefs);
-  const travelFit = isMultiStop ? null : assessPracticality(dest, prefs);
-  const score = isMultiStop ? null : scoreWithPracticality(dest, prefs, travelFit).finalScore;
-  const fingerprint = isMultiStop
+  // Header, leg labels and the saved snapshot show the legs actually built and
+  // their achieved day counts, not the proposal's intent -- the generator can
+  // fall short of a leg's allocation or drop a leg outright, and the page must
+  // never promise days or destinations the itinerary doesn't contain.
+  const builtLegs = multi
+    ? multi.legDays.map((b) => ({
+        ...snapshotLegs.find((l) => l.destinationId === b.destinationId),
+        days: b.days,
+      }))
+    : null;
+  const isMultiStop = !!builtLegs && builtLegs.length >= 2;
+  // If dropping legs left a single destination, that one is the trip.
+  const tripDest = builtLegs && builtLegs.length === 1
+    ? fullLegs.find((l) => l.destination.id === builtLegs[0].destinationId).destination
+    : dest;
+  const display = normalizeDestinationDisplay(tripDest);
+  const shownLegs = isMultiStop ? builtLegs : null;
+
+  const packingGroups = generatePackingList(tripDest, prefs);
+  const travelFit = plannedMultiStop ? null : assessPracticality(dest, prefs);
+  const score = plannedMultiStop ? null : scoreWithPracticality(dest, prefs, travelFit).finalScore;
+  // Fingerprint stays keyed on the proposal so re-opening the same plan still
+  // matches its saved copy.
+  const fingerprint = plannedMultiStop
     ? tripFingerprint(prefs, snapshotLegs)
     : tripFingerprint(prefs, dest.id);
 
@@ -222,8 +240,8 @@ export default function TripDetail() {
   // both are local-device concepts that don't apply once an account exists.
   const saveNewAccountTrip = async () => {
     const snapshot = buildTripSnapshot({
-      dest, prefs, fingerprint, itinerary, packingGroups, packingState, travelFit, score,
-      legs: isMultiStop ? snapshotLegs : undefined,
+      dest: tripDest, prefs, fingerprint, itinerary, packingGroups, packingState, travelFit, score,
+      legs: shownLegs || undefined,
     });
     const res = await saveTripToAccount(identity, snapshot);
     if (res.ok) {
@@ -260,8 +278,8 @@ export default function TripDetail() {
     // those — this only gates NEW additions once the limit is already met.
     if (getSavedTripCount() >= GUEST_TRIP_LIMIT) {
       const snapshot = buildTripSnapshot({
-        dest, prefs, fingerprint, itinerary, packingGroups, packingState, travelFit, score,
-        legs: isMultiStop ? snapshotLegs : undefined,
+        dest: tripDest, prefs, fingerprint, itinerary, packingGroups, packingState, travelFit, score,
+        legs: shownLegs || undefined,
       });
       setPendingTripSnapshot(snapshot);
       setUpgradeOpen(true);
@@ -272,8 +290,8 @@ export default function TripDetail() {
       return;
     }
     const snapshot = buildTripSnapshot({
-      dest, prefs, fingerprint, itinerary, packingGroups, packingState, travelFit, score,
-      legs: isMultiStop ? snapshotLegs : undefined,
+      dest: tripDest, prefs, fingerprint, itinerary, packingGroups, packingState, travelFit, score,
+      legs: shownLegs || undefined,
     });
     reportSaveResult(saveNewTrip(snapshot));
   };
@@ -283,9 +301,9 @@ export default function TripDetail() {
     if (isSignedIn) {
       if (!accountMatch) return;
       const snapshot = buildTripSnapshot({
-        dest, prefs, fingerprint, itinerary, packingGroups, packingState, travelFit, score,
+        dest: tripDest, prefs, fingerprint, itinerary, packingGroups, packingState, travelFit, score,
         existingId: accountMatch.id, existingSavedAt: accountMatch.savedAt,
-        legs: isMultiStop ? snapshotLegs : undefined,
+        legs: shownLegs || undefined,
       });
       const res = await updateTripSnapshotInAccount(accountMatch.accountRecordId, snapshot);
       if (res.ok) {
@@ -300,9 +318,9 @@ export default function TripDetail() {
     const existing = findSavedTripByFingerprint(fingerprint);
     if (!existing) return;
     const snapshot = buildTripSnapshot({
-      dest, prefs, fingerprint, itinerary, packingGroups, packingState, travelFit, score,
+      dest: tripDest, prefs, fingerprint, itinerary, packingGroups, packingState, travelFit, score,
       existingId: existing.id, existingSavedAt: existing.savedAt,
-      legs: isMultiStop ? snapshotLegs : undefined,
+      legs: shownLegs || undefined,
     });
     reportSaveResult(replaceSavedTrip(existing.id, snapshot));
   };
@@ -314,7 +332,7 @@ export default function TripDetail() {
         score={isMultiStop ? null : score}
         backHref="/results"
         backLabel="Back to recommendations"
-        legs={isMultiStop ? snapshotLegs : null}
+        legs={shownLegs}
       />
 
       {/* overflow-clip (not overflow-hidden) -- hidden establishes a scroll
@@ -347,7 +365,7 @@ export default function TripDetail() {
             packingGroups={packingGroups}
             packingState={packingState}
             travelFit={travelFit}
-            legs={isMultiStop ? snapshotLegs : null}
+            legs={shownLegs}
             packingHandlers={{
               onToggle: handleToggle,
               onAdd: handleAdd,

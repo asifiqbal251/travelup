@@ -1,5 +1,5 @@
 import { generateItinerary } from "@/lib/itinerary";
-import { haversineKm } from "@/lib/practicality";
+import { haversineKm, assessPracticality } from "@/lib/practicality";
 import { getDestinationCoords } from "@/lib/coordinates";
 
 // Transit-time formula mirrors practicality.js flightHours (not exported — §2 of brief).
@@ -120,46 +120,107 @@ function makeTransitDay(fromDest, toDest) {
   };
 }
 
+// generateItinerary() spends a tier-dependent number of days on round-trip travel
+// from home (itinerary.js:586-589) which the stitcher then trims away. Rather than
+// duplicating that tier→overhead table here — itinerary.js is protected and its
+// arithmetic may change — ask for progressively longer trips until the trimmed
+// result is the length this leg actually needs.
+//
+// Never truncates from the end to force a fit (that is how return-home days get
+// silently eaten). If no request lands exactly on target, returns the longest
+// trimmed result still under it, or [] if every request trims to nothing.
+const MAX_REQUEST_DAYS = 14; // generateItinerary clamps travelDays to 14
+
+function generateLegDays(leg, prefs, isFirst, isLast, target) {
+  // travelDays: 0 is falsy and generateItinerary would default it to 7.
+  if (target < 1) return [];
+  let bestUnder = null;
+  for (let request = target; request <= MAX_REQUEST_DAYS; request++) {
+    let d = generateItinerary(leg.destination, { ...prefs, travelDays: request });
+    if (!isFirst) d = trimLeadingEdge(d, leg.destination.name);
+    if (!isLast) d = trimTrailingEdge(d, leg.destination.name);
+    if (d.length === target) return d;
+    if (d.length > target) break;          // overshot; fall back to bestUnder
+    if (d.length > 0) bestUnder = d;       // keep the longest short result
+  }
+  return bestUnder || [];
+}
+
+function legTier(leg, prefs) {
+  return assessPracticality(leg.destination, { ...prefs, travelDays: leg.days }).tier;
+}
+
 // Generate a stitched multi-destination itinerary.
 // legs: [{destination, days}] — ordered list from the leg planner (§4)
 // prefs: the standard buildPrefs() output, applied trip-wide
 //
-// Per leg: calls generateItinerary exactly as it works today, then stitches by
-// dropping the trailing return-travel days from leg N and the leading outbound-
-// travel days from leg N+1, replacing both with one transit day.
+// Day accounting: each leg's `days` are calendar days inside the traveller's
+// budget, and the transit day between two legs is the day the earlier leg is
+// left. So a non-last leg contributes `days - 1` of its own plus the transit day
+// after it, and the last leg contributes `days` (keeping its return home). The
+// total is sum(leg.days) — never more.
+//
+// A leg that would contribute zero days is dropped with a console warning and the
+// remaining legs are regenerated, because dropping a first/last leg changes which
+// neighbour keeps the outbound/return travel.
+//
+// Returns { days, legDays }. legDays is [{destinationId, days}] for the legs that
+// were actually built, each non-last leg counting its outgoing transit day, so
+// sum(legDays[].days) === days.length.
 export function generateMultiDestItinerary(legs, prefs) {
-  if (!legs || legs.length === 0) return [];
-  if (legs.length === 1) {
-    return generateItinerary(legs[0].destination, { ...prefs, travelDays: legs[0].days });
+  if (!legs || legs.length === 0) return { days: [], legDays: [] };
+
+  let active = legs.slice();
+  let trimmed;
+  for (;;) {
+    if (active.length === 1) {
+      const only = active[0];
+      const days = generateItinerary(only.destination, { ...prefs, travelDays: only.days });
+      return {
+        days,
+        legDays: days.length ? [{ destinationId: only.destination.id, days: days.length }] : [],
+      };
+    }
+
+    trimmed = active.map((leg, i) => {
+      const isLast = i === active.length - 1;
+      const target = isLast ? leg.days : leg.days - 1;
+      const d = generateLegDays(leg, prefs, i === 0, isLast, target);
+      if (d.length > 0 && d.length < target) {
+        console.warn(
+          `[multiDestItinerary] ${leg.destination.name} built ${d.length} of ${target} target days (allocated ${leg.days}d, tier ${legTier(leg, prefs)}).`
+        );
+      }
+      // Tag every day with the leg it belongs to
+      return d.map((day) => ({ ...day, legDestinationId: leg.destination.id }));
+    });
+
+    const emptyIdx = trimmed.findIndex((d) => d.length === 0);
+    if (emptyIdx === -1) break;
+    const dropped = active[emptyIdx];
+    console.warn(
+      `[multiDestItinerary] Dropping ${dropped.destination.name} from the trip: allocated ${dropped.days}d (tier ${legTier(dropped, prefs)}) but it produced no days.`
+    );
+    active = active.filter((_, i) => i !== emptyIdx);
   }
-
-  // Generate each leg's standalone itinerary
-  const perLeg = legs.map((leg) =>
-    generateItinerary(leg.destination, { ...prefs, travelDays: leg.days })
-  );
-
-  // Trim each leg: drop outbound days from non-first, drop return days from non-last
-  const trimmed = perLeg.map((days, i) => {
-    let d = days;
-    if (i > 0) d = trimLeadingEdge(d, legs[i].destination.name);
-    if (i < legs.length - 1) d = trimTrailingEdge(d, legs[i].destination.name);
-    // Tag every day with the leg it belongs to
-    return d.map((day) => ({ ...day, legDestinationId: legs[i].destination.id }));
-  });
 
   // Stitch: interleave transit days between legs and renumber sequentially
   const allDays = [];
+  const legDays = [];
   let counter = 1;
 
   for (let i = 0; i < trimmed.length; i++) {
     for (const day of trimmed[i]) {
       allDays.push({ ...day, day: counter++ });
     }
+    let achieved = trimmed[i].length;
     if (i < trimmed.length - 1) {
-      const transit = makeTransitDay(legs[i].destination, legs[i + 1].destination);
+      const transit = makeTransitDay(active[i].destination, active[i + 1].destination);
       allDays.push({ ...transit, day: counter++ });
+      achieved += 1;
     }
+    legDays.push({ destinationId: active[i].destination.id, days: achieved });
   }
 
-  return allDays;
+  return { days: allDays, legDays };
 }
