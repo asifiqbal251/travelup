@@ -15,7 +15,7 @@ import { scrollToId } from "@/lib/scrollNav";
 import { useScrollSpy } from "@/hooks/useScrollSpy";
 import { useMeasuredHeight } from "@/hooks/useMeasuredHeight";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { ArrowLeft, ShieldCheck, ExternalLink, PlaneTakeoff, Footprints } from "lucide-react";
+import { ArrowLeft, ChevronDown, ChevronRight, ShieldCheck, ExternalLink, PlaneTakeoff, Footprints } from "lucide-react";
 
 // The shared tab bar sticks at top-16 (see the wrapper below) -- 64px,
 // matching TravelUpLayout's fixed header. Kept as a literal here rather than
@@ -509,12 +509,26 @@ function buildLegNameMap(legs) {
 }
 
 function ItineraryView({ itinerary, openDay, setOpenDay, scrollOffset, legs }) {
+  const isMultiStop = Array.isArray(legs) && legs.length >= 2;
+  const legNameMap = isMultiStop ? buildLegNameMap(legs) : {};
+
+  // All legs except the first are collapsed by default for easier scanning.
+  const [collapsedLegIds, setCollapsedLegIds] = useState(
+    () => new Set(isMultiStop ? legs.slice(1).map((l) => l.destinationId) : [])
+  );
+
   if (!itinerary || !itinerary.length) {
     return <p className="text-wn-text-2-l">No itinerary available for this combination.</p>;
   }
 
-  const isMultiStop = Array.isArray(legs) && legs.length >= 2;
-  const legNameMap = isMultiStop ? buildLegNameMap(legs) : {};
+  const toggleLeg = (destId) => {
+    setCollapsedLegIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(destId)) next.delete(destId);
+      else next.add(destId);
+      return next;
+    });
+  };
 
   return (
     <div>
@@ -537,43 +551,63 @@ function ItineraryView({ itinerary, openDay, setOpenDay, scrollOffset, legs }) {
               (idx === 0 || !prevDay || prevDay.isTransitBoundary || prevDay.legDestinationId !== d.legDestinationId);
             const legName = showLegLabel ? (legNameMap[d.legDestinationId] || null) : null;
 
+            // Transit-boundary days always render; they're the divider rows
+            // between sections and are already short one-line entries.
+            const isHidden =
+              isMultiStop &&
+              d.legDestinationId &&
+              collapsedLegIds.has(d.legDestinationId) &&
+              !d.isTransitBoundary;
+
             return (
               <div key={d.day}>
                 {legName && (
-                  <div className="flex items-center gap-2 mb-3 px-1" aria-label={`${legName} leg`}>
+                  <button
+                    type="button"
+                    onClick={() => toggleLeg(d.legDestinationId)}
+                    aria-expanded={!collapsedLegIds.has(d.legDestinationId)}
+                    aria-label={`${legName} leg`}
+                    className="flex items-center gap-2 mb-3 px-1 w-full text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-wn-cyan rounded"
+                  >
                     <span className="h-px flex-1 bg-wn-line-l" aria-hidden="true" />
-                    <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-wn-cyan px-2">
+                    <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-wn-cyan px-2 inline-flex items-center gap-1">
                       {legName}
+                      {collapsedLegIds.has(d.legDestinationId)
+                        ? <ChevronRight className="w-3 h-3" aria-hidden="true" />
+                        : <ChevronDown className="w-3 h-3" aria-hidden="true" />
+                      }
                     </span>
                     <span className="h-px flex-1 bg-wn-line-l" aria-hidden="true" />
+                  </button>
+                )}
+                {!isHidden && (
+                  <div
+                    id={`day-${d.day}`}
+                    style={{ scrollMarginTop: scrollOffset + 12 }}
+                    className="relative flex gap-4"
+                  >
+                    <span
+                      className="relative z-10 flex-shrink-0 w-8 h-8 rounded-full bg-wn-surface-l ring-1 ring-wn-line-l flex items-center justify-center font-display text-xs font-bold text-wn-text-l"
+                      aria-hidden="true"
+                    >
+                      {d.isTravel ? (
+                        <PlaneTakeoff className="w-4 h-4" />
+                      ) : d.flexible ? (
+                        <Footprints className="w-4 h-4" />
+                      ) : (
+                        d.day
+                      )}
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <DayCard
+                        day={d}
+                        isOpen={openDay === d.day}
+                        badge={INTENSITY_COLOR[d.intensity] || ""}
+                        onToggle={() => setOpenDay((cur) => (cur === d.day ? null : d.day))}
+                      />
+                    </div>
                   </div>
                 )}
-                <div
-                  id={`day-${d.day}`}
-                  style={{ scrollMarginTop: scrollOffset + 12 }}
-                  className="relative flex gap-4"
-                >
-                  <span
-                    className="relative z-10 flex-shrink-0 w-8 h-8 rounded-full bg-wn-surface-l ring-1 ring-wn-line-l flex items-center justify-center font-display text-xs font-bold text-wn-text-l"
-                    aria-hidden="true"
-                  >
-                    {d.isTravel ? (
-                      <PlaneTakeoff className="w-4 h-4" />
-                    ) : d.flexible ? (
-                      <Footprints className="w-4 h-4" />
-                    ) : (
-                      d.day
-                    )}
-                  </span>
-                  <div className="flex-1 min-w-0">
-                    <DayCard
-                      day={d}
-                      isOpen={openDay === d.day}
-                      badge={INTENSITY_COLOR[d.intensity] || ""}
-                      onToggle={() => setOpenDay((cur) => (cur === d.day ? null : d.day))}
-                    />
-                  </div>
-                </div>
               </div>
             );
           })}
