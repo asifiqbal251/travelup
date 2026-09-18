@@ -10,6 +10,7 @@ import ScrollToTop from './components/ScrollToTop';
 import TravelUpLayout from '@/components/TravelUpLayout';
 import TripMigrationEffect from '@/components/TripMigrationEffect';
 import Landing from '@/pages/Landing';
+import DoorB from '@/pages/DoorB';
 import Questionnaire from '@/pages/Questionnaire';
 import Results from '@/pages/Results';
 import TripDetail from '@/pages/TripDetail';
@@ -52,6 +53,7 @@ const AuthenticatedApp = () => {
       <Routes>
         {/* Full-bleed immersive routes -- no site chrome (see docs/travelfit-visual-fidelity-pass.md #1) */}
         <Route path="/questionnaire" element={<Questionnaire />} />
+        <Route path="/find" element={<DoorB />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />

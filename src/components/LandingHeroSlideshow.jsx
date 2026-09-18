@@ -123,11 +123,12 @@ export default function LandingHeroSlideshow() {
           </Button>
           <Button
             asChild
-            variant="outline"
             size="lg"
-            className="border-white/30 text-on-dark hover:bg-white/10 hover:text-on-dark hover:border-white/60 min-h-12 px-8 text-base focus-visible:!ring-on-dark focus-visible:ring-offset-cinema"
+            className="bg-ink text-on-dark ring-1 ring-teal/40 hover:bg-surface-dark hover:ring-teal/70 min-h-12 px-8 text-base focus-visible:!ring-teal focus-visible:ring-offset-cinema"
           >
-            <Link to="/saved-trips">View saved trips</Link>
+            <Link to="/find">
+              <MapPin className="w-4 h-4 mr-2" /> I know where I&apos;m going
+            </Link>
           </Button>
         </div>
 

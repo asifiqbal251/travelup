@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { MapPinned, Gauge, UserX, ArrowRight, RotateCw } from "lucide-react";
+import { MapPinned, Gauge, UserX, ArrowRight, RotateCw, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { base44 } from "@/api/base44Client";
 import { getPrefs, getSavedTrips } from "@/lib/storage";
@@ -183,24 +183,38 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* 6. Final Travel Fit CTA */}
+      {/* 6. Final CTA — two equal-weight entry points */}
       <section className="bg-surface-dark border-t border-white/10">
         <div className="max-w-5xl mx-auto px-4 py-16 text-center">
           <h2 className="font-display text-2xl sm:text-3xl font-bold mb-3 text-on-dark">
-            Ready to find your Travel Fit?
+            How do you want to start?
           </h2>
-          <p className="text-on-dark/75 mb-6 max-w-xl mx-auto">
+          <p className="text-on-dark/75 mb-8 max-w-xl mx-auto">
             No account required — your answers and saved trips stay on this browser and device.
           </p>
-          <Button
-            asChild
-            size="lg"
-            className="bg-ink text-on-dark ring-1 ring-teal/40 shadow-[0_10px_30px_-12px_rgba(2,218,227,0.55)] hover:bg-surface-dark hover:ring-teal/70 min-h-12 px-8 focus-visible:!ring-teal focus-visible:ring-offset-cinema"
-          >
-            <Link to="/questionnaire">
-              Find my Travel Fit <ArrowRight className="w-4 h-4 ml-2" />
-            </Link>
-          </Button>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-stretch sm:items-center max-w-lg mx-auto">
+            <Button
+              asChild
+              size="lg"
+              className="flex-1 bg-ink text-on-dark ring-1 ring-teal/40 shadow-[0_10px_30px_-12px_rgba(2,218,227,0.55)] hover:bg-surface-dark hover:ring-teal/70 min-h-12 px-6 text-base focus-visible:!ring-teal focus-visible:ring-offset-cinema"
+            >
+              <Link to="/questionnaire">
+                Find my Travel Fit <ArrowRight className="w-4 h-4 ml-2" />
+              </Link>
+            </Button>
+            <Button
+              asChild
+              size="lg"
+              className="flex-1 bg-ink text-on-dark ring-1 ring-teal/40 hover:bg-surface-dark hover:ring-teal/70 min-h-12 px-6 text-base focus-visible:!ring-teal focus-visible:ring-offset-cinema"
+            >
+              <Link to="/find">
+                <MapPin className="w-4 h-4 mr-2" /> I know where I&apos;m going
+              </Link>
+            </Button>
+          </div>
+          <p className="mt-5 text-[13px] text-on-dark/50">
+            Not sure? The questionnaire finds destinations you might not have considered.
+          </p>
         </div>
       </section>
 
