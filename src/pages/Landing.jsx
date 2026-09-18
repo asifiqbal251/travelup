@@ -192,11 +192,11 @@ export default function Landing() {
           <p className="text-on-dark/75 mb-8 max-w-xl mx-auto">
             No account required — your answers and saved trips stay on this browser and device.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-stretch sm:items-center max-w-lg mx-auto">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-stretch max-w-lg mx-auto">
             <Button
               asChild
               size="lg"
-              className="flex-1 bg-ink text-on-dark ring-1 ring-teal/40 shadow-[0_10px_30px_-12px_rgba(2,218,227,0.55)] hover:bg-surface-dark hover:ring-teal/70 min-h-12 px-6 text-base focus-visible:!ring-teal focus-visible:ring-offset-cinema"
+              className="w-full bg-ink text-on-dark ring-1 ring-teal/40 shadow-[0_10px_30px_-12px_rgba(2,218,227,0.55)] hover:bg-surface-dark hover:ring-teal/70 min-h-12 px-6 text-base focus-visible:!ring-teal focus-visible:ring-offset-cinema"
             >
               <Link to="/questionnaire">
                 Find my Travel Fit <ArrowRight className="w-4 h-4 ml-2" />
@@ -205,7 +205,7 @@ export default function Landing() {
             <Button
               asChild
               size="lg"
-              className="flex-1 bg-ink text-on-dark ring-1 ring-teal/40 hover:bg-surface-dark hover:ring-teal/70 min-h-12 px-6 text-base focus-visible:!ring-teal focus-visible:ring-offset-cinema"
+              className="w-full bg-ink text-on-dark ring-1 ring-teal/40 hover:bg-surface-dark hover:ring-teal/70 min-h-12 px-6 text-base focus-visible:!ring-teal focus-visible:ring-offset-cinema"
             >
               <Link to="/find">
                 <MapPin className="w-4 h-4 mr-2" /> I know where I&apos;m going

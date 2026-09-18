@@ -52,12 +52,30 @@ function isCountryQuery(destinations, query) {
 }
 
 // Score alternatives for the miss state. Returns up to 3 with a reason line.
+// Two-factor ranking: continuous distance decay (max 60 pts) + tag/region/climate
+// similarity derived from same-country catalogue entries (max ~40 pts).
 function rankAlternatives(query, allDests, queryCoords) {
-  return allDests.map((dest) => {
-    let score = 0;
-    let reason = null;
+  const resolvedCountry = inferCountry(query);
 
-    // Proximity
+  // Build reference tag signals from same-country catalogue entries
+  const refDests = resolvedCountry
+    ? allDests.filter((d) => d.country === resolvedCountry)
+    : [];
+  const refInterestTags = new Set(refDests.flatMap((d) => [
+    ...(d.interest_tags || []),
+    ...(d.primary_interests || []),
+  ]));
+  const refRegion = refDests[0]?.region ?? null;
+  const refClimateTags = new Set(refDests.flatMap((d) => d.climate_tags || []));
+  const hasSimilaritySignals = refInterestTags.size > 0 || refRegion != null || refClimateTags.size > 0;
+
+  return allDests.map((dest) => {
+    let distScore = 0;
+    let simScore = 0;
+    let distReason = null;
+    let simReason = null;
+
+    // Continuous distance score — exponential decay, max 60 pts, no band edges
     if (queryCoords) {
       const dc = dest.gateway_lat != null && dest.gateway_lng != null
         ? { lat: dest.gateway_lat, lng: dest.gateway_lng }
@@ -65,27 +83,43 @@ function rankAlternatives(query, allDests, queryCoords) {
       if (dc) {
         const km = haversineKm(queryCoords, dc);
         if (km != null) {
-          if (km < 500) { score += 40; reason = `${Math.round(km)} km away`; }
-          else if (km < 1500) { score += 25; reason = `${Math.round(km / 100) * 100} km away`; }
-          else if (km < 4000) { score += 10; reason = `${Math.round(km / 500) * 500} km away`; }
+          distScore = Math.round(60 * Math.exp(-km / 2000));
+          distReason = km < 1000
+            ? `${Math.round(km)} km away`
+            : `${Math.round(km / 100) * 100} km away`;
         }
       }
     }
 
-    // Similarity via tags (only when we have them)
-    // We don't know the searched city's tags, but we can use region/continent match
-    // which is good enough for the unresolved-coords fallback.
-    const resolvedCountry = inferCountry(query);
-    if (resolvedCountry) {
-      // Same broad region heuristic via country centroid similarity is captured
-      // by the proximity score already. Add a small bonus for same region string.
+    // Similarity score: interest-tag + climate-tag overlap, region bonus — max ~40 pts
+    if (hasSimilaritySignals) {
+      const destAllTags = new Set([
+        ...(dest.interest_tags || []),
+        ...(dest.primary_interests || []),
+      ]);
+      const tagOverlap = [...refInterestTags].filter((t) => destAllTags.has(t)).length;
+      simScore += Math.min(tagOverlap * 6, 24);
+
+      const climateOverlap = (dest.climate_tags || []).filter((t) => refClimateTags.has(t)).length;
+      simScore += Math.min(climateOverlap * 4, 12);
+
+      if (refRegion && dest.region === refRegion) {
+        simScore += 8;
+        simReason = `Same region as ${query.trim()}`;
+      }
+      if (tagOverlap >= 2 && !simReason) {
+        simReason = `Similar character to ${query.trim()}`;
+      }
     }
 
+    const score = distScore + simScore;
+    // Use similarity reason when it contributed meaningfully; fall back to distance
+    const reason = simScore >= 8 && simReason ? simReason : distReason ?? simReason;
     return { dest, score, reason };
   })
     .sort((a, b) => b.score - a.score)
     .slice(0, 3)
-    .filter((r) => r.reason); // Only include if we have a reason
+    .filter((r) => r.reason);
 }
 
 // Group all destinations by country, alphabetical
