@@ -1,0 +1,112 @@
+- generic [ref=f1e4]:
+  - generic [ref=f1e5]:
+    - banner [ref=f1e6]:
+      - generic [ref=f1e7]:
+        - link "WhereNova home" [ref=f1e8] [cursor=pointer]:
+          - /url: /
+        - navigation [ref=f1e12]:
+          - link "Home" [ref=f1e13] [cursor=pointer]:
+            - /url: /
+          - link "Saved trips" [ref=f1e14] [cursor=pointer]:
+            - /url: /saved-trips
+          - link "About" [ref=f1e15] [cursor=pointer]:
+            - /url: /about
+          - button "Sign in" [ref=f1e16] [cursor=pointer]
+          - button "Clear this device" [ref=f1e20] [cursor=pointer]
+    - main [ref=f1e24]:
+      - generic [ref=f1e26]:
+        - generic [ref=f1e27]:
+          - generic [ref=f1e28]:
+            - paragraph [ref=f1e29]: Your Travel Fit
+            - heading "Your top 2 matches" [level=1] [ref=f1e30]
+            - paragraph [ref=f1e31]: Scored on how well each place fits you, and how practical it is for 2 days.
+          - button "Revise" [ref=f1e32] [cursor=pointer]
+        - group [ref=f1e33]:
+          - generic "How matches are calculated" [ref=f1e34] [cursor=pointer]
+        - generic [ref=f1e163]:
+          - paragraph [ref=f1e164]: Showing updated results. Changes aren't saved.
+          - button "Back to original results" [ref=f1e165] [cursor=pointer]
+        - paragraph [ref=f1e40]: Some longer-distance destinations weren't included because this trip length doesn't leave enough time to make the travel worthwhile — a longer trip would open up more options.
+        - generic [ref=f1e41]:
+          - paragraph [ref=f1e42]: Want more options to choose from? Here's what you could adjust.
+          - generic [ref=f1e43]:
+            - link "Increase your daily budget." [ref=f1e44] [cursor=pointer]:
+              - /url: /questionnaire?step=8
+            - link "Select more interests that appeal to you." [ref=f1e47] [cursor=pointer]:
+              - /url: /questionnaire?step=4
+        - generic [ref=f1e53]:
+          - article [ref=f1e54]:
+            - generic [ref=f1e55]:
+              - img "Edinburgh, United Kingdom" [ref=f1e168]
+              - generic [ref=f1e59]:
+                - generic [ref=f1e60]: Best fit
+                - generic [ref=f1e61]:
+                  - img "Travel Fit score 54 out of 100" [ref=f1e169]:
+                    - generic [ref=f1e67]:
+                      - generic [ref=f1e68]: "54"
+                      - generic [ref=f1e69]: Travel Fit
+                  - heading "Edinburgh" [level=2] [ref=f1e170]
+                  - paragraph [ref=f1e71]:
+                    - generic [aria-hidden] [ref=f1e72]: 🇬🇧
+                    - text: United Kingdom · Lothian, Scotland, United Kingdom
+            - generic [ref=f1e73]:
+              - paragraph [ref=f1e74]: Dramatic castle, medieval Old Town and festival energy in a compact, walkable city.
+              - generic [ref=f1e75]:
+                - generic [ref=f1e76]:
+                  - term [ref=f1e77]: Getting there
+                  - definition [ref=f1e81]: International flight + local transport
+                - generic [ref=f1e82]:
+                  - term [ref=f1e83]: Travel time
+                  - definition [ref=f1e87]: 5h total travel each way
+                - generic [ref=f1e88]:
+                  - term [ref=f1e89]: On the ground
+                  - definition [ref=f1e93]: 2d
+              - generic [ref=f1e94]:
+                - generic [ref=f1e95]: Enjoyable in your chosen month
+                - generic [ref=f1e96]: Ideal for 2 total days
+              - group [ref=f1e97]:
+                - generic "How this score was built" [ref=f1e98] [cursor=pointer]
+              - button "View my trip" [ref=f1e101] [cursor=pointer]
+          - article [ref=f1e171]:
+            - generic [ref=f1e172]:
+              - img "Amsterdam, Netherlands" [ref=f1e174]
+              - generic [ref=f1e176]:
+                - img "Travel Fit score 54 out of 100" [ref=f1e178]:
+                  - generic [ref=f1e183]:
+                    - generic [ref=f1e184]: "54"
+                    - generic [ref=f1e185]: Travel Fit
+                - generic [ref=f1e186]:
+                  - heading "Amsterdam" [level=2] [ref=f1e187]
+                  - paragraph [ref=f1e188]:
+                    - generic [aria-hidden] [ref=f1e189]: 🇳🇱
+                    - text: Netherlands · North Holland, Netherlands
+            - generic [ref=f1e190]:
+              - paragraph [ref=f1e191]: Seventeenth-century canals, world-famous museums and a relaxed, cycling-first culture.
+              - generic [ref=f1e192]:
+                - generic [ref=f1e193]:
+                  - term [ref=f1e194]: Getting there
+                  - definition [ref=f1e198]: International flight + local transport
+                - generic [ref=f1e199]:
+                  - term [ref=f1e200]: Travel time
+                  - definition [ref=f1e204]: 5h total travel each way
+                - generic [ref=f1e205]:
+                  - term [ref=f1e206]: On the ground
+                  - definition [ref=f1e210]: 2d
+              - generic [ref=f1e211]: cold or snowy climate as you prefer
+              - group [ref=f1e213]:
+                - generic "How this score was built" [ref=f1e214] [cursor=pointer]
+              - button "View my trip" [ref=f1e217] [cursor=pointer]
+    - contentinfo [ref=f1e151]:
+      - generic [ref=f1e152]:
+        - paragraph [ref=f1e153]
+        - paragraph [ref=f1e157]: Helping unsure travellers discover where to go next.
+        - paragraph [ref=f1e158]: All budgets, climates, seasons, itineraries and packing suggestions are indicative estimates, not live information. Always verify visa requirements, entry conditions, safety and travel advisories using official government sources for your citizenship.
+        - generic [ref=f1e159]:
+          - link "About & disclaimer" [ref=f1e160] [cursor=pointer]:
+            - /url: /about
+          - link "Saved trips" [ref=f1e161] [cursor=pointer]:
+            - /url: /saved-trips
+          - link "Home" [ref=f1e162] [cursor=pointer]:
+            - /url: /
+  - region "Notifications (F8)":
+    - list
