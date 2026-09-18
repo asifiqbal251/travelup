@@ -1,6 +1,7 @@
 import { generateItinerary } from "@/lib/itinerary";
 import { haversineKm, assessPracticality } from "@/lib/practicality";
 import { getDestinationCoords } from "@/lib/coordinates";
+import { distributeLeftovers } from "@/lib/tripFit";
 
 // Transit-time formula mirrors practicality.js flightHours (not exported — §2 of brief).
 // distanceKm / 800 gives a ~800 km/h cruise estimate; 0.75 is a 45-minute boarding allowance.
@@ -162,15 +163,25 @@ function legTier(leg, prefs) {
 //
 // A leg that would contribute zero days is dropped with a console warning and the
 // remaining legs are regenerated, because dropping a first/last leg changes which
-// neighbour keeps the outbound/return travel.
+// neighbour keeps the outbound/return travel. The dropped leg's allocated days are
+// not lost: they're redistributed round-robin to the surviving legs (same
+// distribute-to-max_days strategy tripFit.js uses pre-build), up to each leg's own
+// max_days and never below any leg's own min_days (redistribution only grows legs,
+// it never shrinks one). This keeps the trip's total length equal to the
+// traveller's original day budget even when a destination doesn't make the cut.
+// Every drop is strictly one fewer active leg, so the retry loop below always
+// terminates.
 //
-// Returns { days, legDays }. legDays is [{destinationId, days}] for the legs that
-// were actually built, each non-last leg counting its outgoing transit day, so
-// sum(legDays[].days) === days.length.
+// Returns { days, legDays, droppedLegs }. legDays is [{destinationId, days}] for
+// the legs that were actually built, each non-last leg counting its outgoing
+// transit day, so sum(legDays[].days) === days.length. droppedLegs is
+// [{destinationId, destinationName, allocatedDays, minDays}] for any leg removed
+// during the retry loop (empty array if nothing was dropped).
 export function generateMultiDestItinerary(legs, prefs) {
-  if (!legs || legs.length === 0) return { days: [], legDays: [] };
+  if (!legs || legs.length === 0) return { days: [], legDays: [], droppedLegs: [] };
 
   let active = legs.slice();
+  const droppedLegs = [];
   let trimmed;
   for (;;) {
     if (active.length === 1) {
@@ -179,6 +190,7 @@ export function generateMultiDestItinerary(legs, prefs) {
       return {
         days,
         legDays: days.length ? [{ destinationId: only.destination.id, days: days.length }] : [],
+        droppedLegs,
       };
     }
 
@@ -201,7 +213,19 @@ export function generateMultiDestItinerary(legs, prefs) {
     console.warn(
       `[multiDestItinerary] Dropping ${dropped.destination.name} from the trip: allocated ${dropped.days}d (tier ${legTier(dropped, prefs)}) but it produced no days.`
     );
-    active = active.filter((_, i) => i !== emptyIdx);
+    droppedLegs.push({
+      destinationId: dropped.destination.id,
+      destinationName: dropped.destination.name,
+      allocatedDays: dropped.days,
+      minDays: dropped.destination.min_days || 1,
+    });
+    const survivors = active.filter((_, i) => i !== emptyIdx);
+    // Give the dropped leg's days back to the trip: round-robin them onto the
+    // remaining legs up to each one's own max_days cap. distributeLeftovers only
+    // grows legs (never below their own min_days) and strictly shrinks
+    // active.length above, so this loop is guaranteed to terminate.
+    const { legs: grown } = distributeLeftovers(survivors, dropped.days);
+    active = grown;
   }
 
   // Stitch: interleave transit days between legs and renumber sequentially
@@ -222,5 +246,5 @@ export function generateMultiDestItinerary(legs, prefs) {
     legDays.push({ destinationId: active[i].destination.id, days: achieved });
   }
 
-  return { days: allDays, legDays };
+  return { days: allDays, legDays, droppedLegs };
 }
