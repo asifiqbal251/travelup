@@ -12,6 +12,12 @@ import {
 import { PILOT_DATA, buildFilledTrip } from "@/lib/door2/planner";
 import { PILOT_PLACES } from "@/lib/door2/pilotData";
 import { MONTHS } from "@/lib/options";
+import {
+  deleteDraftTrip,
+  listDraftTrips,
+  loadDraftTrip,
+  saveDraftTrip,
+} from "@/lib/door2/draftStorage";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -81,6 +87,73 @@ function requiredPlacesForDestination(destinationValue) {
   const countryId = destinationValue.split(":")[1];
   return Object.values(PILOT_PLACES).filter(
     (p) => p.countryId === countryId && p.id !== "vancouver"
+  );
+}
+
+function autoLabel(spec) {
+  const destLabel =
+    spec.destination?.kind === "place"
+      ? (PILOT_PLACES[spec.destination.id]?.name ?? spec.destination.id)
+      : (DESTINATIONS.find((d) => d.value === `country:${spec.destination?.id}`)?.label ?? spec.destination?.id ?? "Trip");
+  const date = new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  return `${destLabel} · ${spec.totalDays} days · ${date}`;
+}
+
+function SavedTripsList({ onLoad }) {
+  const [drafts, setDrafts] = useState(() => listDraftTrips());
+  const [inlineErrors, setInlineErrors] = useState({});
+
+  function handleDelete(id) {
+    deleteDraftTrip(id);
+    setDrafts(listDraftTrips());
+  }
+
+  function handleLoad(id) {
+    const r = loadDraftTrip(id);
+    if (r.compatible) {
+      onLoad(r.trip);
+    } else {
+      setInlineErrors((e) => ({ ...e, [id]: r.reason }));
+    }
+  }
+
+  if (drafts.length === 0) return null;
+
+  return (
+    <div className="rounded-xl bg-white border border-slate-200 p-5 space-y-3">
+      <h2 className="text-sm font-semibold text-slate-700">My saved trips</h2>
+      <ul className="space-y-2">
+        {drafts.map((d) => (
+          <li key={d.id} className="flex items-start gap-3 py-2 border-b border-slate-100 last:border-0">
+            <div className="flex-1 min-w-0 space-y-0.5">
+              <p className="text-sm font-medium text-slate-900 truncate">{d.label}</p>
+              <p className="text-xs text-slate-400">
+                {new Date(d.savedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+              </p>
+              {inlineErrors[d.id] && (
+                <p className="text-xs text-rose-700">{inlineErrors[d.id]}</p>
+              )}
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                type="button"
+                onClick={() => handleLoad(d.id)}
+                className="text-xs px-2.5 py-1 rounded-md bg-slate-800 text-white hover:bg-slate-700 font-medium transition-colors"
+              >
+                Continue
+              </button>
+              <button
+                type="button"
+                onClick={() => handleDelete(d.id)}
+                className="text-xs px-2.5 py-1 rounded-md bg-rose-100 text-rose-700 hover:bg-rose-200 font-medium transition-colors"
+              >
+                Delete
+              </button>
+            </div>
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }
 
@@ -285,7 +358,7 @@ function DayCard({ day, onMakeLighter, onSwap, onReject, onPin, blockErrors, day
   );
 }
 
-function TripSummaryCard({ trip, editCount, editError, onUndo, onStartOver }) {
+function TripSummaryCard({ trip, editCount, editError, onUndo, onStartOver, onSave, saveMsg }) {
   const home = trip.days
     .flatMap((d) => d.blocks)
     .find((b) => b.id.endsWith(">origin_home"));
@@ -309,13 +382,25 @@ function TripSummaryCard({ trip, editCount, editError, onUndo, onStartOver }) {
           )}
           {nights && <p className="text-sm text-slate-500">{nights}</p>}
         </div>
-        <button
-          type="button"
-          onClick={onStartOver}
-          className="shrink-0 text-sm px-3 py-1.5 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-50 font-medium transition-colors"
-        >
-          New trip
-        </button>
+        <div className="flex items-center gap-2 shrink-0">
+          <button
+            type="button"
+            onClick={onSave}
+            className="text-sm px-3 py-1.5 rounded-lg bg-teal-700 text-white hover:bg-teal-800 font-medium transition-colors"
+          >
+            Save this trip
+          </button>
+          {saveMsg && (
+            <span className="text-sm text-teal-700 font-medium">{saveMsg}</span>
+          )}
+          <button
+            type="button"
+            onClick={onStartOver}
+            className="text-sm px-3 py-1.5 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-50 font-medium transition-colors"
+          >
+            New trip
+          </button>
+        </div>
       </div>
 
       <div className="flex flex-wrap gap-3 text-xs text-slate-500">
@@ -461,6 +546,7 @@ export default function Door2Plan() {
   const [editError, setEditError] = useState(null);
   const [blockErrors, setBlockErrors] = useState({});
   const [dayErrors, setDayErrors] = useState({});
+  const [saveMsg, setSaveMsg] = useState(null);
 
   if (!allowed) return <PageNotFound />;
 
@@ -567,6 +653,29 @@ export default function Door2Plan() {
     runBuild(newForm);
   }
 
+  function handleSaveDraft() {
+    const t = activeTrip;
+    if (!t) return;
+    try {
+      saveDraftTrip(t, autoLabel(t.spec));
+      setSaveMsg("Saved");
+      setTimeout(() => setSaveMsg(null), 2500);
+    } catch {
+      setSaveMsg("Couldn't save — storage may be full.");
+      setTimeout(() => setSaveMsg(null), 4000);
+    }
+  }
+
+  function handleLoadDraft(trip) {
+    setTripResult({ result: trip, thrown: null });
+    setEditTrip(null);
+    setEditCount(0);
+    setEditError(null);
+    setBlockErrors({});
+    setDayErrors({});
+    setSaveMsg(null);
+  }
+
   // ── Edit handlers ──────────────────────────────────────────────────────────
 
   function applyBlockEdit(fn, blockId) {
@@ -628,6 +737,8 @@ export default function Door2Plan() {
 
         {/* Intake form */}
         {!showResults && (
+          <>
+          <SavedTripsList onLoad={handleLoadDraft} />
           <form
             onSubmit={handleSubmit}
             className="rounded-xl bg-white border border-slate-200 p-6 space-y-6"
@@ -783,6 +894,7 @@ export default function Door2Plan() {
               Plan my trip
             </button>
           </form>
+          </>
         )}
 
         {/* Results */}
@@ -823,6 +935,8 @@ export default function Door2Plan() {
                   editError={editError}
                   onUndo={handleUndo}
                   onStartOver={handleStartOver}
+                  onSave={handleSaveDraft}
+                  saveMsg={saveMsg}
                 />
                 {activeTrip.days.map((day) => (
                   <DayCard
