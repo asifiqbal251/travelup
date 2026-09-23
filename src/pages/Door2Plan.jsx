@@ -386,7 +386,7 @@ function TripSummaryCard({ trip, editCount, editError, onUndo, onStartOver, onSa
           <button
             type="button"
             onClick={onSave}
-            className="text-sm px-3 py-1.5 rounded-lg bg-teal-700 text-white hover:bg-teal-800 font-medium transition-colors"
+            className="text-sm px-3 py-1.5 rounded-lg bg-slate-800 text-white hover:bg-slate-700 font-medium transition-colors"
           >
             Save this trip
           </button>
