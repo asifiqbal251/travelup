@@ -23,6 +23,7 @@ import Register from '@/pages/Register';
 import ForgotPassword from '@/pages/ForgotPassword';
 import OAuthConsent from '@/pages/OAuthConsent';
 import Door2Dev from '@/pages/Door2Dev';
+import Door2Plan from '@/pages/Door2Plan';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -56,6 +57,7 @@ const AuthenticatedApp = () => {
         <Route path="/questionnaire" element={<Questionnaire />} />
         <Route path="/find" element={<DoorB />} />
         <Route path="/dev/door2" element={<Door2Dev />} />
+        <Route path="/plan" element={<Door2Plan />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
