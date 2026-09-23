@@ -128,32 +128,32 @@ function SavedTripsList({ onLoad }) {
   if (drafts.length === 0) return null;
 
   return (
-    <div className="rounded-xl bg-white border border-slate-200 p-5 space-y-3">
-      <h2 className="text-sm font-semibold text-slate-700">My saved trips</h2>
+    <div className="rounded-xl bg-slate-800 border border-slate-700 p-5 space-y-3">
+      <h2 className="text-sm font-semibold text-slate-300">My saved trips</h2>
       <ul className="space-y-2">
         {drafts.map((d) => (
-          <li key={d.id} className="flex items-start gap-3 py-2 border-b border-slate-100 last:border-0">
+          <li key={d.id} className="flex items-start gap-3 py-2 border-b border-slate-700 last:border-0">
             <div className="flex-1 min-w-0 space-y-0.5">
-              <p className="text-sm font-medium text-slate-900 truncate">{d.label}</p>
-              <p className="text-xs text-slate-400">
+              <p className="text-sm font-medium text-white truncate">{d.label}</p>
+              <p className="text-xs text-slate-500">
                 {new Date(d.savedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
               </p>
               {inlineErrors[d.id] && (
-                <p className="text-xs text-rose-700">{inlineErrors[d.id]}</p>
+                <p className="text-xs text-rose-400">{inlineErrors[d.id]}</p>
               )}
             </div>
             <div className="flex items-center gap-2 shrink-0">
               <button
                 type="button"
                 onClick={() => handleLoad(d.id)}
-                className="text-xs px-2.5 py-1 rounded-md bg-slate-800 text-white hover:bg-slate-700 font-medium transition-colors"
+                className="text-xs px-2.5 py-1 rounded-md bg-teal text-slate-900 hover:opacity-90 font-semibold transition-opacity"
               >
                 Continue
               </button>
               <button
                 type="button"
                 onClick={() => handleDelete(d.id)}
-                className="text-xs px-2.5 py-1 rounded-md bg-rose-100 text-rose-700 hover:bg-rose-200 font-medium transition-colors"
+                className="text-xs px-2.5 py-1 rounded-md bg-slate-700 text-rose-400 hover:bg-slate-600 font-medium transition-colors"
               >
                 Delete
               </button>
@@ -168,20 +168,20 @@ function SavedTripsList({ onLoad }) {
 // ── Sub-components ────────────────────────────────────────────────────────────
 
 const BLOCK_TYPE_STYLES = {
-  travel: "bg-sky-100 text-sky-800",
-  arrive: "bg-blue-100 text-blue-800",
-  open: "bg-emerald-100 text-emerald-800",
-  activity: "bg-violet-100 text-violet-800",
+  travel: "bg-sky-900/60 text-sky-300",
+  arrive: "bg-blue-900/60 text-blue-300",
+  open: "bg-emerald-900/60 text-emerald-300",
+  activity: "bg-violet-900/60 text-violet-300",
 };
 
 function TypeBadge({ type, isGap }) {
   if (isGap)
     return (
-      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
+      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-900/60 text-amber-300">
         gap
       </span>
     );
-  const cls = BLOCK_TYPE_STYLES[type] ?? "bg-slate-100 text-slate-700";
+  const cls = BLOCK_TYPE_STYLES[type] ?? "bg-slate-700 text-slate-300";
   return (
     <span
       className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium uppercase tracking-wide ${cls}`}
@@ -195,13 +195,13 @@ function ActivityDetail({ block }) {
   const a = block.activity;
   const source = block.provenance.content;
   return (
-    <div className="mt-2 pl-3 border-l-2 border-violet-200 space-y-1 text-sm text-slate-700">
+    <div className="mt-2 pl-3 border-l-2 border-violet-700/50 space-y-1 text-sm text-slate-300">
       <div>
-        <span className="font-semibold text-slate-900">{a.title}</span>
-        <span className="ml-2 text-slate-500">
+        <span className="font-semibold text-white">{a.title}</span>
+        <span className="ml-2 text-slate-400">
           {a.slot} · {a.intensity}
         </span>
-        <span className="ml-2 inline-flex items-center px-1.5 py-0.5 rounded text-xs bg-slate-100 text-slate-600">
+        <span className="ml-2 inline-flex items-center px-1.5 py-0.5 rounded text-xs bg-slate-700 text-slate-400">
           {source?.kind === "extracted" ? (
             <>
               from <em className="ml-1">{source.bundleName}</em>
@@ -213,21 +213,21 @@ function ActivityDetail({ block }) {
       </div>
       <div>{a.summary}</div>
       {a.slot === "full" && (
-        <div className="text-slate-600 space-y-0.5">
+        <div className="text-slate-400 space-y-0.5">
           <div>
-            <span className="font-medium">Morning:</span> {a.morning}
+            <span className="font-medium text-slate-300">Morning:</span> {a.morning}
           </div>
           <div>
-            <span className="font-medium">Afternoon:</span> {a.afternoon}
+            <span className="font-medium text-slate-300">Afternoon:</span> {a.afternoon}
           </div>
           <div>
-            <span className="font-medium">Evening:</span> {a.evening}
+            <span className="font-medium text-slate-300">Evening:</span> {a.evening}
           </div>
         </div>
       )}
       {a.foodNote && (
-        <div className="text-slate-600">
-          <span className="font-medium">Food:</span> {a.foodNote}
+        <div className="text-slate-400">
+          <span className="font-medium text-slate-300">Food:</span> {a.foodNote}
         </div>
       )}
     </div>
