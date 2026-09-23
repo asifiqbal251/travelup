@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { useLocation } from "react-router-dom";
 import PageNotFound from "@/lib/PageNotFound";
+import { makeDayLighter, pinActivity, rejectActivity, swapActivity, undo, unpinActivity } from "@/lib/door2/edit";
 import { PILOT_DATA, buildFilledTrip, buildSkeletonTrip } from "@/lib/door2/planner";
 import { PILOT_PLACES } from "@/lib/door2/pilotData";
 
@@ -160,14 +161,53 @@ export default function Door2Dev() {
   const allowed = new URLSearchParams(location.search).get("key") === "door2";
   const [state, setState] = useState(() => fixtureState("F2"));
   const [copied, setCopied] = useState(false);
+  const [editTrip, setEditTrip] = useState(null);
+  const [editCount, setEditCount] = useState(0);
+  const [editError, setEditError] = useState(null);
   const output = useMemo(() => run(state), [state]);
 
   if (!allowed) return <PageNotFound />;
 
   const update = (patch) => {
     setCopied(false);
+    setEditTrip(null);
+    setEditCount(0);
+    setEditError(null);
     setState((s) => ({ ...s, ...patch }));
   };
+
+  // The trip currently shown (editTrip overrides the built trip when edits are active)
+  const activeTrip = (() => {
+    if (editTrip) return editTrip;
+    const r = output.result;
+    return r && r.ok !== false ? r : null;
+  })();
+
+  function applyEdit(fn) {
+    const t = activeTrip;
+    if (!t) return;
+    const result = fn(t);
+    if (result.ok) {
+      setEditTrip(result.trip);
+      setEditCount((n) => n + 1);
+      setEditError(null);
+    } else {
+      setEditError(result.message);
+    }
+  }
+
+  function handleUndo() {
+    const t = editTrip ?? activeTrip;
+    if (!t) return;
+    const r = undo(t);
+    if (r.ok) {
+      setEditTrip(r.trip);
+      setEditCount((n) => Math.max(0, n - 1));
+      setEditError(null);
+    } else {
+      setEditError(r.message);
+    }
+  }
   const toggleRequired = (id) =>
     update({ required: state.required.includes(id) ? state.required.filter((x) => x !== id) : [...state.required, id] });
   const toggleInterest = (i) =>
@@ -183,7 +223,6 @@ export default function Door2Dev() {
   };
 
   const result = output.result;
-  const isTrip = result && result.ok !== false;
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900">
@@ -194,6 +233,7 @@ export default function Door2Dev() {
           <div className="rounded-lg bg-amber-400 text-amber-950 font-semibold px-4 py-3 border-2 border-amber-600">
             DRAFT DATA — pilot connections are unreviewed. Not for real travellers.
             {state.fill && " Pilot activities are unreviewed. Tokyo intentionally runs out after about 6 days."}
+            {" "}Edits are local to this browser tab and are not saved anywhere yet.
           </div>
         )}
 
@@ -291,48 +331,84 @@ export default function Door2Dev() {
           </section>
         )}
 
-        {isTrip && (
-          <section className="space-y-3">
-            <div className="rounded-lg bg-white border border-slate-200 p-4 text-sm">
-              <div className="font-semibold">{tripSummary(result)}</div>
-              <div className="text-slate-600 mt-1">
-                {result.id} · status <code className={result.status === "incomplete" ? "px-1 rounded bg-amber-200 text-amber-900" : undefined}>{result.status}</code> · route <code>{result.spec.routeTemplateId}</code>
-                {result.warnings?.length > 0 && <> · warnings: <code>{result.warnings.join(", ")}</code></>}
-                {result.contentGaps && <> · gaps: <code>{result.contentGaps.length}</code></>}
-                {" · "}content <code>{result.versions.content}</code>
+        {(activeTrip || (output.result && output.result.ok !== false)) && (() => {
+          const displayTrip = activeTrip ?? output.result;
+          return (
+            <section className="space-y-3">
+              <div className="rounded-lg bg-white border border-slate-200 p-4 text-sm">
+                <div className="font-semibold">{tripSummary(displayTrip)}</div>
+                <div className="text-slate-600 mt-1">
+                  {displayTrip.id} · status <code className={displayTrip.status === "incomplete" ? "px-1 rounded bg-amber-200 text-amber-900" : undefined}>{displayTrip.status}</code> · route <code>{displayTrip.spec.routeTemplateId}</code>
+                  {displayTrip.warnings?.length > 0 && <> · warnings: <code>{displayTrip.warnings.join(", ")}</code></>}
+                  {displayTrip.contentGaps && <> · gaps: <code>{displayTrip.contentGaps.length}</code></>}
+                  {" · "}content <code>{displayTrip.versions.content}</code>
+                  {state.fill && <> · <span className="font-medium">{editCount} edits this session</span></>}
+                </div>
+                {state.fill && (
+                  <div className="mt-2 flex items-center gap-2">
+                    <button
+                      type="button"
+                      disabled={!editTrip?.history?.length}
+                      onClick={handleUndo}
+                      className="rounded bg-slate-700 text-white text-xs px-2.5 py-1 hover:bg-slate-600 disabled:opacity-40 disabled:cursor-not-allowed"
+                    >
+                      Undo
+                    </button>
+                    {editError && <span className="text-xs text-red-700">{editError}</span>}
+                  </div>
+                )}
               </div>
-            </div>
-            {result.days.map((d) => (
-              <div key={d.id} className="rounded-lg bg-white border border-slate-200 p-3">
-                <div className="font-semibold text-sm mb-2">Day {d.dayNumber}</div>
-                <ul className="space-y-1 text-sm">
-                  {d.blocks.map((b) => (
-                    <li key={b.id} className="flex flex-wrap gap-x-2 items-baseline">
-                      <span className="font-mono w-12">{b.startTime}</span>
-                      <span className={`font-mono text-xs uppercase px-1.5 rounded ${b.type === "travel" ? "bg-sky-100 text-sky-900" : b.gap ? "bg-amber-200 text-amber-900" : b.type === "open" ? "bg-emerald-100 text-emerald-900" : b.type === "activity" ? "bg-violet-100 text-violet-900" : "bg-slate-100"}`}>{b.type}</span>
-                      <span>{b.note === "in_transit" ? "in transit" : placeName(b.placeId)}</span>
-                      <span className="text-slate-500">{b.durationHours.toFixed(2)}h{(b.type === "open" || b.type === "activity") && ` (until ${endTime(b)})`}</span>
-                      {b.transport && (
-                        <span className="text-slate-700">
-                          {b.transport.mode} · {placeName(b.transport.fromPlaceId)} → {placeName(b.transport.toPlaceId)} · arrives Day {b.transport.arriveDayNumber} {b.transport.arriveTime}
-                          {b.transport.overnight && <span className="ml-1.5 text-xs px-1.5 rounded bg-indigo-100 text-indigo-900">overnight</span>}
-                        </span>
-                      )}
-                      {!b.provenance.reviewed && <span className="text-xs px-1.5 rounded bg-amber-200 text-amber-900">draft</span>}
-                      <span className="text-xs text-slate-400 font-mono">{b.id}</span>
-                      {b.type === "activity" && <ActivityDetail block={b} />}
-                      {b.gap && (
-                        <div className="basis-full pl-14 text-amber-800 font-medium">
-                          No curated activity left for this slot yet <span className="font-normal text-amber-700">({b.gap.slot})</span>
-                        </div>
-                      )}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </section>
-        )}
+              {displayTrip.days.map((d) => (
+                <div key={d.id} className="rounded-lg bg-white border border-slate-200 p-3">
+                  <div className="flex items-center gap-3 mb-2">
+                    <span className="font-semibold text-sm">Day {d.dayNumber}</span>
+                    {state.fill && (
+                      <button
+                        type="button"
+                        onClick={() => applyEdit((t) => makeDayLighter(t, d.dayNumber))}
+                        className="rounded bg-teal-100 text-teal-800 text-xs px-2 py-0.5 hover:bg-teal-200"
+                      >
+                        Make lighter
+                      </button>
+                    )}
+                  </div>
+                  <ul className="space-y-1 text-sm">
+                    {d.blocks.map((b) => (
+                      <li key={b.id} className="flex flex-wrap gap-x-2 items-baseline">
+                        <span className="font-mono w-12">{b.startTime}</span>
+                        <span className={`font-mono text-xs uppercase px-1.5 rounded ${b.type === "travel" ? "bg-sky-100 text-sky-900" : b.gap ? "bg-amber-200 text-amber-900" : b.type === "open" ? "bg-emerald-100 text-emerald-900" : b.type === "activity" ? "bg-violet-100 text-violet-900" : "bg-slate-100"}`}>{b.type}</span>
+                        <span>{b.note === "in_transit" ? "in transit" : placeName(b.placeId)}</span>
+                        <span className="text-slate-500">{b.durationHours.toFixed(2)}h{(b.type === "open" || b.type === "activity") && ` (until ${endTime(b)})`}</span>
+                        {b.transport && (
+                          <span className="text-slate-700">
+                            {b.transport.mode} · {placeName(b.transport.fromPlaceId)} → {placeName(b.transport.toPlaceId)} · arrives Day {b.transport.arriveDayNumber} {b.transport.arriveTime}
+                            {b.transport.overnight && <span className="ml-1.5 text-xs px-1.5 rounded bg-indigo-100 text-indigo-900">overnight</span>}
+                          </span>
+                        )}
+                        {!b.provenance.reviewed && <span className="text-xs px-1.5 rounded bg-amber-200 text-amber-900">draft</span>}
+                        {b.locked && <span className="text-xs px-1.5 rounded bg-indigo-200 text-indigo-900">📌 pinned</span>}
+                        <span className="text-xs text-slate-400 font-mono">{b.id}</span>
+                        {state.fill && b.type === "activity" && (
+                          <span className="flex gap-1 ml-1">
+                            <button type="button" onClick={() => applyEdit((t) => swapActivity(t, b.id))} className="rounded bg-violet-100 text-violet-800 text-xs px-1.5 py-0 hover:bg-violet-200">Swap</button>
+                            <button type="button" onClick={() => applyEdit((t) => rejectActivity(t, b.id))} className="rounded bg-rose-100 text-rose-800 text-xs px-1.5 py-0 hover:bg-rose-200">Reject</button>
+                            <button type="button" onClick={() => applyEdit((t) => b.locked ? unpinActivity(t, b.id) : pinActivity(t, b.id))} className="rounded bg-slate-100 text-slate-700 text-xs px-1.5 py-0 hover:bg-slate-200">{b.locked ? "Unpin" : "Pin"}</button>
+                          </span>
+                        )}
+                        {b.type === "activity" && <ActivityDetail block={b} />}
+                        {b.gap && (
+                          <div className="basis-full pl-14 text-amber-800 font-medium">
+                            No curated activity left for this slot yet <span className="font-normal text-amber-700">({b.gap.slot})</span>
+                          </div>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </section>
+          );
+        })()}
       </div>
     </div>
   );

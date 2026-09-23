@@ -267,4 +267,15 @@
  * @property {Array<{blockId: string, dayNumber: number, placeId: string, slot: string}>} [contentGaps]  ➕ Open blocks fill.js left unfilled (filled Trips only).
  */
 
+/**
+ * Result of a bounded edit operation (swap, reject, pin, unpin, lighter day, undo).
+ * Distinct from FailureResult: no `state` field, no `options` field.
+ * Callers can tell them apart by checking `reason` (EditResult) vs `state` (FailureResult).
+ *
+ * @typedef {
+ *   {ok: true, trip: Trip} |
+ *   {ok: false, reason: 'block_not_found'|'block_not_editable'|'block_locked'|'content_not_eligible'|'nothing_to_undo', message: string}
+ * } EditResult
+ */
+
 export {};

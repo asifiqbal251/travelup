@@ -71,7 +71,7 @@ function arrivalDaysByStop(days) {
 }
 
 /** @param {ContentItem} item @param {string} slot */
-function activityFor(item, slot) {
+export function activityFor(item, slot) {
   return {
     templateId: item.id,
     title: item.title,
@@ -87,15 +87,103 @@ function activityFor(item, slot) {
 }
 
 /**
+ * Per-block derived context. Pure: derives isFirstAtStop from existing
+ * open/activity blocks in the trip, so fill.js and edit.js agree.
+ * @param {Trip} trip
+ * @param {Block} block
+ */
+export function blockContext(trip, block) {
+  const slot = classifySlot(block);
+  const stopId = block.anchor.stopId;
+  const arrivalDays = arrivalDaysByStop(trip.days);
+  const arrival = arrivalDays.get(stopId);
+  if (arrival == null) throw new Error(`blockContext: no inbound route leg for stop "${stopId}" (block "${block.id}")`);
+
+  let dayNumber = null;
+  outer: for (const day of trip.days) {
+    for (const b of day.blocks) {
+      if (b.id === block.id) { dayNumber = day.dayNumber; break outer; }
+    }
+  }
+  if (dayNumber == null) throw new Error(`blockContext: block "${block.id}" not found in trip`);
+
+  const dayOffset = dayNumber - arrival;
+
+  let isFirstAtStop = true;
+  scan: for (const day of trip.days) {
+    for (const b of day.blocks) {
+      if (b.id === block.id) break scan;
+      if ((b.type === 'open' || b.type === 'activity') && b.anchor?.stopId === stopId) {
+        isFirstAtStop = false;
+        break scan;
+      }
+    }
+  }
+
+  return { slot, stopId, arrival, dayOffset, isFirstAtStop };
+}
+
+/**
+ * Returns the subset of `content` eligible for `block`, minus items already
+ * used in the trip (from activity blocks) and any caller-supplied exclusions.
+ * The block itself is never counted as "used" — callers exclude its current
+ * content via excludeContentIds when they need to.
+ *
+ * @param {Trip} trip
+ * @param {Block} block
+ * @param {ContentItem[]} content
+ * @param {{excludeContentIds?: string[]}} [opts]
+ * @returns {ContentItem[]}
+ */
+export function eligibleItemsForBlock(trip, block, content, { excludeContentIds = [] } = {}) {
+  const { slot, dayOffset } = blockContext(trip, block);
+  const accepted = ACCEPTED_SLOTS[slot];
+
+  const used = new Set();
+  for (const day of trip.days) {
+    for (const b of day.blocks) {
+      if (b.id === block.id) continue;
+      if (b.type === 'activity' && b.anchor?.contentId) used.add(b.anchor.contentId);
+    }
+  }
+
+  const excludeSet = new Set(excludeContentIds);
+
+  return content.filter((item) => {
+    if (item.placeId !== block.placeId) return false;
+    if (used.has(item.id)) return false;
+    if (excludeSet.has(item.id)) return false;
+    if (!item.slots.some((s) => accepted.includes(s))) return false;
+    if ((item.minDayAtStop ?? 0) > dayOffset) return false;
+    return true;
+  });
+}
+
+/**
+ * Score a content item for a block's context.
+ * Pass paceOverride to force a different pace without mutating spec.
+ *
+ * @param {ContentItem} item
+ * @param {{spec: TripSpec, isFirstAtStop: boolean, paceOverride?: string|null}} ctx
+ * @returns {number}
+ */
+export function scoreItem(item, { spec, isFirstAtStop, paceOverride = null }) {
+  const interests = new Set(spec.interests ?? []);
+  const pace = paceOverride ?? normalisePace(spec.pace);
+  return (
+    2 * item.interests.filter((i) => interests.has(i)).length +
+    paceScore(pace, item.intensity) +
+    (isFirstAtStop && item.arrivalFriendly ? 5 : 0)
+  );
+}
+
+/**
  * @param {Trip} trip  A skeleton Trip (buildSkeletonTrip success).
  * @param {TripSpec} spec
  * @param {ContentItem[]} [content]
  * @returns {Trip}
  */
 export function fillTrip(trip, spec, content = PILOT_CONTENT) {
-  const interests = new Set(spec.interests ?? []);
-  const pace = normalisePace(spec.pace);
-  const arrivalDay = arrivalDaysByStop(trip.days);
   const used = new Set();
   const seenStops = new Set();
   const contentGaps = [];
@@ -105,27 +193,18 @@ export function fillTrip(trip, spec, content = PILOT_CONTENT) {
     blocks: day.blocks.map((block) => {
       if (block.type !== 'open') return block;
 
-      const slot = classifySlot(block);
-      const accepted = ACCEPTED_SLOTS[slot];
-      const stopId = block.anchor.stopId;
-      const arrival = arrivalDay.get(stopId);
-      if (arrival == null) throw new Error(`fillTrip: no inbound route leg for stop "${stopId}" (block "${block.id}")`);
-      const dayOffset = day.dayNumber - arrival;
-      const isFirstAtStop = !seenStops.has(stopId);
+      const { slot, stopId, isFirstAtStop } = blockContext(trip, block);
+      // seenStops maintains the same incremental order as the original loop.
+      // blockContext derives isFirstAtStop from the skeleton's open blocks,
+      // which is equivalent for a fresh (all-open) skeleton.
       seenStops.add(stopId);
+
+      const eligible = eligibleItemsForBlock(trip, block, content, { excludeContentIds: [...used] });
 
       let best = null;
       let bestScore = -Infinity;
-      for (const item of content) {
-        if (item.placeId !== block.placeId) continue;
-        if (used.has(item.id)) continue;
-        if (!item.slots.some((s) => accepted.includes(s))) continue;
-        if ((item.minDayAtStop ?? 0) > dayOffset) continue;
-        const score =
-          2 * item.interests.filter((i) => interests.has(i)).length +
-          paceScore(pace, item.intensity) +
-          (isFirstAtStop && item.arrivalFriendly ? 5 : 0);
-        // Strictly greater: ties go to the earlier item in `content`.
+      for (const item of eligible) {
+        const score = scoreItem(item, { spec, isFirstAtStop });
         if (score > bestScore) {
           best = item;
           bestScore = score;

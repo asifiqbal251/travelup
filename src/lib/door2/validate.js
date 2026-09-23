@@ -314,3 +314,98 @@ export function validateFilled(filledTrip, skeletonTrip, spec, content) {
 
   return makeSuccess({ warnings: [...filledTrip.warnings] });
 }
+
+// ---------------------------------------------------------------------------
+// validateEditInvariant: independent post-edit check. Throws on any violation
+// (engine bug), never returns a failure result.
+
+function editInvariant(condition, message) {
+  if (!condition) throw new Error(`validateEditInvariant violated: ${message}`);
+}
+
+/**
+ * Verifies the calendar is unchanged after an edit, content IDs are unique,
+ * pinned state is consistent, and contentGaps/status/warnings are coherent.
+ * Throws on any violation.
+ * @param {Object} newTrip   Result of an edit operation.
+ * @param {Object} previousTrip  Pre-edit trip.
+ * @returns {{ok: true, value: {warnings: string[]}}}
+ */
+export function validateEditInvariant(newTrip, previousTrip) {
+  // Same day count.
+  editInvariant(
+    newTrip.days.length === previousTrip.days.length,
+    `day count changed from ${previousTrip.days.length} to ${newTrip.days.length}`
+  );
+
+  // Same block count per day; structural fields unchanged except on editable blocks.
+  const allowedDiffFields = new Set(['activity', 'anchor', 'provenance', 'generationStatus', 'gap', 'userEdited', 'locked']);
+
+  for (let i = 0; i < newTrip.days.length; i++) {
+    const newDay = newTrip.days[i];
+    const prevDay = previousTrip.days[i];
+    editInvariant(
+      newDay.blocks.length === prevDay.blocks.length,
+      `Day ${prevDay.dayNumber} block count changed from ${prevDay.blocks.length} to ${newDay.blocks.length}`
+    );
+
+    for (let j = 0; j < newDay.blocks.length; j++) {
+      const nb = newDay.blocks[j];
+      const pb = prevDay.blocks[j];
+      editInvariant(nb.id === pb.id, `Day ${prevDay.dayNumber} block ${j}: id changed from "${pb.id}" to "${nb.id}"`);
+      editInvariant(nb.startTime === pb.startTime, `block "${nb.id}" startTime changed`);
+      editInvariant(nb.durationHours === pb.durationHours, `block "${nb.id}" durationHours changed`);
+      editInvariant(nb.placeId === pb.placeId, `block "${nb.id}" placeId changed`);
+      editInvariant(nb.type === pb.type || (pb.type === 'open' && nb.type === 'activity') || (pb.type === 'activity' && nb.type === 'open'),
+        `block "${nb.id}" type changed from "${pb.type}" to "${nb.type}" in a way not allowed by edits`);
+
+      // Travel, rest, and any non-editable blocks must be byte-identical.
+      if (pb.type === 'travel' || pb.type === 'rest') {
+        const sameKeys = Object.keys(pb).every((k) => {
+          if (allowedDiffFields.has(k)) return true;
+          return JSON.stringify(nb[k]) === JSON.stringify(pb[k]);
+        });
+        editInvariant(sameKeys, `block "${nb.id}" is a ${pb.type} block and was changed by an edit`);
+      }
+    }
+  }
+
+  // No contentId used twice.
+  const usedIds = new Set();
+  for (const day of newTrip.days) {
+    for (const block of day.blocks) {
+      if (block.type === 'activity' && block.anchor?.contentId) {
+        editInvariant(!usedIds.has(block.anchor.contentId), `contentId "${block.anchor.contentId}" used on more than one block`);
+        usedIds.add(block.anchor.contentId);
+      }
+    }
+  }
+
+  // Every locked block's templateId is in spec.choices.pinned.
+  const pinned = new Set(newTrip.spec?.choices?.pinned ?? []);
+  for (const day of newTrip.days) {
+    for (const block of day.blocks) {
+      if (block.locked) {
+        editInvariant(
+          block.activity?.templateId && pinned.has(block.activity.templateId),
+          `locked block "${block.id}" has templateId "${block.activity?.templateId}" not in spec.choices.pinned`
+        );
+      }
+    }
+  }
+
+  // contentGaps/status/warnings are internally consistent.
+  const gapBlocks = newTrip.days.flatMap((d) => d.blocks.filter((b) => b.type === 'open' && b.gap));
+  const hasGaps = gapBlocks.length > 0;
+  editInvariant(
+    Array.isArray(newTrip.contentGaps) && newTrip.contentGaps.length === gapBlocks.length,
+    `contentGaps length ${newTrip.contentGaps?.length} does not match ${gapBlocks.length} gap blocks`
+  );
+  editInvariant((newTrip.status === 'incomplete') === hasGaps, `status "${newTrip.status}" with ${gapBlocks.length} gaps`);
+  editInvariant(
+    (newTrip.warnings ?? []).includes(FAILURE_STATES.CONTENT_INSUFFICIENT) === hasGaps,
+    `content_insufficient warning does not match ${gapBlocks.length} gaps`
+  );
+
+  return makeSuccess({ warnings: [...(newTrip.warnings ?? [])] });
+}
