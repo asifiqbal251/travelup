@@ -518,9 +518,9 @@ function TripSummaryCard({ trip, editCount, editError, onUndo, onStartOver, onSa
 function FailurePanel({ result, thrown, onExtend, onRemovePlace }) {
   if (thrown) {
     return (
-      <div className="rounded-xl bg-red-50 border border-red-200 p-5 space-y-2">
-        <h3 className="font-semibold text-red-800">Something went wrong</h3>
-        <p className="text-sm font-mono text-red-700 break-words">{thrown}</p>
+      <div className="rounded-xl bg-red-950/60 border border-red-700/50 p-5 space-y-2">
+        <h3 className="font-semibold text-red-300">Something went wrong</h3>
+        <p className="text-sm font-mono text-red-400 break-words">{thrown}</p>
         <p className="text-xs text-red-500">
           This is a data-integrity signal, not a normal failure state.
         </p>
@@ -531,17 +531,17 @@ function FailurePanel({ result, thrown, onExtend, onRemovePlace }) {
   if (!result || result.ok !== false) return null;
 
   return (
-    <div className="rounded-xl bg-white border border-orange-300 p-5 space-y-4">
+    <div className="rounded-xl bg-slate-800 border border-orange-700/50 p-5 space-y-4">
       <div>
-        <h3 className="font-semibold text-orange-800 mb-1">
+        <h3 className="font-semibold text-orange-300 mb-1">
           This trip can&apos;t be built yet
         </h3>
-        <p className="text-sm text-slate-700">{result.message}</p>
+        <p className="text-sm text-slate-300">{result.message}</p>
       </div>
 
       {result.options?.length > 0 && (
         <div className="space-y-3">
-          <p className="text-xs font-medium text-slate-400 uppercase tracking-wide">
+          <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">
             Options
           </p>
           {result.options.map((opt, i) => {
@@ -551,11 +551,11 @@ function FailurePanel({ result, thrown, onExtend, onRemovePlace }) {
                   <button
                     type="button"
                     onClick={() => onExtend(opt.days)}
-                    className="shrink-0 text-sm px-3 py-1.5 rounded-lg bg-orange-600 text-white hover:bg-orange-700 font-medium transition-colors"
+                    className="shrink-0 text-sm px-3 py-1.5 rounded-lg bg-orange-700 text-white hover:bg-orange-600 font-medium transition-colors"
                   >
                     Add {opt.days} day{opt.days !== 1 ? "s" : ""}
                   </button>
-                  <span className="text-sm text-slate-600 pt-1">{opt.detail}</span>
+                  <span className="text-sm text-slate-400 pt-1">{opt.detail}</span>
                 </div>
               );
             }
@@ -569,13 +569,13 @@ function FailurePanel({ result, thrown, onExtend, onRemovePlace }) {
                   >
                     Drop {placeName(opt.placeId)}
                   </button>
-                  <span className="text-sm text-slate-600 pt-1">{opt.detail}</span>
+                  <span className="text-sm text-slate-400 pt-1">{opt.detail}</span>
                 </div>
               );
             }
             return (
-              <div key={i} className="flex items-start gap-2 text-sm text-slate-600">
-                <span className="shrink-0 mt-0.5 inline-block px-1.5 py-0.5 rounded bg-slate-100 text-slate-500 text-xs font-mono">
+              <div key={i} className="flex items-start gap-2 text-sm text-slate-400">
+                <span className="shrink-0 mt-0.5 inline-block px-1.5 py-0.5 rounded bg-slate-700 text-slate-400 text-xs font-mono">
                   {opt.action}
                 </span>
                 <span>{opt.detail}</span>
