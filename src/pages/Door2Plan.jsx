@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
 import PageNotFound from "@/lib/PageNotFound";
 import {
@@ -31,6 +31,8 @@ const DESTINATIONS = [
     .map((p) => ({ value: `place:${p.id}`, label: p.name })),
 ];
 
+const QUICK_DESTINATIONS = DESTINATIONS.filter((d) => d.value.startsWith("country:"));
+
 const PACES = [
   { value: "relaxed", label: "Relaxed" },
   { value: "balanced", label: "Balanced" },
@@ -60,7 +62,7 @@ const TRAVELLER_OPTIONS = [
 const MONTH_OPTIONS = MONTHS.map((name, i) => ({ value: i + 1, label: name }));
 
 const DEFAULT_FORM = {
-  destination: "country:PE",
+  destination: "",
   totalDays: 10,
   travelMonth: 10,
   travellerType: "couple",
@@ -75,20 +77,16 @@ function placeName(id) {
   return PILOT_PLACES[id]?.name ?? id ?? "—";
 }
 
-function blockEndTime(block) {
-  const [h, m] = block.startTime.split(":").map(Number);
-  const total = Math.round(h * 60 + m + block.durationHours * 60);
-  return `${String(Math.floor(total / 60) % 24).padStart(2, "0")}:${String(
-    total % 60
-  ).padStart(2, "0")}`;
-}
-
 function requiredPlacesForDestination(destinationValue) {
   if (!destinationValue || destinationValue.startsWith("place:")) return [];
   const countryId = destinationValue.split(":")[1];
   return Object.values(PILOT_PLACES).filter(
     (p) => p.countryId === countryId && p.id !== "vancouver"
   );
+}
+
+function destinationLabel(destinationValue) {
+  return DESTINATIONS.find((d) => d.value === destinationValue)?.label ?? "Your trip";
 }
 
 function autoLabel(spec) {
@@ -106,6 +104,16 @@ function routeLabel(routeResult) {
   const stops = routeResult.stops.map(s => PILOT_PLACES[s.placeId]?.name ?? s.placeId).join(' → ');
   return { name: pkg.name, stops, stopCount: routeResult.stops.length };
 }
+
+function chipClass(active) {
+  return `px-3.5 py-1.5 rounded-full text-sm font-medium border transition-colors ${
+    active
+      ? "bg-teal text-slate-900 border-teal"
+      : "bg-slate-700 text-slate-300 border-slate-600 hover:border-slate-400"
+  }`;
+}
+
+// ── Saved trips ──────────────────────────────────────────────────────────────
 
 function SavedTripsList({ onLoad }) {
   const [drafts, setDrafts] = useState(() => listDraftTrips());
@@ -165,204 +173,278 @@ function SavedTripsList({ onLoad }) {
   );
 }
 
-// ── Sub-components ────────────────────────────────────────────────────────────
+// ── Intake: destination step ────────────────────────────────────────────────
 
-const BLOCK_TYPE_STYLES = {
-  travel: "bg-sky-900/60 text-sky-300",
-  arrive: "bg-blue-900/60 text-blue-300",
-  open: "bg-emerald-900/60 text-emerald-300",
-  activity: "bg-violet-900/60 text-violet-300",
-};
+function DestinationStep({ query, onQueryChange, onPick, onLoad }) {
+  const q = query.trim().toLowerCase();
+  const results = q ? DESTINATIONS.filter((d) => d.label.toLowerCase().includes(q)) : [];
 
-function TypeBadge({ type, isGap }) {
-  if (isGap)
-    return (
-      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-900/60 text-amber-300">
-        gap
-      </span>
-    );
-  const cls = BLOCK_TYPE_STYLES[type] ?? "bg-slate-700 text-slate-300";
   return (
-    <span
-      className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium uppercase tracking-wide ${cls}`}
-    >
-      {type}
-    </span>
+    <div className="space-y-4">
+      <SavedTripsList onLoad={onLoad} />
+      <div className="rounded-xl bg-slate-800 border border-slate-700 p-6 space-y-5">
+        <div>
+          <h1 className="text-xl font-bold text-white mb-1">Where are you going?</h1>
+          <p className="text-sm text-slate-500">Pilot catalogue · a handful of places, built properly.</p>
+        </div>
+        <input
+          type="text"
+          value={query}
+          onChange={(e) => onQueryChange(e.target.value)}
+          placeholder="Search a country or place"
+          className="w-full border border-slate-600 rounded-lg px-4 py-3 text-sm bg-slate-700 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-teal"
+        />
+
+        {q ? (
+          <div className="space-y-2">
+            {results.length === 0 && (
+              <p className="text-sm text-slate-500">No matches in the pilot catalogue yet.</p>
+            )}
+            {results.map((d) => (
+              <button
+                key={d.value}
+                type="button"
+                onClick={() => onPick(d.value)}
+                className="w-full text-left px-4 py-3 rounded-lg bg-slate-700 hover:bg-slate-600 border border-slate-600 text-white text-sm font-medium transition-colors"
+              >
+                {d.label}
+              </button>
+            ))}
+          </div>
+        ) : (
+          <div>
+            <p className="text-xs font-medium text-slate-400 mb-2">Or pick a common one</p>
+            <div className="flex flex-wrap gap-2">
+              {QUICK_DESTINATIONS.map((d) => (
+                <button
+                  key={d.value}
+                  type="button"
+                  onClick={() => onPick(d.value)}
+                  className="px-4 py-2 rounded-full bg-slate-700 hover:bg-slate-600 border border-slate-600 text-white text-sm font-medium transition-colors"
+                >
+                  {d.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
   );
 }
 
-function ActivityDetail({ block }) {
-  const a = block.activity;
-  const source = block.provenance.content;
+// ── Intake: basics step ─────────────────────────────────────────────────────
+
+function BasicsStep({ form, updateForm, onBack, onSubmit }) {
   return (
-    <div className="mt-2 pl-3 border-l-2 border-violet-700/50 space-y-1 text-sm text-slate-300">
-      <div>
-        <span className="font-semibold text-white">{a.title}</span>
-        <span className="ml-2 text-slate-400">
-          {a.slot} · {a.intensity}
-        </span>
-        <span className="ml-2 inline-flex items-center px-1.5 py-0.5 rounded text-xs bg-slate-700 text-slate-400">
-          {source?.kind === "extracted" ? (
-            <>
-              from <em className="ml-1">{source.bundleName}</em>
-            </>
-          ) : (
-            "pilot-written"
-          )}
-        </span>
+    <div className="space-y-4">
+      <button
+        type="button"
+        onClick={onBack}
+        className="text-sm text-slate-400 hover:text-white transition-colors"
+      >
+        ← Back
+      </button>
+      <div className="rounded-xl bg-slate-800 border border-slate-700 p-6 space-y-6">
+        <div>
+          <h1 className="text-xl font-bold text-white mb-1">
+            {destinationLabel(form.destination)}
+          </h1>
+          <p className="text-sm text-slate-500">Three quick answers and we&apos;ll build it.</p>
+        </div>
+
+        <div>
+          <p className="text-xs font-medium text-slate-400 mb-2">When</p>
+          <div className="flex flex-wrap gap-2">
+            {MONTH_OPTIONS.map((m) => (
+              <button
+                key={m.value}
+                type="button"
+                onClick={() => updateForm({ travelMonth: m.value })}
+                className={chipClass(form.travelMonth === m.value)}
+              >
+                {m.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <p className="text-xs font-medium text-slate-400 mb-2">How long</p>
+          <div className="flex items-center justify-center gap-5 bg-slate-700 border border-slate-600 rounded-lg py-4">
+            <button
+              type="button"
+              onClick={() => updateForm({ totalDays: Math.max(1, Number(form.totalDays) - 1) })}
+              className="w-9 h-9 rounded-full bg-slate-600 text-white text-lg font-bold hover:bg-slate-500 transition-colors"
+            >
+              −
+            </button>
+            <div className="text-xl font-bold text-white w-24 text-center">
+              {form.totalDays} days
+            </div>
+            <button
+              type="button"
+              onClick={() => updateForm({ totalDays: Math.min(60, Number(form.totalDays) + 1) })}
+              className="w-9 h-9 rounded-full bg-slate-600 text-white text-lg font-bold hover:bg-slate-500 transition-colors"
+            >
+              +
+            </button>
+          </div>
+          <p className="mt-1.5 text-xs text-slate-500 text-center">
+            Door to door — travel days included.
+          </p>
+        </div>
+
+        <div>
+          <p className="text-xs font-medium text-slate-400 mb-2">Who&apos;s going</p>
+          <div className="flex flex-wrap gap-2">
+            {TRAVELLER_OPTIONS.map((t) => (
+              <button
+                key={t.value}
+                type="button"
+                onClick={() => updateForm({ travellerType: t.value })}
+                className={chipClass(form.travellerType === t.value)}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <button
+          type="button"
+          onClick={onSubmit}
+          className="w-full bg-teal text-slate-900 rounded-lg px-6 py-3 font-bold text-sm hover:opacity-90 transition-opacity"
+        >
+          Build my trip
+        </button>
+        <p className="text-xs text-slate-500 text-center">
+          Relaxed pace, sensible defaults. Two taps to make it yours once you can see it.
+        </p>
       </div>
-      <div>{a.summary}</div>
-      {a.slot === "full" && (
-        <div className="text-slate-400 space-y-0.5">
-          <div>
-            <span className="font-medium text-slate-300">Morning:</span> {a.morning}
-          </div>
-          <div>
-            <span className="font-medium text-slate-300">Afternoon:</span> {a.afternoon}
-          </div>
-          <div>
-            <span className="font-medium text-slate-300">Evening:</span> {a.evening}
-          </div>
-        </div>
-      )}
-      {a.foodNote && (
-        <div className="text-slate-400">
-          <span className="font-medium text-slate-300">Food:</span> {a.foodNote}
-        </div>
-      )}
+    </div>
+  );
+}
+
+// ── Results: day view ───────────────────────────────────────────────────────
+
+function ActivityLine({ block, onSwap, onReject, onPin }) {
+  const [showMore, setShowMore] = useState(false);
+  const a = block.activity;
+  return (
+    <div className="space-y-1">
+      <div className="flex items-baseline gap-2 flex-wrap">
+        <span className="font-medium text-white text-sm">{a.title}</span>
+        {block.locked && <span className="text-xs text-teal">· pinned</span>}
+      </div>
+      <p className="text-sm text-slate-400">{a.summary}</p>
+      {a.foodNote && <p className="text-sm text-slate-500">{a.foodNote}</p>}
+      <div className="flex items-center gap-3 pt-0.5">
+        <button
+          type="button"
+          onClick={() => onSwap(block.id)}
+          className="text-xs text-teal hover:opacity-80 font-medium transition-opacity"
+        >
+          Swap
+        </button>
+        <button
+          type="button"
+          onClick={() => setShowMore((v) => !v)}
+          className="text-xs text-slate-600 hover:text-slate-400 transition-colors"
+        >
+          {showMore ? "less" : "more"}
+        </button>
+        {showMore && (
+          <>
+            <button
+              type="button"
+              onClick={() => onReject(block.id)}
+              className="text-xs text-rose-400 hover:opacity-80 font-medium transition-opacity"
+            >
+              Remove
+            </button>
+            <button
+              type="button"
+              onClick={() => onPin(block.id, block.locked)}
+              className="text-xs text-slate-400 hover:text-slate-200 font-medium transition-colors"
+            >
+              {block.locked ? "Unpin" : "Pin"}
+            </button>
+          </>
+        )}
+      </div>
     </div>
   );
 }
 
 function BlockRow({ block, onSwap, onReject, onPin, blockError }) {
-  const [showActions, setShowActions] = useState(false);
   const isGap = !!block.gap;
   const isActivity = block.type === "activity" && !isGap;
   const isTravel = block.type === "travel";
-  const hasEndTime = block.type === "open" || isActivity;
 
   return (
-    <li className="py-3 border-b border-slate-700 last:border-0">
+    <li className="py-3.5 border-b border-slate-700/70 last:border-0">
       <div className="flex items-start gap-3">
-        <span className="font-mono text-sm text-slate-500 w-12 shrink-0 mt-0.5">
+        <span className="font-mono text-xs text-slate-500 w-11 shrink-0 mt-0.5">
           {block.startTime}
         </span>
-        <div className="flex-1 min-w-0 space-y-1.5">
-          <div className="flex flex-wrap items-center gap-2">
-            <TypeBadge type={block.type} isGap={isGap} />
-            <span className="text-sm font-medium text-white">
-              {block.note === "in_transit" ? "In transit" : placeName(block.placeId)}
-            </span>
-            <span className="text-xs text-slate-500">
-              {block.durationHours.toFixed(1)}h
-              {hasEndTime && ` · until ${blockEndTime(block)}`}
-            </span>
-            {!block.provenance.reviewed && (
-              <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs bg-amber-900/60 text-amber-300 font-medium">
-                draft
-              </span>
-            )}
-            {block.locked && (
-              <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs bg-indigo-900/60 text-indigo-300 font-medium">
-                📌 pinned
-              </span>
-            )}
-          </div>
-
+        <div className="flex-1 min-w-0">
           {isTravel && block.transport && (
-            <div className="text-sm text-slate-400">
-              <span className="capitalize">
-                {block.transport.mode.replace(/_/g, " ")}
-              </span>
+            <p className="text-sm text-slate-300">
+              <span className="capitalize">{block.transport.mode.replace(/_/g, " ")}</span>
               {" · "}
-              {placeName(block.transport.fromPlaceId)} →{" "}
-              {placeName(block.transport.toPlaceId)}
-              {" · "}Day {block.transport.arriveDayNumber} at{" "}
+              {placeName(block.transport.fromPlaceId)} → {placeName(block.transport.toPlaceId)}
+              {" · arrive "}
               {block.transport.arriveTime}
               {block.transport.overnight && (
-                <span className="ml-2 inline-flex items-center px-1.5 py-0.5 rounded text-xs bg-indigo-900/60 text-indigo-300">
-                  overnight
-                </span>
+                <span className="text-slate-500"> · overnight</span>
               )}
-            </div>
-          )}
-
-          {isActivity && <ActivityDetail block={block} />}
-
-          {isGap && (
-            <div className="text-sm text-amber-300 font-medium">
-              No curated activity left for this slot yet
-              <span className="font-normal ml-1 text-amber-400">
-                ({block.gap.slot})
-              </span>
-            </div>
+            </p>
           )}
 
           {isActivity && (
-            <div className="flex items-center gap-2 pt-0.5">
-              <button
-                type="button"
-                onClick={() => setShowActions((v) => !v)}
-                className="text-xs px-2 py-0.5 rounded text-slate-500 hover:text-slate-300 transition-colors"
-              >
-                {showActions ? "less" : "···"}
-              </button>
-              {showActions && (
-                <>
-                  <button
-                    type="button"
-                    onClick={() => onSwap(block.id)}
-                    className="text-xs px-2.5 py-1 rounded-md bg-violet-900/60 text-violet-300 hover:bg-violet-900 font-medium transition-colors"
-                  >
-                    Swap
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => onReject(block.id)}
-                    className="text-xs px-2.5 py-1 rounded-md bg-rose-900/60 text-rose-300 hover:bg-rose-900 font-medium transition-colors"
-                  >
-                    Reject
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => onPin(block.id, block.locked)}
-                    className="text-xs px-2.5 py-1 rounded-md bg-slate-700 text-slate-300 hover:bg-slate-600 font-medium transition-colors"
-                  >
-                    {block.locked ? "Unpin" : "Pin"}
-                  </button>
-                </>
-              )}
-            </div>
+            <ActivityLine block={block} onSwap={onSwap} onReject={onReject} onPin={onPin} />
           )}
 
-          {blockError && (
-            <p className="text-xs text-rose-400 mt-0.5">{blockError}</p>
+          {isGap && (
+            <p className="text-sm text-amber-400">
+              Nothing curated for this slot yet in {placeName(block.placeId)}.
+            </p>
           )}
+
+          {!isTravel && !isActivity && !isGap && (
+            <p className="text-sm text-slate-300">
+              {block.type === "arrive" ? "Arrive in " : "Free time in "}
+              {placeName(block.placeId)}
+            </p>
+          )}
+
+          {blockError && <p className="text-xs text-rose-400 mt-1">{blockError}</p>}
         </div>
       </div>
     </li>
   );
 }
 
-function DayCard({ day, onMakeLighter, onSwap, onReject, onPin, blockErrors, dayError }) {
+function DayView({ day, notice, dayError, onMakeLighter, onSwap, onReject, onPin, blockErrors }) {
   return (
     <div className="rounded-xl bg-slate-800 border border-slate-700 overflow-hidden">
-      <div className="flex items-center justify-between px-4 py-3 bg-slate-900 border-b border-slate-700">
-        <span className="font-semibold text-sm text-white">Day {day.dayNumber}</span>
-        <div className="flex items-center gap-3">
-          {dayError && (
-            <span className="text-xs text-rose-400">{dayError}</span>
-          )}
-          <button
-            type="button"
-            onClick={() => onMakeLighter(day.dayNumber)}
-            className="text-xs px-2.5 py-1 rounded-md bg-slate-700 text-teal hover:bg-slate-600 font-medium transition-colors"
-          >
-            Make day lighter
-          </button>
-        </div>
+      <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-700">
+        <span className="font-semibold text-white">Day {day.dayNumber}</span>
+        <button
+          type="button"
+          onClick={() => onMakeLighter(day.dayNumber)}
+          className="text-xs text-teal hover:opacity-80 font-medium transition-opacity"
+        >
+          Make lighter
+        </button>
       </div>
-      <ul className="px-4">
+      {(notice || dayError) && (
+        <p className={`px-5 pt-3 text-xs ${dayError ? "text-rose-400" : "text-slate-500"}`}>
+          {dayError || notice}
+        </p>
+      )}
+      <ul className="px-5">
         {day.blocks.map((block) => (
           <BlockRow
             key={block.id}
@@ -378,142 +460,125 @@ function DayCard({ day, onMakeLighter, onSwap, onReject, onPin, blockErrors, day
   );
 }
 
-function TripSummaryCard({ trip, editCount, editError, onUndo, onStartOver, onSave, saveMsg, routeAlternatives, onChangeRoute }) {
-  const [showAlt, setShowAlt] = useState(false);
+// ── Results: refine sheet ───────────────────────────────────────────────────
 
-  const home = trip.days
-    .flatMap((d) => d.blocks)
-    .find((b) => b.id.endsWith(">origin_home"));
-  const nights = trip.spec.stops
-    .filter((s) => s.nights > 0)
-    .map((s) => `${placeName(s.placeId)} ${s.nights}n`)
-    .join(" · ");
-
+function RefineSheet({
+  open,
+  onClose,
+  form,
+  toggleInterest,
+  setPace,
+  requiredPlaces,
+  toggleRequired,
+  onApply,
+  routeAlternatives,
+  onChangeRoute,
+}) {
+  if (!open) return null;
   return (
-    <div className="rounded-xl bg-slate-800 border border-slate-700 p-5 space-y-3">
-      <div className="flex items-start justify-between gap-4">
-        <div className="space-y-0.5">
-          <h2 className="text-lg font-bold text-white">
-            {trip.days.length}-day trip
-          </h2>
-          {home && (
-            <p className="text-sm text-slate-400">
-              Home: Day {home.transport.arriveDayNumber} at{" "}
-              {home.transport.arriveTime}
-            </p>
-          )}
-          {nights && <p className="text-sm font-medium text-teal">{nights}</p>}
-        </div>
-        <div className="flex items-center gap-2 shrink-0 flex-wrap justify-end">
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60" onClick={onClose}>
+      <div
+        className="w-full max-w-2xl max-h-[85vh] overflow-y-auto rounded-t-2xl bg-slate-800 border-t border-slate-700 p-6 space-y-6"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-bold text-white">Make it yours</h2>
           <button
             type="button"
-            onClick={onSave}
-            className="text-sm px-3 py-1.5 rounded-lg bg-teal text-slate-900 hover:opacity-90 font-semibold transition-opacity"
+            onClick={onClose}
+            className="text-slate-500 hover:text-white text-xl leading-none"
           >
-            Save
-          </button>
-          {saveMsg && (
-            <span className="text-sm text-teal font-medium">{saveMsg}</span>
-          )}
-          {routeAlternatives?.length > 0 && (
-            <button
-              type="button"
-              onClick={() => setShowAlt((v) => !v)}
-              className="text-sm px-3 py-1.5 rounded-lg bg-slate-700 border border-slate-600 text-slate-300 hover:bg-slate-600 font-medium transition-colors"
-            >
-              {showAlt ? "Hide routes" : "Change route"}
-            </button>
-          )}
-          <button
-            type="button"
-            onClick={onStartOver}
-            className="text-sm px-3 py-1.5 rounded-lg bg-slate-700 border border-slate-600 text-slate-300 hover:bg-slate-600 font-medium transition-colors"
-          >
-            New trip
+            ×
           </button>
         </div>
-      </div>
 
-      {showAlt && routeAlternatives?.length > 0 && (
-        <div className="rounded-lg border border-slate-700 bg-slate-900 p-3 space-y-2">
-          <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">
-            Alternative routes
-          </p>
-          {routeAlternatives.map((alt) => {
-            const { name, stops, stopCount } = routeLabel(alt);
-            return (
+        <div>
+          <p className="text-xs font-medium text-slate-400 mb-2">What you&apos;re here for</p>
+          <div className="flex flex-wrap gap-2">
+            {INTERESTS.map((interest) => (
               <button
-                key={alt.routePackageId}
+                key={interest}
                 type="button"
-                onClick={() => { setShowAlt(false); onChangeRoute(alt.routePackageId); }}
-                className="w-full text-left px-3 py-2 rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 transition-colors space-y-0.5"
+                onClick={() => toggleInterest(interest)}
+                className={chipClass(form.interests.includes(interest))}
               >
-                <span className="text-sm font-medium text-white">
-                  Try: {name} · {stopCount} stops
-                </span>
-                <span className="block text-xs text-slate-400">{stops}</span>
+                {interest}
               </button>
-            );
-          })}
+            ))}
+          </div>
         </div>
-      )}
 
-      <div className="flex flex-wrap gap-3 text-xs text-slate-500">
-        <span>
-          Status:{" "}
-          <span
-            className={
-              trip.status === "incomplete"
-                ? "px-1 rounded bg-amber-900/60 text-amber-300 font-medium"
-                : "font-medium text-slate-300"
-            }
-          >
-            {trip.status}
-          </span>
-        </span>
-        <span>
-          Route:{" "}
-          <span className="font-medium text-slate-300">
-            {trip.spec.routeTemplateId ?? "—"}
-          </span>
-        </span>
-        {trip.warnings?.length > 0 && (
-          <span>
-            Warnings:{" "}
-            <span className="font-medium text-amber-400">
-              {trip.warnings.join(", ")}
-            </span>
-          </span>
-        )}
-        {trip.contentGaps?.length > 0 && (
-          <span>
-            Content gaps:{" "}
-            <span className="font-medium text-amber-400">
-              {trip.contentGaps.length}
-            </span>
-          </span>
-        )}
-      </div>
+        <div>
+          <p className="text-xs font-medium text-slate-400 mb-2">Pace</p>
+          <div className="flex flex-wrap gap-2">
+            {PACES.map((p) => (
+              <button
+                key={p.value}
+                type="button"
+                onClick={() => setPace(p.value)}
+                className={chipClass(form.pace === p.value)}
+              >
+                {p.label}
+              </button>
+            ))}
+          </div>
+        </div>
 
-      <div className="flex items-center gap-3 pt-1 border-t border-slate-700">
-        <span className="text-xs text-slate-500">
-          {editCount} edit{editCount !== 1 ? "s" : ""}
-        </span>
+        {requiredPlaces.length > 0 && (
+          <div>
+            <p className="text-xs font-medium text-slate-400 mb-2">Must include</p>
+            <div className="flex flex-wrap gap-2">
+              {requiredPlaces.map((p) => (
+                <button
+                  key={p.id}
+                  type="button"
+                  onClick={() => toggleRequired(p.id)}
+                  className={chipClass(form.required.includes(p.id))}
+                >
+                  {p.name}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {routeAlternatives?.length > 0 && (
+          <div>
+            <p className="text-xs font-medium text-slate-400 mb-2">Route</p>
+            <div className="space-y-2">
+              {routeAlternatives.map((alt) => {
+                const { name, stops, stopCount } = routeLabel(alt);
+                return (
+                  <button
+                    key={alt.routePackageId}
+                    type="button"
+                    onClick={() => onChangeRoute(alt.routePackageId)}
+                    className="w-full text-left px-3 py-2 rounded-lg border border-slate-600 bg-slate-700 hover:bg-slate-600 transition-colors space-y-0.5"
+                  >
+                    <span className="block text-sm font-medium text-white">
+                      Try: {name} · {stopCount} stops
+                    </span>
+                    <span className="block text-xs text-slate-400">{stops}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         <button
           type="button"
-          disabled={!trip.history?.length}
-          onClick={onUndo}
-          className="text-sm px-3 py-1.5 rounded-lg bg-slate-700 text-slate-300 hover:bg-slate-600 disabled:opacity-40 disabled:cursor-not-allowed font-medium transition-colors"
+          onClick={onApply}
+          className="w-full bg-teal text-slate-900 rounded-lg px-6 py-3 font-bold text-sm hover:opacity-90 transition-opacity"
         >
-          Undo
+          Apply and rebuild
         </button>
-        {editError && (
-          <span className="text-sm text-rose-400">{editError}</span>
-        )}
       </div>
     </div>
   );
 }
+
+// ── Results: failure panel ──────────────────────────────────────────────────
 
 function FailurePanel({ result, thrown, onExtend, onRemovePlace }) {
   if (thrown) {
@@ -594,16 +659,22 @@ export default function Door2Plan() {
   const location = useLocation();
   const allowed = new URLSearchParams(location.search).get("key") === "door2";
 
+  const [step, setStep] = useState("destination"); // 'destination' | 'basics'
+  const [destQuery, setDestQuery] = useState("");
   const [form, setForm] = useState(DEFAULT_FORM);
   const [tripResult, setTripResult] = useState(null);
   const [editTrip, setEditTrip] = useState(null);
-  const [editCount, setEditCount] = useState(0);
   const [editError, setEditError] = useState(null);
   const [blockErrors, setBlockErrors] = useState({});
   const [dayErrors, setDayErrors] = useState({});
+  const [dayNotices, setDayNotices] = useState({});
   const [saveMsg, setSaveMsg] = useState(null);
   const [routeAlternatives, setRouteAlternatives] = useState([]);
   const [currentSpec, setCurrentSpec] = useState(null);
+  const [dayIndex, setDayIndex] = useState(0);
+  const [showRefine, setShowRefine] = useState(false);
+  const [toast, setToast] = useState(null);
+  const toastTimer = useRef(null);
 
   if (!allowed) return <PageNotFound />;
 
@@ -620,14 +691,21 @@ export default function Door2Plan() {
     showResults &&
     (tripResult.thrown || (tripResult.result && tripResult.result.ok === false));
 
+  function showToast(msg) {
+    setToast(msg);
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+    toastTimer.current = setTimeout(() => setToast(null), 3000);
+  }
+
   // ── Form handlers ──────────────────────────────────────────────────────────
 
   function updateForm(patch) {
     setForm((f) => ({ ...f, ...patch }));
   }
 
-  function handleDestinationChange(value) {
+  function pickDestination(value) {
     setForm((f) => ({ ...f, destination: value, required: [] }));
+    setStep("basics");
   }
 
   function toggleInterest(interest) {
@@ -661,10 +739,11 @@ export default function Door2Plan() {
     }
     setTripResult({ result, thrown });
     setEditTrip(null);
-    setEditCount(0);
     setEditError(null);
     setBlockErrors({});
     setDayErrors({});
+    setDayNotices({});
+    setDayIndex(0);
     if (!thrown && result && result.ok !== false) {
       const routes = selectRoutes(spec, PILOT_DATA, { reviewPolicy: "allow_drafts" });
       setRouteAlternatives(routes.ok ? routes.value.slice(1, 3) : []);
@@ -692,20 +771,24 @@ export default function Door2Plan() {
     runBuildFromSpec(spec);
   }
 
-  function handleSubmit(e) {
-    e.preventDefault();
+  function handleBuildFromBasics() {
     runBuild(form);
   }
 
   function handleStartOver() {
     setTripResult(null);
     setEditTrip(null);
-    setEditCount(0);
     setEditError(null);
     setBlockErrors({});
     setDayErrors({});
+    setDayNotices({});
     setRouteAlternatives([]);
     setCurrentSpec(null);
+    setDayIndex(0);
+    setShowRefine(false);
+    setStep("destination");
+    setDestQuery("");
+    setForm(DEFAULT_FORM);
   }
 
   function handleExtend(days) {
@@ -726,6 +809,13 @@ export default function Door2Plan() {
   function handleChangeRoute(routePackageId) {
     const newSpec = { ...currentSpec, routeTemplateId: routePackageId };
     runBuildFromSpec(newSpec);
+    setShowRefine(false);
+    showToast("Route changed");
+  }
+
+  function handleApplyRefine() {
+    runBuild(form);
+    setShowRefine(false);
   }
 
   function handleSaveDraft() {
@@ -744,48 +834,62 @@ export default function Door2Plan() {
   function handleLoadDraft(trip) {
     setTripResult({ result: trip, thrown: null });
     setEditTrip(null);
-    setEditCount(0);
     setEditError(null);
     setBlockErrors({});
     setDayErrors({});
+    setDayNotices({});
     setSaveMsg(null);
     setRouteAlternatives([]);
     setCurrentSpec(null);
+    setDayIndex(0);
+    setStep("basics");
   }
 
   // ── Edit handlers ──────────────────────────────────────────────────────────
 
-  function applyBlockEdit(fn, blockId) {
+  function applyBlockEdit(fn, blockId, successMsg) {
     const t = activeTrip;
     if (!t) return;
     const result = fn(t);
     if (result.ok) {
       setEditTrip(result.trip);
-      setEditCount((n) => n + 1);
       setBlockErrors((e) => {
         const next = { ...e };
         delete next[blockId];
         return next;
       });
+      showToast(successMsg);
     } else {
       setBlockErrors((e) => ({ ...e, [blockId]: result.message }));
     }
   }
 
-  function applyDayEdit(fn, dayNumber) {
+  function handleMakeLighter(dayNumber) {
     const t = activeTrip;
     if (!t) return;
-    const result = fn(t);
-    if (result.ok) {
-      setEditTrip(result.trip);
-      setEditCount((n) => n + 1);
-      setDayErrors((e) => {
-        const next = { ...e };
+    const before = t.days.find((d) => d.dayNumber === dayNumber);
+    const result = makeDayLighter(t, dayNumber);
+    if (!result.ok) {
+      setDayErrors((e) => ({ ...e, [dayNumber]: result.message }));
+      return;
+    }
+    const after = result.trip.days.find((d) => d.dayNumber === dayNumber);
+    const unchanged = JSON.stringify(before?.blocks) === JSON.stringify(after?.blocks);
+    setEditTrip(result.trip);
+    setDayErrors((e) => {
+      const next = { ...e };
+      delete next[dayNumber];
+      return next;
+    });
+    if (unchanged) {
+      setDayNotices((n) => ({ ...n, [dayNumber]: "This day's already about as light as it gets." }));
+    } else {
+      setDayNotices((n) => {
+        const next = { ...n };
         delete next[dayNumber];
         return next;
       });
-    } else {
-      setDayErrors((e) => ({ ...e, [dayNumber]: result.message }));
+      showToast("Day lightened");
     }
   }
 
@@ -795,8 +899,8 @@ export default function Door2Plan() {
     const r = undo(t);
     if (r.ok) {
       setEditTrip(r.trip);
-      setEditCount((n) => Math.max(0, n - 1));
       setEditError(null);
+      showToast("Undone");
     } else {
       setEditError(r.message);
     }
@@ -804,172 +908,44 @@ export default function Door2Plan() {
 
   // ── Render ─────────────────────────────────────────────────────────────────
 
+  const nights = activeTrip
+    ? activeTrip.spec.stops
+        .filter((s) => s.nights > 0)
+        .map((s) => `${placeName(s.placeId)} ${s.nights}n`)
+        .join(" · ")
+    : "";
+
   return (
     <div className="min-h-screen bg-slate-900">
-      <div className="max-w-2xl mx-auto px-4 py-10 space-y-6">
-        <header className="space-y-0.5">
-          <h1 className="text-2xl font-bold text-white">Plan a trip</h1>
-          <p className="text-sm text-slate-500">Pilot preview</p>
-        </header>
-
-        {/* Intake form */}
+      <div className="max-w-2xl mx-auto px-4 py-10 space-y-4">
         {!showResults && (
-          <>
-          <SavedTripsList onLoad={handleLoadDraft} />
-          <form
-            onSubmit={handleSubmit}
-            className="rounded-xl bg-slate-800 border border-slate-700 p-6 space-y-6"
-          >
-            {/* Top row: Destination + Days + Month */}
-            <div className="grid grid-cols-3 gap-3">
-              <div className="col-span-1">
-                <label className="block text-xs font-medium text-slate-400 mb-1.5">
-                  Where to
-                </label>
-                <select
-                  value={form.destination}
-                  onChange={(e) => handleDestinationChange(e.target.value)}
-                  className="w-full border border-slate-600 rounded-lg px-3 py-2 text-sm bg-slate-700 text-white focus:outline-none focus:ring-2 focus:ring-teal"
-                >
-                  {DESTINATIONS.map((d) => (
-                    <option key={d.value} value={d.value}>
-                      {d.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-slate-400 mb-1.5">
-                  Days
-                </label>
-                <input
-                  type="number"
-                  min={1}
-                  max={60}
-                  required
-                  value={form.totalDays}
-                  onChange={(e) => updateForm({ totalDays: e.target.value })}
-                  className="w-full border border-slate-600 rounded-lg px-3 py-2 text-sm bg-slate-700 text-white focus:outline-none focus:ring-2 focus:ring-teal"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-slate-400 mb-1.5">
-                  Month
-                </label>
-                <select
-                  value={form.travelMonth}
-                  onChange={(e) =>
-                    updateForm({ travelMonth: Number(e.target.value) })
-                  }
-                  className="w-full border border-slate-600 rounded-lg px-3 py-2 text-sm bg-slate-700 text-white focus:outline-none focus:ring-2 focus:ring-teal"
-                >
-                  {MONTH_OPTIONS.map((m) => (
-                    <option key={m.value} value={m.value}>
-                      {m.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
+          <header className="space-y-0.5">
+            <p className="text-xs font-medium text-slate-600 uppercase tracking-wide">WhereNova · Pilot preview</p>
+          </header>
+        )}
 
-            {/* Secondary row: Who + Pace */}
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs font-medium text-slate-400 mb-1.5">
-                  Who&apos;s going
-                </label>
-                <select
-                  value={form.travellerType}
-                  onChange={(e) => updateForm({ travellerType: e.target.value })}
-                  className="w-full border border-slate-600 rounded-lg px-3 py-2 text-sm bg-slate-700 text-white focus:outline-none focus:ring-2 focus:ring-teal"
-                >
-                  {TRAVELLER_OPTIONS.map((t) => (
-                    <option key={t.value} value={t.value}>
-                      {t.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-slate-400 mb-1.5">
-                  Pace
-                </label>
-                <select
-                  value={form.pace}
-                  onChange={(e) => updateForm({ pace: e.target.value })}
-                  className="w-full border border-slate-600 rounded-lg px-3 py-2 text-sm bg-slate-700 text-white focus:outline-none focus:ring-2 focus:ring-teal"
-                >
-                  {PACES.map((p) => (
-                    <option key={p.value} value={p.value}>
-                      {p.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
+        {/* Intake wizard */}
+        {!showResults && step === "destination" && (
+          <DestinationStep
+            query={destQuery}
+            onQueryChange={setDestQuery}
+            onPick={pickDestination}
+            onLoad={handleLoadDraft}
+          />
+        )}
 
-            {/* Interests: chip toggles */}
-            <div>
-              <p className="text-xs font-medium text-slate-400 mb-2">Interests</p>
-              <div className="flex flex-wrap gap-2">
-                {INTERESTS.map((interest) => (
-                  <button
-                    key={interest}
-                    type="button"
-                    onClick={() => toggleInterest(interest)}
-                    className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-colors ${
-                      form.interests.includes(interest)
-                        ? "bg-teal text-slate-900 border-teal"
-                        : "bg-slate-700 text-slate-300 border-slate-600 hover:border-slate-400"
-                    }`}
-                  >
-                    {interest}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Required places: chip toggles */}
-            {requiredPlaces.length > 0 && (
-              <div>
-                <p className="text-xs font-medium text-slate-400 mb-2">Must include</p>
-                <div className="flex flex-wrap gap-2">
-                  {requiredPlaces.map((p) => (
-                    <button
-                      key={p.id}
-                      type="button"
-                      onClick={() => toggleRequired(p.id)}
-                      className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-colors ${
-                        form.required.includes(p.id)
-                          ? "bg-teal text-slate-900 border-teal"
-                          : "bg-slate-700 text-slate-300 border-slate-600 hover:border-slate-400"
-                      }`}
-                    >
-                      {p.name}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            <button
-              type="submit"
-              className="w-full bg-teal text-slate-900 rounded-lg px-6 py-3 font-bold text-sm hover:opacity-90 transition-opacity"
-            >
-              Plan my trip
-            </button>
-          </form>
-          </>
+        {!showResults && step === "basics" && (
+          <BasicsStep
+            form={form}
+            updateForm={updateForm}
+            onBack={() => setStep("destination")}
+            onSubmit={handleBuildFromBasics}
+          />
         )}
 
         {/* Results */}
         {showResults && (
           <div className="space-y-4">
-            {/* Draft banner */}
-            <div className="rounded-lg bg-amber-950/60 text-amber-300 border border-amber-700/50 px-4 py-2.5 text-xs font-medium">
-              DRAFT DATA — pilot connections unreviewed. Not for real travellers.
-            </div>
-
             {/* Failure panel */}
             {isFailure && (
               <>
@@ -989,54 +965,129 @@ export default function Door2Plan() {
               </>
             )}
 
-            {/* Trip summary + day view */}
+            {/* Trip header + day view */}
             {activeTrip && (
               <>
-                <TripSummaryCard
-                  trip={activeTrip}
-                  editCount={editCount}
-                  editError={editError}
-                  onUndo={handleUndo}
-                  onStartOver={handleStartOver}
-                  onSave={handleSaveDraft}
-                  saveMsg={saveMsg}
-                  routeAlternatives={routeAlternatives}
-                  onChangeRoute={handleChangeRoute}
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <h1 className="text-lg font-bold text-white truncate">
+                      {destinationLabel(form.destination)}
+                    </h1>
+                    <p className="text-xs text-slate-500">
+                      {activeTrip.days.length} days{nights ? ` · ${nights}` : ""}
+                    </p>
+                    {saveMsg && <p className="text-xs text-teal mt-0.5">{saveMsg}</p>}
+                    {editError && <p className="text-xs text-rose-400 mt-0.5">{editError}</p>}
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => setShowRefine(true)}
+                      className="text-xs px-3 py-1.5 rounded-lg bg-slate-700 border border-slate-600 text-slate-300 hover:bg-slate-600 font-medium transition-colors"
+                    >
+                      Refine
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleSaveDraft}
+                      className="text-xs px-3 py-1.5 rounded-lg bg-teal text-slate-900 hover:opacity-90 font-semibold transition-opacity"
+                    >
+                      Save
+                    </button>
+                  </div>
+                </div>
+
+                {activeTrip.status === "incomplete" && (
+                  <p className="text-xs text-amber-400">Some days still need attention below.</p>
+                )}
+
+                <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
+                  {activeTrip.days.map((day, i) => (
+                    <button
+                      key={day.id}
+                      type="button"
+                      onClick={() => setDayIndex(i)}
+                      className={`shrink-0 px-4 py-2 rounded-full text-sm font-semibold transition-colors ${
+                        i === dayIndex
+                          ? "bg-teal text-slate-900"
+                          : "bg-slate-800 border border-slate-700 text-slate-400 hover:text-white"
+                      }`}
+                    >
+                      Day {day.dayNumber}
+                    </button>
+                  ))}
+                </div>
+
+                <DayView
+                  day={activeTrip.days[dayIndex]}
+                  notice={dayNotices[activeTrip.days[dayIndex]?.dayNumber]}
+                  dayError={dayErrors[activeTrip.days[dayIndex]?.dayNumber]}
+                  blockErrors={blockErrors}
+                  onMakeLighter={handleMakeLighter}
+                  onSwap={(blockId) =>
+                    applyBlockEdit((t) => swapActivity(t, blockId), blockId, "Swapped")
+                  }
+                  onReject={(blockId) =>
+                    applyBlockEdit((t) => rejectActivity(t, blockId), blockId, "Removed")
+                  }
+                  onPin={(blockId, isLocked) =>
+                    applyBlockEdit(
+                      (t) => (isLocked ? unpinActivity(t, blockId) : pinActivity(t, blockId)),
+                      blockId,
+                      isLocked ? "Unpinned" : "Pinned"
+                    )
+                  }
                 />
-                {activeTrip.days.map((day) => (
-                  <DayCard
-                    key={day.id}
-                    day={day}
-                    blockErrors={blockErrors}
-                    dayError={dayErrors[day.dayNumber]}
-                    onMakeLighter={(dayNum) =>
-                      applyDayEdit((t) => makeDayLighter(t, dayNum), dayNum)
-                    }
-                    onSwap={(blockId) =>
-                      applyBlockEdit((t) => swapActivity(t, blockId), blockId)
-                    }
-                    onReject={(blockId) =>
-                      applyBlockEdit(
-                        (t) => rejectActivity(t, blockId),
-                        blockId
-                      )
-                    }
-                    onPin={(blockId, isLocked) =>
-                      applyBlockEdit(
-                        (t) =>
-                          isLocked
-                            ? unpinActivity(t, blockId)
-                            : pinActivity(t, blockId),
-                        blockId
-                      )
-                    }
-                  />
-                ))}
+
+                {activeTrip.history?.length > 0 && (
+                  <div className="text-center">
+                    <button
+                      type="button"
+                      onClick={handleUndo}
+                      className="text-xs text-slate-500 hover:text-slate-300 underline underline-offset-2"
+                    >
+                      Undo last change
+                    </button>
+                  </div>
+                )}
+
+                <div className="text-center pt-2">
+                  <button
+                    type="button"
+                    onClick={handleStartOver}
+                    className="text-xs text-slate-600 hover:text-slate-400 underline underline-offset-2"
+                  >
+                    Start a new trip
+                  </button>
+                </div>
+
+                <p className="text-center text-xs text-slate-700 pt-4">
+                  Draft data — pilot connections unreviewed. Not for real travellers.
+                </p>
               </>
             )}
           </div>
         )}
       </div>
+
+      <RefineSheet
+        open={showRefine}
+        onClose={() => setShowRefine(false)}
+        form={form}
+        toggleInterest={toggleInterest}
+        setPace={(pace) => updateForm({ pace })}
+        requiredPlaces={requiredPlaces}
+        toggleRequired={toggleRequired}
+        onApply={handleApplyRefine}
+        routeAlternatives={routeAlternatives}
+        onChangeRoute={handleChangeRoute}
+      />
+
+      {toast && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-slate-700 border border-slate-600 text-white text-sm px-4 py-2 rounded-full shadow-lg">
+          {toast}
+        </div>
+      )}
     </div>
   );
 }
