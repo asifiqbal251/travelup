@@ -10,7 +10,8 @@ import {
   unpinActivity,
 } from "@/lib/door2/edit";
 import { PILOT_DATA, buildFilledTrip } from "@/lib/door2/planner";
-import { PILOT_PLACES } from "@/lib/door2/pilotData";
+import { PILOT_PLACES, PILOT_ROUTE_PACKAGES } from "@/lib/door2/pilotData";
+import { selectRoutes } from "@/lib/door2/route";
 import { MONTHS } from "@/lib/options";
 import {
   deleteDraftTrip,
@@ -97,6 +98,13 @@ function autoLabel(spec) {
       : (DESTINATIONS.find((d) => d.value === `country:${spec.destination?.id}`)?.label ?? spec.destination?.id ?? "Trip");
   const date = new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
   return `${destLabel} · ${spec.totalDays} days · ${date}`;
+}
+
+function routeLabel(routeResult) {
+  const pkg = PILOT_ROUTE_PACKAGES.find(p => p.id === routeResult.routePackageId);
+  if (!pkg) return { name: routeResult.routePackageId, stops: routeResult.routePackageId, stopCount: 0 };
+  const stops = routeResult.stops.map(s => PILOT_PLACES[s.placeId]?.name ?? s.placeId).join(' → ');
+  return { name: pkg.name, stops, stopCount: routeResult.stops.length };
 }
 
 function SavedTripsList({ onLoad }) {
@@ -358,7 +366,9 @@ function DayCard({ day, onMakeLighter, onSwap, onReject, onPin, blockErrors, day
   );
 }
 
-function TripSummaryCard({ trip, editCount, editError, onUndo, onStartOver, onSave, saveMsg }) {
+function TripSummaryCard({ trip, editCount, editError, onUndo, onStartOver, onSave, saveMsg, routeAlternatives, onChangeRoute }) {
+  const [showAlt, setShowAlt] = useState(false);
+
   const home = trip.days
     .flatMap((d) => d.blocks)
     .find((b) => b.id.endsWith(">origin_home"));
@@ -382,7 +392,7 @@ function TripSummaryCard({ trip, editCount, editError, onUndo, onStartOver, onSa
           )}
           {nights && <p className="text-sm text-slate-500">{nights}</p>}
         </div>
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex items-center gap-2 shrink-0 flex-wrap justify-end">
           <button
             type="button"
             onClick={onSave}
@@ -393,6 +403,15 @@ function TripSummaryCard({ trip, editCount, editError, onUndo, onStartOver, onSa
           {saveMsg && (
             <span className="text-sm text-teal-700 font-medium">{saveMsg}</span>
           )}
+          {routeAlternatives?.length > 0 && (
+            <button
+              type="button"
+              onClick={() => setShowAlt((v) => !v)}
+              className="text-sm px-3 py-1.5 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-50 font-medium transition-colors"
+            >
+              {showAlt ? "Hide routes" : "Change route"}
+            </button>
+          )}
           <button
             type="button"
             onClick={onStartOver}
@@ -402,6 +421,30 @@ function TripSummaryCard({ trip, editCount, editError, onUndo, onStartOver, onSa
           </button>
         </div>
       </div>
+
+      {showAlt && routeAlternatives?.length > 0 && (
+        <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 space-y-2">
+          <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">
+            Alternative routes
+          </p>
+          {routeAlternatives.map((alt) => {
+            const { name, stops, stopCount } = routeLabel(alt);
+            return (
+              <button
+                key={alt.routePackageId}
+                type="button"
+                onClick={() => { setShowAlt(false); onChangeRoute(alt.routePackageId); }}
+                className="w-full text-left px-3 py-2 rounded-lg border border-slate-300 text-slate-700 hover:bg-white bg-white transition-colors space-y-0.5"
+              >
+                <span className="text-sm font-medium text-slate-900">
+                  Try: {name} · {stopCount} stops
+                </span>
+                <span className="block text-xs text-slate-500">{stops}</span>
+              </button>
+            );
+          })}
+        </div>
+      )}
 
       <div className="flex flex-wrap gap-3 text-xs text-slate-500">
         <span>
@@ -547,6 +590,8 @@ export default function Door2Plan() {
   const [blockErrors, setBlockErrors] = useState({});
   const [dayErrors, setDayErrors] = useState({});
   const [saveMsg, setSaveMsg] = useState(null);
+  const [routeAlternatives, setRouteAlternatives] = useState([]);
+  const [currentSpec, setCurrentSpec] = useState(null);
 
   if (!allowed) return <PageNotFound />;
 
@@ -593,6 +638,29 @@ export default function Door2Plan() {
 
   // ── Build ──────────────────────────────────────────────────────────────────
 
+  function runBuildFromSpec(spec) {
+    setCurrentSpec(spec);
+    let result = null;
+    let thrown = null;
+    try {
+      result = buildFilledTrip(spec, PILOT_DATA, { reviewPolicy: "allow_drafts" });
+    } catch (err) {
+      thrown = String(err?.message ?? err);
+    }
+    setTripResult({ result, thrown });
+    setEditTrip(null);
+    setEditCount(0);
+    setEditError(null);
+    setBlockErrors({});
+    setDayErrors({});
+    if (!thrown && result && result.ok !== false) {
+      const routes = selectRoutes(spec, PILOT_DATA, { reviewPolicy: "allow_drafts" });
+      setRouteAlternatives(routes.ok ? routes.value.slice(1, 3) : []);
+    } else {
+      setRouteAlternatives([]);
+    }
+  }
+
   function runBuild(values) {
     const [kind, id] = values.destination.split(":");
     const spec = {
@@ -609,19 +677,7 @@ export default function Door2Plan() {
       requiredPlaceIds: values.required,
       choices: { pinned: [], rejected: [], placed: [] },
     };
-    let result = null;
-    let thrown = null;
-    try {
-      result = buildFilledTrip(spec, PILOT_DATA, { reviewPolicy: "allow_drafts" });
-    } catch (err) {
-      thrown = String(err?.message ?? err);
-    }
-    setTripResult({ result, thrown });
-    setEditTrip(null);
-    setEditCount(0);
-    setEditError(null);
-    setBlockErrors({});
-    setDayErrors({});
+    runBuildFromSpec(spec);
   }
 
   function handleSubmit(e) {
@@ -636,6 +692,8 @@ export default function Door2Plan() {
     setEditError(null);
     setBlockErrors({});
     setDayErrors({});
+    setRouteAlternatives([]);
+    setCurrentSpec(null);
   }
 
   function handleExtend(days) {
@@ -651,6 +709,11 @@ export default function Door2Plan() {
     };
     setForm(newForm);
     runBuild(newForm);
+  }
+
+  function handleChangeRoute(routePackageId) {
+    const newSpec = { ...currentSpec, routeTemplateId: routePackageId };
+    runBuildFromSpec(newSpec);
   }
 
   function handleSaveDraft() {
@@ -674,6 +737,8 @@ export default function Door2Plan() {
     setBlockErrors({});
     setDayErrors({});
     setSaveMsg(null);
+    setRouteAlternatives([]);
+    setCurrentSpec(null);
   }
 
   // ── Edit handlers ──────────────────────────────────────────────────────────
@@ -937,6 +1002,8 @@ export default function Door2Plan() {
                   onStartOver={handleStartOver}
                   onSave={handleSaveDraft}
                   saveMsg={saveMsg}
+                  routeAlternatives={routeAlternatives}
+                  onChangeRoute={handleChangeRoute}
                 />
                 {activeTrip.days.map((day) => (
                   <DayCard
