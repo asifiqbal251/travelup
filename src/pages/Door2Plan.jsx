@@ -346,23 +346,23 @@ function BlockRow({ block, onSwap, onReject, onPin, blockError }) {
 
 function DayCard({ day, onMakeLighter, onSwap, onReject, onPin, blockErrors, dayError }) {
   return (
-    <div className="rounded-xl bg-white border border-slate-200 overflow-hidden">
-      <div className="flex items-center justify-between px-4 py-3 bg-slate-50 border-b border-slate-200">
-        <span className="font-semibold text-sm text-slate-900">Day {day.dayNumber}</span>
+    <div className="rounded-xl bg-slate-800 border border-slate-700 overflow-hidden">
+      <div className="flex items-center justify-between px-4 py-3 bg-slate-900 border-b border-slate-700">
+        <span className="font-semibold text-sm text-white">Day {day.dayNumber}</span>
         <div className="flex items-center gap-3">
           {dayError && (
-            <span className="text-xs text-rose-700">{dayError}</span>
+            <span className="text-xs text-rose-400">{dayError}</span>
           )}
           <button
             type="button"
             onClick={() => onMakeLighter(day.dayNumber)}
-            className="text-xs px-2.5 py-1 rounded-md bg-teal-100 text-teal-800 hover:bg-teal-200 font-medium transition-colors"
+            className="text-xs px-2.5 py-1 rounded-md bg-slate-700 text-teal hover:bg-slate-600 font-medium transition-colors"
           >
             Make day lighter
           </button>
         </div>
       </div>
-      <ul className="px-4 divide-y divide-slate-50">
+      <ul className="px-4">
         {day.blocks.map((block) => (
           <BlockRow
             key={block.id}
@@ -390,36 +390,36 @@ function TripSummaryCard({ trip, editCount, editError, onUndo, onStartOver, onSa
     .join(" · ");
 
   return (
-    <div className="rounded-xl bg-white border border-slate-200 p-5 space-y-3">
+    <div className="rounded-xl bg-slate-800 border border-slate-700 p-5 space-y-3">
       <div className="flex items-start justify-between gap-4">
         <div className="space-y-0.5">
-          <h2 className="text-lg font-bold text-slate-900">
+          <h2 className="text-lg font-bold text-white">
             {trip.days.length}-day trip
           </h2>
           {home && (
-            <p className="text-sm text-slate-600">
+            <p className="text-sm text-slate-400">
               Home: Day {home.transport.arriveDayNumber} at{" "}
               {home.transport.arriveTime}
             </p>
           )}
-          {nights && <p className="text-sm text-slate-500">{nights}</p>}
+          {nights && <p className="text-sm font-medium text-teal">{nights}</p>}
         </div>
         <div className="flex items-center gap-2 shrink-0 flex-wrap justify-end">
           <button
             type="button"
             onClick={onSave}
-            className="text-sm px-3 py-1.5 rounded-lg bg-slate-800 text-white hover:bg-slate-700 font-medium transition-colors"
+            className="text-sm px-3 py-1.5 rounded-lg bg-teal text-slate-900 hover:opacity-90 font-semibold transition-opacity"
           >
-            Save this trip
+            Save
           </button>
           {saveMsg && (
-            <span className="text-sm text-teal-700 font-medium">{saveMsg}</span>
+            <span className="text-sm text-teal font-medium">{saveMsg}</span>
           )}
           {routeAlternatives?.length > 0 && (
             <button
               type="button"
               onClick={() => setShowAlt((v) => !v)}
-              className="text-sm px-3 py-1.5 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-50 font-medium transition-colors"
+              className="text-sm px-3 py-1.5 rounded-lg bg-slate-700 border border-slate-600 text-slate-300 hover:bg-slate-600 font-medium transition-colors"
             >
               {showAlt ? "Hide routes" : "Change route"}
             </button>
@@ -427,7 +427,7 @@ function TripSummaryCard({ trip, editCount, editError, onUndo, onStartOver, onSa
           <button
             type="button"
             onClick={onStartOver}
-            className="text-sm px-3 py-1.5 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-50 font-medium transition-colors"
+            className="text-sm px-3 py-1.5 rounded-lg bg-slate-700 border border-slate-600 text-slate-300 hover:bg-slate-600 font-medium transition-colors"
           >
             New trip
           </button>
@@ -435,7 +435,7 @@ function TripSummaryCard({ trip, editCount, editError, onUndo, onStartOver, onSa
       </div>
 
       {showAlt && routeAlternatives?.length > 0 && (
-        <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 space-y-2">
+        <div className="rounded-lg border border-slate-700 bg-slate-900 p-3 space-y-2">
           <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">
             Alternative routes
           </p>
@@ -446,12 +446,12 @@ function TripSummaryCard({ trip, editCount, editError, onUndo, onStartOver, onSa
                 key={alt.routePackageId}
                 type="button"
                 onClick={() => { setShowAlt(false); onChangeRoute(alt.routePackageId); }}
-                className="w-full text-left px-3 py-2 rounded-lg border border-slate-300 text-slate-700 hover:bg-white bg-white transition-colors space-y-0.5"
+                className="w-full text-left px-3 py-2 rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 transition-colors space-y-0.5"
               >
-                <span className="text-sm font-medium text-slate-900">
+                <span className="text-sm font-medium text-white">
                   Try: {name} · {stopCount} stops
                 </span>
-                <span className="block text-xs text-slate-500">{stops}</span>
+                <span className="block text-xs text-slate-400">{stops}</span>
               </button>
             );
           })}
@@ -464,8 +464,8 @@ function TripSummaryCard({ trip, editCount, editError, onUndo, onStartOver, onSa
           <span
             className={
               trip.status === "incomplete"
-                ? "px-1 rounded bg-amber-100 text-amber-800 font-medium"
-                : "font-medium text-slate-900"
+                ? "px-1 rounded bg-amber-900/60 text-amber-300 font-medium"
+                : "font-medium text-slate-300"
             }
           >
             {trip.status}
@@ -473,14 +473,14 @@ function TripSummaryCard({ trip, editCount, editError, onUndo, onStartOver, onSa
         </span>
         <span>
           Route:{" "}
-          <span className="font-medium text-slate-900">
+          <span className="font-medium text-slate-300">
             {trip.spec.routeTemplateId ?? "—"}
           </span>
         </span>
         {trip.warnings?.length > 0 && (
           <span>
             Warnings:{" "}
-            <span className="font-medium text-amber-700">
+            <span className="font-medium text-amber-400">
               {trip.warnings.join(", ")}
             </span>
           </span>
@@ -488,27 +488,27 @@ function TripSummaryCard({ trip, editCount, editError, onUndo, onStartOver, onSa
         {trip.contentGaps?.length > 0 && (
           <span>
             Content gaps:{" "}
-            <span className="font-medium text-amber-700">
+            <span className="font-medium text-amber-400">
               {trip.contentGaps.length}
             </span>
           </span>
         )}
       </div>
 
-      <div className="flex items-center gap-3 pt-1 border-t border-slate-100">
-        <span className="text-sm text-slate-500">
-          {editCount} edit{editCount !== 1 ? "s" : ""} this session
+      <div className="flex items-center gap-3 pt-1 border-t border-slate-700">
+        <span className="text-xs text-slate-500">
+          {editCount} edit{editCount !== 1 ? "s" : ""}
         </span>
         <button
           type="button"
           disabled={!trip.history?.length}
           onClick={onUndo}
-          className="text-sm px-3 py-1.5 rounded-lg bg-slate-800 text-white hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed font-medium transition-colors"
+          className="text-sm px-3 py-1.5 rounded-lg bg-slate-700 text-slate-300 hover:bg-slate-600 disabled:opacity-40 disabled:cursor-not-allowed font-medium transition-colors"
         >
           Undo
         </button>
         {editError && (
-          <span className="text-sm text-rose-700">{editError}</span>
+          <span className="text-sm text-rose-400">{editError}</span>
         )}
       </div>
     </div>
