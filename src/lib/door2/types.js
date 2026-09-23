@@ -187,6 +187,46 @@
  * @property {boolean} reviewed          False whenever draft data was used.
  * @property {'low'|'medium'|'high'} confidence
  * @property {Object} [generation]       Generator metadata (not used by the skeleton).
+ * @property {ContentSource} [content]   ➕ Filled activities: the content item's `source`.
+ */
+
+/**
+ * ➕ Where a content item came from.
+ * @typedef {{kind: 'extracted', bundleId: string, bundleName: string, templateTitle: string, edited?: boolean} | {kind: 'authored', note: string}} ContentSource
+ */
+
+/**
+ * ➕ One curated activity on the per-place pilot shelf (pilotContent.js).
+ * @typedef {Object} ContentItem
+ * @property {string} id                 Stable id, e.g. "cusco_pisac".
+ * @property {string} placeId            The one place it happens at.
+ * @property {string} title              Display title.
+ * @property {Array<'full'|'half'|'evening'|'short'>} slots  Slot kinds it fits.
+ * @property {'Light'|'Moderate'|'High'|'Highly active'} intensity
+ * @property {string[]} interests        WhereNova interest labels.
+ * @property {string} summary            One line, used for every slot kind.
+ * @property {string} [morning]          Present whenever slots includes 'full'.
+ * @property {string} [afternoon]        Present whenever slots includes 'full'.
+ * @property {string} [evening]          Present whenever slots includes 'full'.
+ * @property {string} [foodNote]
+ * @property {boolean} [arrivalFriendly] Good as the first thing at a new stop.
+ * @property {number} [minDayAtStop]     Not before this many days after arriving (altitude safety).
+ * @property {ContentSource} source      Provenance back to the source bundle, or 'authored'.
+ */
+
+/**
+ * ➕ The activity on a filled block (fill.js).
+ * @typedef {Object} BlockActivity
+ * @property {string} templateId         ContentItem id.
+ * @property {string} title
+ * @property {'full'|'half'|'evening'|'short'} slot  ➕ Slot class of the block.
+ * @property {string} summary            ➕ The item's one-line summary.
+ * @property {string} intensity
+ * @property {string[]} interests
+ * @property {string} [foodNote]
+ * @property {string} [morning]          Full slots only.
+ * @property {string} [afternoon]        Full slots only.
+ * @property {string} [evening]          Full slots only.
  */
 
 /**
@@ -197,7 +237,7 @@
  * @property {string|null} placeId       Where it happens (departure place for travel).
  * @property {string} startTime          "HH:MM", local at placeId.
  * @property {number} durationHours      Length of the block.
- * @property {Object} [activity]         Filled later by fill.js.
+ * @property {BlockActivity} [activity] Filled later by fill.js.
  * @property {BlockTransport} [transport]  Present on travel blocks.
  * @property {Provenance} provenance
  * @property {string} generationStatus   'ok' for the skeleton.
@@ -205,6 +245,7 @@
  * @property {boolean} locked            Always false in the skeleton.
  * @property {Object} [liveData]         Reserved for live data.
  * @property {string} [note]             e.g. 'in_transit' on a filler rest block.
+ * @property {{reason: 'no_eligible_content', slot: string}} [gap]  ➕ Set by fill.js on an open block it couldn't fill (generationStatus 'unavailable').
  */
 
 /**
@@ -223,6 +264,7 @@
  * @property {string[]} warnings        ➕ Scheduler warnings, e.g. 'nights_above_package_max'.
  * @property {{engine: string, schema: string, content: string, routeData: string, bufferRuleset: string}} versions
  * @property {Object[]} history
+ * @property {Array<{blockId: string, dayNumber: number, placeId: string, slot: string}>} [contentGaps]  ➕ Open blocks fill.js left unfilled (filled Trips only).
  */
 
 export {};

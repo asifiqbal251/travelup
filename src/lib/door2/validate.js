@@ -182,3 +182,135 @@ export function validateSkeleton(result, routeResult, spec, data, { reviewPolicy
     warnings: [...(skeleton.warnings ?? [])]
   });
 }
+
+// ---------------------------------------------------------------------------
+// validateFilled: independent re-check of fill.js output against the skeleton
+// it was filled from. It re-derives slot classes and arrival days itself
+// rather than importing fill.js, so a fill bug can't vouch for itself. Every
+// violation is an engine bug and THROWS.
+
+const FILLED_SLOTS_ACCEPTED = Object.freeze({
+  full: ['full'],
+  half: ['half'],
+  evening: ['evening'],
+  short: ['short', 'half']
+});
+
+function filledInvariant(condition, message) {
+  if (!condition) throw new Error(`validateFilled invariant violated: ${message}`);
+}
+
+function isDeepEqual(a, b) {
+  if (a === b) return true;
+  if (typeof a !== 'object' || typeof b !== 'object' || a === null || b === null) return false;
+  if (Array.isArray(a) !== Array.isArray(b)) return false;
+  const keysA = Object.keys(a);
+  const keysB = Object.keys(b);
+  if (keysA.length !== keysB.length) return false;
+  return keysA.every((k) => Object.prototype.hasOwnProperty.call(b, k) && isDeepEqual(a[k], b[k]));
+}
+
+function slotClassOf(block) {
+  const startHour = parseClock(block.startTime);
+  if (block.durationHours >= 8) return 'full';
+  if (startHour >= 17) return 'evening';
+  if (block.durationHours >= 3) return 'half';
+  return 'short';
+}
+
+/**
+ * @param {Object} filledTrip   fillTrip output
+ * @param {Object} skeletonTrip buildSkeletonTrip output it was filled from
+ * @param {TripSpec} spec
+ * @param {Object[]} content    the content shelf fill used
+ */
+export function validateFilled(filledTrip, skeletonTrip, spec, content) {
+  const contentById = new Map(content.map((item) => [item.id, item]));
+
+  // Calendar untouched.
+  filledInvariant(filledTrip.id === skeletonTrip.id, `trip id changed from "${skeletonTrip.id}" to "${filledTrip.id}"`);
+  filledInvariant(filledTrip.days.length === skeletonTrip.days.length, `day count ${filledTrip.days.length} != skeleton ${skeletonTrip.days.length}`);
+
+  // Arrival day per stop, re-derived from the skeleton's inbound route legs.
+  const arrivalDay = new Map();
+  for (const day of skeletonTrip.days) {
+    for (const b of day.blocks) {
+      if (b.type !== 'travel' || !b.id.startsWith('tr:')) continue;
+      const d = b.transport.arriveDayNumber;
+      if (!arrivalDay.has(b.anchor.stopId) || d < arrivalDay.get(b.anchor.stopId)) arrivalDay.set(b.anchor.stopId, d);
+    }
+  }
+
+  const usedContentIds = new Set();
+  const gapBlocks = [];
+  skeletonTrip.days.forEach((skDay, i) => {
+    const day = filledTrip.days[i];
+    filledInvariant(day.id === skDay.id && day.dayNumber === skDay.dayNumber, `day ${i + 1} identity changed`);
+    filledInvariant(day.blocks.length === skDay.blocks.length, `Day ${skDay.dayNumber} has ${day.blocks.length} blocks, skeleton ${skDay.blocks.length}`);
+
+    skDay.blocks.forEach((sk, j) => {
+      const b = day.blocks[j];
+      const where = `Day ${skDay.dayNumber} block ${j} ("${sk.id}")`;
+      filledInvariant(b.id === sk.id, `${where} id is "${b.id}"`);
+      filledInvariant(b.startTime === sk.startTime, `${where} startTime ${b.startTime} != ${sk.startTime}`);
+      filledInvariant(b.durationHours === sk.durationHours, `${where} durationHours ${b.durationHours} != ${sk.durationHours}`);
+      filledInvariant(b.placeId === sk.placeId, `${where} placeId "${b.placeId}" != "${sk.placeId}"`);
+
+      if (sk.type !== 'open') {
+        filledInvariant(isDeepEqual(b, sk), `${where} is a ${sk.type} block and was changed`);
+        return;
+      }
+
+      const slot = slotClassOf(sk);
+      if (b.type === 'open') {
+        filledInvariant(b.generationStatus === 'unavailable' && b.gap != null, `${where} is still open but not marked as a gap`);
+        filledInvariant(b.gap.slot === slot, `${where} gap slot "${b.gap.slot}", expected "${slot}"`);
+        gapBlocks.push({ blockId: b.id, dayNumber: day.dayNumber, placeId: b.placeId, slot });
+        return;
+      }
+
+      filledInvariant(b.type === 'activity', `${where} became "${b.type}", expected activity or gap`);
+      const contentId = b.anchor?.contentId;
+      filledInvariant(b.anchor.stopId === sk.anchor.stopId, `${where} anchor.stopId changed`);
+      filledInvariant(contentId != null && b.activity?.templateId === contentId, `${where} contentId/templateId mismatch`);
+      filledInvariant(!usedContentIds.has(contentId), `content "${contentId}" used more than once`);
+      usedContentIds.add(contentId);
+
+      const item = contentById.get(contentId);
+      filledInvariant(item, `${where} uses unknown content "${contentId}"`);
+      filledInvariant(item.placeId === b.placeId, `${where} at "${b.placeId}" uses content "${contentId}" for "${item.placeId}"`);
+      filledInvariant(
+        item.slots.some((s) => FILLED_SLOTS_ACCEPTED[slot].includes(s)),
+        `${where} is a ${slot} slot; "${contentId}" fits ${item.slots.join('/')}`
+      );
+      filledInvariant(b.activity.slot === slot, `${where} activity.slot "${b.activity.slot}", expected "${slot}"`);
+
+      const arrival = arrivalDay.get(sk.anchor.stopId);
+      filledInvariant(arrival != null, `${where} stop "${sk.anchor.stopId}" has no inbound route leg`);
+      const dayOffset = skDay.dayNumber - arrival;
+      filledInvariant(
+        (item.minDayAtStop ?? 0) <= dayOffset,
+        `${where} places "${contentId}" at dayOffset ${dayOffset}, minDayAtStop ${item.minDayAtStop}`
+      );
+      filledInvariant(b.provenance?.reviewed === false, `${where} pilot content marked reviewed`);
+    });
+  });
+
+  // contentGaps exactly matches the gap blocks.
+  filledInvariant(Array.isArray(filledTrip.contentGaps), 'contentGaps missing');
+  filledInvariant(
+    isDeepEqual(filledTrip.contentGaps, gapBlocks),
+    `contentGaps ${JSON.stringify(filledTrip.contentGaps)} != gap blocks ${JSON.stringify(gapBlocks)}`
+  );
+
+  // Status: incomplete iff there are gaps; otherwise the skeleton's status.
+  const hasGaps = gapBlocks.length > 0;
+  filledInvariant((filledTrip.status === 'incomplete') === hasGaps, `status "${filledTrip.status}" with ${gapBlocks.length} gaps`);
+  if (!hasGaps) filledInvariant(filledTrip.status === skeletonTrip.status, `status "${filledTrip.status}" != skeleton "${skeletonTrip.status}"`);
+  filledInvariant(
+    filledTrip.warnings.includes(FAILURE_STATES.CONTENT_INSUFFICIENT) === hasGaps,
+    `content_insufficient warning does not match ${gapBlocks.length} gaps`
+  );
+
+  return makeSuccess({ warnings: [...filledTrip.warnings] });
+}

@@ -4,11 +4,13 @@
 
 import { BUFFER_RULESET_VERSION, DEFAULT_BUFFER_RULESET } from './bufferRuleset.js';
 import { FAILURE_STATES, makeFailure } from './failureStates.js';
+import { fillTrip } from './fill.js';
+import { PILOT_CONTENT } from './pilotContent.js';
 import { PILOT_CONNECTIONS, PILOT_DATA_VERSION, PILOT_PLACES, PILOT_ROUTE_PACKAGES } from './pilotData.js';
 import { getPlace, selectRoutes } from './route.js';
 import { PackageAuthoringError, scheduleRoute } from './schedule.js';
 import { ENGINE_VERSION, SCHEDULE_CONFIG } from './scheduleConfig.js';
-import { validateSkeleton } from './validate.js';
+import { validateFilled, validateSkeleton } from './validate.js';
 
 // The one entry point the harness and tests call: route -> schedule ->
 // validate. No randomness and no Date.now(): identical input gives an
@@ -157,4 +159,21 @@ export function buildSkeletonTrip(spec, data = PILOT_DATA, options = {}) {
     },
     history: []
   };
+}
+
+/**
+ * Skeleton, then fill (one curated activity per open block), then an
+ * independent re-check. A skeleton failure is returned unchanged.
+ * @param {TripSpec} spec
+ * @param {{places: Object|Map, connections: Object[], routePackages: Object[]}} [data]
+ * @param {{reviewPolicy?: 'strict'|'allow_drafts', config?: typeof SCHEDULE_CONFIG, bufferRuleset?: typeof DEFAULT_BUFFER_RULESET, content?: Object[]}} [options]
+ * @returns {Trip|FailureResult}
+ */
+export function buildFilledTrip(spec, data = PILOT_DATA, options = {}) {
+  const skeleton = buildSkeletonTrip(spec, data, options);
+  if (skeleton.ok === false) return skeleton;
+  const content = options.content ?? PILOT_CONTENT;
+  const filled = fillTrip(skeleton, spec, content);
+  validateFilled(filled, skeleton, spec, content);
+  return filled;
 }

@@ -1,10 +1,10 @@
 import { useMemo, useState } from "react";
 import { useLocation } from "react-router-dom";
 import PageNotFound from "@/lib/PageNotFound";
-import { PILOT_DATA, buildSkeletonTrip } from "@/lib/door2/planner";
+import { PILOT_DATA, buildFilledTrip, buildSkeletonTrip } from "@/lib/door2/planner";
 import { PILOT_PLACES } from "@/lib/door2/pilotData";
 
-// Hidden dev harness for the Door 2 skeleton scheduler (/dev/door2?key=door2).
+// Hidden dev harness for the Door 2 planner (skeleton + fill) (/dev/door2?key=door2).
 // A test instrument, not product UI. Not linked from anywhere.
 
 const BASE_SPEC = {
@@ -59,7 +59,10 @@ const FIXTURES = [
   { key: "F8b", label: "F8b · test pkg: stop at atlantis (throws)", destination: PERU, totalDays: 10, required: [] },
   { key: "F8c", label: "F8c · test pkg: night at Machu Picchu (throws)", destination: PERU, totalDays: 12, required: [] },
   { key: "F8d", label: "F8d · test pkg: Lima pass-through after Huaraz", destination: PERU, totalDays: 12, required: [] },
-  { key: "F9", label: "F9 · Ljubljana, 7 days (uncovered)", destination: "place:ljubljana", totalDays: 7, required: [] }
+  { key: "F9", label: "F9 · Ljubljana, 7 days (uncovered)", destination: "place:ljubljana", totalDays: 7, required: [] },
+  { key: "G5", label: "G5 · Tokyo, 10 days (runs out of content)", destination: "place:tokyo", totalDays: 10, required: [] },
+  { key: "G7", label: "G7 · Peru, 10 days, Hiking", destination: PERU, totalDays: 10, required: [], interests: ["Hiking"] },
+  { key: "G10", label: "G10 · Tokyo, 7 days, Relaxed", destination: "place:tokyo", totalDays: 7, required: [], pace: "relaxed" }
 ];
 
 const DESTINATIONS = [
@@ -70,6 +73,14 @@ const DESTINATIONS = [
     .filter((p) => p.id !== "vancouver")
     .map((p) => ({ value: `place:${p.id}`, label: `${p.name} (place)` }))
 ];
+
+const PACES = [
+  { value: "relaxed", label: "Relaxed" },
+  { value: "balanced", label: "Balanced" },
+  { value: "fast-paced", label: "Fast-paced" }
+];
+
+const INTERESTS = ["Cities", "Food", "History and culture", "Photography", "Nature", "Hiking", "Adventure", "Beaches", "Relaxation", "Wildlife"];
 
 const placeName = (id) => PILOT_PLACES[id]?.name ?? id ?? "—";
 
@@ -82,10 +93,18 @@ function endTime(block) {
 function run(state) {
   const fixture = FIXTURES.find((f) => f.key === state.fixture);
   const [kind, id] = state.destination.split(":");
-  const spec = { ...BASE_SPEC, destination: { kind, id }, totalDays: Number(state.totalDays), requiredPlaceIds: state.required };
+  const spec = {
+    ...BASE_SPEC,
+    destination: { kind, id },
+    totalDays: Number(state.totalDays),
+    requiredPlaceIds: state.required,
+    pace: state.pace,
+    interests: state.interests
+  };
   const data = TEST_PACKAGES[fixture?.key] ? { ...PILOT_DATA, routePackages: [TEST_PACKAGES[fixture.key]] } : PILOT_DATA;
+  const build = state.fill ? buildFilledTrip : buildSkeletonTrip;
   try {
-    return { spec, result: buildSkeletonTrip(spec, data, { reviewPolicy: state.policy }) };
+    return { spec, result: build(spec, data, { reviewPolicy: state.policy }) };
   } catch (err) {
     return { spec, thrown: String(err?.message ?? err) };
   }
@@ -97,9 +116,43 @@ function tripSummary(trip) {
   return `${trip.days.length}-day trip · home arrival Day ${home.transport.arriveDayNumber} ${home.transport.arriveTime} · nights: ${nights}`;
 }
 
-function fixtureState(key) {
+function fixtureState(key, fill = true) {
   const f = FIXTURES.find((x) => x.key === key);
-  return { fixture: f.key, destination: f.destination, totalDays: f.totalDays, required: [...f.required], policy: f.policy ?? "allow_drafts" };
+  return {
+    fixture: f.key,
+    destination: f.destination,
+    totalDays: f.totalDays,
+    required: [...f.required],
+    policy: f.policy ?? "allow_drafts",
+    pace: f.pace ?? "balanced",
+    interests: [...(f.interests ?? [])],
+    fill
+  };
+}
+
+function ActivityDetail({ block }) {
+  const a = block.activity;
+  const source = block.provenance.content;
+  return (
+    <div className="basis-full pl-14 text-slate-700 space-y-0.5">
+      <div>
+        <span className="font-semibold text-slate-900">{a.title}</span>
+        <span className="text-slate-500"> · {a.slot} · {a.intensity}</span>
+        <span className="ml-2 text-xs px-1.5 rounded bg-slate-100 text-slate-600">
+          {source?.kind === "extracted" ? <>from <em>{source.bundleName}</em></> : "pilot-written"}
+        </span>
+      </div>
+      <div>{a.summary}</div>
+      {a.slot === "full" && (
+        <div className="text-slate-600">
+          <div>Morning: {a.morning}</div>
+          <div>Afternoon: {a.afternoon}</div>
+          <div>Evening: {a.evening}</div>
+        </div>
+      )}
+      {a.foodNote && <div className="text-slate-600">Food: {a.foodNote}</div>}
+    </div>
+  );
 }
 
 export default function Door2Dev() {
@@ -117,6 +170,8 @@ export default function Door2Dev() {
   };
   const toggleRequired = (id) =>
     update({ required: state.required.includes(id) ? state.required.filter((x) => x !== id) : [...state.required, id] });
+  const toggleInterest = (i) =>
+    update({ interests: state.interests.includes(i) ? state.interests.filter((x) => x !== i) : [...state.interests, i] });
 
   const copyJson = async () => {
     try {
@@ -133,18 +188,19 @@ export default function Door2Dev() {
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900">
       <div className="max-w-5xl mx-auto px-4 py-6 space-y-5">
-        <h1 className="text-2xl font-bold">Door 2 skeleton scheduler · dev harness</h1>
+        <h1 className="text-2xl font-bold">Door 2 planner (skeleton + fill) · dev harness</h1>
 
         {state.policy === "allow_drafts" && (
           <div className="rounded-lg bg-amber-400 text-amber-950 font-semibold px-4 py-3 border-2 border-amber-600">
             DRAFT DATA — pilot connections are unreviewed. Not for real travellers.
+            {state.fill && " Pilot activities are unreviewed. Tokyo intentionally runs out after about 6 days."}
           </div>
         )}
 
         <section className="rounded-lg bg-white border border-slate-200 p-4 grid gap-4 md:grid-cols-2">
           <label className="block text-sm">
             <span className="font-medium">Fixture</span>
-            <select className="mt-1 w-full border border-slate-300 rounded px-2 py-1.5 bg-white" value={state.fixture} onChange={(e) => { setCopied(false); setState(fixtureState(e.target.value)); }}>
+            <select className="mt-1 w-full border border-slate-300 rounded px-2 py-1.5 bg-white" value={state.fixture} onChange={(e) => { setCopied(false); setState(fixtureState(e.target.value, state.fill)); }}>
               {FIXTURES.map((f) => <option key={f.key} value={f.key}>{f.label}</option>)}
             </select>
           </label>
@@ -165,6 +221,27 @@ export default function Door2Dev() {
                 <label key={p} className="flex items-center gap-1.5">
                   <input type="radio" name="policy" checked={state.policy === p} onChange={() => update({ policy: p })} />
                   {p}
+                </label>
+              ))}
+            </div>
+          </fieldset>
+          <label className="flex items-center gap-2 text-sm font-medium">
+            <input type="checkbox" checked={state.fill} onChange={(e) => update({ fill: e.target.checked })} />
+            Fill activities
+          </label>
+          <label className="block text-sm">
+            <span className="font-medium">Pace</span>
+            <select className="mt-1 w-full border border-slate-300 rounded px-2 py-1.5 bg-white" value={state.pace} onChange={(e) => update({ pace: e.target.value })}>
+              {PACES.map((p) => <option key={p.value} value={p.value}>{p.label}</option>)}
+            </select>
+          </label>
+          <fieldset className="text-sm md:col-span-2">
+            <legend className="font-medium">Interests</legend>
+            <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1">
+              {INTERESTS.map((i) => (
+                <label key={i} className="flex items-center gap-1.5">
+                  <input type="checkbox" checked={state.interests.includes(i)} onChange={() => toggleInterest(i)} />
+                  {i}
                 </label>
               ))}
             </div>
@@ -219,8 +296,10 @@ export default function Door2Dev() {
             <div className="rounded-lg bg-white border border-slate-200 p-4 text-sm">
               <div className="font-semibold">{tripSummary(result)}</div>
               <div className="text-slate-600 mt-1">
-                {result.id} · status <code>{result.status}</code> · route <code>{result.spec.routeTemplateId}</code>
+                {result.id} · status <code className={result.status === "incomplete" ? "px-1 rounded bg-amber-200 text-amber-900" : undefined}>{result.status}</code> · route <code>{result.spec.routeTemplateId}</code>
                 {result.warnings?.length > 0 && <> · warnings: <code>{result.warnings.join(", ")}</code></>}
+                {result.contentGaps && <> · gaps: <code>{result.contentGaps.length}</code></>}
+                {" · "}content <code>{result.versions.content}</code>
               </div>
             </div>
             {result.days.map((d) => (
@@ -230,9 +309,9 @@ export default function Door2Dev() {
                   {d.blocks.map((b) => (
                     <li key={b.id} className="flex flex-wrap gap-x-2 items-baseline">
                       <span className="font-mono w-12">{b.startTime}</span>
-                      <span className={`font-mono text-xs uppercase px-1.5 rounded ${b.type === "travel" ? "bg-sky-100 text-sky-900" : b.type === "open" ? "bg-emerald-100 text-emerald-900" : "bg-slate-100"}`}>{b.type}</span>
+                      <span className={`font-mono text-xs uppercase px-1.5 rounded ${b.type === "travel" ? "bg-sky-100 text-sky-900" : b.gap ? "bg-amber-200 text-amber-900" : b.type === "open" ? "bg-emerald-100 text-emerald-900" : b.type === "activity" ? "bg-violet-100 text-violet-900" : "bg-slate-100"}`}>{b.type}</span>
                       <span>{b.note === "in_transit" ? "in transit" : placeName(b.placeId)}</span>
-                      <span className="text-slate-500">{b.durationHours.toFixed(2)}h{b.type === "open" && ` (until ${endTime(b)})`}</span>
+                      <span className="text-slate-500">{b.durationHours.toFixed(2)}h{(b.type === "open" || b.type === "activity") && ` (until ${endTime(b)})`}</span>
                       {b.transport && (
                         <span className="text-slate-700">
                           {b.transport.mode} · {placeName(b.transport.fromPlaceId)} → {placeName(b.transport.toPlaceId)} · arrives Day {b.transport.arriveDayNumber} {b.transport.arriveTime}
@@ -241,6 +320,12 @@ export default function Door2Dev() {
                       )}
                       {!b.provenance.reviewed && <span className="text-xs px-1.5 rounded bg-amber-200 text-amber-900">draft</span>}
                       <span className="text-xs text-slate-400 font-mono">{b.id}</span>
+                      {b.type === "activity" && <ActivityDetail block={b} />}
+                      {b.gap && (
+                        <div className="basis-full pl-14 text-amber-800 font-medium">
+                          No curated activity left for this slot yet <span className="font-normal text-amber-700">({b.gap.slot})</span>
+                        </div>
+                      )}
                     </li>
                   ))}
                 </ul>
