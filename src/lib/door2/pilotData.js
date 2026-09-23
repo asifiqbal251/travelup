@@ -66,7 +66,10 @@ export const PILOT_CONNECTIONS = [
     mode: 'flight_international',
     inVehicleHours: 5.4,
     localTransferHours: { origin: 0.5, destination: 0.85 },
-    processingProfile: 'US_preclearance'
+    processingProfile: 'US_preclearance',
+    reviewedBy: "Claude (chat, 23 Sep 2026 — confirmed: 5h03m–5h23m nonstop range matches; Air Canada + United on EWR, JetBlue on JFK)",
+    reviewedAt: "2026-09-23",
+    version: 3
   },
   {
     ...DRAFT_ROW,
@@ -79,9 +82,18 @@ export const PILOT_CONNECTIONS = [
       { mode: 'flight_international', inVehicleHours: 4.6 },
       { mode: 'flight_international', inVehicleHours: 6.6 }
     ],
-    layoverHours: 1.5,
+    layoverHours: 2.0,
     typicalRangeHours: { min: 10.9, max: 13.5 },
-    localTransferHours: { origin: 0.5, destination: 0.75 }
+    localTransferHours: { origin: 0.5, destination: 0.75 },
+    assumptions: [
+      "layoverHours (2.0h) is a conservative estimate — FlightRoutes.com cites the United via-Houston routing as ~14h total wall-clock, implying a layover of roughly 2.0–2.2h once segment times are subtracted. The IMPORTANT DISCREPANCY flagged in v2 still stands and is unresolved — a real date-specific booked itinerary is the correct fix before this row is marked reviewed with higher confidence."
+    ],
+    sources: [
+      "https://www.flightroutes.com/YVR-LIM (United via Houston total ~14h, implying ~2.0h layover at IAH)"
+    ],
+    reviewedBy: "Claude (chat, 23 Sep 2026 live-research pass — layoverHours conservative estimate only; DISCREPANCY flag unresolved)",
+    reviewedAt: "2026-09-23",
+    version: 3
   },
   {
     ...DRAFT_ROW,
@@ -92,7 +104,18 @@ export const PILOT_CONNECTIONS = [
     inVehicleHours: 10.1,
     typicalRangeHours: { min: 9.8, max: 10.5 },
     gatewayId: 'NRT',
-    localTransferHours: { origin: 0.5, destination: 1.25 }
+    localTransferHours: { origin: 0.5, destination: 1.25 },
+    assumptions: [
+      "ANA does NOT operate its own metal on this route as of September 2026 — it codeshares on Air Canada (AC3). Correct framing: Air Canada (own metal); JAL (own metal); ZIPAIR (own metal); ANA (codeshare on AC). No change to flight times."
+    ],
+    sources: [
+      "https://www.directflights.com/YVR-NRT (flight time 9h45m–10h20m, updated Sep 21 2026; Air Canada, JAL, Zipair confirmed nonstop operators)",
+      "https://www.flightconnections.com/flights-from-yvr-to-nrt (18 flights/week as of Sep 2026, 9h45m average)",
+      "https://info.flightmapper.net/route/ANA_NH_YVR_NRT (ANA codeshares on AC3, not own-metal)"
+    ],
+    reviewedBy: "Claude (chat, 23 Sep 2026 live-research pass)",
+    reviewedAt: "2026-09-23",
+    version: 3
   },
   {
     ...DRAFT_ROW,
@@ -102,7 +125,17 @@ export const PILOT_CONNECTIONS = [
     mode: 'flight_domestic',
     inVehicleHours: 1.25,
     typicalRangeHours: { min: 1.25, max: 1.5 },
-    localTransferHours: { origin: 1.0, destination: 0.75 }
+    localTransferHours: { origin: 1.0, destination: 0.75 },
+    assumptions: [
+      "IMPORTANT — Lima new terminal (June 2026): Lima Jorge Chavez Airport completed a full terminal migration in June 2026. The existing localTransferHours.origin (1.0h) is correct for domestic-to-domestic scenarios only. For any traveller connecting from an INTERNATIONAL flight into Lima then domestic to Cusco, the required minimum transfer time is now 3.0h (4.0h comfortable in peak season). The scheduler must not use the 1.0h figure for international-connection itineraries routing through Lima. Future schema fix needed: localTransferHours.origin_international_connection."
+    ],
+    sources: [
+      "https://www.theonlyperuguide.com/research/lima-to-cusco-by-plane-airlines-typical-prices-best-flight-times-and-delay-tips/ (1h15–1h30 in-air; new terminal June 2026; 3h minimum for international connections)",
+      "https://www.flightconnections.com/flights-from-lim-to-cuz (1h20m average, 149 flights/week as of Aug 2026)"
+    ],
+    reviewedBy: "Claude (chat, 23 Sep 2026 live-research pass)",
+    reviewedAt: "2026-09-23",
+    version: 3
   },
   {
     ...DRAFT_ROW,
@@ -112,7 +145,10 @@ export const PILOT_CONNECTIONS = [
     mode: 'road_private_transfer',
     inVehicleHours: 1.5,
     typicalRangeHours: { min: 1.5, max: 2.5 },
-    localTransferHours: { origin: 0.25, destination: 0.1 }
+    localTransferHours: { origin: 0.25, destination: 0.1 },
+    reviewedBy: "Claude (chat, 23 Sep 2026 — confirmed: 1.5–2.5h private transfer range consistent with all sources)",
+    reviewedAt: "2026-09-23",
+    version: 3
   },
   {
     ...DRAFT_ROW,
@@ -120,9 +156,21 @@ export const PILOT_CONNECTIONS = [
     fromPlaceId: 'ollantaytambo',
     toPlaceId: 'aguas_calientes',
     mode: 'train',
-    inVehicleHours: 1.75,
-    typicalRangeHours: { min: 1.75, max: 2.0 },
-    localTransferHours: { origin: 0.25, destination: 0.1 }
+    inVehicleHours: 1.5,
+    typicalRangeHours: { min: 1.5, max: 1.75 },
+    localTransferHours: { origin: 0.25, destination: 0.1 },
+    assumptions: [
+      "inVehicleHours corrected to 1.5h: Rome2Rio and multiple 2026 guides cite 1h30m as the standard journey time. 1.5h is the better deterministic value; 1.75h is now the range max. Safety note: December 30 2025 PeruRail/Inca Rail collision near Ollantaytambo killed 1, injured 40; service has since resumed."
+    ],
+    sources: [
+      "https://www.perurail.com/ (official: approximately 1 hour and 45 minutes from Ollantaytambo)",
+      "https://www.rome2rio.com/Train/Ollantaytambo/Aguas-Calientes (PeruRail hourly; 1h30m average, fastest 1h21m)",
+      "https://inkatimetours.com/train-from-ollantaytambo-to-aguas-calientes/ (2026 guide: ~1.5h for most direct services)",
+      "https://en.wikipedia.org/wiki/2025_Ollantaytambo_District_train_collision (Dec 30 2025 collision, service resumed)"
+    ],
+    reviewedBy: "Claude (chat, 23 Sep 2026 live-research pass)",
+    reviewedAt: "2026-09-23",
+    version: 3
   },
   {
     ...DRAFT_ROW,
@@ -132,7 +180,18 @@ export const PILOT_CONNECTIONS = [
     mode: 'local_shuttle',
     inVehicleHours: 0.45,
     typicalRangeHours: { min: 0.4, max: 0.5 },
-    localTransferHours: { origin: 0.1, destination: 0.1 }
+    localTransferHours: { origin: 0.1, destination: 0.1 },
+    assumptions: [
+      "OPERATOR UPDATE (Feb 2026): A second operator (San Antonio de Torontoy) was authorised alongside Consettur on a temporary basis while a new concession process is defined. Any copy referring to Consettur as the exclusive/sole operator is now inaccurate. Scheduling impact is neutral — same road, same times."
+    ],
+    sources: [
+      "https://www.inkayniperutours.com/blog/bus-to-machu-picchu (25–30 min; Feb 2026 dual-operator status documented)",
+      "https://www.yapaexplorers.com/travel-guides/aguas-calientes-to-machu-picchu-bus-times-lines-tickets-and-what-to-expect/ (20–25 min; 2026 detail)",
+      "https://www.peruviancuscotraveltour.com/buses-machupicchu-complete-guide-2026/ (20–30 min; 2026 detail)"
+    ],
+    reviewedBy: "Claude (chat, 23 Sep 2026 live-research pass)",
+    reviewedAt: "2026-09-23",
+    version: 3
   },
   {
     ...DRAFT_ROW,
@@ -140,9 +199,19 @@ export const PILOT_CONNECTIONS = [
     fromPlaceId: 'lima',
     toPlaceId: 'huaraz',
     mode: 'coach_scheduled',
-    inVehicleHours: 8.0,
-    typicalRangeHours: { min: 7.5, max: 8.5 },
-    localTransferHours: { origin: 0.25, destination: 0.1 }
+    inVehicleHours: 8.5,
+    typicalRangeHours: { min: 8.0, max: 9.5 },
+    localTransferHours: { origin: 0.25, destination: 0.1 },
+    assumptions: [
+      "inVehicleHours corrected to 8.5h: Cruz del Sur's actual Sep 2026 schedule shows 8h30m for the Lima→Huaraz overnight service. Range updated to {8.0, 9.5} per Busbud data for multiple operators."
+    ],
+    sources: [
+      "https://www.checkmybus.com/coach-providers/cruz-del-sur (Cruz del Sur Lima→Huaraz Sep 2026: 8h30m, 9:45PM departure)",
+      "https://www.busbud.com/en/bus-lima-huaraz/r/6mc5rp-6q2cgc (multiple operators; Cruz del Sur 8h30m; range 8–9.5h)"
+    ],
+    reviewedBy: "Claude (chat, 23 Sep 2026 live-research pass)",
+    reviewedAt: "2026-09-23",
+    version: 3
   }
 ];
 
