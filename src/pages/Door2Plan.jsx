@@ -235,13 +235,14 @@ function ActivityDetail({ block }) {
 }
 
 function BlockRow({ block, onSwap, onReject, onPin, blockError }) {
+  const [showActions, setShowActions] = useState(false);
   const isGap = !!block.gap;
   const isActivity = block.type === "activity" && !isGap;
   const isTravel = block.type === "travel";
   const hasEndTime = block.type === "open" || isActivity;
 
   return (
-    <li className="py-3 border-b border-slate-100 last:border-0">
+    <li className="py-3 border-b border-slate-700 last:border-0">
       <div className="flex items-start gap-3">
         <span className="font-mono text-sm text-slate-500 w-12 shrink-0 mt-0.5">
           {block.startTime}
@@ -249,7 +250,7 @@ function BlockRow({ block, onSwap, onReject, onPin, blockError }) {
         <div className="flex-1 min-w-0 space-y-1.5">
           <div className="flex flex-wrap items-center gap-2">
             <TypeBadge type={block.type} isGap={isGap} />
-            <span className="text-sm font-medium text-slate-900">
+            <span className="text-sm font-medium text-white">
               {block.note === "in_transit" ? "In transit" : placeName(block.placeId)}
             </span>
             <span className="text-xs text-slate-500">
@@ -257,19 +258,19 @@ function BlockRow({ block, onSwap, onReject, onPin, blockError }) {
               {hasEndTime && ` · until ${blockEndTime(block)}`}
             </span>
             {!block.provenance.reviewed && (
-              <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs bg-amber-100 text-amber-700 font-medium">
+              <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs bg-amber-900/60 text-amber-300 font-medium">
                 draft
               </span>
             )}
             {block.locked && (
-              <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs bg-indigo-100 text-indigo-700 font-medium">
+              <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs bg-indigo-900/60 text-indigo-300 font-medium">
                 📌 pinned
               </span>
             )}
           </div>
 
           {isTravel && block.transport && (
-            <div className="text-sm text-slate-600">
+            <div className="text-sm text-slate-400">
               <span className="capitalize">
                 {block.transport.mode.replace(/_/g, " ")}
               </span>
@@ -279,7 +280,7 @@ function BlockRow({ block, onSwap, onReject, onPin, blockError }) {
               {" · "}Day {block.transport.arriveDayNumber} at{" "}
               {block.transport.arriveTime}
               {block.transport.overnight && (
-                <span className="ml-2 inline-flex items-center px-1.5 py-0.5 rounded text-xs bg-indigo-100 text-indigo-700">
+                <span className="ml-2 inline-flex items-center px-1.5 py-0.5 rounded text-xs bg-indigo-900/60 text-indigo-300">
                   overnight
                 </span>
               )}
@@ -289,42 +290,53 @@ function BlockRow({ block, onSwap, onReject, onPin, blockError }) {
           {isActivity && <ActivityDetail block={block} />}
 
           {isGap && (
-            <div className="text-sm text-amber-700 font-medium">
+            <div className="text-sm text-amber-300 font-medium">
               No curated activity left for this slot yet
-              <span className="font-normal ml-1 text-amber-600">
+              <span className="font-normal ml-1 text-amber-400">
                 ({block.gap.slot})
               </span>
             </div>
           )}
 
           {isActivity && (
-            <div className="flex gap-2 pt-0.5">
+            <div className="flex items-center gap-2 pt-0.5">
               <button
                 type="button"
-                onClick={() => onSwap(block.id)}
-                className="text-xs px-2.5 py-1 rounded-md bg-violet-100 text-violet-800 hover:bg-violet-200 font-medium transition-colors"
+                onClick={() => setShowActions((v) => !v)}
+                className="text-xs px-2 py-0.5 rounded text-slate-500 hover:text-slate-300 transition-colors"
               >
-                Swap
+                {showActions ? "less" : "···"}
               </button>
-              <button
-                type="button"
-                onClick={() => onReject(block.id)}
-                className="text-xs px-2.5 py-1 rounded-md bg-rose-100 text-rose-700 hover:bg-rose-200 font-medium transition-colors"
-              >
-                Reject
-              </button>
-              <button
-                type="button"
-                onClick={() => onPin(block.id, block.locked)}
-                className="text-xs px-2.5 py-1 rounded-md bg-slate-100 text-slate-700 hover:bg-slate-200 font-medium transition-colors"
-              >
-                {block.locked ? "Unpin" : "Pin"}
-              </button>
+              {showActions && (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => onSwap(block.id)}
+                    className="text-xs px-2.5 py-1 rounded-md bg-violet-900/60 text-violet-300 hover:bg-violet-900 font-medium transition-colors"
+                  >
+                    Swap
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onReject(block.id)}
+                    className="text-xs px-2.5 py-1 rounded-md bg-rose-900/60 text-rose-300 hover:bg-rose-900 font-medium transition-colors"
+                  >
+                    Reject
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onPin(block.id, block.locked)}
+                    className="text-xs px-2.5 py-1 rounded-md bg-slate-700 text-slate-300 hover:bg-slate-600 font-medium transition-colors"
+                  >
+                    {block.locked ? "Unpin" : "Pin"}
+                  </button>
+                </>
+              )}
             </div>
           )}
 
           {blockError && (
-            <p className="text-xs text-rose-700 mt-0.5">{blockError}</p>
+            <p className="text-xs text-rose-400 mt-0.5">{blockError}</p>
           )}
         </div>
       </div>
