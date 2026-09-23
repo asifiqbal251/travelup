@@ -220,6 +220,11 @@ export function selectRoutes(spec, data, options = {}) {
       a.stops.length - b.stops.length ||
       (a.id < b.id ? -1 : a.id > b.id ? 1 : 0)
   );
+  // If the caller requested a specific route package, bubble it to the front.
+  if (spec.routeTemplateId) {
+    const idx = ranked.findIndex((pkg) => pkg.id === spec.routeTemplateId);
+    if (idx > 0) ranked.unshift(ranked.splice(idx, 1)[0]);
+  }
 
   // 5. Build a RouteResult per candidate. Only the best candidate's missing leg
   // is a traveller failure; a lesser candidate with a gap is simply dropped.
