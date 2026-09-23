@@ -805,11 +805,11 @@ export default function Door2Plan() {
   // ── Render ─────────────────────────────────────────────────────────────────
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-slate-900">
       <div className="max-w-2xl mx-auto px-4 py-10 space-y-6">
         <header className="space-y-0.5">
-          <h1 className="text-2xl font-bold text-slate-900">Plan a trip</h1>
-          <p className="text-sm text-slate-400">Hidden preview · pilot catalogue only</p>
+          <h1 className="text-2xl font-bold text-white">Plan a trip</h1>
+          <p className="text-sm text-slate-500">Pilot preview</p>
         </header>
 
         {/* Intake form */}
@@ -818,155 +818,143 @@ export default function Door2Plan() {
           <SavedTripsList onLoad={handleLoadDraft} />
           <form
             onSubmit={handleSubmit}
-            className="rounded-xl bg-white border border-slate-200 p-6 space-y-6"
+            className="rounded-xl bg-slate-800 border border-slate-700 p-6 space-y-6"
           >
-            {/* Destination */}
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1.5">
-                Destination
-              </label>
-              <select
-                value={form.destination}
-                onChange={(e) => handleDestinationChange(e.target.value)}
-                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-slate-400"
-              >
-                {DESTINATIONS.map((d) => (
-                  <option key={d.value} value={d.value}>
-                    {d.label}
-                  </option>
-                ))}
-              </select>
+            {/* Top row: Destination + Days + Month */}
+            <div className="grid grid-cols-3 gap-3">
+              <div className="col-span-1">
+                <label className="block text-xs font-medium text-slate-400 mb-1.5">
+                  Where to
+                </label>
+                <select
+                  value={form.destination}
+                  onChange={(e) => handleDestinationChange(e.target.value)}
+                  className="w-full border border-slate-600 rounded-lg px-3 py-2 text-sm bg-slate-700 text-white focus:outline-none focus:ring-2 focus:ring-teal"
+                >
+                  {DESTINATIONS.map((d) => (
+                    <option key={d.value} value={d.value}>
+                      {d.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-slate-400 mb-1.5">
+                  Days
+                </label>
+                <input
+                  type="number"
+                  min={1}
+                  max={60}
+                  required
+                  value={form.totalDays}
+                  onChange={(e) => updateForm({ totalDays: e.target.value })}
+                  className="w-full border border-slate-600 rounded-lg px-3 py-2 text-sm bg-slate-700 text-white focus:outline-none focus:ring-2 focus:ring-teal"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-slate-400 mb-1.5">
+                  Month
+                </label>
+                <select
+                  value={form.travelMonth}
+                  onChange={(e) =>
+                    updateForm({ travelMonth: Number(e.target.value) })
+                  }
+                  className="w-full border border-slate-600 rounded-lg px-3 py-2 text-sm bg-slate-700 text-white focus:outline-none focus:ring-2 focus:ring-teal"
+                >
+                  {MONTH_OPTIONS.map((m) => (
+                    <option key={m.value} value={m.value}>
+                      {m.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
 
-            {/* Total days */}
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1.5">
-                Total days, door to door
-              </label>
-              <input
-                type="number"
-                min={1}
-                max={60}
-                required
-                value={form.totalDays}
-                onChange={(e) => updateForm({ totalDays: e.target.value })}
-                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-400"
-              />
-              <p className="mt-1.5 text-xs text-slate-500">
-                From when you leave home to when you&apos;re back — travel days included.
-              </p>
+            {/* Secondary row: Who + Pace */}
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-medium text-slate-400 mb-1.5">
+                  Who&apos;s going
+                </label>
+                <select
+                  value={form.travellerType}
+                  onChange={(e) => updateForm({ travellerType: e.target.value })}
+                  className="w-full border border-slate-600 rounded-lg px-3 py-2 text-sm bg-slate-700 text-white focus:outline-none focus:ring-2 focus:ring-teal"
+                >
+                  {TRAVELLER_OPTIONS.map((t) => (
+                    <option key={t.value} value={t.value}>
+                      {t.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-slate-400 mb-1.5">
+                  Pace
+                </label>
+                <select
+                  value={form.pace}
+                  onChange={(e) => updateForm({ pace: e.target.value })}
+                  className="w-full border border-slate-600 rounded-lg px-3 py-2 text-sm bg-slate-700 text-white focus:outline-none focus:ring-2 focus:ring-teal"
+                >
+                  {PACES.map((p) => (
+                    <option key={p.value} value={p.value}>
+                      {p.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
 
-            {/* When */}
+            {/* Interests: chip toggles */}
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1.5">
-                When
-              </label>
-              <select
-                value={form.travelMonth}
-                onChange={(e) =>
-                  updateForm({ travelMonth: Number(e.target.value) })
-                }
-                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-slate-400"
-              >
-                {MONTH_OPTIONS.map((m) => (
-                  <option key={m.value} value={m.value}>
-                    {m.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Traveller type */}
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1.5">
-                Who&apos;s going
-              </label>
-              <select
-                value={form.travellerType}
-                onChange={(e) => updateForm({ travellerType: e.target.value })}
-                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-slate-400"
-              >
-                {TRAVELLER_OPTIONS.map((t) => (
-                  <option key={t.value} value={t.value}>
-                    {t.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Pace */}
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1.5">
-                Pace
-              </label>
-              <select
-                value={form.pace}
-                onChange={(e) => updateForm({ pace: e.target.value })}
-                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-slate-400"
-              >
-                {PACES.map((p) => (
-                  <option key={p.value} value={p.value}>
-                    {p.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Interests */}
-            <fieldset>
-              <legend className="text-sm font-medium text-slate-700 mb-2">
-                Interests
-              </legend>
-              <div className="grid grid-cols-2 gap-x-6 gap-y-2">
+              <p className="text-xs font-medium text-slate-400 mb-2">Interests</p>
+              <div className="flex flex-wrap gap-2">
                 {INTERESTS.map((interest) => (
-                  <label
+                  <button
                     key={interest}
-                    className="flex items-center gap-2 text-sm text-slate-700 cursor-pointer"
+                    type="button"
+                    onClick={() => toggleInterest(interest)}
+                    className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-colors ${
+                      form.interests.includes(interest)
+                        ? "bg-teal text-slate-900 border-teal"
+                        : "bg-slate-700 text-slate-300 border-slate-600 hover:border-slate-400"
+                    }`}
                   >
-                    <input
-                      type="checkbox"
-                      checked={form.interests.includes(interest)}
-                      onChange={() => toggleInterest(interest)}
-                      className="rounded border-slate-300"
-                    />
                     {interest}
-                  </label>
+                  </button>
                 ))}
               </div>
-            </fieldset>
+            </div>
 
-            {/* Required places */}
+            {/* Required places: chip toggles */}
             {requiredPlaces.length > 0 && (
-              <fieldset>
-                <legend className="text-sm font-medium text-slate-700 mb-1.5">
-                  Required places
-                </legend>
-                <p className="text-xs text-slate-500 mb-2">
-                  Places this trip must include.
-                </p>
-                <div className="grid grid-cols-2 gap-x-6 gap-y-2">
+              <div>
+                <p className="text-xs font-medium text-slate-400 mb-2">Must include</p>
+                <div className="flex flex-wrap gap-2">
                   {requiredPlaces.map((p) => (
-                    <label
+                    <button
                       key={p.id}
-                      className="flex items-center gap-2 text-sm text-slate-700 cursor-pointer"
+                      type="button"
+                      onClick={() => toggleRequired(p.id)}
+                      className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-colors ${
+                        form.required.includes(p.id)
+                          ? "bg-teal text-slate-900 border-teal"
+                          : "bg-slate-700 text-slate-300 border-slate-600 hover:border-slate-400"
+                      }`}
                     >
-                      <input
-                        type="checkbox"
-                        checked={form.required.includes(p.id)}
-                        onChange={() => toggleRequired(p.id)}
-                        className="rounded border-slate-300"
-                      />
                       {p.name}
-                    </label>
+                    </button>
                   ))}
                 </div>
-              </fieldset>
+              </div>
             )}
 
             <button
               type="submit"
-              className="w-full bg-slate-900 text-white rounded-lg px-6 py-3 font-semibold text-sm hover:bg-slate-800 transition-colors"
+              className="w-full bg-teal text-slate-900 rounded-lg px-6 py-3 font-bold text-sm hover:opacity-90 transition-opacity"
             >
               Plan my trip
             </button>
@@ -977,11 +965,9 @@ export default function Door2Plan() {
         {/* Results */}
         {showResults && (
           <div className="space-y-4">
-            {/* Non-dismissible draft banner */}
-            <div className="rounded-lg bg-amber-400 text-amber-950 font-semibold px-4 py-3 border-2 border-amber-600 text-sm">
-              DRAFT DATA — pilot connections are unreviewed. Not for real
-              travellers. Edits are local to this browser tab and are not saved
-              anywhere yet.
+            {/* Draft banner */}
+            <div className="rounded-lg bg-amber-950/60 text-amber-300 border border-amber-700/50 px-4 py-2.5 text-xs font-medium">
+              DRAFT DATA — pilot connections unreviewed. Not for real travellers.
             </div>
 
             {/* Failure panel */}
