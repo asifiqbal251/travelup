@@ -22,6 +22,7 @@ import Login from '@/pages/Login';
 import Register from '@/pages/Register';
 import ForgotPassword from '@/pages/ForgotPassword';
 import OAuthConsent from '@/pages/OAuthConsent';
+import Door2Dev from '@/pages/Door2Dev';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -54,6 +55,7 @@ const AuthenticatedApp = () => {
         {/* Full-bleed immersive routes -- no site chrome (see docs/travelfit-visual-fidelity-pass.md #1) */}
         <Route path="/questionnaire" element={<Questionnaire />} />
         <Route path="/find" element={<DoorB />} />
+        <Route path="/dev/door2" element={<Door2Dev />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
