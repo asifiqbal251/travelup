@@ -982,9 +982,9 @@ export default function Door2Plan() {
                 <button
                   type="button"
                   onClick={handleStartOver}
-                  className="text-sm px-3 py-1.5 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-50 font-medium transition-colors"
+                  className="text-sm px-3 py-1.5 rounded-lg bg-slate-700 border border-slate-600 text-slate-300 hover:bg-slate-600 font-medium transition-colors"
                 >
-                  Back to intake
+                  Back to form
                 </button>
               </>
             )}
