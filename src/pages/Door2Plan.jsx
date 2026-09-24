@@ -5,7 +5,7 @@ import { makeDayLighter, swapActivity, swapDays, swappableDays, undo } from "@/l
 import { PILOT_DATA, buildFilledTrip } from "@/lib/door2/planner";
 import { PILOT_PLACES, PILOT_ROUTE_FAMILIES, PILOT_ROUTE_PACKAGES } from "@/lib/door2/pilotData";
 import { selectRoutes } from "@/lib/door2/route";
-import { applyProposal, previewAddOptional, previewAdjustNights, previewRemoveOptional } from "@/lib/door2/restructure";
+import { applyProposal, listMoveOptions, previewAddOptional, previewAdjustNights, previewRemoveOptional } from "@/lib/door2/restructure";
 import { MONTHS } from "@/lib/options";
 import {
   deleteDraftTrip,
@@ -799,7 +799,7 @@ function ProposalCard({ trip, proposal, onUse, onKeep }) {
   );
 }
 
-function StructureSheet({ sheet, trip, onMoreTime, onLessTime, onRemoveOptional, onAddOptional, onUseProposal, onClose }) {
+function StructureSheet({ sheet, trip, onMoreTime, onLessTime, onRemoveOptional, onAddOptional, onMoveOptional, onPickMove, onBackToMove, onUseProposal, onClose }) {
   if (!sheet) return null;
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60" onClick={onClose}>
@@ -813,7 +813,9 @@ function StructureSheet({ sheet, trip, onMoreTime, onLessTime, onRemoveOptional,
               ? `${placeName(sheet.placeId)} · ${nightsLabel(sheet.nights)}`
               : sheet.stage === "optional"
                 ? sheet.label
-                : "How this would look"}
+                : sheet.stage === "move"
+                  ? `Move ${sheet.optionalLabel}`
+                  : "How this would look"}
           </h2>
           <button type="button" onClick={onClose} className="text-slate-500 hover:text-white text-xl leading-none">
             ×
@@ -839,6 +841,15 @@ function StructureSheet({ sheet, trip, onMoreTime, onLessTime, onRemoveOptional,
             {sheet.optionalId && (
               <button
                 type="button"
+                onClick={() => onMoveOptional(sheet.optionalId)}
+                className="w-full bg-slate-800 border border-slate-600 text-white rounded-lg px-6 py-3 font-semibold text-sm hover:bg-slate-700 transition-colors"
+              >
+                Move to a different point in your trip
+              </button>
+            )}
+            {sheet.optionalId && (
+              <button
+                type="button"
                 onClick={() => onRemoveOptional(sheet.optionalId)}
                 className="w-full bg-slate-800 border border-rose-700/40 text-rose-400 rounded-lg px-6 py-3 font-semibold text-sm hover:bg-rose-950/30 transition-colors"
               >
@@ -859,6 +870,40 @@ function StructureSheet({ sheet, trip, onMoreTime, onLessTime, onRemoveOptional,
               Add {sheet.label}
             </button>
           </div>
+        )}
+
+        {sheet.stage === "move" && (
+          <div className="space-y-3">
+            {sheet.current && (
+              <div className="rounded-lg bg-slate-800 border border-slate-700 p-3">
+                <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide">Where it is now</p>
+                <p className="text-sm text-white">{sheet.current.after ? `After ${placeName(sheet.current.after)}` : sheet.optionalLabel}</p>
+              </div>
+            )}
+            {sheet.options.length === 0 ? (
+              <div className="rounded-lg bg-slate-800 border border-slate-700 p-4 space-y-1">
+                <p className="text-sm font-semibold text-white">There&apos;s nowhere else to move it yet on this trip</p>
+                <p className="text-sm text-slate-400 leading-relaxed">
+                  {sheet.optionalLabel} only fits at one point in this route right now, so we&apos;ve left it where it is.
+                </p>
+              </div>
+            ) : (
+              sheet.options.map((o) => (
+                <button
+                  key={o.positionId}
+                  type="button"
+                  onClick={() => onPickMove(o.proposal)}
+                  className="w-full text-left bg-slate-800 border border-slate-600 text-white rounded-lg px-4 py-3 font-semibold text-sm hover:bg-slate-700 transition-colors"
+                >
+                  {o.after ? `After ${placeName(o.after)}` : o.positionId}
+                </button>
+              ))
+            )}
+          </div>
+        )}
+
+        {sheet.stage === "move_confirm" && (
+          <ProposalCard trip={trip} proposal={sheet.proposal} onUse={onUseProposal} onKeep={onBackToMove} />
         )}
 
         {sheet.stage === "refusal" && (
@@ -1364,6 +1409,21 @@ export default function Door2Plan() {
     }
   }
 
+  function handleMoveOptional(optionalId) {
+    const t = activeTrip;
+    if (!t) return;
+    const { current, options } = listMoveOptions(t, optionalId);
+    setStructureSheet({ stage: "move", optionalId, optionalLabel: optionalLabelFor(t, optionalId), current, options });
+  }
+
+  function handlePickMove(proposal) {
+    setStructureSheet((s) => ({ ...s, stage: "move_confirm", proposal }));
+  }
+
+  function handleBackToMove() {
+    setStructureSheet((s) => ({ ...s, stage: "move", proposal: undefined }));
+  }
+
   function handleAdjustNights(stopKey, delta) {
     const t = activeTrip;
     if (!t) return;
@@ -1602,6 +1662,9 @@ export default function Door2Plan() {
         onLessTime={(stopKey) => handleAdjustNights(stopKey, -1)}
         onRemoveOptional={handleRemoveOptional}
         onAddOptional={handleAddOptional}
+        onMoveOptional={handleMoveOptional}
+        onPickMove={handlePickMove}
+        onBackToMove={handleBackToMove}
         onUseProposal={handleUseProposal}
         onClose={() => setStructureSheet(null)}
       />

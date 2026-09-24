@@ -5,11 +5,14 @@ import { readFileSync } from 'node:fs';
 
 import { pinActivity, rejectActivity, swapActivity, undo } from '../../src/lib/door2/edit.js';
 import { tripFingerprint } from '../../src/lib/door2/fingerprint.js';
+import { compileFamilies } from '../../src/lib/door2/families.js';
+import { PILOT_ROUTE_FAMILIES } from '../../src/lib/door2/pilotData.js';
 import { PILOT_CONTENT } from '../../src/lib/door2/pilotContent.js';
 import { PILOT_DATA, buildFilledTrip, buildSkeletonTrip, buildTripFromRoutePlan } from '../../src/lib/door2/planner.js';
 import {
   applyProposal,
   isDurationFlexible,
+  listMoveOptions,
   previewAddOptional,
   previewAdjustNights,
   previewChangeLength,
@@ -544,4 +547,46 @@ test('R.Remove.3: removing Huaraz from a trip too long for the backbone offers t
   assert.match(p.label, /shorten the trip by/);
   assertProposalValid(p);
   assert.equal(applyProposal(hz, p).ok, true);
+});
+
+// Move picker (Door2Plan): listMoveOptions feeds Step 1, applyProposal commits Step 2.
+
+test('R.MoveList.1: Huaraz today has no approved alternate position → zero options (empty state), current is reported', () => {
+  const r = listMoveOptions(huarazChosen(), 'huaraz');
+  assert.deepEqual(r.options, []);
+  assert.equal(r.current.positionId, 'after_lima_in');
+  assert.equal(r.current.after, 'lima');
+});
+
+test('R.MoveList.2: a pending_review position is never listed', () => {
+  const hz = huarazChosen();
+  const family = PILOT_ROUTE_FAMILIES.find((f) => f.id === 'peru_classic');
+  assert.equal(family.optional[0].positions.find((p) => p.id === 'after_machu_picchu').status, 'pending_review');
+  assert.ok(!listMoveOptions(hz, 'huaraz').options.some((o) => o.positionId === 'after_machu_picchu'));
+});
+
+test('R.MoveList.3: unknown or not-included optional lists nothing', () => {
+  assert.deepEqual(listMoveOptions(huarazChosen(), 'nowhere'), { current: null, options: [] });
+  assert.deepEqual(listMoveOptions(filled(spec(PERU, 10)), 'huaraz'), { current: null, options: [] });
+});
+
+test('R.Move.3: once a second position is approved it is listed, its proposal applies, and goes stale after another edit', () => {
+  const hz = huarazChosen(14);
+  const family = structuredClone(PILOT_ROUTE_FAMILIES.find((f) => f.id === 'peru_classic'));
+  family.optional[0].positions.find((p) => p.id === 'after_machu_picchu').status = 'approved';
+  const data = { ...PILOT_DATA, routePackages: compileFamilies([family]) };
+  const listed = listMoveOptions(hz, 'huaraz', { families: [family], data });
+  assert.deepEqual(listed.options.map((o) => o.positionId), ['after_machu_picchu']);
+  const { proposal } = listed.options[0];
+  assert.equal(proposal.kind, 'move_optional');
+
+  const applied = applyProposal(hz, proposal);
+  assert.equal(applied.ok, true);
+  assert.equal(applied.trip.routePlan.optionals[0].positionId, 'after_machu_picchu');
+
+  const other = previewChangeLength(hz, 15);
+  const edited = applyProposal(hz, other.proposals[0]);
+  assert.equal(edited.ok, true);
+  const stale = applyProposal(edited.trip, proposal);
+  assert.deepEqual([stale.ok, stale.reason], [false, 'stale_preview']);
 });

@@ -743,6 +743,36 @@ export function previewMoveOptional(trip, optionalId, positionId, options = {}) 
   return { ok: true, proposals: [proposal] };
 }
 
+/**
+ * The places an included optional could move to: one entry per approved
+ * position other than its current one, each with the proposal
+ * previewMoveOptional builds for it. Positions that aren't approved
+ * (pending_review) or that don't resolve to a servable trip are left out, so
+ * an empty `options` means there is genuinely nowhere else to move it.
+ * @param {Trip} trip
+ * @param {string} optionalId
+ * @param {{data?: Object, content?: ContentItem[], reviewPolicy?: 'strict'|'allow_drafts', families?: Object[]}} [options]
+ * @returns {{current: {positionId: string, after: string|null}|null, options: {positionId: string, after: string|null, proposal: Object}[]}}
+ */
+export function listMoveOptions(trip, optionalId, options = {}) {
+  const ctx = context(trip, options);
+  const family = familyFor(trip, ctx.families);
+  const optional = findOptional(family, optionalId);
+  const current = trip.routePlan.optionals.find((o) => o.optionalId === optionalId);
+  if (!optional || !current) return { current: null, options: [] };
+  const afterOf = (pos) => (pos ? (family.stops[pos.after]?.placeId ?? null) : null);
+  const moves = [];
+  for (const pos of optional.positions) {
+    if (pos.id === current.positionId || pos.status !== 'approved') continue;
+    const r = previewMoveOptional(trip, optionalId, pos.id, options);
+    if (r.ok) moves.push({ positionId: pos.id, after: afterOf(pos), proposal: r.proposals[0] });
+  }
+  return {
+    current: { positionId: current.positionId, after: afterOf(optional.positions.find((p) => p.id === current.positionId)) },
+    options: moves
+  };
+}
+
 // ---------------------------------------------------------------------------
 // applyProposal
 
