@@ -467,7 +467,7 @@ function BasicsStep({ form, updateForm, onBack, onSubmit }) {
 
 // ── Results: trip at a glance ───────────────────────────────────────────────
 
-function TripAtAGlance({ trip, routeAlternatives, onChangeRoute, onOpenNightsSheet }) {
+function TripAtAGlance({ trip, routeAlternatives, onChangeRoute, onOpenNightsSheet, addableOptionals, onOpenOptionalSheet }) {
   const { nodes, edges } = tripAtGlanceSegments(trip);
   if (nodes.length === 0) return null;
 
@@ -500,6 +500,23 @@ function TripAtAGlance({ trip, routeAlternatives, onChangeRoute, onOpenNightsShe
           </div>
         ))}
       </div>
+
+      {addableOptionals?.length > 0 && (
+        <div className="pt-3 border-t border-slate-700 space-y-2">
+          <p className="text-xs font-medium text-slate-400 uppercase tracking-wide">+ Add a place</p>
+          {addableOptionals.map((opt) => (
+            <button
+              key={opt.optionalId}
+              type="button"
+              onClick={() => onOpenOptionalSheet(opt)}
+              className="w-full flex items-center justify-between gap-3 px-3.5 py-2.5 rounded-lg bg-slate-900/60 border border-slate-700 hover:border-slate-500 text-left transition-colors"
+            >
+              <span className="text-sm font-medium text-white">{opt.label}</span>
+              <span className="text-xs text-slate-500 shrink-0">Add</span>
+            </button>
+          ))}
+        </div>
+      )}
 
       {routeAlternatives?.length > 0 && (
         <div className="pt-3 border-t border-slate-700 space-y-2">
