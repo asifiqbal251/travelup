@@ -107,11 +107,10 @@ test('S5: pins travel with the item; gaps move too; spec choices are unchanged',
   // Reject Cusco content until Day 6 becomes a gap, then swap the gap with Day 5.
   let g = filled(BALANCED);
   for (let i = 0; i < 10 && g.days[5].blocks[0].type === 'activity'; i++) g = must(rejectActivity(g, 'op:pc_cusco:d2'));
-  if (g.days[5].blocks[0].type === 'open') {
-    const moved = must(swapDays(g, 5, 6));
-    assert.equal(moved.days[4].blocks[0].type, 'open');
-    assert.equal(moved.days[4].blocks[0].gap.slot, 'full');
-    assert.equal(moved.days[5].blocks[0].type, 'activity');
-    assert.deepEqual(moved.contentGaps.map((x) => x.dayNumber), [5]);
-  }
+  assert.equal(g.days[5].blocks[0].type, 'open', 'Day 6 should be a gap after rejecting the Cusco shelf');
+  const moved = must(swapDays(g, 5, 6));
+  assert.equal(moved.days[4].blocks[0].type, 'open');
+  assert.equal(moved.days[4].blocks[0].gap.slot, 'full');
+  assert.equal(moved.days[5].blocks[0].type, 'activity');
+  assert.deepEqual(moved.contentGaps.map((x) => x.dayNumber), [5]);
 });
