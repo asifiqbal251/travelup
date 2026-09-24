@@ -8,6 +8,7 @@ import { fillTrip } from './fill.js';
 import { PILOT_CONTENT } from './pilotContent.js';
 import { PILOT_CONNECTIONS, PILOT_DATA_VERSION, PILOT_PLACES, PILOT_ROUTE_PACKAGES, PILOT_ROUTE_PACKAGES_ALL } from './pilotData.js';
 import { buildRouteResult, getPlace, selectRoutes } from './route.js';
+import { makeRoutePlan } from './routePlan.js';
 import { PackageAuthoringError, scheduleRoute } from './schedule.js';
 import { ENGINE_VERSION, SCHEDULE_CONFIG } from './scheduleConfig.js';
 import { validateFilled, validateSkeleton } from './validate.js';
@@ -133,22 +134,36 @@ export function buildSkeletonTrip(spec, data = PILOT_DATA, options = {}) {
   if (!validation.ok) return validation;
 
   // 6. Assemble the Trip.
-  return assembleSkeletonTrip(spec, best, scheduled, validation, scheduleOptions.bufferRuleset);
+  const pkg = findRoutePackage(data, best.routePackageId);
+  return assembleSkeletonTrip(spec, pkg, best, scheduled, validation, scheduleOptions.bufferRuleset);
 }
 
 /**
  * Shared Trip assembly for buildSkeletonTrip and buildTripFromRoutePlan.
+ * `spec.stops` and `spec.routeTemplateId` are still written exactly as in v5,
+ * as derived mirrors of `routePlan` for one schema version (design §7).
  * @param {TripSpec} spec
+ * @param {Object} pkg                    The package/variant the route came from.
  * @param {import('./types.js').RouteResult} best
- * @param {{value: {days: Object[], stops: Array<{stopId: string, nights: number}>}}} scheduled
+ * @param {{value: {days: Object[], stops: Array<{stopId: string, nights: number}>, minDays: number}}} scheduled
  * @param {{value: {status: string, warnings: string[]}}} validation
  * @param {typeof DEFAULT_BUFFER_RULESET} bufferRuleset
+ * @param {{prior?: import('./types.js').RoutePlan, nightsSource?: 'auto'|'user'}} [planOptions]
  * @returns {Trip}
  */
-function assembleSkeletonTrip(spec, best, scheduled, validation, bufferRuleset) {
+function assembleSkeletonTrip(spec, pkg, best, scheduled, validation, bufferRuleset, planOptions = {}) {
   const N = spec.totalDays;
   const required = spec.requiredPlaceIds ?? [];
   const nightsByStop = Object.fromEntries(scheduled.value.stops.map((s) => [s.stopId, s.nights]));
+  const routePlan = makeRoutePlan({
+    pkg: pkg ?? { id: best.routePackageId },
+    stops: best.stops.map((s) => ({ ...s, key: s.id, nights: nightsByStop[s.id] })),
+    connectionIds: best.connectionIds,
+    minDays: scheduled.value.minDays,
+    source: best.source,
+    nightsSource: planOptions.nightsSource ?? 'auto',
+    prior: planOptions.prior
+  });
   return {
     id: `door2:${spec.originPlaceId}:${spec.destination.id}:${N}:${best.routePackageId}`,
     status: validation.value.status,
@@ -165,11 +180,12 @@ function assembleSkeletonTrip(spec, best, scheduled, validation, bufferRuleset) 
       })),
       choices: spec.choices ?? { pinned: [], rejected: [], placed: [] }
     }),
+    routePlan,
     days: scheduled.value.days,
     warnings: validation.value.warnings,
     versions: {
       engine: ENGINE_VERSION,
-      schema: 'door2-v5',
+      schema: 'door2-v6',
       content: 'none',
       routeData: PILOT_DATA_VERSION,
       bufferRuleset: `${bufferRuleset.id}@${bufferRuleset.version ?? BUFFER_RULESET_VERSION}`
@@ -254,7 +270,10 @@ export function buildTripFromRoutePlan(spec, routePlan, data = PILOT_DATA, optio
 
   const validation = validateSkeleton(scheduled.value, best, spec, data, { reviewPolicy, config: scheduleOptions.config });
   if (!validation.ok) return validation;
-  return assembleSkeletonTrip(spec, best, scheduled, validation, scheduleOptions.bufferRuleset);
+  return assembleSkeletonTrip(spec, pkg, best, scheduled, validation, scheduleOptions.bufferRuleset, {
+    prior: routePlan,
+    nightsSource: routePlan.nightsSource ?? 'auto'
+  });
 }
 
 /**
