@@ -86,9 +86,60 @@
  * @property {RoutePackageStop[]} stops  ➕ Ordered journey including the return path; the origin is implicit at both ends.
  * @property {string[]} placeIds         Derived: every stop and excursion place.
  * @property {{minNights: number, maxNights: number, extensions: string[]}} visitRules  Kept for v5 compatibility; not read by the scheduler.
- * @property {boolean} reviewed          Whether the package itself has been reviewed.
+ * @property {boolean} reviewed          Not enforced by route.js. Servability is controlled by position status in families.js.
  * @property {string[]} [assumptions]    ➕ Authoring assumptions (e.g. the Cusco acclimatisation minimum).
  * @property {string} [preferredGatewayId]  ➕ Prefer connections with this gateway.
+ * @property {string} [familyId]         ➕ RF: Route Family this package was compiled from.
+ * @property {string} [variantId]        ➕ RF: compiled variant id (equals `id`).
+ * @property {Array<{optionalId: string, positionId: string, stopKeys: string[]}>} [optionals]  ➕ RF: optionals present, with the stop keys each inserted.
+ * @property {string[]} [aliases]        ➕ RF: old ids that still resolve to this package (e.g. 'peru_classic_huaraz').
+ * @property {boolean} [held]            ➕ RF: true when any position is 'pending_review'; held packages are never served.
+ */
+
+/**
+ * ➕ RF: one stop definition in a Route Family, keyed by its family-scoped stop key.
+ * @typedef {Object} RouteFamilyStop
+ * @property {string} placeId
+ * @property {number} minNights
+ * @property {number} maxNights
+ * @property {RoutePackageExcursion[]} [excursions]
+ */
+
+/**
+ * ➕ RF: where an optional may sit. `insert` and `overrides` are per position (design §0.1 F).
+ * @typedef {Object} RouteFamilyPosition
+ * @property {string} id                 e.g. 'after_lima_in'.
+ * @property {string} after              Stop key the insert follows.
+ * @property {string[]} insert           Stop keys inserted, as a unit, after `after`.
+ * @property {'approved'|'pending_review'} status  Only all-approved variants are served (§0.1 G).
+ * @property {string} [variantName]      Name of the variant when this is the only optional present.
+ * @property {Object<string, {minNights?: number, maxNights?: number}>} [overrides]  Stop limits in this variant only.
+ * @property {string[]} [assumptions]    Authoring notes appended to the variant's assumptions.
+ */
+
+/**
+ * ➕ RF: an optional stop group.
+ * @typedef {Object} RouteFamilyOptional
+ * @property {string} id                 e.g. 'huaraz'.
+ * @property {string} label              Traveller-facing name.
+ * @property {string} pitch              One-line traveller-facing reason to add it.
+ * @property {RouteFamilyPosition[]} positions
+ * @property {string[]} exclusiveWith    Optional ids that can't be present at the same time.
+ * @property {string[]} [assumptions]    Authoring notes appended to every variant that includes it.
+ */
+
+/**
+ * ➕ RF: a backbone plus optional stops, compiled into RoutePackages by families.js.
+ * @typedef {Object} RouteFamily
+ * @property {string} id                 Also the backbone variant's id.
+ * @property {string} name               Also the backbone variant's name.
+ * @property {string} countryId
+ * @property {Object<string, RouteFamilyStop>} stops  Family-scoped stop keys.
+ * @property {string[]} backbone         Ordered stop keys of the backbone.
+ * @property {RouteFamilyOptional[]} optional
+ * @property {string[]} [assumptions]
+ * @property {string} [preferredGatewayId]
+ * @property {Object<string, string[]>} [aliases]  Compiled variant id → old ids that resolve to it.
  */
 
 /**
