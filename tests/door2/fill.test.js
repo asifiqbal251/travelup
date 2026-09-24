@@ -217,8 +217,9 @@ test('G9: Peru, 16 days, Huaraz + MP, Hiking: Wilcacocha at offset 1, Laguna 69 
   const got = ids(trip);
   assert.equal(got.find((x) => x.startsWith('D5 ')), 'D5 huz_wilcacocha');
   assert.equal(got.find((x) => x.startsWith('D6 ')), 'D6 huz_laguna69');
-  assert.equal(blockById(trip, 'op:ph_huaraz:d1').anchor.contentId, 'huz_wilcacocha');
-  assert.equal(blockById(trip, 'op:ph_huaraz:d2').anchor.contentId, 'huz_laguna69');
+  // Route Families: Huaraz stop key ph_huaraz -> pc_huaraz.
+  assert.equal(blockById(trip, 'op:pc_huaraz:d1').anchor.contentId, 'huz_wilcacocha');
+  assert.equal(blockById(trip, 'op:pc_huaraz:d2').anchor.contentId, 'huz_laguna69');
 });
 
 test('G10: Tokyo, 7 days, relaxed: no Nikko; Fast-paced is identical to G4', () => {

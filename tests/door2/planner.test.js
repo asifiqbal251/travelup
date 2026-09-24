@@ -170,35 +170,37 @@ test('F3: Peru, 5 days is too short', () => {
 
 test('F4: Peru + Huaraz + Machu Picchu, 12 days', () => {
   const trip = assertTrip(buildSkeletonTrip(F.F4, PILOT_DATA, DRAFTS));
-  assert.equal(trip.spec.routeTemplateId, 'peru_classic_huaraz');
+  // Route Families: the Huaraz package is now the compiled variant 'peru_classic+huaraz@after_lima_in'
+  // (old id kept as an alias), with family stop keys: ph_* -> pc_*, ph_lima_mid -> pc_lima_hub.
+  assert.equal(trip.spec.routeTemplateId, 'peru_classic+huaraz@after_lima_in');
   // minDays is 11, so the 1 extra night goes to lima_in.
   assert.deepEqual(nightsOf(trip), {
-    ph_lima_in: 2,
-    ph_huaraz: 2, // brief: 3
-    ph_lima_mid: 1,
-    ph_cusco: 2,
-    ph_sacred_valley: 0,
-    ph_aguas: 1,
-    ph_olly_return: 0,
-    ph_cusco_return: 0,
-    ph_lima_out: 1
+    pc_lima_in: 2,
+    pc_huaraz: 2, // brief: 3
+    pc_lima_hub: 1,
+    pc_cusco: 2,
+    pc_sacred_valley: 0,
+    pc_aguas: 1,
+    pc_olly_return: 0,
+    pc_cusco_return: 0,
+    pc_lima_out: 1
   });
-  const toHuaraz = blockById(trip, 'tr:ph_lima_in>ph_huaraz');
+  const toHuaraz = blockById(trip, 'tr:pc_lima_in>pc_huaraz');
   assert.equal(toHuaraz.dayNumber, 4);
   assert.equal(toHuaraz.transport.arriveTime, '18:21'); // 72eb2d7: Lima↔Huaraz coach 8.0h → 8.5h
-  const fromHuaraz = blockById(trip, 'tr:ph_huaraz>ph_lima_mid');
+  const fromHuaraz = blockById(trip, 'tr:pc_huaraz>pc_lima_hub');
   assert.equal(fromHuaraz.dayNumber, 6); // brief: 7
   assert.equal(fromHuaraz.transport.arriveTime, '18:21'); // 72eb2d7: coach 8.0h → 8.5h
   // Lima appears again mid-trip (the hub backtrack) as an overnight stop.
   assert.equal(trip.spec.stops.filter((s) => s.placeId === 'lima' && s.nights >= 1).length, 3);
-  assert.ok(blocks(trip, 6).some((b) => b.type === 'open' && b.placeId === 'lima' && b.anchor.stopId === 'ph_lima_mid'));
-  assert.equal(blockById(trip, 'tr:ph_lima_mid>ph_cusco').dayNumber, 7); // brief: 8
-  const exOut = blockById(trip, 'ex:ph_aguas:machu_picchu:out');
-  const exBack = blockById(trip, 'ex:ph_aguas:machu_picchu:back');
+  assert.ok(blocks(trip, 6).some((b) => b.type === 'open' && b.placeId === 'lima' && b.anchor.stopId === 'pc_lima_hub'));
+  assert.equal(blockById(trip, 'tr:pc_lima_hub>pc_cusco').dayNumber, 7); // brief: 8
+  const exOut = blockById(trip, 'ex:pc_aguas:machu_picchu:out');
+  const exBack = blockById(trip, 'ex:pc_aguas:machu_picchu:back');
   assert.equal(exOut.dayNumber, 9); // brief: 10
   assert.equal(exOut.startTime, '13:39'); // 72eb2d7: train −15 min
   assert.equal(exBack.transport.arriveTime, '19:21'); // 72eb2d7: train −15 min
-  const home = blockById(trip, 'tr:ph_lima_out>origin_home');
+  const home = blockById(trip, 'tr:pc_lima_out>origin_home');
   assert.equal(home.dayNumber, 11);
   assert.equal(home.transport.arriveDayNumber, 12);
   assert.equal(home.transport.arriveTime, '00:57'); // brief: 22:45; 72eb2d7: layover +30 min
