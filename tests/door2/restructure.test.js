@@ -466,9 +466,16 @@ test('R.Add.2: already_included and not_in_family refusals', () => {
   assert.deepEqual([unknown.ok, unknown.why], [false, 'not_in_family']);
 });
 
-test('R.Add.3: the held position is never offered — explicit request refuses without ever computing a proposal', () => {
+// Held-position coverage: no position is pending today, so hold one on a cloned family.
+function heldOptions() {
+  const family = structuredClone(PILOT_ROUTE_FAMILIES.find((f) => f.id === 'peru_classic'));
+  family.optional[0].positions.find((p) => p.id === 'after_machu_picchu').status = 'pending_review';
+  return { families: [family], data: { ...PILOT_DATA, routePackages: compileFamilies([family]) } };
+}
+
+test('R.Add.3: a held position is never offered — explicit request refuses without ever computing a proposal', () => {
   const t = filled(spec(PERU, 14));
-  const r = previewAddOptional(t, 'huaraz', 'after_machu_picchu');
+  const r = previewAddOptional(t, 'huaraz', 'after_machu_picchu', heldOptions());
   assert.equal(r.ok, false);
   assert.notEqual(r.why, undefined);
   assert.equal(r.alternatives.length, 0);
@@ -499,9 +506,9 @@ test('R.Remove.2: removing a required optional refuses required_place; removing 
   assert.deepEqual([none.ok, none.why], [false, 'not_included']);
 });
 
-test('R.Move.1: moving Huaraz to the held position refuses order_fixed and never builds a proposal', () => {
+test('R.Move.1: moving Huaraz to a held position refuses order_fixed and never builds a proposal', () => {
   const hz = huarazChosen();
-  const r = previewMoveOptional(hz, 'huaraz', 'after_machu_picchu');
+  const r = previewMoveOptional(hz, 'huaraz', 'after_machu_picchu', heldOptions());
   assert.deepEqual([r.ok, r.why], [false, 'order_fixed']);
   assert.equal(typeof r.message, 'string');
   assert.deepEqual(r.alternatives, []);
@@ -525,7 +532,7 @@ test('R.AddRemoveMove determinism: identical input gives identical output; every
     () => previewAddOptional(filled(spec(PERU, 14)), 'huaraz', 'after_lima_in'),
     () => previewAddOptional(filled(spec(PERU, 10)), 'huaraz'),
     () => previewRemoveOptional(huarazChosen(12), 'huaraz'),
-    () => previewMoveOptional(huarazChosen(12), 'huaraz', 'after_machu_picchu')
+    () => previewMoveOptional(huarazChosen(12), 'huaraz', 'after_machu_picchu', heldOptions())
   ];
   for (const run of runs) {
     const a = run();
@@ -551,8 +558,8 @@ test('R.Remove.3: removing Huaraz from a trip too long for the backbone offers t
 
 // Move picker (Door2Plan): listMoveOptions feeds Step 1, applyProposal commits Step 2.
 
-test('R.MoveList.1: Huaraz today has no approved alternate position → zero options (empty state), current is reported', () => {
-  const r = listMoveOptions(huarazChosen(), 'huaraz');
+test('R.MoveList.1: with no approved alternate position → zero options (empty state), current is reported', () => {
+  const r = listMoveOptions(huarazChosen(), 'huaraz', heldOptions());
   assert.deepEqual(r.options, []);
   assert.equal(r.current.positionId, 'after_lima_in');
   assert.equal(r.current.after, 'lima');
@@ -560,9 +567,7 @@ test('R.MoveList.1: Huaraz today has no approved alternate position → zero opt
 
 test('R.MoveList.2: a pending_review position is never listed', () => {
   const hz = huarazChosen();
-  const family = PILOT_ROUTE_FAMILIES.find((f) => f.id === 'peru_classic');
-  assert.equal(family.optional[0].positions.find((p) => p.id === 'after_machu_picchu').status, 'pending_review');
-  assert.ok(!listMoveOptions(hz, 'huaraz').options.some((o) => o.positionId === 'after_machu_picchu'));
+  assert.ok(!listMoveOptions(hz, 'huaraz', heldOptions()).options.some((o) => o.positionId === 'after_machu_picchu'));
 });
 
 test('R.MoveList.3: unknown or not-included optional lists nothing', () => {
@@ -570,12 +575,26 @@ test('R.MoveList.3: unknown or not-included optional lists nothing', () => {
   assert.deepEqual(listMoveOptions(filled(spec(PERU, 10)), 'huaraz'), { current: null, options: [] });
 });
 
-test('R.Move.3: once a second position is approved it is listed, its proposal applies, and goes stale after another edit', () => {
+test('R.Move.4: after_machu_picchu is approved in the shipped data — listed as a real alternate, previewed, and applied to a valid trip', () => {
+  assert.equal(
+    PILOT_ROUTE_FAMILIES.find((f) => f.id === 'peru_classic').optional[0].positions.find((p) => p.id === 'after_machu_picchu').status,
+    'approved'
+  );
   const hz = huarazChosen(14);
-  const family = structuredClone(PILOT_ROUTE_FAMILIES.find((f) => f.id === 'peru_classic'));
-  family.optional[0].positions.find((p) => p.id === 'after_machu_picchu').status = 'approved';
-  const data = { ...PILOT_DATA, routePackages: compileFamilies([family]) };
-  const listed = listMoveOptions(hz, 'huaraz', { families: [family], data });
+  const listed = listMoveOptions(hz, 'huaraz');
+  assert.deepEqual(listed.options.map((o) => o.positionId), ['after_machu_picchu']);
+  const preview = previewMoveOptional(hz, 'huaraz', 'after_machu_picchu');
+  assert.equal(preview.ok, true, JSON.stringify(preview).slice(0, 300));
+  const p = preview.proposals[0];
+  assertProposalValid(p);
+  const applied = applyProposal(hz, p);
+  assert.equal(applied.ok, true);
+  assert.equal(applied.trip.routePlan.optionals[0].positionId, 'after_machu_picchu');
+});
+
+test('R.Move.3: a listed second position applies, and its proposal goes stale after another edit', () => {
+  const hz = huarazChosen(14);
+  const listed = listMoveOptions(hz, 'huaraz');
   assert.deepEqual(listed.options.map((o) => o.positionId), ['after_machu_picchu']);
   const { proposal } = listed.options[0];
   assert.equal(proposal.kind, 'move_optional');

@@ -298,10 +298,10 @@ export const PILOT_ROUTE_FAMILIES = [
             id: 'after_machu_picchu',
             after: 'pc_lima_out',
             insert: ['pc_huaraz', 'pc_lima_hub'],
-            status: 'pending_review',
+            status: 'approved',
             variantName: 'Peru classic, then Huaraz',
             assumptions: [
-              'Pending altitude/connection review: arriving in Huaraz (≈3,050 m) after Cusco means already acclimatised; reuses the Lima–Huaraz coach both ways.'
+              'Altitude/connection review approved: arriving in Huaraz (≈3,050 m) after Cusco means already acclimatised; reuses the Lima–Huaraz coach both ways.'
             ]
           }
         ]

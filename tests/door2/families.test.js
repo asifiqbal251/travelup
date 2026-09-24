@@ -98,17 +98,27 @@ const PERU = { kind: 'country', id: 'PE' };
 
 // ---------------------------------------------------------------------------
 
-test('RF1: pilot families compile to 4 served packages, 5 with includePending', () => {
-  assert.deepEqual(PILOT_ROUTE_PACKAGES.map((p) => p.id), ['nyc_city', 'tokyo_city', 'peru_classic', HUARAZ_VARIANT]);
+// Held coverage: no pilot position is pending today, so hold one on a cloned family set.
+function heldFamilies() {
+  const fams = structuredClone(PILOT_ROUTE_FAMILIES);
+  fams.find((f) => f.id === 'peru_classic').optional[0].positions.find((p) => p.id === 'after_machu_picchu').status = 'pending_review';
+  return fams;
+}
+
+test('RF1: pilot families compile to 5 served packages (all approved); a pending position is compiled but held', () => {
+  assert.deepEqual(PILOT_ROUTE_PACKAGES.map((p) => p.id), ['nyc_city', 'tokyo_city', 'peru_classic', HUARAZ_VARIANT, HELD_VARIANT]);
   assert.deepEqual(compileFamilies(PILOT_ROUTE_FAMILIES).map((p) => p.id), PILOT_ROUTE_PACKAGES.map((p) => p.id));
-  const all = compileFamilies(PILOT_ROUTE_FAMILIES, { includePending: true });
+  assert.deepEqual(compileFamilies(PILOT_ROUTE_FAMILIES, { includePending: true }), PILOT_ROUTE_PACKAGES_ALL);
+  assert.deepEqual(PILOT_ROUTE_PACKAGES_ALL.map((p) => p.held), [false, false, false, false, false]);
+  const fams = heldFamilies();
+  assert.deepEqual(compileFamilies(fams).map((p) => p.id), ['nyc_city', 'tokyo_city', 'peru_classic', HUARAZ_VARIANT]);
+  const all = compileFamilies(fams, { includePending: true });
   assert.deepEqual(all.map((p) => p.id), ['nyc_city', 'tokyo_city', 'peru_classic', HUARAZ_VARIANT, HELD_VARIANT]);
-  assert.deepEqual(all, PILOT_ROUTE_PACKAGES_ALL);
   assert.deepEqual(all.map((p) => p.held), [false, false, false, false, true]);
   const held = all.find((p) => p.id === HELD_VARIANT);
   assert.equal(held.name, 'Peru classic, then Huaraz');
   assert.deepEqual(held.stops.map((s) => s.id).slice(-3), ['pc_lima_out', 'pc_huaraz', 'pc_lima_hub']);
-  assert.ok(held.assumptions.some((a) => a.startsWith('Pending altitude/connection review')));
+  assert.ok(held.assumptions.some((a) => a.startsWith('Altitude/connection review')));
 });
 
 test('RF2: backbone identity — compiled packages equal the old hand-written ones apart from new fields', () => {
@@ -180,7 +190,8 @@ test('RF6: routeTemplateId "peru_classic_huaraz" (alias) still selects the Huara
   // Without a template, the backbone still ranks first.
   assert.equal(selectRoutes(spec(PERU, 12), PILOT_DATA).value[0].routePackageId, 'peru_classic');
   // A held variant is never selectable by a traveller, even by id.
-  const held = selectRoutes({ ...spec(PERU, 12), routeTemplateId: HELD_VARIANT }, PILOT_DATA);
+  const heldData = { ...PILOT_DATA, routePackages: compileFamilies(heldFamilies()) };
+  const held = selectRoutes({ ...spec(PERU, 12), routeTemplateId: HELD_VARIANT }, heldData);
   assert.equal(held.value.some((x) => x.routePackageId === HELD_VARIANT), false);
 });
 
@@ -249,10 +260,11 @@ test('RF10: checkVariantsSchedulable passes for every served variant; the held v
     { variantId: 'nyc_city', held: false, minDays: 3, maxDays: 11 },
     { variantId: 'tokyo_city', held: false, minDays: 5, maxDays: 12 },
     { variantId: 'peru_classic', held: false, minDays: 8, maxDays: 14 },
-    { variantId: HUARAZ_VARIANT, held: false, minDays: 11, maxDays: 18 }
+    { variantId: HUARAZ_VARIANT, held: false, minDays: 11, maxDays: 18 },
+    { variantId: HELD_VARIANT, held: false, minDays: 11, maxDays: 19 }
   ]);
-  // Held position after Machu Picchu: compiled and checked, never served.
-  const held = checkVariantsSchedulable(PILOT_ROUTE_PACKAGES_ALL.filter((p) => p.held), PILOT_DATA);
+  // A pending position after Machu Picchu: compiled and checked, never served.
+  const held = checkVariantsSchedulable(compileFamilies(heldFamilies(), { includePending: true }).filter((p) => p.held), PILOT_DATA);
   assert.deepEqual(held, [{ variantId: HELD_VARIANT, held: true, minDays: 11, maxDays: 19 }]);
 });
 
