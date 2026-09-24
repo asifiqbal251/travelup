@@ -3,6 +3,8 @@
 /** @typedef {import('./types.js').RoutePackage} RoutePackage */
 /** @typedef {import('./types.js').RoutePackageStop} RoutePackageStop */
 
+import { compileFamilies } from './families.js';
+
 // Pilot catalogue v2: DRAFT DATA.
 //
 // Every connection is unreviewed (reviewedBy/reviewedAt null). The engine
@@ -215,9 +217,15 @@ export const PILOT_CONNECTIONS = [
   }
 ];
 
-/** @returns {RoutePackageStop} */
-function stop(id, placeId, minNights, maxNights, excursions = []) {
-  return { id, placeId, minNights, maxNights, excursions };
+// ---------------------------------------------------------------------------
+// Route Families (design-door2-route-families v2). The hand-written package
+// list is replaced by families; compileFamilies() turns them into the same
+// RoutePackage shape route.js and schedule.js already read. The backbone of
+// `peru_classic` compiles to exactly the package that used to be written here.
+
+/** @returns {import('./types.js').RouteFamilyStop} */
+function familyStop(placeId, minNights, maxNights, excursions = []) {
+  return { placeId, minNights, maxNights, excursions };
 }
 
 const MACHU_PICCHU_EXCURSION = Object.freeze({
@@ -229,80 +237,87 @@ const MACHU_PICCHU_EXCURSION = Object.freeze({
 const CUSCO_ACCLIMATISATION =
   'Cusco minimum is 2 nights for altitude acclimatisation (3,400 m) before the Sacred Valley and Machu Picchu.';
 
-/**
- * Derives placeIds and visitRules from the stops.
- * @param {Omit<RoutePackage, 'placeIds'|'visitRules'|'reviewed'>} pkg
- * @returns {RoutePackage}
- */
-function routePackage(pkg) {
-  const placeIds = [];
-  for (const s of pkg.stops) {
-    if (!placeIds.includes(s.placeId)) placeIds.push(s.placeId);
-    for (const ex of s.excursions) {
-      if (!placeIds.includes(ex.placeId)) placeIds.push(ex.placeId);
-    }
-  }
-  return {
-    ...pkg,
-    placeIds,
-    visitRules: {
-      minNights: pkg.stops.reduce((sum, s) => sum + s.minNights, 0),
-      maxNights: pkg.stops.reduce((sum, s) => sum + s.maxNights, 0),
-      extensions: []
-    },
-    reviewed: false
-  };
-}
+const HUARAZ_HUB_BACKTRACK =
+  'Huaraz to Cusco backtracks through the Lima hub: there is deliberately no direct Huaraz-Cusco connection.';
 
-/** @type {RoutePackage[]} */
-export const PILOT_ROUTE_PACKAGES = [
-  routePackage({
+/** @type {import('./types.js').RouteFamily[]} */
+export const PILOT_ROUTE_FAMILIES = [
+  {
     id: 'nyc_city',
     name: 'New York City',
     countryId: 'US',
-    stops: [stop('nyc_base', 'new_york', 2, 10)]
-  }),
-  routePackage({
+    stops: { nyc_base: familyStop('new_york', 2, 10) },
+    backbone: ['nyc_base'],
+    optional: []
+  },
+  {
     id: 'tokyo_city',
     name: 'Tokyo',
     countryId: 'JP',
     preferredGatewayId: 'NRT',
-    stops: [stop('tokyo_base', 'tokyo', 3, 10)]
-  }),
-  routePackage({
+    stops: { tokyo_base: familyStop('tokyo', 3, 10) },
+    backbone: ['tokyo_base'],
+    optional: []
+  },
+  {
     id: 'peru_classic',
     name: 'Peru classic: Lima, Cusco, Sacred Valley, Machu Picchu',
     countryId: 'PE',
     assumptions: [CUSCO_ACCLIMATISATION],
-    stops: [
-      stop('pc_lima_in', 'lima', 1, 3),
-      stop('pc_cusco', 'cusco', 2, 4),
-      stop('pc_sacred_valley', 'ollantaytambo', 0, 1),
-      stop('pc_aguas', 'aguas_calientes', 1, 2, [MACHU_PICCHU_EXCURSION]),
-      stop('pc_olly_return', 'ollantaytambo', 0, 0),
-      stop('pc_cusco_return', 'cusco', 0, 0),
-      stop('pc_lima_out', 'lima', 1, 1)
-    ]
-  }),
-  routePackage({
-    id: 'peru_classic_huaraz',
-    name: 'Peru classic with Huaraz',
-    countryId: 'PE',
-    assumptions: [
-      CUSCO_ACCLIMATISATION,
-      'Huaraz to Cusco backtracks through the Lima hub: there is deliberately no direct Huaraz-Cusco connection.'
+    stops: {
+      pc_lima_in: familyStop('lima', 1, 3),
+      pc_cusco: familyStop('cusco', 2, 4),
+      pc_sacred_valley: familyStop('ollantaytambo', 0, 1),
+      pc_aguas: familyStop('aguas_calientes', 1, 2, [MACHU_PICCHU_EXCURSION]),
+      pc_olly_return: familyStop('ollantaytambo', 0, 0),
+      pc_cusco_return: familyStop('cusco', 0, 0),
+      pc_lima_out: familyStop('lima', 1, 1),
+      pc_huaraz: familyStop('huaraz', 2, 4),
+      // Hub night in Lima between Huaraz and the next leg (was ph_lima_mid).
+      pc_lima_hub: familyStop('lima', 1, 1)
+    },
+    backbone: ['pc_lima_in', 'pc_cusco', 'pc_sacred_valley', 'pc_aguas', 'pc_olly_return', 'pc_cusco_return', 'pc_lima_out'],
+    optional: [
+      {
+        id: 'huaraz',
+        label: 'Huaraz & the Cordillera Blanca',
+        pitch: 'Glacier lakes and high-altitude hiking, about 8½ hours north of Lima by coach.',
+        assumptions: [HUARAZ_HUB_BACKTRACK],
+        exclusiveWith: [],
+        positions: [
+          {
+            id: 'after_lima_in',
+            after: 'pc_lima_in',
+            insert: ['pc_huaraz', 'pc_lima_hub'],
+            status: 'approved',
+            variantName: 'Peru classic with Huaraz',
+            // Reproduces the old peru_classic_huaraz package (Lima-in 1–2, not 1–3).
+            overrides: { pc_lima_in: { maxNights: 2 } }
+          },
+          {
+            id: 'after_machu_picchu',
+            after: 'pc_lima_out',
+            insert: ['pc_huaraz', 'pc_lima_hub'],
+            status: 'pending_review',
+            variantName: 'Peru classic, then Huaraz',
+            assumptions: [
+              'Pending altitude/connection review: arriving in Huaraz (≈3,050 m) after Cusco means already acclimatised; reuses the Lima–Huaraz coach both ways.'
+            ]
+          }
+        ]
+      }
     ],
-    stops: [
-      stop('ph_lima_in', 'lima', 1, 2),
-      stop('ph_huaraz', 'huaraz', 2, 4),
-      // Hub backtrack: Huaraz -> Lima -> Cusco.
-      stop('ph_lima_mid', 'lima', 1, 1),
-      stop('ph_cusco', 'cusco', 2, 4),
-      stop('ph_sacred_valley', 'ollantaytambo', 0, 1),
-      stop('ph_aguas', 'aguas_calientes', 1, 2, [MACHU_PICCHU_EXCURSION]),
-      stop('ph_olly_return', 'ollantaytambo', 0, 0),
-      stop('ph_cusco_return', 'cusco', 0, 0),
-      stop('ph_lima_out', 'lima', 1, 1)
-    ]
-  })
+    // The old package id stays resolvable for saved drafts and old requests.
+    aliases: { 'peru_classic+huaraz@after_lima_in': ['peru_classic_huaraz'] }
+  }
 ];
+
+/**
+ * Every compiled variant, held ones included (dev harness, draft upgrader and
+ * buildTripFromRoutePlan use this; travellers never get a held variant).
+ * @type {RoutePackage[]}
+ */
+export const PILOT_ROUTE_PACKAGES_ALL = compileFamilies(PILOT_ROUTE_FAMILIES, { includePending: true });
+
+/** The packages served to travellers: only variants whose positions are all approved. @type {RoutePackage[]} */
+export const PILOT_ROUTE_PACKAGES = PILOT_ROUTE_PACKAGES_ALL.filter((p) => !p.held);
