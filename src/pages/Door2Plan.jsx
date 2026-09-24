@@ -1327,12 +1327,41 @@ export default function Door2Plan() {
 
   function handleOpenNightsSheet(node) {
     if (!node.routeStop) return;
+    const optionalId = node.routeStop.optionalId ?? null;
     setStructureSheet({
       stage: "nights",
       stopKey: node.routeStop.key,
       placeId: node.placeId,
       nights: node.nights,
+      optionalId,
+      optionalLabel: optionalId ? optionalLabelFor(activeTrip, optionalId) : null,
     });
+  }
+
+  function handleOpenOptionalSheet(opt) {
+    setStructureSheet({ stage: "optional", optionalId: opt.optionalId, label: opt.label, pitch: opt.pitch });
+  }
+
+  function handleAddOptional(optionalId) {
+    const t = activeTrip;
+    if (!t) return;
+    const result = previewAddOptional(t, optionalId);
+    if (result.ok) {
+      setStructureSheet({ stage: "proposals", proposals: result.proposals });
+    } else {
+      setStructureSheet({ stage: "refusal", message: result.message, alternatives: result.alternatives ?? [] });
+    }
+  }
+
+  function handleRemoveOptional(optionalId) {
+    const t = activeTrip;
+    if (!t) return;
+    const result = previewRemoveOptional(t, optionalId);
+    if (result.ok) {
+      setStructureSheet({ stage: "proposals", proposals: result.proposals });
+    } else {
+      setStructureSheet({ stage: "refusal", message: result.message, alternatives: result.alternatives ?? [] });
+    }
   }
 
   function handleAdjustNights(stopKey, delta) {
