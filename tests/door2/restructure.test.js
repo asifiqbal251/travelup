@@ -531,3 +531,17 @@ test('R.AddRemoveMove determinism: identical input gives identical output; every
     for (const p of a.ok ? a.proposals : a.alternatives) assertProposalValid(p);
   }
 });
+
+test('R.Remove.3: removing Huaraz from a trip too long for the backbone offers to shorten instead of dead-ending', () => {
+  const hz = huarazChosen(16);
+  const r = previewRemoveOptional(hz, 'huaraz');
+  assert.equal(r.ok, false);
+  assert.equal(r.why, 'allocation_maximum');
+  assert.ok(r.alternatives.length >= 1, 'a shrink alternative is offered');
+  const p = r.alternatives[0];
+  assert.equal(p.trip.routePlan.variantId, 'peru_classic');
+  assert.ok(p.trip.spec.totalDays < 16);
+  assert.match(p.label, /shorten the trip by/);
+  assertProposalValid(p);
+  assert.equal(applyProposal(hz, p).ok, true);
+});

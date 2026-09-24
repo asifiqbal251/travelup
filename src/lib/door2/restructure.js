@@ -671,7 +671,29 @@ export function previewRemoveOptional(trip, optionalId, options = {}) {
   const minDays = packageMinDays(pkg, trip.spec, ctx.data);
   if (minDays == null) return refusal('not_available', `${optional.label} can't be removed from your trip right now.`, []);
   const proposal = proposeVariantChange(trip, pkg, minDays, { id: `remove:${optionalId}`, kind: 'remove_optional', label: `Remove ${optional.label}` }, ctx, N);
-  if (!proposal) return refusal('allocation_maximum', `Removing ${optional.label} doesn't leave a trip that fits ${plural(N, 'day')}.`, []);
+  if (!proposal) {
+    // The remaining route can't absorb the freed nights at this length. Offer
+    // to shrink the trip by them (symmetric to add's "add N days"), falling
+    // back to the plain backbone route if that variant can't be shrunk to fit.
+    const alternatives = [];
+    if (isDurationFlexible(trip.spec)) {
+      const candidates = [pkg];
+      const backbone = findRoutePackage(ctx.data, family.id);
+      if (backbone && !backbone.held && backbone.id !== pkg.id) candidates.push(backbone);
+      for (const cand of candidates) {
+        const candMin = cand === pkg ? minDays : packageMinDays(cand, trip.spec, ctx.data);
+        if (candMin == null) continue;
+        const candMax = candMin + cand.stops.reduce((sum, st) => sum + (st.maxNights - st.minNights), 0);
+        if (candMax >= N) continue;
+        const shrunk = proposeVariantChange(trip, cand, candMin, { id: `remove:${optionalId}:shrink`, kind: 'shorten', label: `Remove ${optional.label}` }, ctx, candMax);
+        if (shrunk) {
+          alternatives.push({ ...shrunk, label: `Remove ${optional.label} and shorten the trip by ${plural(N - candMax, 'day')}` });
+          break;
+        }
+      }
+    }
+    return refusal('allocation_maximum', `Removing ${optional.label} doesn't leave a trip that fits ${plural(N, 'day')}.`, alternatives);
+  }
   return { ok: true, proposals: [proposal] };
 }
 
