@@ -14,8 +14,9 @@ import { PILOT_CONNECTIONS, PILOT_PLACES, PILOT_ROUTE_PACKAGES } from '../../src
 
 const conn = (id) => PILOT_CONNECTIONS.find((c) => c.id === id);
 
-test('computeUsableTimeLost(conn_yvr_lim_air) === 17.45 (brief: 15.75, see pilotData.js header)', () => {
-  assert.ok(Math.abs(computeUsableTimeLost(conn('conn_yvr_lim_air')) - 17.45) < 1e-9);
+// 72eb2d7: conn_yvr_lim_air layoverHours 1.5 → 2.0, so usable time lost 17.45 → 17.95.
+test('computeUsableTimeLost(conn_yvr_lim_air) === 17.95 (brief: 15.75, see pilotData.js header)', () => {
+  assert.ok(Math.abs(computeUsableTimeLost(conn('conn_yvr_lim_air')) - 17.95) < 1e-9);
 });
 
 test('computeUsableTimeLost for NYC and Tokyo rows', () => {
@@ -104,12 +105,14 @@ test('placeIntegrity throws, naming the offending id', () => {
   assert.equal(assertPlaceCanBeOvernightBase(PILOT_PLACES.cusco), undefined);
 });
 
-test('pilot data: every connection is a draft and resolves; package placeIds are derived', () => {
+// 72eb2d7: every connection row now carries reviewedBy/reviewedAt '2026-09-23' and version 3.
+test('pilot data: every connection is reviewed and resolves; package placeIds are derived', () => {
   assert.equal(PILOT_CONNECTIONS.length, 8);
   for (const c of PILOT_CONNECTIONS) {
-    assert.equal(c.reviewedBy, null);
-    assert.equal(c.reviewedAt, null);
-    assert.equal(c.version, 2);
+    assert.equal(typeof c.reviewedBy, 'string');
+    assert.ok(c.reviewedBy.length > 0);
+    assert.equal(c.reviewedAt, '2026-09-23');
+    assert.equal(c.version, 3);
     assert.equal(c.direction, 'bidirectional');
     assertConnectionPlacesResolve(c, PILOT_PLACES);
     if (c.segments) {
