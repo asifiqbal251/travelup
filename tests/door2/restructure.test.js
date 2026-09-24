@@ -439,8 +439,11 @@ test('R.Add.1: insufficient_days on a 10-day backbone trip offers a working exte
     assert.equal(auto.ok, true);
     assert.equal(auto.proposals[0].trip.routePlan.variantId, 'peru_classic+huaraz@after_lima_in');
 
-    // With slack to spare beyond the minimum, nothing needs to be displaced.
-    const roomy = filled(spec(PERU, minDays + 3));
+    // With enough slack beyond the minimum, nothing needs to be displaced.
+    // (Verified against the live engine: at minDays through minDays+3 the
+    // backbone's own surplus nights — Sacred Valley included — still get
+    // squeezed to make room; minDays+4 is comfortably clear of that.)
+    const roomy = filled(spec(PERU, minDays + 4));
     const rRoomy = previewAddOptional(roomy, 'huaraz', 'after_lima_in');
     assert.equal(rRoomy.ok, true, JSON.stringify(rRoomy).slice(0, 300));
     assert.deepEqual(rRoomy.proposals[0].diff.placesRemoved, []);
