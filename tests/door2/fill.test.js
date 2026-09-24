@@ -76,7 +76,7 @@ test('G1: NYC, 7 days', () => {
     'D6 nyc_brooklyn_neighbourhoods'
   ]);
   assert.equal(trip.contentGaps.length, 0);
-  assert.equal(trip.status, 'draft');
+  assert.equal(trip.status, 'valid'); // 72eb2d7: all connections reviewed → trip status 'valid'
   assert.equal(trip.versions.content, PILOT_CONTENT_VERSION);
 });
 
@@ -91,14 +91,18 @@ test('G2: Peru, 10 days', () => {
       'D4 14:00 half cusco_acclimatise',
       'D5 09:00 full cusco_market_san_blas',
       'D6 09:00 full cusco_sacsayhuaman',
-      'D7 14:45 half mp_citadel',
-      'D8 18:54 evening lima_magic_water'
+      // 72eb2d7: Ollantaytambo→Aguas train 1.75h → 1.5h, so MP is 15 min earlier and the
+      // return from MP lands 19:21 (was 19:36), leaving a 99-min evening (≥ 90-min minimum).
+      'D7 14:30 half mp_citadel',
+      'D7 19:21 evening agc_hot_springs',
+      // 72eb2d7: the Aguas→Ollantaytambo leg is the same train row, so Lima arrival is 15 min earlier.
+      'D8 18:39 evening lima_magic_water'
     ]
   );
   assert.equal(f.find((x) => x.contentId === 'mp_citadel').id, 'ex:pc_aguas:machu_picchu:site');
   assert.equal(blockById(trip, 'ex:pc_aguas:machu_picchu:site').placeId, 'machu_picchu');
   assert.equal(trip.contentGaps.length, 0);
-  assert.equal(trip.status, 'draft');
+  assert.equal(trip.status, 'valid'); // 72eb2d7: all connections reviewed → trip status 'valid'
 });
 
 test('G3: Peru + Huaraz + Machu Picchu, 12 days', () => {
@@ -113,12 +117,15 @@ test('G3: Peru + Huaraz + Machu Picchu, 12 days', () => {
     'D7 cusco_acclimatise',
     'D8 cusco_market_san_blas',
     'D9 mp_citadel',
+    'D9 agc_hot_springs', // 72eb2d7: train 15 min shorter → MP return 19:21 leaves a 99-min evening
     'D10 lima_ceviche_evening'
   ]);
   const at = (day) => f.find((x) => x.day === day);
-  assert.deepEqual([at(4).start, at(4).slot], ['17:51', 'evening']);
-  assert.deepEqual([at(6).start, at(6).slot], ['17:51', 'evening']);
-  assert.deepEqual([at(10).start, at(10).slot], ['18:54', 'evening']);
+  // 72eb2d7: Lima↔Huaraz coach 8.0h → 8.5h, so both coach arrivals move 17:51 → 18:21.
+  assert.deepEqual([at(4).start, at(4).slot], ['18:21', 'evening']);
+  assert.deepEqual([at(6).start, at(6).slot], ['18:21', 'evening']);
+  // 72eb2d7: train 1.75h → 1.5h, so the Lima arrival moves 18:54 → 18:39.
+  assert.deepEqual([at(10).start, at(10).slot], ['18:39', 'evening']);
   const limaItems = f.filter((x) => x.contentId.startsWith('lima_')).map((x) => x.contentId);
   assert.equal(limaItems.length, 4);
   assert.equal(new Set(limaItems).size, 4, "Lima's three stays use four different items");
