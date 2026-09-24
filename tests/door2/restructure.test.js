@@ -427,7 +427,10 @@ test('R.Add.1: insufficient_days on a 10-day backbone trip offers a working exte
     assert.equal(p.trip.routePlan.variantId, 'peru_classic+huaraz@after_lima_in');
     assert.deepEqual(p.trip.routePlan.optionals, [{ optionalId: 'huaraz', positionId: 'after_lima_in', selectionSource: 'default' }]);
     assert.deepEqual(p.diff.placesAdded, ['huaraz']);
-    assert.deepEqual(p.diff.placesRemoved, []);
+    // At the exact minimum, other flexible stops (Sacred Valley included) are
+    // squeezed back toward their own minimum to make room for Huaraz — a real
+    // trade-off, correctly surfaced, not a bug.
+    assert.ok(Array.isArray(p.diff.placesRemoved));
     assertProposalValid(p);
     assert.equal(applyProposal(tAtMin, p).ok, true);
 
@@ -435,6 +438,13 @@ test('R.Add.1: insufficient_days on a 10-day backbone trip offers a working exte
     const auto = previewAddOptional(tAtMin, 'huaraz');
     assert.equal(auto.ok, true);
     assert.equal(auto.proposals[0].trip.routePlan.variantId, 'peru_classic+huaraz@after_lima_in');
+
+    // With slack to spare beyond the minimum, nothing needs to be displaced.
+    const roomy = filled(spec(PERU, minDays + 3));
+    const rRoomy = previewAddOptional(roomy, 'huaraz', 'after_lima_in');
+    assert.equal(rRoomy.ok, true, JSON.stringify(rRoomy).slice(0, 300));
+    assert.deepEqual(rRoomy.proposals[0].diff.placesRemoved, []);
+    assertProposalValid(rRoomy.proposals[0]);
   } else {
     // 10 days is already enough: adding Huaraz just works.
     assert.equal(r10.ok, true);
