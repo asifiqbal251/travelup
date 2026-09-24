@@ -54,9 +54,13 @@ function isReviewed(connection) {
  * @param {RouteResult} routeResult
  * @param {TripSpec} spec
  * @param {{places: Object|Map, connections: Object[]}} data
- * @param {{config?: typeof SCHEDULE_CONFIG, bufferRuleset?: typeof DEFAULT_BUFFER_RULESET}} [options]
+ * @param {{config?: typeof SCHEDULE_CONFIG, bufferRuleset?: typeof DEFAULT_BUFFER_RULESET, nightsOverride?: Object<string, number>}} [options]
+ *   nightsOverride (Route Families §5.1): nights per stop id, covering every stop. Skips round-robin
+ *   allocation. Must satisfy min ≤ n ≤ max per stop and minDays + Σ(n − min) === spec.totalDays;
+ *   a violation throws a plain Error (engine bug: the solver only asks for valid allocations).
+ *   Without it, behaviour is unchanged.
  */
-export function scheduleRoute(routeResult, spec, data, { config = SCHEDULE_CONFIG, bufferRuleset = DEFAULT_BUFFER_RULESET } = {}) {
+export function scheduleRoute(routeResult, spec, data, { config = SCHEDULE_CONFIG, bufferRuleset = DEFAULT_BUFFER_RULESET, nightsOverride } = {}) {
   const origin = getPlace(data.places, spec.originPlaceId);
   if (!origin) throw new Error(`scheduleRoute: unknown origin "${spec.originPlaceId}"`);
   const placeOf = (id) => {
@@ -322,6 +326,10 @@ export function scheduleRoute(routeResult, spec, data, { config = SCHEDULE_CONFI
   const minRun = simulate(nights);
   const minDays = minRun.homeArrival.dayNumber;
 
+  if (nightsOverride != null) {
+    return emitOverride();
+  }
+
   if (minDays > N) {
     const extra = minDays - N;
     return makeFailure(
@@ -358,7 +366,32 @@ export function scheduleRoute(routeResult, spec, data, { config = SCHEDULE_CONFI
     }
   }
 
-  const run = simulate(nights);
+  return emit(simulate(nights), warnings);
+
+  /** nightsOverride path: check the allocation, then simulate once. */
+  function emitOverride() {
+    const where = `scheduleRoute nightsOverride (route "${routeResult.routePackageId}")`;
+    const known = new Set(stops.map((s) => s.id));
+    for (const key of Object.keys(nightsOverride)) {
+      if (!known.has(key)) throw new Error(`${where}: unknown stop "${key}"`);
+    }
+    let extra = 0;
+    for (const s of stops) {
+      const n = nightsOverride[s.id];
+      if (!Number.isInteger(n)) throw new Error(`${where}: stop "${s.id}" has no integer nights (got ${n})`);
+      if (n < s.minNights || n > s.maxNights) {
+        throw new Error(`${where}: stop "${s.id}" nights ${n} outside ${s.minNights}–${s.maxNights}`);
+      }
+      extra += n - s.minNights;
+    }
+    if (minDays + extra !== N) {
+      throw new Error(`${where}: minDays ${minDays} + extra nights ${extra} = ${minDays + extra}, expected totalDays ${N}`);
+    }
+    return emit(simulate({ ...nightsOverride }), []);
+  }
+
+  /** Sanity-check the home arrival, then emit Days 1..N. */
+  function emit(run, warnings) {
   if (run.homeArrival.dayNumber !== N) {
     throw new Error(
       `scheduleRoute engine bug: home arrival on Day ${run.homeArrival.dayNumber}, expected Day ${N} (route "${routeResult.routePackageId}")`
@@ -407,4 +440,5 @@ export function scheduleRoute(routeResult, spec, data, { config = SCHEDULE_CONFI
     warnings,
     usesDraftData: routeResult.usesDraftData
   });
+  }
 }
