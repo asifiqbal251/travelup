@@ -1,14 +1,7 @@
 import { useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
 import PageNotFound from "@/lib/PageNotFound";
-import {
-  makeDayLighter,
-  pinActivity,
-  rejectActivity,
-  swapActivity,
-  undo,
-  unpinActivity,
-} from "@/lib/door2/edit";
+import { makeDayLighter, swapActivity, undo } from "@/lib/door2/edit";
 import { PILOT_DATA, buildFilledTrip } from "@/lib/door2/planner";
 import { PILOT_PLACES, PILOT_ROUTE_PACKAGES } from "@/lib/door2/pilotData";
 import { selectRoutes } from "@/lib/door2/route";
@@ -61,6 +54,16 @@ const TRAVELLER_OPTIONS = [
 
 const MONTH_OPTIONS = MONTHS.map((name, i) => ({ value: i + 1, label: name }));
 
+const MODE_LABELS = {
+  flight_international: "flight",
+  flight_domestic: "flight",
+  train: "train",
+  road_private_transfer: "transfer",
+  coach_scheduled: "coach",
+  local_shuttle: "shuttle",
+  ferry: "ferry",
+};
+
 const DEFAULT_FORM = {
   destination: "",
   totalDays: 10,
@@ -75,6 +78,14 @@ const DEFAULT_FORM = {
 
 function placeName(id) {
   return PILOT_PLACES[id]?.name ?? id ?? "—";
+}
+
+function nightsLabel(n) {
+  return `${n} night${n === 1 ? "" : "s"}`;
+}
+
+function modeLabel(mode) {
+  return MODE_LABELS[mode] ?? String(mode ?? "").replace(/_/g, " ");
 }
 
 function requiredPlacesForDestination(destinationValue) {
@@ -111,6 +122,88 @@ function chipClass(active) {
       ? "bg-teal text-slate-900 border-teal"
       : "bg-slate-700 text-slate-300 border-slate-600 hover:border-slate-400"
   }`;
+}
+
+/** A day whose only content is an in-transit marker (e.g. landing just after
+ * midnight) carries no information of its own — it's folded into the
+ * previous day's travel block display instead of getting its own card. */
+function isEmptyDay(day) {
+  return (
+    day.blocks.length > 0 &&
+    day.blocks.every((b) => (b.durationHours ?? 0) === 0 && (b.type === "rest" || b.note === "in_transit"))
+  );
+}
+
+/** Derive the ordered sequence of major stops (nights > 0) plus the travel
+ * mode(s) connecting each pair, purely from data the trip already carries.
+ * Round-trip excursions (e.g. a Machu Picchu day trip from Aguas Calientes)
+ * are detected and excluded — they return to the same place they left, so
+ * they don't represent progress toward the next major stop. */
+function tripAtGlanceSegments(trip) {
+  const majorStops = trip.spec.stops.filter((s) => s.nights > 0);
+  if (majorStops.length === 0) return { nodes: [], edges: [] };
+
+  const travelBlocks = trip.days
+    .flatMap((d) => d.blocks)
+    .filter((b) => b.type === "travel" && b.transport);
+
+  const edges = [];
+  let pending = [];
+  let segmentStartPlace = trip.spec.originPlaceId;
+  let majorIdx = 0;
+
+  for (const block of travelBlocks) {
+    if (majorIdx >= majorStops.length) break;
+    pending.push(block.transport.mode);
+    const to = block.transport.toPlaceId;
+    if (to === majorStops[majorIdx].placeId) {
+      edges.push(pending);
+      pending = [];
+      segmentStartPlace = to;
+      majorIdx += 1;
+    } else if (to === segmentStartPlace) {
+      pending = [];
+    }
+  }
+
+  return { nodes: majorStops, edges };
+}
+
+function edgeLabel(modes) {
+  const deduped = modes.filter((m, i) => m !== modes[i - 1]);
+  return deduped.map(modeLabel).join(" + ");
+}
+
+/** Group the trip's days under the major stop (nights > 0) each day belongs
+ * to, in order, so the itinerary reads "Lima · 2 nights" then its days,
+ * "Cusco · 3 nights" then its days, and so on — rather than a flat day list
+ * or day-by-day tabs. A day's group is decided by where it ends (its last
+ * block's place); the final travel-home day rides along with the last group
+ * since it has no destination place of its own. */
+function groupDaysByPlace(trip) {
+  const majorStops = trip.spec.stops.filter((s) => s.nights > 0);
+  const displayDays = trip.days.filter((d) => !isEmptyDay(d));
+
+  if (majorStops.length === 0) {
+    return [{ placeId: null, nights: 0, days: displayDays }];
+  }
+
+  function dayEndPlace(day) {
+    const last = day.blocks[day.blocks.length - 1];
+    if (!last) return null;
+    return last.type === "travel" ? last.transport?.toPlaceId : last.placeId;
+  }
+
+  const groups = majorStops.map((s) => ({ placeId: s.placeId, nights: s.nights, days: [] }));
+  let stopPtr = 0;
+  for (const day of displayDays) {
+    const pid = dayEndPlace(day);
+    if (stopPtr + 1 < majorStops.length && pid === majorStops[stopPtr + 1].placeId) {
+      stopPtr += 1;
+    }
+    groups[stopPtr].days.push(day);
+  }
+  return groups;
 }
 
 // ── Saved trips ──────────────────────────────────────────────────────────────
@@ -326,58 +419,78 @@ function BasicsStep({ form, updateForm, onBack, onSubmit }) {
   );
 }
 
-// ── Results: day view ───────────────────────────────────────────────────────
+// ── Results: trip at a glance ───────────────────────────────────────────────
 
-function ActivityLine({ block, onSwap, onReject, onPin }) {
-  const [showMore, setShowMore] = useState(false);
-  const a = block.activity;
+function TripAtAGlance({ trip, routeAlternatives, onChangeRoute }) {
+  const { nodes, edges } = tripAtGlanceSegments(trip);
+  if (nodes.length === 0) return null;
+
   return (
-    <div className="space-y-1">
-      <div className="flex items-baseline gap-2 flex-wrap">
-        <span className="font-medium text-white text-sm">{a.title}</span>
-        {block.locked && <span className="text-xs text-teal">· pinned</span>}
+    <div className="rounded-xl bg-slate-800 border border-slate-700 p-5 space-y-4">
+      <h2 className="text-sm font-semibold text-slate-300">Your trip at a glance</h2>
+      <div>
+        {nodes.map((node, i) => (
+          <div key={`${node.placeId}-${i}`}>
+            {i > 0 && (
+              <div className="flex items-center gap-2 pl-1 py-1">
+                <span className="text-teal text-base leading-none">↓</span>
+                <span className="text-xs text-slate-500">{edgeLabel(edges[i - 1] ?? [])}</span>
+              </div>
+            )}
+            <div className="flex items-baseline gap-2">
+              <span className="text-base font-semibold text-white">{placeName(node.placeId)}</span>
+              <span className="text-sm text-slate-400">{nightsLabel(node.nights)}</span>
+            </div>
+          </div>
+        ))}
       </div>
-      <p className="text-sm text-slate-400">{a.summary}</p>
-      {a.foodNote && <p className="text-sm text-slate-500">{a.foodNote}</p>}
-      <div className="flex items-center gap-3 pt-0.5">
-        <button
-          type="button"
-          onClick={() => onSwap(block.id)}
-          className="text-xs text-teal hover:opacity-80 font-medium transition-opacity"
-        >
-          Swap
-        </button>
-        <button
-          type="button"
-          onClick={() => setShowMore((v) => !v)}
-          className="text-xs text-slate-600 hover:text-slate-400 transition-colors"
-        >
-          {showMore ? "less" : "more"}
-        </button>
-        {showMore && (
-          <>
-            <button
-              type="button"
-              onClick={() => onReject(block.id)}
-              className="text-xs text-rose-400 hover:opacity-80 font-medium transition-opacity"
-            >
-              Remove
-            </button>
-            <button
-              type="button"
-              onClick={() => onPin(block.id, block.locked)}
-              className="text-xs text-slate-400 hover:text-slate-200 font-medium transition-colors"
-            >
-              {block.locked ? "Unpin" : "Pin"}
-            </button>
-          </>
-        )}
-      </div>
+
+      {routeAlternatives?.length > 0 && (
+        <div className="pt-3 border-t border-slate-700 space-y-2">
+          <p className="text-xs font-medium text-slate-400">Another way to do this trip</p>
+          {routeAlternatives.map((alt) => {
+            const { name, stops, stopCount } = routeLabel(alt);
+            return (
+              <button
+                key={alt.routePackageId}
+                type="button"
+                onClick={() => onChangeRoute(alt.routePackageId)}
+                className="w-full text-left px-3 py-2 rounded-lg border border-slate-600 bg-slate-700 hover:bg-slate-600 transition-colors space-y-0.5"
+              >
+                <span className="block text-sm font-medium text-white">
+                  {name} · {stopCount} stops
+                </span>
+                <span className="block text-xs text-slate-400">{stops}</span>
+              </button>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
 
-function BlockRow({ block, onSwap, onReject, onPin, blockError }) {
+// ── Results: day view ───────────────────────────────────────────────────────
+
+function ActivityLine({ block, onSwap }) {
+  const a = block.activity;
+  return (
+    <div className="space-y-1">
+      <p className="font-medium text-white text-sm">{a.title}</p>
+      <p className="text-sm text-slate-400">{a.summary}</p>
+      {a.foodNote && <p className="text-sm text-slate-500">{a.foodNote}</p>}
+      <button
+        type="button"
+        onClick={() => onSwap(block.id)}
+        className="text-xs text-teal hover:opacity-80 font-medium transition-opacity"
+      >
+        Swap
+      </button>
+    </div>
+  );
+}
+
+function BlockRow({ block, dayNumber, onSwap, blockError }) {
   const isGap = !!block.gap;
   const isActivity = block.type === "activity" && !isGap;
   const isTravel = block.type === "travel";
@@ -391,20 +504,21 @@ function BlockRow({ block, onSwap, onReject, onPin, blockError }) {
         <div className="flex-1 min-w-0">
           {isTravel && block.transport && (
             <p className="text-sm text-slate-300">
-              <span className="capitalize">{block.transport.mode.replace(/_/g, " ")}</span>
+              <span className="capitalize">{modeLabel(block.transport.mode)}</span>
               {" · "}
               {placeName(block.transport.fromPlaceId)} → {placeName(block.transport.toPlaceId)}
               {" · arrive "}
               {block.transport.arriveTime}
+              {block.transport.arriveDayNumber && block.transport.arriveDayNumber !== dayNumber && (
+                <span className="text-slate-500"> (day {block.transport.arriveDayNumber})</span>
+              )}
               {block.transport.overnight && (
                 <span className="text-slate-500"> · overnight</span>
               )}
             </p>
           )}
 
-          {isActivity && (
-            <ActivityLine block={block} onSwap={onSwap} onReject={onReject} onPin={onPin} />
-          )}
+          {isActivity && <ActivityLine block={block} onSwap={onSwap} />}
 
           {isGap && (
             <p className="text-sm text-amber-400">
@@ -426,7 +540,7 @@ function BlockRow({ block, onSwap, onReject, onPin, blockError }) {
   );
 }
 
-function DayView({ day, notice, dayError, onMakeLighter, onSwap, onReject, onPin, blockErrors }) {
+function DayView({ day, notice, dayError, onMakeLighter, onSwap, blockErrors }) {
   return (
     <div className="rounded-xl bg-slate-800 border border-slate-700 overflow-hidden">
       <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-700">
@@ -449,9 +563,8 @@ function DayView({ day, notice, dayError, onMakeLighter, onSwap, onReject, onPin
           <BlockRow
             key={block.id}
             block={block}
+            dayNumber={day.dayNumber}
             onSwap={onSwap}
-            onReject={onReject}
-            onPin={onPin}
             blockError={blockErrors[block.id]}
           />
         ))}
@@ -460,20 +573,34 @@ function DayView({ day, notice, dayError, onMakeLighter, onSwap, onReject, onPin
   );
 }
 
+function PlaceSection({ placeId, nights, days, dayNotices, dayErrors, blockErrors, onMakeLighter, onSwap }) {
+  return (
+    <div className="space-y-3">
+      {placeId && (
+        <h3 className="text-sm font-semibold text-teal uppercase tracking-wide px-1">
+          {placeName(placeId)} · {nightsLabel(nights)}
+        </h3>
+      )}
+      <div className="space-y-3">
+        {days.map((day) => (
+          <DayView
+            key={day.id}
+            day={day}
+            notice={dayNotices[day.dayNumber]}
+            dayError={dayErrors[day.dayNumber]}
+            blockErrors={blockErrors}
+            onMakeLighter={onMakeLighter}
+            onSwap={onSwap}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // ── Results: refine sheet ───────────────────────────────────────────────────
 
-function RefineSheet({
-  open,
-  onClose,
-  form,
-  toggleInterest,
-  setPace,
-  requiredPlaces,
-  toggleRequired,
-  onApply,
-  routeAlternatives,
-  onChangeRoute,
-}) {
+function RefineSheet({ open, onClose, form, toggleInterest, setPace, requiredPlaces, toggleRequired, onApply }) {
   if (!open) return null;
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60" onClick={onClose}>
@@ -538,30 +665,6 @@ function RefineSheet({
                   {p.name}
                 </button>
               ))}
-            </div>
-          </div>
-        )}
-
-        {routeAlternatives?.length > 0 && (
-          <div>
-            <p className="text-xs font-medium text-slate-400 mb-2">Route</p>
-            <div className="space-y-2">
-              {routeAlternatives.map((alt) => {
-                const { name, stops, stopCount } = routeLabel(alt);
-                return (
-                  <button
-                    key={alt.routePackageId}
-                    type="button"
-                    onClick={() => onChangeRoute(alt.routePackageId)}
-                    className="w-full text-left px-3 py-2 rounded-lg border border-slate-600 bg-slate-700 hover:bg-slate-600 transition-colors space-y-0.5"
-                  >
-                    <span className="block text-sm font-medium text-white">
-                      Try: {name} · {stopCount} stops
-                    </span>
-                    <span className="block text-xs text-slate-400">{stops}</span>
-                  </button>
-                );
-              })}
             </div>
           </div>
         )}
@@ -671,7 +774,6 @@ export default function Door2Plan() {
   const [saveMsg, setSaveMsg] = useState(null);
   const [routeAlternatives, setRouteAlternatives] = useState([]);
   const [currentSpec, setCurrentSpec] = useState(null);
-  const [dayIndex, setDayIndex] = useState(0);
   const [showRefine, setShowRefine] = useState(false);
   const [toast, setToast] = useState(null);
   const toastTimer = useRef(null);
@@ -743,7 +845,6 @@ export default function Door2Plan() {
     setBlockErrors({});
     setDayErrors({});
     setDayNotices({});
-    setDayIndex(0);
     if (!thrown && result && result.ok !== false) {
       const routes = selectRoutes(spec, PILOT_DATA, { reviewPolicy: "allow_drafts" });
       setRouteAlternatives(routes.ok ? routes.value.slice(1, 3) : []);
@@ -784,7 +885,6 @@ export default function Door2Plan() {
     setDayNotices({});
     setRouteAlternatives([]);
     setCurrentSpec(null);
-    setDayIndex(0);
     setShowRefine(false);
     setStep("destination");
     setDestQuery("");
@@ -809,7 +909,6 @@ export default function Door2Plan() {
   function handleChangeRoute(routePackageId) {
     const newSpec = { ...currentSpec, routeTemplateId: routePackageId };
     runBuildFromSpec(newSpec);
-    setShowRefine(false);
     showToast("Route changed");
   }
 
@@ -841,16 +940,15 @@ export default function Door2Plan() {
     setSaveMsg(null);
     setRouteAlternatives([]);
     setCurrentSpec(null);
-    setDayIndex(0);
     setStep("basics");
   }
 
   // ── Edit handlers ──────────────────────────────────────────────────────────
 
-  function applyBlockEdit(fn, blockId, successMsg) {
+  function handleSwap(blockId) {
     const t = activeTrip;
     if (!t) return;
-    const result = fn(t);
+    const result = swapActivity(t, blockId);
     if (result.ok) {
       setEditTrip(result.trip);
       setBlockErrors((e) => {
@@ -858,7 +956,7 @@ export default function Door2Plan() {
         delete next[blockId];
         return next;
       });
-      showToast(successMsg);
+      showToast("Swapped");
     } else {
       setBlockErrors((e) => ({ ...e, [blockId]: result.message }));
     }
@@ -911,9 +1009,11 @@ export default function Door2Plan() {
   const nights = activeTrip
     ? activeTrip.spec.stops
         .filter((s) => s.nights > 0)
-        .map((s) => `${placeName(s.placeId)} ${s.nights}n`)
+        .map((s) => `${placeName(s.placeId)} ${nightsLabel(s.nights)}`)
         .join(" · ")
     : "";
+
+  const placeGroups = activeTrip ? groupDaysByPlace(activeTrip) : [];
 
   return (
     <div className="min-h-screen bg-slate-900">
@@ -965,7 +1065,7 @@ export default function Door2Plan() {
               </>
             )}
 
-            {/* Trip header + day view */}
+            {/* Trip header + itinerary */}
             {activeTrip && (
               <>
                 <div className="flex items-start justify-between gap-3">
@@ -1001,43 +1101,27 @@ export default function Door2Plan() {
                   <p className="text-xs text-amber-400">Some days still need attention below.</p>
                 )}
 
-                <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
-                  {activeTrip.days.map((day, i) => (
-                    <button
-                      key={day.id}
-                      type="button"
-                      onClick={() => setDayIndex(i)}
-                      className={`shrink-0 px-4 py-2 rounded-full text-sm font-semibold transition-colors ${
-                        i === dayIndex
-                          ? "bg-teal text-slate-900"
-                          : "bg-slate-800 border border-slate-700 text-slate-400 hover:text-white"
-                      }`}
-                    >
-                      Day {day.dayNumber}
-                    </button>
+                <TripAtAGlance
+                  trip={activeTrip}
+                  routeAlternatives={routeAlternatives}
+                  onChangeRoute={handleChangeRoute}
+                />
+
+                <div className="space-y-5">
+                  {placeGroups.map((group, i) => (
+                    <PlaceSection
+                      key={`${group.placeId}-${i}`}
+                      placeId={group.placeId}
+                      nights={group.nights}
+                      days={group.days}
+                      dayNotices={dayNotices}
+                      dayErrors={dayErrors}
+                      blockErrors={blockErrors}
+                      onMakeLighter={handleMakeLighter}
+                      onSwap={handleSwap}
+                    />
                   ))}
                 </div>
-
-                <DayView
-                  day={activeTrip.days[dayIndex]}
-                  notice={dayNotices[activeTrip.days[dayIndex]?.dayNumber]}
-                  dayError={dayErrors[activeTrip.days[dayIndex]?.dayNumber]}
-                  blockErrors={blockErrors}
-                  onMakeLighter={handleMakeLighter}
-                  onSwap={(blockId) =>
-                    applyBlockEdit((t) => swapActivity(t, blockId), blockId, "Swapped")
-                  }
-                  onReject={(blockId) =>
-                    applyBlockEdit((t) => rejectActivity(t, blockId), blockId, "Removed")
-                  }
-                  onPin={(blockId, isLocked) =>
-                    applyBlockEdit(
-                      (t) => (isLocked ? unpinActivity(t, blockId) : pinActivity(t, blockId)),
-                      blockId,
-                      isLocked ? "Unpinned" : "Pinned"
-                    )
-                  }
-                />
 
                 {activeTrip.history?.length > 0 && (
                   <div className="text-center">
@@ -1079,8 +1163,6 @@ export default function Door2Plan() {
         requiredPlaces={requiredPlaces}
         toggleRequired={toggleRequired}
         onApply={handleApplyRefine}
-        routeAlternatives={routeAlternatives}
-        onChangeRoute={handleChangeRoute}
       />
 
       {toast && (
