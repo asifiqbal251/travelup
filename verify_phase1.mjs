@@ -50,7 +50,8 @@ function tripAtGlanceSegments(trip) {
     pending.push(block.transport.mode);
     const to = block.transport.toPlaceId;
     if (to === majorStops[majorIdx].placeId) {
-      edges.push(pending); pending = []; segmentStartPlace = to; majorIdx += 1;
+      if (majorIdx > 0) edges.push(pending);
+      pending = []; segmentStartPlace = to; majorIdx += 1;
     } else if (to === segmentStartPlace) {
       pending = [];
     }
