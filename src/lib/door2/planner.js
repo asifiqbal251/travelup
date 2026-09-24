@@ -6,8 +6,8 @@ import { BUFFER_RULESET_VERSION, DEFAULT_BUFFER_RULESET } from './bufferRuleset.
 import { FAILURE_STATES, makeFailure } from './failureStates.js';
 import { fillTrip } from './fill.js';
 import { PILOT_CONTENT } from './pilotContent.js';
-import { PILOT_CONNECTIONS, PILOT_DATA_VERSION, PILOT_PLACES, PILOT_ROUTE_PACKAGES } from './pilotData.js';
-import { getPlace, selectRoutes } from './route.js';
+import { PILOT_CONNECTIONS, PILOT_DATA_VERSION, PILOT_PLACES, PILOT_ROUTE_PACKAGES, PILOT_ROUTE_PACKAGES_ALL } from './pilotData.js';
+import { buildRouteResult, getPlace, selectRoutes } from './route.js';
 import { PackageAuthoringError, scheduleRoute } from './schedule.js';
 import { ENGINE_VERSION, SCHEDULE_CONFIG } from './scheduleConfig.js';
 import { validateFilled, validateSkeleton } from './validate.js';
@@ -19,7 +19,10 @@ import { validateFilled, validateSkeleton } from './validate.js';
 export const PILOT_DATA = Object.freeze({
   places: PILOT_PLACES,
   connections: PILOT_CONNECTIONS,
-  routePackages: PILOT_ROUTE_PACKAGES
+  routePackages: PILOT_ROUTE_PACKAGES,
+  // Every compiled variant, held ones included. Never used for selection; only
+  // buildTripFromRoutePlan looks a known variant up here.
+  allRoutePackages: PILOT_ROUTE_PACKAGES_ALL
 });
 
 function packageName(data, routePackageId) {
@@ -130,8 +133,22 @@ export function buildSkeletonTrip(spec, data = PILOT_DATA, options = {}) {
   if (!validation.ok) return validation;
 
   // 6. Assemble the Trip.
+  return assembleSkeletonTrip(spec, best, scheduled, validation, scheduleOptions.bufferRuleset);
+}
+
+/**
+ * Shared Trip assembly for buildSkeletonTrip and buildTripFromRoutePlan.
+ * @param {TripSpec} spec
+ * @param {import('./types.js').RouteResult} best
+ * @param {{value: {days: Object[], stops: Array<{stopId: string, nights: number}>}}} scheduled
+ * @param {{value: {status: string, warnings: string[]}}} validation
+ * @param {typeof DEFAULT_BUFFER_RULESET} bufferRuleset
+ * @returns {Trip}
+ */
+function assembleSkeletonTrip(spec, best, scheduled, validation, bufferRuleset) {
+  const N = spec.totalDays;
+  const required = spec.requiredPlaceIds ?? [];
   const nightsByStop = Object.fromEntries(scheduled.value.stops.map((s) => [s.stopId, s.nights]));
-  const bufferRuleset = scheduleOptions.bufferRuleset;
   return {
     id: `door2:${spec.originPlaceId}:${spec.destination.id}:${N}:${best.routePackageId}`,
     status: validation.value.status,
@@ -159,6 +176,85 @@ export function buildSkeletonTrip(spec, data = PILOT_DATA, options = {}) {
     },
     history: []
   };
+}
+
+/**
+ * Every package a RoutePlan may name: the served list first, then every
+ * compiled variant (held ones included).
+ */
+function knownPackages(data) {
+  const served = data.routePackages ?? [];
+  const extra = (data.allRoutePackages ?? []).filter((p) => !served.some((s) => s.id === p.id));
+  return [...served, ...extra];
+}
+
+/** Finds a package by id or alias; undefined when unknown. */
+export function findRoutePackage(data, id) {
+  const all = knownPackages(data);
+  return all.find((p) => p.id === id) ?? all.find((p) => (p.aliases ?? []).includes(id));
+}
+
+/**
+ * Builds an unfilled skeleton Trip for an exact RoutePlan: the named variant,
+ * with the plan's nights per stop (no ranking, no round-robin). Used by the
+ * structural editor (restructure.js); the traveller never reaches a held
+ * variant because no proposal is ever built from one.
+ *
+ * @param {TripSpec} spec                 spec.totalDays must equal the plan's allocation.
+ * @param {{variantId: string, stops: Array<{key: string, nights: number}>}} routePlan
+ * @param {{places: Object|Map, connections: Object[], routePackages: Object[], allRoutePackages?: Object[]}} [data]
+ * @param {{reviewPolicy?: 'strict'|'allow_drafts', config?: typeof SCHEDULE_CONFIG, bufferRuleset?: typeof DEFAULT_BUFFER_RULESET}} [options]
+ * @returns {Trip|FailureResult}
+ */
+export function buildTripFromRoutePlan(spec, routePlan, data = PILOT_DATA, options = {}) {
+  const reviewPolicy = options.reviewPolicy ?? 'strict';
+  const scheduleOptions = {
+    config: options.config ?? SCHEDULE_CONFIG,
+    bufferRuleset: options.bufferRuleset ?? DEFAULT_BUFFER_RULESET
+  };
+
+  const pkg = findRoutePackage(data, routePlan.variantId);
+  if (!pkg) throw new Error(`buildTripFromRoutePlan: unknown variant "${routePlan.variantId}"`);
+  const planKeys = routePlan.stops.map((s) => s.key);
+  const pkgKeys = pkg.stops.map((s) => s.id);
+  if (planKeys.join('|') !== pkgKeys.join('|')) {
+    throw new Error(`buildTripFromRoutePlan: plan stops [${planKeys}] do not match variant "${pkg.id}" stops [${pkgKeys}]`);
+  }
+
+  const built = buildRouteResult(pkg, spec, data);
+  if (built.missing) {
+    return makeFailure(
+      FAILURE_STATES.CONNECTION_UNREVIEWED,
+      [{ action: 'check_back_later', detail: "We don't have verified transport for this leg yet" }],
+      { detail: { reason: 'missing', from: built.missing.from, to: built.missing.to, routePackageId: pkg.id } }
+    );
+  }
+  if (reviewPolicy === 'strict' && built.unreviewedIds.length > 0) {
+    return makeFailure(
+      FAILURE_STATES.CONNECTION_UNREVIEWED,
+      [{ action: 'check_back_later', detail: "We're still verifying the transport on this route" }],
+      { detail: { reason: 'unreviewed', connectionIds: [...built.unreviewedIds], routePackageId: pkg.id } }
+    );
+  }
+  const best = built.routeResult;
+  const nightsOverride = Object.fromEntries(routePlan.stops.map((s) => [s.key, s.nights]));
+
+  let scheduled;
+  try {
+    scheduled = scheduleRoute(best, spec, data, { ...scheduleOptions, nightsOverride });
+  } catch (err) {
+    if (!(err instanceof PackageAuthoringError)) throw err;
+    return makeFailure(
+      FAILURE_STATES.ROUTE_NOT_SUPPORTED,
+      [{ action: 'check_back_later', detail: "We're still working on a route that fits this trip" }],
+      { detail: { ...err.detail, routePackageId: pkg.id } }
+    );
+  }
+  if (!scheduled.ok) return scheduled;
+
+  const validation = validateSkeleton(scheduled.value, best, spec, data, { reviewPolicy, config: scheduleOptions.config });
+  if (!validation.ok) return validation;
+  return assembleSkeletonTrip(spec, best, scheduled, validation, scheduleOptions.bufferRuleset);
 }
 
 /**
