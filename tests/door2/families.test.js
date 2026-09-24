@@ -147,13 +147,23 @@ test('RF4: backbone trips are byte-identical to the old packages (every length, 
   }
 });
 
+// Step 3 note: trip.routePlan carries family metadata (familyId, optionals, stop roles) that the
+// old hand-written package can't have, so routePlan is compared separately in draftUpgrade.test.js.
+const withoutRoutePlan = (t) => {
+  if (t.ok === false) return t;
+  const { routePlan, ...rest } = t;
+  return rest;
+};
+
 test('RF5: Huaraz variant identity — every length 11..18 equals the old output after mapping keys', () => {
   for (const required of [['huaraz'], ['huaraz', 'machu_picchu']]) {
     for (let n = 11; n <= 18; n++) {
       const s = spec(PERU, n, required);
-      const before = mapOldHuaraz(buildFilledTrip(s, OLD_DATA, DRAFTS));
+      const before = withoutRoutePlan(mapOldHuaraz(buildFilledTrip(s, OLD_DATA, DRAFTS)));
       const after = buildFilledTrip(s, PILOT_DATA, DRAFTS);
-      assert.deepStrictEqual(after, before, `${required.join('+')} ${n} days`);
+      assert.deepStrictEqual(withoutRoutePlan(after), before, `${required.join('+')} ${n} days`);
+      assert.equal(after.routePlan.variantId, HUARAZ_VARIANT);
+      assert.deepEqual(after.routePlan.stops.map((x) => [x.key, x.nights]), after.spec.stops.map((x) => [x.id, x.nights]));
     }
   }
   // Below its minimum, both refuse the same way (except the package id).
