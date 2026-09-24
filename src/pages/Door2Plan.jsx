@@ -3,9 +3,9 @@ import { useLocation } from "react-router-dom";
 import PageNotFound from "@/lib/PageNotFound";
 import { makeDayLighter, swapActivity, swapDays, swappableDays, undo } from "@/lib/door2/edit";
 import { PILOT_DATA, buildFilledTrip } from "@/lib/door2/planner";
-import { PILOT_PLACES, PILOT_ROUTE_PACKAGES } from "@/lib/door2/pilotData";
+import { PILOT_PLACES, PILOT_ROUTE_FAMILIES, PILOT_ROUTE_PACKAGES } from "@/lib/door2/pilotData";
 import { selectRoutes } from "@/lib/door2/route";
-import { applyProposal, previewAdjustNights } from "@/lib/door2/restructure";
+import { applyProposal, previewAddOptional, previewAdjustNights, previewRemoveOptional } from "@/lib/door2/restructure";
 import { MONTHS } from "@/lib/options";
 import {
   deleteDraftTrip,
@@ -115,6 +115,26 @@ function routeLabel(routeResult) {
   if (!pkg) return { name: routeResult.routePackageId, stops: routeResult.routePackageId, stopCount: 0 };
   const stops = routeResult.stops.map(s => PILOT_PLACES[s.placeId]?.name ?? s.placeId).join(' → ');
   return { name: pkg.name, stops, stopCount: routeResult.stops.length };
+}
+
+/** The family this trip belongs to, or null (route families are the only route type, but be defensive). */
+function familyFor(trip) {
+  return PILOT_ROUTE_FAMILIES.find((f) => f.id === trip?.routePlan?.familyId) ?? null;
+}
+
+/** Optionals not yet in the trip that have at least one approved (never held) position to add at. */
+function addableOptionalsFor(trip) {
+  const family = familyFor(trip);
+  if (!family) return [];
+  const included = new Set((trip.routePlan.optionals ?? []).map((o) => o.optionalId));
+  return (family.optional ?? [])
+    .filter((o) => !included.has(o.id) && o.positions.some((p) => p.status === "approved"))
+    .map((o) => ({ optionalId: o.id, label: o.label, pitch: o.pitch }));
+}
+
+/** The optional's traveller-facing label for a stop that belongs to one (e.g. "Huaraz & the Cordillera Blanca"). */
+function optionalLabelFor(trip, optionalId) {
+  return familyFor(trip)?.optional?.find((o) => o.id === optionalId)?.label ?? optionalId;
 }
 
 function summarizeDiff(diff) {
