@@ -76,7 +76,7 @@ const withPackages = (routePackages) => ({ ...PILOT_DATA, routePackages });
 
 test('F1: NYC, 7 days', () => {
   const trip = assertTrip(buildSkeletonTrip(F.F1, PILOT_DATA, DRAFTS));
-  assert.equal(trip.status, 'draft');
+  assert.equal(trip.status, 'valid'); // 72eb2d7: all connections reviewed → trip status 'valid'
   assert.deepEqual(nightsOf(trip), { nyc_base: 6 });
   const out = blocks(trip, 1)[0];
   assert.equal(out.type, 'travel');
@@ -110,7 +110,7 @@ test('F2: Peru, 10 days', () => {
   assert.equal(out.dayNumber, 1);
   assert.equal(out.startTime, '09:00');
   assert.equal(out.transport.arriveDayNumber, 2);
-  assert.equal(out.transport.arriveTime, '04:27'); // brief: 02:45
+  assert.equal(out.transport.arriveTime, '04:57'); // brief: 02:45; 72eb2d7: YVR–LIM layover 1.5h → 2.0h (+30 min)
   assert.equal(out.transport.overnight, true);
   const d2Open = blocks(trip, 2).filter((b) => b.type === 'open').reduce((s, b) => s + b.durationHours, 0);
   assert.ok(d2Open <= 4, `D2 open ${d2Open}h`);
@@ -128,14 +128,14 @@ test('F2: Peru, 10 days', () => {
   const ollyAgc = blockById(trip, 'tr:pc_sacred_valley>pc_aguas');
   assert.equal(ollyAgc.dayNumber, 7); // brief: 8
   assert.equal(ollyAgc.startTime, '11:03');
-  assert.equal(ollyAgc.transport.arriveTime, '13:54'); // brief: 11:51
+  assert.equal(ollyAgc.transport.arriveTime, '13:39'); // brief: 11:51; 72eb2d7: train 1.75h → 1.5h (−15 min)
 
   const exOut = blockById(trip, 'ex:pc_aguas:machu_picchu:out');
   const exSite = blockById(trip, 'ex:pc_aguas:machu_picchu:site');
   const exBack = blockById(trip, 'ex:pc_aguas:machu_picchu:back');
   assert.equal(exOut.dayNumber, 7); // brief: D8 11:51–17:33
-  assert.equal(exOut.startTime, '13:54');
-  assert.equal(exBack.transport.arriveTime, '19:36');
+  assert.equal(exOut.startTime, '13:39'); // 72eb2d7: train −15 min
+  assert.equal(exBack.transport.arriveTime, '19:21'); // 72eb2d7: train −15 min
   assert.equal(exSite.type, 'open');
   assert.equal(exSite.placeId, 'machu_picchu');
   assert.equal(exSite.anchor.stopId, 'pc_aguas');
@@ -148,14 +148,14 @@ test('F2: Peru, 10 days', () => {
   );
   assert.equal(chain[1].startTime, chain[0].transport.arriveTime);
   assert.equal(chain[2].startTime, chain[1].transport.arriveTime);
-  assert.equal(chain[2].transport.arriveTime, '18:54');
+  assert.equal(chain[2].transport.arriveTime, '18:39'); // 72eb2d7: the return train is the same row, −15 min
 
   // The flight home leaves D9 and lands just after midnight on D10.
   const home = blockById(trip, 'tr:pc_lima_out>origin_home');
   assert.equal(home.dayNumber, 9); // brief: 10
   assert.equal(home.startTime, '09:00');
   assert.equal(home.transport.arriveDayNumber, 10);
-  assert.equal(home.transport.arriveTime, '00:27'); // brief: 22:45
+  assert.equal(home.transport.arriveTime, '00:57'); // brief: 22:45; 72eb2d7: LIM–YVR layover +30 min
   assert.equal(home.transport.overnight, true); // brief: false
   assert.deepEqual(blocks(trip, 10).map((b) => [b.type, b.note]), [['rest', 'in_transit']]);
 });
@@ -185,10 +185,10 @@ test('F4: Peru + Huaraz + Machu Picchu, 12 days', () => {
   });
   const toHuaraz = blockById(trip, 'tr:ph_lima_in>ph_huaraz');
   assert.equal(toHuaraz.dayNumber, 4);
-  assert.equal(toHuaraz.transport.arriveTime, '17:51');
+  assert.equal(toHuaraz.transport.arriveTime, '18:21'); // 72eb2d7: Lima↔Huaraz coach 8.0h → 8.5h
   const fromHuaraz = blockById(trip, 'tr:ph_huaraz>ph_lima_mid');
   assert.equal(fromHuaraz.dayNumber, 6); // brief: 7
-  assert.equal(fromHuaraz.transport.arriveTime, '17:51');
+  assert.equal(fromHuaraz.transport.arriveTime, '18:21'); // 72eb2d7: coach 8.0h → 8.5h
   // Lima appears again mid-trip (the hub backtrack) as an overnight stop.
   assert.equal(trip.spec.stops.filter((s) => s.placeId === 'lima' && s.nights >= 1).length, 3);
   assert.ok(blocks(trip, 6).some((b) => b.type === 'open' && b.placeId === 'lima' && b.anchor.stopId === 'ph_lima_mid'));
@@ -196,12 +196,12 @@ test('F4: Peru + Huaraz + Machu Picchu, 12 days', () => {
   const exOut = blockById(trip, 'ex:ph_aguas:machu_picchu:out');
   const exBack = blockById(trip, 'ex:ph_aguas:machu_picchu:back');
   assert.equal(exOut.dayNumber, 9); // brief: 10
-  assert.equal(exOut.startTime, '13:54');
-  assert.equal(exBack.transport.arriveTime, '19:36');
+  assert.equal(exOut.startTime, '13:39'); // 72eb2d7: train −15 min
+  assert.equal(exBack.transport.arriveTime, '19:21'); // 72eb2d7: train −15 min
   const home = blockById(trip, 'tr:ph_lima_out>origin_home');
   assert.equal(home.dayNumber, 11);
   assert.equal(home.transport.arriveDayNumber, 12);
-  assert.equal(home.transport.arriveTime, '00:27'); // brief: 22:45
+  assert.equal(home.transport.arriveTime, '00:57'); // brief: 22:45; 72eb2d7: layover +30 min
 });
 
 test('F5: Peru + Huaraz + Machu Picchu, 9 days is a required-place conflict', () => {
@@ -235,20 +235,24 @@ test('F6: Tokyo, 7 days', () => {
   assert.equal(home.transport.overnight, true);
 });
 
-test('F7: strict review policy refuses the draft pilot data', () => {
-  const r = buildSkeletonTrip(F.F2, PILOT_DATA, { reviewPolicy: 'strict' });
+// 72eb2d7 made every pilot connection reviewed, so "strict refuses the pilot data" became a
+// false premise. The intent is kept by un-reviewing one leg that every Peru package uses.
+test('F7: strict review policy refuses a route with an unreviewed connection', () => {
+  const oneDraft = {
+    ...PILOT_DATA,
+    connections: PILOT_DATA.connections.map((c) => (c.id === 'conn_lim_cuz_air' ? { ...c, reviewedAt: null } : c))
+  };
+  const r = buildSkeletonTrip(F.F2, oneDraft, { reviewPolicy: 'strict' });
   assert.equal(r.ok, false);
   assert.equal(r.state, 'connection_unreviewed');
   assert.equal(r.detail.reason, 'unreviewed');
-  assert.deepEqual(r.detail.connectionIds, [
-    'conn_yvr_lim_air',
-    'conn_lim_cuz_air',
-    'conn_cuz_olly_road',
-    'conn_olly_agc_train',
-    'conn_agc_mp_shuttle'
-  ]);
+  assert.deepEqual(r.detail.connectionIds, ['conn_lim_cuz_air']);
   // strict is the default.
-  assert.deepEqual(buildSkeletonTrip(F.F2), r);
+  assert.deepEqual(buildSkeletonTrip(F.F2, oneDraft), r);
+  // The same trip is served when drafts are allowed.
+  assert.equal(assertTrip(buildSkeletonTrip(F.F2, oneDraft, DRAFTS)).status, 'draft');
+  // And the real (fully reviewed) pilot data passes strict.
+  assert.equal(assertTrip(buildSkeletonTrip(F.F2)).status, 'valid');
 });
 
 test('F7b: reviewed connections pass strict and produce a valid trip', () => {
@@ -362,16 +366,17 @@ test('F11: every C4 invariant holds for all successful fixtures (validateSkeleto
     assert.deepStrictEqual(scheduled.value.days, trip.days);
     const v = validateSkeleton(scheduled.value, best, s, PILOT_DATA, DRAFTS);
     assert.equal(v.ok, true);
-    assert.equal(v.value.status, 'draft');
+    assert.equal(v.value.status, 'valid'); // 72eb2d7: all connections reviewed → 'valid'
     assert.equal(v.value.contentStatus, 'not_filled');
-    // Strict validation of draft data is a traveller state, not a throw.
-    assert.equal(validateSkeleton(scheduled.value, best, s, PILOT_DATA, { reviewPolicy: 'strict' }).state, 'connection_unreviewed');
+    // 72eb2d7: reviewed data now passes strict validation too (the refusal path is covered by F7).
+    assert.equal(validateSkeleton(scheduled.value, best, s, PILOT_DATA, { reviewPolicy: 'strict' }).ok, true);
 
     // Spot-check invariants directly on the Trip.
     assert.deepEqual(trip.days.map((d) => d.dayNumber), Array.from({ length: s.totalDays }, (_, i) => i + 1));
     for (const d of trip.days) {
       for (const b of d.blocks) {
-        assert.deepEqual(b.provenance, { source: 'curated', reviewed: false, confidence: 'medium' });
+        // 72eb2d7: reviewed connections → provenance.reviewed true.
+        assert.deepEqual(b.provenance, { source: 'curated', reviewed: true, confidence: 'medium' });
         assert.equal(b.generationStatus, 'ok');
         assert.equal(b.userEdited, false);
         assert.equal(b.locked, false);
@@ -423,5 +428,5 @@ test('trip shape: id, versions, spec stops', () => {
       assert.equal(d.blocks.some((b) => b.type === 'open' && b.placeId === t.placeId && b.startTime < t.startTime), false);
     }
   }
-  assert.equal(endClock(blockById(trip, 'ex:pc_aguas:machu_picchu:back')), '19:36');
+  assert.equal(endClock(blockById(trip, 'ex:pc_aguas:machu_picchu:back')), '19:21'); // 72eb2d7: train −15 min
 });
