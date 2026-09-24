@@ -157,7 +157,7 @@ function tripAtGlanceSegments(trip) {
     pending.push(block.transport.mode);
     const to = block.transport.toPlaceId;
     if (to === majorStops[majorIdx].placeId) {
-      edges.push(pending);
+      if (majorIdx > 0) edges.push(pending);
       pending = [];
       segmentStartPlace = to;
       majorIdx += 1;
