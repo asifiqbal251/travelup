@@ -5,6 +5,7 @@ import { makeDayLighter, swapActivity, swapDays, swappableDays, undo } from "@/l
 import { PILOT_DATA, buildFilledTrip } from "@/lib/door2/planner";
 import { PILOT_PLACES, PILOT_ROUTE_FAMILIES, PILOT_ROUTE_PACKAGES } from "@/lib/door2/pilotData";
 import { selectRoutes } from "@/lib/door2/route";
+import { backToMove, pickMove, positionLabel, proposalColumns } from "@/lib/door2/proposalView";
 import { applyProposal, listMoveOptions, previewAddOptional, previewAdjustNights, previewRemoveOptional } from "@/lib/door2/restructure";
 import { MONTHS } from "@/lib/options";
 import {
@@ -727,19 +728,7 @@ function PlaceSection({ placeId, nights, days, dayNotices, dayErrors, blockError
 // ── Results: structural edit sheet (nights chips → preview → apply) ────────
 
 function ProposalCard({ trip, proposal, onUse, onKeep }) {
-  const rp = trip.routePlan;
-  const stopKeys = [...new Set([...(rp?.stops ?? []).map((s) => s.key), ...(proposal.routePlan?.stops ?? []).map((s) => s.key)])];
-  const beforeByKey = new Map((rp?.stops ?? []).map((s) => [s.key, s]));
-  const afterByKey = new Map((proposal.routePlan?.stops ?? []).map((s) => [s.key, s]));
-  const rows = stopKeys
-    .map((key) => {
-      const before = beforeByKey.get(key);
-      const after = afterByKey.get(key);
-      const nightsAfter = after?.nights ?? 0;
-      const nightsBefore = before?.nights ?? 0;
-      return { key, placeId: (after ?? before)?.placeId, nightsBefore, nightsAfter };
-    })
-    .filter((r) => r.nightsBefore > 0 || r.nightsAfter > 0);
+  const columns = proposalColumns(trip.routePlan, proposal.routePlan);
 
   return (
     <div className="rounded-xl bg-slate-800 border border-slate-700 p-5 space-y-4">
@@ -757,21 +746,19 @@ function ProposalCard({ trip, proposal, onUse, onKeep }) {
       <div className="flex gap-3">
         <div className="flex-1 rounded-lg bg-slate-900/60 border border-slate-700 p-3 space-y-1">
           <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide">Before</p>
-          {rows.map((r) => (
+          {columns.before.map((r) => (
             <p key={`b-${r.key}`} className="text-xs text-slate-300">
-              {placeName(r.placeId)} <span className="text-slate-500">· {nightsLabel(r.nightsBefore)}</span>
+              {placeName(r.placeId)} <span className="text-slate-500">· {nightsLabel(r.nights)}</span>
             </p>
           ))}
         </div>
         <span className="self-center text-teal text-sm">→</span>
         <div className="flex-1 rounded-lg bg-slate-900/60 border border-teal/30 p-3 space-y-1">
           <p className="text-[10px] font-semibold text-teal uppercase tracking-wide">After</p>
-          {rows.map((r) => (
+          {columns.after.map((r) => (
             <p key={`a-${r.key}`} className="text-xs text-slate-300">
               {placeName(r.placeId)}{" "}
-              <span className={r.nightsAfter !== r.nightsBefore ? "text-teal" : "text-slate-500"}>
-                · {nightsLabel(r.nightsAfter)}
-              </span>
+              <span className={r.changed ? "text-teal" : "text-slate-500"}>· {nightsLabel(r.nights)}</span>
             </p>
           ))}
         </div>
@@ -799,7 +786,7 @@ function ProposalCard({ trip, proposal, onUse, onKeep }) {
   );
 }
 
-function StructureSheet({ sheet, trip, onMoreTime, onLessTime, onRemoveOptional, onAddOptional, onMoveOptional, onPickMove, onBackToMove, onUseProposal, onClose }) {
+export function StructureSheet({ sheet, trip, onMoreTime, onLessTime, onRemoveOptional, onAddOptional, onMoveOptional, onPickMove, onBackToMove, onUseProposal, onClose }) {
   if (!sheet) return null;
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60" onClick={onClose}>
@@ -877,7 +864,7 @@ function StructureSheet({ sheet, trip, onMoreTime, onLessTime, onRemoveOptional,
             {sheet.current && (
               <div className="rounded-lg bg-slate-800 border border-slate-700 p-3">
                 <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide">Where it is now</p>
-                <p className="text-sm text-white">{sheet.current.after ? `After ${placeName(sheet.current.after)}` : sheet.optionalLabel}</p>
+                <p className="text-sm text-white">{sheet.current.after ? positionLabel(sheet.current.positionId, placeName(sheet.current.after)) : sheet.optionalLabel}</p>
               </div>
             )}
             {sheet.options.length === 0 ? (
@@ -895,7 +882,7 @@ function StructureSheet({ sheet, trip, onMoreTime, onLessTime, onRemoveOptional,
                   onClick={() => onPickMove(o.proposal)}
                   className="w-full text-left bg-slate-800 border border-slate-600 text-white rounded-lg px-4 py-3 font-semibold text-sm hover:bg-slate-700 transition-colors"
                 >
-                  {o.after ? `After ${placeName(o.after)}` : o.positionId}
+                  {positionLabel(o.positionId, o.after ? placeName(o.after) : null)}
                 </button>
               ))
             )}
@@ -1417,11 +1404,11 @@ export default function Door2Plan() {
   }
 
   function handlePickMove(proposal) {
-    setStructureSheet((s) => ({ ...s, stage: "move_confirm", proposal }));
+    setStructureSheet((s) => pickMove(s, proposal));
   }
 
   function handleBackToMove() {
-    setStructureSheet((s) => ({ ...s, stage: "move", proposal: undefined }));
+    setStructureSheet((s) => backToMove(s));
   }
 
   function handleAdjustNights(stopKey, delta) {
