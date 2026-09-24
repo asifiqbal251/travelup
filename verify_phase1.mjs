@@ -73,6 +73,6 @@ for (const g of groupDaysByPlace(t)) {
 console.log('\n=== tripAtGlanceSegments ===');
 const {nodes, edges} = tripAtGlanceSegments(t);
 nodes.forEach((n,i)=>{
+  if (i > 0) console.log('  --', edgeLabel(edges[i-1]), '-->');
   console.log(n.placeId, n.nights, 'nights');
-  if (edges[i]) console.log('  --', edgeLabel(edges[i]), '-->');
 });
