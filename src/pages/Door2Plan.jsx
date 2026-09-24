@@ -162,7 +162,12 @@ function isEmptyDay(day) {
 function tripAtGlanceSegments(trip) {
   const majorStops = trip.spec.stops.filter((s) => s.nights > 0);
   if (majorStops.length === 0) return { nodes: [], edges: [] };
-  const routeStopByPlace = new Map((trip.routePlan?.stops ?? []).map((s) => [s.placeId, s]));
+  // spec.stops is a derived mirror of routePlan.stops for this schema version
+  // (design §7), so filtering both to nights > 0 and zipping by position lines
+  // them up correctly — including a place visited twice (e.g. Lima in and out),
+  // where matching by placeId alone would collide.
+  const majorRouteStops = (trip.routePlan?.stops ?? []).filter((s) => s.nights > 0);
+  const routeStopAt = (i) => (majorRouteStops.length === majorStops.length ? majorRouteStops[i] : null);
 
   const travelBlocks = trip.days
     .flatMap((d) => d.blocks)
@@ -187,7 +192,7 @@ function tripAtGlanceSegments(trip) {
     }
   }
 
-  return { nodes: majorStops.map((s) => ({ ...s, routeStop: routeStopByPlace.get(s.placeId) ?? null })), edges };
+  return { nodes: majorStops.map((s, i) => ({ ...s, routeStop: routeStopAt(i) })), edges };
 }
 
 function edgeLabel(modes) {
