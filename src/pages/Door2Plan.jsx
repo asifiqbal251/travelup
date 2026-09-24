@@ -799,7 +799,7 @@ function ProposalCard({ trip, proposal, onUse, onKeep }) {
   );
 }
 
-function StructureSheet({ sheet, trip, onMoreTime, onLessTime, onUseProposal, onClose }) {
+function StructureSheet({ sheet, trip, onMoreTime, onLessTime, onRemoveOptional, onAddOptional, onUseProposal, onClose }) {
   if (!sheet) return null;
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60" onClick={onClose}>
@@ -809,7 +809,11 @@ function StructureSheet({ sheet, trip, onMoreTime, onLessTime, onUseProposal, on
       >
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-bold text-white">
-            {sheet.stage === "nights" ? `${placeName(sheet.placeId)} · ${nightsLabel(sheet.nights)}` : "How this would look"}
+            {sheet.stage === "nights"
+              ? `${placeName(sheet.placeId)} · ${nightsLabel(sheet.nights)}`
+              : sheet.stage === "optional"
+                ? sheet.label
+                : "How this would look"}
           </h2>
           <button type="button" onClick={onClose} className="text-slate-500 hover:text-white text-xl leading-none">
             ×
@@ -831,6 +835,28 @@ function StructureSheet({ sheet, trip, onMoreTime, onLessTime, onUseProposal, on
               className="w-full bg-slate-800 border border-slate-600 text-white rounded-lg px-6 py-3 font-semibold text-sm hover:bg-slate-700 transition-colors"
             >
               Less time here (−1 night)
+            </button>
+            {sheet.optionalId && (
+              <button
+                type="button"
+                onClick={() => onRemoveOptional(sheet.optionalId)}
+                className="w-full bg-slate-800 border border-rose-700/40 text-rose-400 rounded-lg px-6 py-3 font-semibold text-sm hover:bg-rose-950/30 transition-colors"
+              >
+                Remove {sheet.optionalLabel} from your trip
+              </button>
+            )}
+          </div>
+        )}
+
+        {sheet.stage === "optional" && (
+          <div className="space-y-4">
+            {sheet.pitch && <p className="text-sm text-slate-300 leading-relaxed">{sheet.pitch}</p>}
+            <button
+              type="button"
+              onClick={() => onAddOptional(sheet.optionalId)}
+              className="w-full bg-teal text-slate-900 rounded-lg px-6 py-3 font-bold text-sm hover:opacity-90 transition-opacity"
+            >
+              Add {sheet.label}
             </button>
           </div>
         )}
