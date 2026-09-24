@@ -1530,6 +1530,8 @@ export default function Door2Plan() {
                   routeAlternatives={routeAlternatives}
                   onChangeRoute={handleChangeRoute}
                   onOpenNightsSheet={handleOpenNightsSheet}
+                  addableOptionals={addableOptionalsFor(activeTrip)}
+                  onOpenOptionalSheet={handleOpenOptionalSheet}
                 />
 
                 <div className="space-y-5">
@@ -1598,6 +1600,8 @@ export default function Door2Plan() {
         trip={activeTrip}
         onMoreTime={(stopKey) => handleAdjustNights(stopKey, 1)}
         onLessTime={(stopKey) => handleAdjustNights(stopKey, -1)}
+        onRemoveOptional={handleRemoveOptional}
+        onAddOptional={handleAddOptional}
         onUseProposal={handleUseProposal}
         onClose={() => setStructureSheet(null)}
       />
