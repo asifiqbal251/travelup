@@ -414,7 +414,7 @@ test('trip shape: id, versions, spec stops', () => {
   assert.equal(trip.id, 'door2:vancouver:PE:10:peru_classic');
   assert.deepEqual(trip.versions, {
     engine: 'door2-skeleton-0.1',
-    schema: 'door2-v5',
+    schema: 'door2-v6', // Route Families step 3: trip.routePlan added
     content: 'none',
     routeData: 'pilot-catalogue-v2',
     bufferRuleset: 'buffer_ruleset_v2@2'
