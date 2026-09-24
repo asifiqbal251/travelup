@@ -440,8 +440,7 @@ function shorterRouteAlternative(trip, newTotalDays, ctx) {
   const plan = {
     variantId: backbone.id,
     stops: stops.map((s) => ({ key: s.key, nights: nights[s.key] })),
-    nightsSource: 'user',
-    prior: undefined
+    nightsSource: 'user'
   };
   const skeleton = buildTripFromRoutePlan({ ...spec, routeTemplateId: backbone.id }, plan, ctx.data, { reviewPolicy: ctx.reviewPolicy });
   if (skeleton.ok === false) return null;
