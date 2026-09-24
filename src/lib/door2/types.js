@@ -350,13 +350,17 @@
  */
 
 /**
- * Result of a bounded edit operation (swap, reject, pin, unpin, lighter day, undo).
+ * Result of a bounded edit operation (swap, reject, pin, unpin, lighter day, swap days, undo).
  * Distinct from FailureResult: no `state` field, no `options` field.
  * Callers can tell them apart by checking `reason` (EditResult) vs `state` (FailureResult).
  *
+ * ➕ RF: 'change_not_feasible' (swapDays) carries a machine-readable `why`:
+ * 'content_constraint' (with `blocked`: [{templateId, title, fromDay, toDay, minDayAtStop}]),
+ * 'different_stop', 'day_shape' or 'same_day'.
+ *
  * @typedef {
  *   {ok: true, trip: Trip} |
- *   {ok: false, reason: 'block_not_found'|'block_not_editable'|'block_locked'|'content_not_eligible'|'nothing_to_undo', message: string}
+ *   {ok: false, reason: 'block_not_found'|'block_not_editable'|'block_locked'|'content_not_eligible'|'nothing_to_undo'|'change_not_feasible', message: string, why?: string, blocked?: Array<{templateId: string, title: string, fromDay: number, toDay: number, minDayAtStop: number}>}
  * } EditResult
  */
 
