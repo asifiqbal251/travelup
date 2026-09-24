@@ -1,10 +1,11 @@
 import { useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
 import PageNotFound from "@/lib/PageNotFound";
-import { makeDayLighter, swapActivity, undo } from "@/lib/door2/edit";
+import { makeDayLighter, swapActivity, swapDays, swappableDays, undo } from "@/lib/door2/edit";
 import { PILOT_DATA, buildFilledTrip } from "@/lib/door2/planner";
 import { PILOT_PLACES, PILOT_ROUTE_PACKAGES } from "@/lib/door2/pilotData";
 import { selectRoutes } from "@/lib/door2/route";
+import { applyProposal, previewAdjustNights } from "@/lib/door2/restructure";
 import { MONTHS } from "@/lib/options";
 import {
   deleteDraftTrip,
@@ -116,6 +117,25 @@ function routeLabel(routeResult) {
   return { name: pkg.name, stops, stopCount: routeResult.stops.length };
 }
 
+function summarizeDiff(diff) {
+  const groupByPlace = (items) => {
+    const map = new Map();
+    for (const it of items ?? []) {
+      const list = map.get(it.placeId) ?? [];
+      list.push(it.title);
+      map.set(it.placeId, list);
+    }
+    return map;
+  };
+  const lost = groupByPlace(diff.activitiesLost);
+  const gained = groupByPlace(diff.activitiesAdded);
+  const clause = (map, verb) =>
+    [...map.entries()].map(([placeId, titles]) => `${verb} ${titles.join(" & ")} in ${placeName(placeId)}`);
+  const parts = [...clause(lost, "lose"), ...clause(gained, "gain")];
+  if (parts.length === 0) return "Everything else stays the same.";
+  return `You'll ${parts.join("; you'll ")}.`;
+}
+
 function chipClass(active) {
   return `px-3.5 py-1.5 rounded-full text-sm font-medium border transition-colors ${
     active
@@ -142,6 +162,7 @@ function isEmptyDay(day) {
 function tripAtGlanceSegments(trip) {
   const majorStops = trip.spec.stops.filter((s) => s.nights > 0);
   if (majorStops.length === 0) return { nodes: [], edges: [] };
+  const routeStopByPlace = new Map((trip.routePlan?.stops ?? []).map((s) => [s.placeId, s]));
 
   const travelBlocks = trip.days
     .flatMap((d) => d.blocks)
@@ -166,7 +187,7 @@ function tripAtGlanceSegments(trip) {
     }
   }
 
-  return { nodes: majorStops, edges };
+  return { nodes: majorStops.map((s) => ({ ...s, routeStop: routeStopByPlace.get(s.placeId) ?? null })), edges };
 }
 
 function edgeLabel(modes) {
@@ -421,7 +442,7 @@ function BasicsStep({ form, updateForm, onBack, onSubmit }) {
 
 // ── Results: trip at a glance ───────────────────────────────────────────────
 
-function TripAtAGlance({ trip, routeAlternatives, onChangeRoute }) {
+function TripAtAGlance({ trip, routeAlternatives, onChangeRoute, onOpenNightsSheet }) {
   const { nodes, edges } = tripAtGlanceSegments(trip);
   if (nodes.length === 0) return null;
 
@@ -439,7 +460,17 @@ function TripAtAGlance({ trip, routeAlternatives, onChangeRoute }) {
             )}
             <div className="flex items-baseline gap-2">
               <span className="text-base font-semibold text-white">{placeName(node.placeId)}</span>
-              <span className="text-sm text-slate-400">{nightsLabel(node.nights)}</span>
+              {node.routeStop ? (
+                <button
+                  type="button"
+                  onClick={() => onOpenNightsSheet(node)}
+                  className="text-sm px-2.5 py-0.5 rounded-full border border-teal/40 bg-teal/10 text-teal hover:bg-teal/20 font-medium transition-colors"
+                >
+                  {nightsLabel(node.nights)}
+                </button>
+              ) : (
+                <span className="text-sm text-slate-400">{nightsLabel(node.nights)}</span>
+              )}
             </div>
           </div>
         ))}
@@ -540,19 +571,69 @@ function BlockRow({ block, dayNumber, onSwap, blockError }) {
   );
 }
 
-function DayView({ day, notice, dayError, onMakeLighter, onSwap, blockErrors }) {
+function DayMenu({ day, menuState, onSwapActivity, onMakeLighter, onSwapWithAnotherDay, onKeep }) {
+  if (menuState?.dayNumber !== day.dayNumber) return null;
+  const hasActivity = day.blocks.some((b) => b.type === "activity");
   return (
-    <div className="rounded-xl bg-slate-800 border border-slate-700 overflow-hidden">
+    <div className="absolute right-5 top-11 z-10 w-56 rounded-lg bg-slate-900 border border-slate-600 shadow-xl overflow-hidden">
+      {hasActivity && (
+        <button
+          type="button"
+          onClick={() => onSwapActivity(day)}
+          className="w-full text-left px-4 py-2.5 text-sm text-white hover:bg-slate-800 border-b border-slate-700 transition-colors"
+        >
+          Swap activity
+        </button>
+      )}
+      <button
+        type="button"
+        onClick={() => onMakeLighter(day.dayNumber)}
+        className="w-full text-left px-4 py-2.5 text-sm text-white hover:bg-slate-800 border-b border-slate-700 transition-colors"
+      >
+        Make lighter
+      </button>
+      {menuState.candidates.length > 0 && (
+        <button
+          type="button"
+          onClick={() => onSwapWithAnotherDay(day.dayNumber, menuState.candidates)}
+          className="w-full text-left px-4 py-2.5 text-sm text-white hover:bg-slate-800 border-b border-slate-700 transition-colors"
+        >
+          Swap with another day
+        </button>
+      )}
+      <button
+        type="button"
+        onClick={onKeep}
+        className="w-full text-left px-4 py-2.5 text-sm text-slate-400 hover:bg-slate-800 transition-colors"
+      >
+        Keep this
+      </button>
+    </div>
+  );
+}
+
+function DayView({ day, notice, dayError, onMakeLighter, onSwap, blockErrors, menuState, onToggleMenu, onSwapWithAnotherDay }) {
+  return (
+    <div className="relative rounded-xl bg-slate-800 border border-slate-700 overflow-hidden">
       <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-700">
         <span className="font-semibold text-white">Day {day.dayNumber}</span>
         <button
           type="button"
-          onClick={() => onMakeLighter(day.dayNumber)}
-          className="text-xs text-teal hover:opacity-80 font-medium transition-opacity"
+          onClick={() => onToggleMenu(day.dayNumber)}
+          aria-label={`Day ${day.dayNumber} options`}
+          className="text-slate-400 hover:text-white text-lg leading-none px-1.5 py-0.5 rounded transition-colors"
         >
-          Make lighter
+          ⋯
         </button>
       </div>
+      <DayMenu
+        day={day}
+        menuState={menuState}
+        onSwapActivity={(d) => onSwap(d.blocks.find((b) => b.type === "activity")?.id)}
+        onMakeLighter={onMakeLighter}
+        onSwapWithAnotherDay={onSwapWithAnotherDay}
+        onKeep={() => onToggleMenu(null)}
+      />
       {(notice || dayError) && (
         <p className={`px-5 pt-3 text-xs ${dayError ? "text-rose-400" : "text-slate-500"}`}>
           {dayError || notice}
@@ -573,7 +654,7 @@ function DayView({ day, notice, dayError, onMakeLighter, onSwap, blockErrors }) 
   );
 }
 
-function PlaceSection({ placeId, nights, days, dayNotices, dayErrors, blockErrors, onMakeLighter, onSwap }) {
+function PlaceSection({ placeId, nights, days, dayNotices, dayErrors, blockErrors, onMakeLighter, onSwap, menuState, onToggleMenu, onSwapWithAnotherDay }) {
   return (
     <div className="space-y-3">
       {placeId && (
@@ -591,8 +672,175 @@ function PlaceSection({ placeId, nights, days, dayNotices, dayErrors, blockError
             blockErrors={blockErrors}
             onMakeLighter={onMakeLighter}
             onSwap={onSwap}
+            menuState={menuState}
+            onToggleMenu={onToggleMenu}
+            onSwapWithAnotherDay={onSwapWithAnotherDay}
           />
         ))}
+      </div>
+    </div>
+  );
+}
+
+// ── Results: structural edit sheet (nights chips → preview → apply) ────────
+
+function ProposalCard({ trip, proposal, onUse, onKeep }) {
+  const rp = trip.routePlan;
+  const stopKeys = [...new Set([...(rp?.stops ?? []).map((s) => s.key), ...(proposal.routePlan?.stops ?? []).map((s) => s.key)])];
+  const beforeByKey = new Map((rp?.stops ?? []).map((s) => [s.key, s]));
+  const afterByKey = new Map((proposal.routePlan?.stops ?? []).map((s) => [s.key, s]));
+  const rows = stopKeys
+    .map((key) => {
+      const before = beforeByKey.get(key);
+      const after = afterByKey.get(key);
+      const nightsAfter = after?.nights ?? 0;
+      const nightsBefore = before?.nights ?? 0;
+      return { key, placeId: (after ?? before)?.placeId, nightsBefore, nightsAfter };
+    })
+    .filter((r) => r.nightsBefore > 0 || r.nightsAfter > 0);
+
+  return (
+    <div className="rounded-xl bg-slate-800 border border-slate-700 p-5 space-y-4">
+      <div className="flex items-center justify-between gap-3">
+        <span className="text-sm font-semibold text-white">{proposal.label}</span>
+        {proposal.diff.contentGaps === 0 ? (
+          <span className="text-xs font-medium text-emerald-400">No gaps</span>
+        ) : (
+          <span className="text-xs font-medium text-amber-400">
+            {proposal.diff.contentGaps} spot{proposal.diff.contentGaps === 1 ? "" : "s"} still open
+          </span>
+        )}
+      </div>
+
+      <div className="flex gap-3">
+        <div className="flex-1 rounded-lg bg-slate-900/60 border border-slate-700 p-3 space-y-1">
+          <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide">Before</p>
+          {rows.map((r) => (
+            <p key={`b-${r.key}`} className="text-xs text-slate-300">
+              {placeName(r.placeId)} <span className="text-slate-500">· {nightsLabel(r.nightsBefore)}</span>
+            </p>
+          ))}
+        </div>
+        <span className="self-center text-teal text-sm">→</span>
+        <div className="flex-1 rounded-lg bg-slate-900/60 border border-teal/30 p-3 space-y-1">
+          <p className="text-[10px] font-semibold text-teal uppercase tracking-wide">After</p>
+          {rows.map((r) => (
+            <p key={`a-${r.key}`} className="text-xs text-slate-300">
+              {placeName(r.placeId)}{" "}
+              <span className={r.nightsAfter !== r.nightsBefore ? "text-teal" : "text-slate-500"}>
+                · {nightsLabel(r.nightsAfter)}
+              </span>
+            </p>
+          ))}
+        </div>
+      </div>
+
+      <p className="text-sm text-slate-300 leading-relaxed">{summarizeDiff(proposal.diff)}</p>
+
+      <div className="flex gap-3">
+        <button
+          type="button"
+          onClick={() => onUse(proposal)}
+          className="flex-1 bg-teal text-slate-900 rounded-lg px-4 py-2.5 font-bold text-sm hover:opacity-90 transition-opacity"
+        >
+          Use this plan
+        </button>
+        <button
+          type="button"
+          onClick={onKeep}
+          className="flex-1 bg-slate-700 border border-slate-600 text-white rounded-lg px-4 py-2.5 font-semibold text-sm hover:bg-slate-600 transition-colors"
+        >
+          Keep my trip
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function StructureSheet({ sheet, trip, onMoreTime, onLessTime, onUseProposal, onClose }) {
+  if (!sheet) return null;
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60" onClick={onClose}>
+      <div
+        className="w-full max-w-2xl max-h-[85vh] overflow-y-auto rounded-t-2xl bg-slate-900 border-t border-slate-700 p-6 space-y-5"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-bold text-white">
+            {sheet.stage === "nights" ? `${placeName(sheet.placeId)} · ${nightsLabel(sheet.nights)}` : "How this would look"}
+          </h2>
+          <button type="button" onClick={onClose} className="text-slate-500 hover:text-white text-xl leading-none">
+            ×
+          </button>
+        </div>
+
+        {sheet.stage === "nights" && (
+          <div className="space-y-3">
+            <button
+              type="button"
+              onClick={() => onMoreTime(sheet.stopKey)}
+              className="w-full bg-teal text-slate-900 rounded-lg px-6 py-3 font-bold text-sm hover:opacity-90 transition-opacity"
+            >
+              More time here (+1 night)
+            </button>
+            <button
+              type="button"
+              onClick={() => onLessTime(sheet.stopKey)}
+              className="w-full bg-slate-800 border border-slate-600 text-white rounded-lg px-6 py-3 font-semibold text-sm hover:bg-slate-700 transition-colors"
+            >
+              Less time here (−1 night)
+            </button>
+          </div>
+        )}
+
+        {sheet.stage === "refusal" && (
+          <div className="space-y-3">
+            <p className="text-sm text-slate-300">{sheet.message}</p>
+            {sheet.alternatives?.map((alt) => (
+              <ProposalCard key={alt.id} trip={trip} proposal={alt} onUse={onUseProposal} onKeep={onClose} />
+            ))}
+          </div>
+        )}
+
+        {sheet.stage === "proposals" && (
+          <div className="space-y-4">
+            {sheet.proposals.map((p) => (
+              <ProposalCard key={p.id} trip={trip} proposal={p} onUse={onUseProposal} onKeep={onClose} />
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function SwapDayPicker({ picker, onConfirm, onClose }) {
+  if (!picker) return null;
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60" onClick={onClose}>
+      <div
+        className="w-full max-w-2xl rounded-t-2xl bg-slate-900 border-t border-slate-700 p-6 space-y-4"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-bold text-white">Swap Day {picker.dayNumber} with…</h2>
+          <button type="button" onClick={onClose} className="text-slate-500 hover:text-white text-xl leading-none">
+            ×
+          </button>
+        </div>
+        {picker.error && <p className="text-xs text-rose-400">{picker.error}</p>}
+        <div className="flex flex-wrap gap-2">
+          {picker.candidates.map((n) => (
+            <button
+              key={n}
+              type="button"
+              onClick={() => onConfirm(n)}
+              className="px-4 py-2 rounded-full bg-slate-700 hover:bg-slate-600 border border-slate-600 text-white text-sm font-medium transition-colors"
+            >
+              Day {n}
+            </button>
+          ))}
+        </div>
       </div>
     </div>
   );
@@ -775,6 +1023,9 @@ export default function Door2Plan() {
   const [routeAlternatives, setRouteAlternatives] = useState([]);
   const [currentSpec, setCurrentSpec] = useState(null);
   const [showRefine, setShowRefine] = useState(false);
+  const [structureSheet, setStructureSheet] = useState(null);
+  const [dayMenu, setDayMenu] = useState(null);
+  const [swapPicker, setSwapPicker] = useState(null);
   const [toast, setToast] = useState(null);
   const toastTimer = useRef(null);
 
@@ -1004,6 +1255,82 @@ export default function Door2Plan() {
     }
   }
 
+  // ── Structural edit handlers (nights chips → preview → apply) ─────────────
+
+  function handleOpenNightsSheet(node) {
+    if (!node.routeStop) return;
+    setStructureSheet({
+      stage: "nights",
+      stopKey: node.routeStop.key,
+      placeId: node.placeId,
+      nights: node.nights,
+    });
+  }
+
+  function handleAdjustNights(stopKey, delta) {
+    const t = activeTrip;
+    if (!t) return;
+    const result = previewAdjustNights(t, stopKey, delta);
+    if (result.ok) {
+      setStructureSheet({ stage: "proposals", proposals: result.proposals, stopKey });
+    } else {
+      setStructureSheet({
+        stage: "refusal",
+        stopKey,
+        message: result.message,
+        alternatives: result.alternatives ?? [],
+      });
+    }
+  }
+
+  function handleUseProposal(proposal) {
+    const t = activeTrip;
+    if (!t) return;
+    const result = applyProposal(t, proposal);
+    if (result.ok) {
+      setEditTrip(result.trip);
+      setStructureSheet(null);
+      setBlockErrors({});
+      setDayErrors({});
+      setDayNotices({});
+      showToast("Trip updated");
+    } else {
+      setStructureSheet((s) => ({ ...s, stage: "refusal", message: result.message, alternatives: [] }));
+    }
+  }
+
+  // ── Day-menu handlers (⋯ menu: swap activity, make lighter, swap days) ────
+
+  function handleToggleDayMenu(dayNumber) {
+    const t = activeTrip;
+    if (dayNumber == null || !t) {
+      setDayMenu(null);
+      return;
+    }
+    setDayMenu((m) => {
+      if (m?.dayNumber === dayNumber) return null;
+      return { dayNumber, candidates: swappableDays(t, dayNumber) };
+    });
+  }
+
+  function handleSwapWithAnotherDay(dayNumber, candidates) {
+    setSwapPicker({ dayNumber, candidates, error: null });
+    setDayMenu(null);
+  }
+
+  function handleConfirmSwapDay(targetDayNumber) {
+    const t = activeTrip;
+    if (!t || !swapPicker) return;
+    const result = swapDays(t, swapPicker.dayNumber, targetDayNumber);
+    if (result.ok) {
+      setEditTrip(result.trip);
+      setSwapPicker(null);
+      showToast(`Day ${swapPicker.dayNumber} and Day ${targetDayNumber} swapped`);
+    } else {
+      setSwapPicker((p) => ({ ...p, error: result.message }));
+    }
+  }
+
   // ── Render ─────────────────────────────────────────────────────────────────
 
   const nights = activeTrip
@@ -1105,6 +1432,7 @@ export default function Door2Plan() {
                   trip={activeTrip}
                   routeAlternatives={routeAlternatives}
                   onChangeRoute={handleChangeRoute}
+                  onOpenNightsSheet={handleOpenNightsSheet}
                 />
 
                 <div className="space-y-5">
@@ -1119,6 +1447,9 @@ export default function Door2Plan() {
                       blockErrors={blockErrors}
                       onMakeLighter={handleMakeLighter}
                       onSwap={handleSwap}
+                      menuState={dayMenu}
+                      onToggleMenu={handleToggleDayMenu}
+                      onSwapWithAnotherDay={handleSwapWithAnotherDay}
                     />
                   ))}
                 </div>
@@ -1164,6 +1495,17 @@ export default function Door2Plan() {
         toggleRequired={toggleRequired}
         onApply={handleApplyRefine}
       />
+
+      <StructureSheet
+        sheet={structureSheet}
+        trip={activeTrip}
+        onMoreTime={(stopKey) => handleAdjustNights(stopKey, 1)}
+        onLessTime={(stopKey) => handleAdjustNights(stopKey, -1)}
+        onUseProposal={handleUseProposal}
+        onClose={() => setStructureSheet(null)}
+      />
+
+      <SwapDayPicker picker={swapPicker} onConfirm={handleConfirmSwapDay} onClose={() => setSwapPicker(null)} />
 
       {toast && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-slate-700 border border-slate-600 text-white text-sm px-4 py-2 rounded-full shadow-lg">
