@@ -183,10 +183,11 @@ test('G6: Peru, 14 days', () => {
       'D7 09:00 full cusco_sacsayhuaman',
       'D8 09:00 full cusco_pisac',
       'D9 11:03 full olly_fortress_town',
-      'D10 12:42 half mp_citadel',
-      'D10 17:33 evening agc_hot_springs',
+      // 72eb2d7: Ollantaytambo↔Aguas train 1.75h → 1.5h moves each of these 15 min earlier.
+      'D10 12:27 half mp_citadel',
+      'D10 17:18 evening agc_hot_springs',
       'D11 09:00 full agc_mandor',
-      'D12 18:54 evening lima_magic_water'
+      'D12 18:39 evening lima_magic_water'
     ]
   );
   assert.equal(trip.contentGaps.length, 0);
