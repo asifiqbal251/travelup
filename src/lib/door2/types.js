@@ -307,10 +307,41 @@
  */
 
 /**
+ * ➕ v6: one stop in a RoutePlan. `key` is the family stop key and the stop's identity everywhere
+ * (block ids, anchors, preview diffs).
+ * @typedef {Object} RoutePlanStop
+ * @property {string} key
+ * @property {string} placeId
+ * @property {number} nights
+ * @property {number} minNights
+ * @property {number} maxNights
+ * @property {'core'|'optional'|'pass_through'} role  pass_through if maxNights === 0; optional if inserted by an optional; else core.
+ * @property {string} [optionalId]       Present when the stop came from an optional's insert.
+ * @property {'default'|'required'|'user_added'} selectionSource  Why the stop is present (design §0.1 C).
+ * @property {boolean} isRequired        The stop or one of its excursions is a required place.
+ * @property {RoutePackageExcursion[]} excursions
+ */
+
+/**
+ * ➕ v6: which places, in what order, for how many nights (design §2.1).
+ * @typedef {Object} RoutePlan
+ * @property {string} familyId
+ * @property {string} variantId          Compiled variant id (= spec.routeTemplateId).
+ * @property {'authored'|'composed'} source
+ * @property {RoutePlanStop[]} stops     Ordered, pass-throughs included.
+ * @property {'auto'|'user'} nightsSource  'user' once any night was set by hand.
+ * @property {string[]} connectionIds    One per leg, as on RouteResult.
+ * @property {number} minDays            Variant minimum (derived, cached for the editor).
+ * @property {number} maxDays            Variant maximum (derived, cached for the editor).
+ * @property {Array<{optionalId: string, positionId: string, selectionSource: 'default'|'required'|'user_added'}>} optionals
+ */
+
+/**
  * @typedef {Object} Trip
  * @property {string} id
  * @property {'draft'|'valid'|'conflict'|'incomplete'} status
- * @property {TripSpec} spec
+ * @property {TripSpec} spec             v6: spec.stops / spec.routeTemplateId are derived mirrors of routePlan for one version.
+ * @property {RoutePlan} [routePlan]     ➕ v6.
  * @property {Day[]} days
  * @property {string[]} warnings        ➕ Scheduler warnings, e.g. 'nights_above_package_max'.
  * @property {{engine: string, schema: string, content: string, routeData: string, bufferRuleset: string}} versions
