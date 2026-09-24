@@ -55,9 +55,11 @@ function findLegConnection(connections, fromPlaceId, toPlaceId, preferredGateway
 
 /**
  * Builds a RouteResult for one package. Throws on data-integrity bugs; returns
- * {missing: {from, to}} when a leg has no connection.
+ * {missing: {from, to}} when a leg has no connection. Exported so planner's
+ * buildTripFromRoutePlan builds a known package the same way selectRoutes does.
+ * @returns {{routeResult: RouteResult, unreviewedIds: string[]} | {missing: {from: string, to: string}}}
  */
-function buildRouteResult(pkg, spec, data) {
+export function buildRouteResult(pkg, spec, data) {
   const { places, connections } = data;
   const required = new Set(spec.requiredPlaceIds ?? []);
 
@@ -221,8 +223,9 @@ export function selectRoutes(spec, data, options = {}) {
       (a.id < b.id ? -1 : a.id > b.id ? 1 : 0)
   );
   // If the caller requested a specific route package, bubble it to the front.
+  // A package's aliases (old ids kept for saved drafts) count as its id.
   if (spec.routeTemplateId) {
-    const idx = ranked.findIndex((pkg) => pkg.id === spec.routeTemplateId);
+    const idx = ranked.findIndex((pkg) => pkg.id === spec.routeTemplateId || (pkg.aliases ?? []).includes(spec.routeTemplateId));
     if (idx > 0) ranked.unshift(ranked.splice(idx, 1)[0]);
   }
 
