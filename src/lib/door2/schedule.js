@@ -392,53 +392,53 @@ export function scheduleRoute(routeResult, spec, data, { config = SCHEDULE_CONFI
 
   /** Sanity-check the home arrival, then emit Days 1..N. */
   function emit(run, warnings) {
-  if (run.homeArrival.dayNumber !== N) {
-    throw new Error(
-      `scheduleRoute engine bug: home arrival on Day ${run.homeArrival.dayNumber}, expected Day ${N} (route "${routeResult.routePackageId}")`
-    );
-  }
-
-  // Emit Days 1..N; a block belongs to the local day it starts on at its place.
-  const byDay = new Map();
-  for (let d = 1; d <= N; d++) byDay.set(d, []);
-  for (const item of run.placed) {
-    const place = placeOf(item.block.placeId);
-    const day = dayOfLocal(localMin(item.absStart, place));
-    if (!byDay.has(day)) {
-      throw new Error(`scheduleRoute engine bug: block "${item.block.id}" lands on Day ${day} outside 1..${N}`);
-    }
-    byDay.get(day).push(item);
-  }
-
-  /** @type {Day[]} */
-  const days = [];
-  for (let d = 1; d <= N; d++) {
-    const items = byDay.get(d).sort((a, b) => a.absStart - b.absStart || (a.block.id < b.block.id ? -1 : 1));
-    const blocks = items.map((it) => it.block);
-    if (blocks.length === 0) {
-      blocks.push(
-        baseBlock({
-          id: `rest:d${d}`,
-          type: 'rest',
-          anchor: { stopId: null, contentId: null },
-          placeId: null,
-          startTime: '00:00',
-          durationHours: 0,
-          note: 'in_transit',
-          provenance: provenance(nonTravelReviewed)
-        })
+    if (run.homeArrival.dayNumber !== N) {
+      throw new Error(
+        `scheduleRoute engine bug: home arrival on Day ${run.homeArrival.dayNumber}, expected Day ${N} (route "${routeResult.routePackageId}")`
       );
     }
-    days.push({ id: `day:${d}`, dayNumber: d, blocks });
-  }
 
-  return makeSuccess({
-    days,
-    stops: run.stops,
-    homeArrival: run.homeArrival,
-    minDays,
-    warnings,
-    usesDraftData: routeResult.usesDraftData
-  });
+    // Emit Days 1..N; a block belongs to the local day it starts on at its place.
+    const byDay = new Map();
+    for (let d = 1; d <= N; d++) byDay.set(d, []);
+    for (const item of run.placed) {
+      const place = placeOf(item.block.placeId);
+      const day = dayOfLocal(localMin(item.absStart, place));
+      if (!byDay.has(day)) {
+        throw new Error(`scheduleRoute engine bug: block "${item.block.id}" lands on Day ${day} outside 1..${N}`);
+      }
+      byDay.get(day).push(item);
+    }
+
+    /** @type {Day[]} */
+    const days = [];
+    for (let d = 1; d <= N; d++) {
+      const items = byDay.get(d).sort((a, b) => a.absStart - b.absStart || (a.block.id < b.block.id ? -1 : 1));
+      const blocks = items.map((it) => it.block);
+      if (blocks.length === 0) {
+        blocks.push(
+          baseBlock({
+            id: `rest:d${d}`,
+            type: 'rest',
+            anchor: { stopId: null, contentId: null },
+            placeId: null,
+            startTime: '00:00',
+            durationHours: 0,
+            note: 'in_transit',
+            provenance: provenance(nonTravelReviewed)
+          })
+        );
+      }
+      days.push({ id: `day:${d}`, dayNumber: d, blocks });
+    }
+
+    return makeSuccess({
+      days,
+      stops: run.stops,
+      homeArrival: run.homeArrival,
+      minDays,
+      warnings,
+      usesDraftData: routeResult.usesDraftData
+    });
   }
 }
