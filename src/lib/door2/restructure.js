@@ -7,6 +7,7 @@ import { tripFingerprint } from './fingerprint.js';
 import { activityFor, classifySlot, eligibleItemsForBlock, fillTrip } from './fill.js';
 import { PILOT_CONTENT } from './pilotContent.js';
 import { PILOT_DATA, buildTripFromRoutePlan, findRoutePackage } from './planner.js';
+import { PILOT_ROUTE_FAMILIES } from './pilotData.js';
 import { buildRouteResult, getPlace } from './route.js';
 import { scheduleRoute } from './schedule.js';
 import { validateFilled } from './validate.js';
@@ -200,6 +201,7 @@ function context(trip, options) {
     data: options.data ?? PILOT_DATA,
     content: options.content ?? PILOT_CONTENT,
     reviewPolicy: options.reviewPolicy ?? reviewPolicyFor(trip),
+    families: options.families ?? PILOT_ROUTE_FAMILIES,
     baseFingerprint: tripFingerprint(trip)
   };
 }
