@@ -472,6 +472,256 @@ function shorterRouteAlternative(trip, newTotalDays, ctx) {
 }
 
 // ---------------------------------------------------------------------------
+// §4.2/§4.3 previewAddOptional / previewRemoveOptional / previewMoveOptional
+//
+// A traveller's routePlan already carries `optionals: [{optionalId,
+// positionId, selectionSource}]` in family declaration order (families.js
+// builds each compiled package's `optionals` from `enumerateCombos`'s
+// (optIndex, posIndex) order, and makeRoutePlan copies it through
+// unchanged). Recomputing the target variantId is then just: take that list,
+// add/remove/replace one entry, put it back in family order, and rebuild the
+// same '{familyId}+{optionalId}@{positionId}+...' string compileFamily uses.
+// findRoutePackage does an exact-id lookup, so a combination families.js
+// didn't compile (exclusiveWith) or that only exists held simply won't
+// resolve to a servable package — that's a refusal, not a bug.
+//
+// Invariant (design v2 §0.1): never build a proposal from a held
+// (pending_review) position. Enforced here, at the position the caller names
+// or the position auto-picked, before any variantId is ever computed — and
+// again, defensively, on the resolved package's own `held` flag.
+
+function familyFor(trip, families) {
+  const family = families.find((f) => f.id === trip.routePlan.familyId);
+  if (!family) throw new Error(`restructure: unknown family "${trip.routePlan.familyId}"`);
+  return family;
+}
+
+function findOptional(family, optionalId) {
+  return (family.optional ?? []).find((o) => o.id === optionalId);
+}
+
+/**
+ * Turns a Map<optionalId, positionId> of desired picks into the ordered pick
+ * list compileFamily would produce: family declaration order, one entry per
+ * optional that's in the map.
+ */
+function orderedPicks(family, choices) {
+  const picks = [];
+  for (const opt of family.optional ?? []) {
+    const positionId = choices.get(opt.id);
+    if (positionId == null) continue;
+    const pos = opt.positions.find((p) => p.id === positionId);
+    if (pos) picks.push({ optionalId: opt.id, positionId: pos.id });
+  }
+  return picks;
+}
+
+function variantIdFor(family, picks) {
+  return picks.length === 0 ? family.id : `${family.id}+${picks.map((p) => `${p.optionalId}@${p.positionId}`).join('+')}`;
+}
+
+/**
+ * Nights for `pkg` at `totalDays`, starting from the trip's current
+ * allocation (kept stops clamped to the new package's limits; stops new to
+ * this package start at their minimum), then redistributed to fit — the same
+ * pattern shorterRouteAlternative uses for a variant switch. Null if it
+ * can't fit.
+ */
+function allocationFor(pkg, current, totalDays, minDays) {
+  const stops = pkg.stops.map((s) => ({ key: s.id, minNights: s.minNights, maxNights: s.maxNights }));
+  const start = Object.fromEntries(stops.map((s) => [s.key, Math.min(Math.max(current[s.key] ?? s.minNights, s.minNights), s.maxNights)]));
+  const startDays = minDays + stops.reduce((sum, s) => sum + (start[s.key] - s.minNights), 0);
+  if (startDays === totalDays) return start;
+  return redistribute(stops, start, totalDays - startDays);
+}
+
+/**
+ * Rebuilds the trip on `pkg` at `totalDays`, reconciles its content and wraps
+ * it as a Proposal. Null if the package doesn't fit at that length or the
+ * rebuild fails.
+ */
+function proposeVariantChange(trip, pkg, minDays, { id, kind, label }, ctx, totalDays) {
+  if (minDays == null || minDays > totalDays) return null;
+  const nights = allocationFor(pkg, nightsMap(trip.routePlan), totalDays, minDays);
+  if (!nights) return null;
+  return buildVariantProposal(trip, { id, kind, label, pkg, nights, totalDays }, ctx);
+}
+
+/** Rebuilds the trip for a new variant/allocation (buildNightsProposal's sibling for a changed stop set). */
+function buildVariantProposal(trip, { id, kind, label, pkg, nights, totalDays }, ctx) {
+  const spec = { ...trip.spec, totalDays, routeTemplateId: pkg.id };
+  const plan = { variantId: pkg.id, stops: pkg.stops.map((s) => ({ key: s.id, nights: nights[s.id] })), nightsSource: 'user' };
+  const skeleton = buildTripFromRoutePlan(spec, plan, ctx.data, { reviewPolicy: ctx.reviewPolicy });
+  if (skeleton.ok === false) return null;
+  const rec = reconcile(trip, skeleton, ctx.content);
+  const newTrip = { ...rec.trip, history: [] };
+  const oldNights = nightsMap(trip.routePlan);
+  const oldPlaces = new Set(trip.routePlan.stops.filter((s) => s.nights > 0).map((s) => s.placeId));
+  const newPlaces = new Set(newTrip.routePlan.stops.filter((s) => s.nights > 0).map((s) => s.placeId));
+  return {
+    id,
+    kind,
+    label,
+    baseFingerprint: ctx.baseFingerprint,
+    routePlan: newTrip.routePlan,
+    trip: newTrip,
+    diff: {
+      nights: pkg.stops
+        .filter((s) => (oldNights[s.id] ?? null) !== nights[s.id])
+        .map((s) => ({ stopKey: s.id, placeId: s.placeId, from: oldNights[s.id] ?? 0, to: nights[s.id] })),
+      totalDays: { from: trip.spec.totalDays, to: totalDays },
+      placesAdded: [...newPlaces].filter((p) => !oldPlaces.has(p)),
+      placesRemoved: [...oldPlaces].filter((p) => !newPlaces.has(p)),
+      activitiesLost: rec.activitiesLost,
+      activitiesAdded: rec.activitiesAdded,
+      keptItemsAffected: rec.keptItemsAffected,
+      newTravelDay: false,
+      contentGaps: newTrip.contentGaps.length
+    }
+  };
+}
+
+/**
+ * Add an optional place to the route. `positionId` picks which of the
+ * optional's positions to insert at; omitted, the earliest approved position
+ * (family declaration order) is used. Never resolves to a held position.
+ * @param {Trip} trip
+ * @param {string} optionalId
+ * @param {string} [positionId]
+ * @param {{data?: Object, content?: ContentItem[], reviewPolicy?: 'strict'|'allow_drafts', families?: Object[]}} [options]
+ */
+export function previewAddOptional(trip, optionalId, positionId, options = {}) {
+  const ctx = context(trip, options);
+  const family = familyFor(trip, ctx.families);
+  const optional = findOptional(family, optionalId);
+  if (!optional) return refusal('not_in_family', `${optionalId} isn't part of this route.`, []);
+
+  const rp = trip.routePlan;
+  if (rp.optionals.some((o) => o.optionalId === optionalId)) {
+    return refusal('already_included', `${optional.label} is already part of your trip.`, []);
+  }
+
+  const pos = positionId != null ? optional.positions.find((p) => p.id === positionId) : optional.positions.find((p) => p.status === 'approved');
+  if (positionId != null && !pos) return refusal('not_in_family', `${optionalId} has no position "${positionId}".`, []);
+  if (!pos || pos.status !== 'approved') {
+    return refusal('not_available', `${optional.label} isn't available to add yet.`, []);
+  }
+
+  const exclusiveWith = new Set(optional.exclusiveWith ?? []);
+  const conflict = rp.optionals.find(
+    (o) => exclusiveWith.has(o.optionalId) || (findOptional(family, o.optionalId)?.exclusiveWith ?? []).includes(optionalId)
+  );
+  if (conflict) {
+    const conflictName = findOptional(family, conflict.optionalId)?.label ?? conflict.optionalId;
+    return refusal('exclusive_optional', `${optional.label} can't be combined with ${conflictName}.`, []);
+  }
+
+  const choices = new Map(rp.optionals.map((o) => [o.optionalId, o.positionId]));
+  choices.set(optionalId, pos.id);
+  const pkg = findRoutePackage(ctx.data, variantIdFor(family, orderedPicks(family, choices)));
+  if (!pkg || pkg.held) {
+    return refusal('exclusive_optional', `${optional.label} can't be combined with what's already in your trip.`, []);
+  }
+
+  const N = trip.spec.totalDays;
+  const flexible = isDurationFlexible(trip.spec);
+  const minDays = packageMinDays(pkg, trip.spec, ctx.data);
+  if (minDays == null) return refusal('not_available', `${optional.label} isn't available to add yet.`, []);
+  if (minDays > N) {
+    const alternatives = [];
+    if (flexible) {
+      const extended = proposeVariantChange(trip, pkg, minDays, { id: `add:${optionalId}:extend`, kind: 'extend', label: `Add ${optional.label}` }, ctx, minDays);
+      if (extended) alternatives.push({ ...extended, label: `Add ${plural(minDays - N, 'day')} and include ${optional.label}` });
+    }
+    return refusal('insufficient_days', `${optional.label} needs ${plural(minDays, 'day')} in total. You have ${plural(N, 'day')}.`, alternatives);
+  }
+  const proposal = proposeVariantChange(trip, pkg, minDays, { id: `add:${optionalId}`, kind: 'add_optional', label: `Add ${optional.label}` }, ctx, N);
+  if (!proposal) return refusal('allocation_maximum', `${optional.label} doesn't fit alongside the rest of your trip.`, []);
+  return { ok: true, proposals: [proposal] };
+}
+
+/**
+ * Remove an optional place from the route, freeing its nights back to the
+ * rest of the trip (the trip's length doesn't change). Refuses only when the
+ * traveller required this place at intake.
+ * @param {Trip} trip
+ * @param {string} optionalId
+ * @param {{data?: Object, content?: ContentItem[], reviewPolicy?: 'strict'|'allow_drafts', families?: Object[]}} [options]
+ */
+export function previewRemoveOptional(trip, optionalId, options = {}) {
+  const ctx = context(trip, options);
+  const family = familyFor(trip, ctx.families);
+  const optional = findOptional(family, optionalId);
+  if (!optional) return refusal('not_in_family', `${optionalId} isn't part of this route.`, []);
+
+  const rp = trip.routePlan;
+  const current = rp.optionals.find((o) => o.optionalId === optionalId);
+  if (!current) return refusal('not_included', `${optional.label} isn't part of your trip.`, []);
+  if (current.selectionSource === 'required') {
+    return refusal('required_place', `You asked for ${optional.label}, so we've kept it.`, []);
+  }
+
+  const choices = new Map(rp.optionals.filter((o) => o.optionalId !== optionalId).map((o) => [o.optionalId, o.positionId]));
+  const pkg = findRoutePackage(ctx.data, variantIdFor(family, orderedPicks(family, choices)));
+  if (!pkg || pkg.held) {
+    return refusal('not_available', `${optional.label} can't be removed from your trip right now.`, []);
+  }
+
+  const N = trip.spec.totalDays;
+  const minDays = packageMinDays(pkg, trip.spec, ctx.data);
+  if (minDays == null) return refusal('not_available', `${optional.label} can't be removed from your trip right now.`, []);
+  const proposal = proposeVariantChange(trip, pkg, minDays, { id: `remove:${optionalId}`, kind: 'remove_optional', label: `Remove ${optional.label}` }, ctx, N);
+  if (!proposal) return refusal('allocation_maximum', `Removing ${optional.label} doesn't leave a trip that fits ${plural(N, 'day')}.`, []);
+  return { ok: true, proposals: [proposal] };
+}
+
+/**
+ * Move an already-included optional to a different position. Refuses when
+ * the target position isn't approved (never builds a proposal from a held
+ * position) or the combination isn't otherwise servable.
+ * @param {Trip} trip
+ * @param {string} optionalId
+ * @param {string} positionId
+ * @param {{data?: Object, content?: ContentItem[], reviewPolicy?: 'strict'|'allow_drafts', families?: Object[]}} [options]
+ */
+export function previewMoveOptional(trip, optionalId, positionId, options = {}) {
+  const ctx = context(trip, options);
+  const family = familyFor(trip, ctx.families);
+  const optional = findOptional(family, optionalId);
+  if (!optional) return refusal('not_in_family', `${optionalId} isn't part of this route.`, []);
+
+  const rp = trip.routePlan;
+  const current = rp.optionals.find((o) => o.optionalId === optionalId);
+  if (!current) return refusal('not_included', `${optional.label} isn't part of your trip yet.`, []);
+  if (current.positionId === positionId) {
+    return refusal('already_included', `${optional.label} is already there.`, []);
+  }
+
+  const pos = optional.positions.find((p) => p.id === positionId);
+  if (!pos) return refusal('not_in_family', `${optionalId} has no position "${positionId}".`, []);
+  if (pos.status !== 'approved') {
+    return refusal('order_fixed', pos.assumptions?.[0] ?? `${optional.label} can't move there yet.`, []);
+  }
+
+  const choices = new Map(rp.optionals.map((o) => [o.optionalId, o.positionId]));
+  choices.set(optionalId, pos.id);
+  const pkg = findRoutePackage(ctx.data, variantIdFor(family, orderedPicks(family, choices)));
+  if (!pkg || pkg.held) {
+    return refusal('not_available', `${optional.label} can't move there right now.`, []);
+  }
+
+  const N = trip.spec.totalDays;
+  const minDays = packageMinDays(pkg, trip.spec, ctx.data);
+  if (minDays == null) return refusal('not_available', `${optional.label} can't move there right now.`, []);
+  if (minDays > N) {
+    return refusal('insufficient_days', `Moving ${optional.label} needs ${plural(minDays, 'day')} in total. You have ${plural(N, 'day')}.`, []);
+  }
+  const proposal = proposeVariantChange(trip, pkg, minDays, { id: `move:${optionalId}:${positionId}`, kind: 'move_optional', label: `Move ${optional.label}` }, ctx, N);
+  if (!proposal) return refusal('allocation_maximum', `${optional.label} doesn't fit there alongside the rest of your trip.`, []);
+  return { ok: true, proposals: [proposal] };
+}
+
+// ---------------------------------------------------------------------------
 // applyProposal
 
 /**
