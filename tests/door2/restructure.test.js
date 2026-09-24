@@ -7,7 +7,16 @@ import { pinActivity, rejectActivity, swapActivity, undo } from '../../src/lib/d
 import { tripFingerprint } from '../../src/lib/door2/fingerprint.js';
 import { PILOT_CONTENT } from '../../src/lib/door2/pilotContent.js';
 import { PILOT_DATA, buildFilledTrip, buildSkeletonTrip, buildTripFromRoutePlan } from '../../src/lib/door2/planner.js';
-import { applyProposal, isDurationFlexible, previewAdjustNights, previewChangeLength, reconcile } from '../../src/lib/door2/restructure.js';
+import {
+  applyProposal,
+  isDurationFlexible,
+  previewAddOptional,
+  previewAdjustNights,
+  previewChangeLength,
+  previewMoveOptional,
+  previewRemoveOptional,
+  reconcile
+} from '../../src/lib/door2/restructure.js';
 import { validateFilled } from '../../src/lib/door2/validate.js';
 import { selectRoutes } from '../../src/lib/door2/route.js';
 import { scheduleRoute } from '../../src/lib/door2/schedule.js';
@@ -386,4 +395,126 @@ test('R4.12 reconcile never reinstates a rejected item; identical skeleton keeps
   const rec = reconcile(t, skeleton);
   assert.deepEqual(contentIds(rec.trip), contentIds(t));
   assert.deepEqual([rec.activitiesLost, rec.activitiesAdded, rec.keptItemsAffected], [[], [], []]);
+});
+
+// ---------------------------------------------------------------------------
+// Phase 2.5: previewAddOptional / previewRemoveOptional / previewMoveOptional
+
+/** A 12-day Peru trip that reached the Huaraz variant by route choice, not by requiring it. */
+const huarazChosen = (totalDays = 12) => filled({ ...spec(PERU, totalDays), routeTemplateId: 'peru_classic+huaraz@after_lima_in' });
+
+test('R.Add.1: insufficient_days on a 10-day backbone trip offers a working extend alternative; succeeds once long enough', () => {
+  const t10 = filled(spec(PERU, 10));
+  assert.equal(t10.routePlan.variantId, 'peru_classic');
+  assert.deepEqual(t10.routePlan.optionals, []);
+
+  const r10 = previewAddOptional(t10, 'huaraz', 'after_lima_in');
+  assert.equal(r10.ok, false);
+  assert.equal(r10.reason, 'change_not_feasible');
+  if (r10.why === 'insufficient_days') {
+    assert.equal(r10.alternatives.length, 1);
+    const ext = r10.alternatives[0];
+    assert.equal(ext.trip.routePlan.variantId, 'peru_classic+huaraz@after_lima_in');
+    assertProposalValid(ext);
+    const minDays = ext.trip.spec.totalDays;
+    assert.ok(minDays > 10, `expected the extend alternative to need more than 10 days, got ${minDays}`);
+
+    const tAtMin = filled(spec(PERU, minDays));
+    const rAtMin = previewAddOptional(tAtMin, 'huaraz', 'after_lima_in');
+    assert.equal(rAtMin.ok, true, JSON.stringify(rAtMin).slice(0, 300));
+    assert.equal(rAtMin.proposals.length, 1);
+    const p = rAtMin.proposals[0];
+    assert.equal(p.trip.routePlan.variantId, 'peru_classic+huaraz@after_lima_in');
+    assert.deepEqual(p.trip.routePlan.optionals, [{ optionalId: 'huaraz', positionId: 'after_lima_in', selectionSource: 'default' }]);
+    assert.deepEqual(p.diff.placesAdded, ['huaraz']);
+    assert.deepEqual(p.diff.placesRemoved, []);
+    assertProposalValid(p);
+    assert.equal(applyProposal(tAtMin, p).ok, true);
+
+    // Omitting positionId auto-picks the same (only approved) position.
+    const auto = previewAddOptional(tAtMin, 'huaraz');
+    assert.equal(auto.ok, true);
+    assert.equal(auto.proposals[0].trip.routePlan.variantId, 'peru_classic+huaraz@after_lima_in');
+  } else {
+    // 10 days is already enough: adding Huaraz just works.
+    assert.equal(r10.ok, true);
+  }
+});
+
+test('R.Add.2: already_included and not_in_family refusals', () => {
+  const hz = huarazChosen();
+  assert.deepEqual(hz.routePlan.optionals.map((o) => o.optionalId), ['huaraz']);
+  const already = previewAddOptional(hz, 'huaraz', 'after_lima_in');
+  assert.deepEqual([already.ok, already.why], [false, 'already_included']);
+  const unknown = previewAddOptional(hz, 'not_a_real_optional');
+  assert.deepEqual([unknown.ok, unknown.why], [false, 'not_in_family']);
+});
+
+test('R.Add.3: the held position is never offered — explicit request refuses without ever computing a proposal', () => {
+  const t = filled(spec(PERU, 14));
+  const r = previewAddOptional(t, 'huaraz', 'after_machu_picchu');
+  assert.equal(r.ok, false);
+  assert.notEqual(r.why, undefined);
+  assert.equal(r.alternatives.length, 0);
+});
+
+test('R.Remove.1: removing a non-required optional succeeds and falls back to the backbone, keeping the trip length', () => {
+  const hz = huarazChosen(12);
+  assert.equal(hz.routePlan.optionals[0].selectionSource, 'default');
+  const r = previewRemoveOptional(hz, 'huaraz');
+  assert.equal(r.ok, true, JSON.stringify(r).slice(0, 300));
+  const p = r.proposals[0];
+  assert.equal(p.trip.routePlan.variantId, 'peru_classic');
+  assert.deepEqual(p.trip.routePlan.optionals, []);
+  assert.equal(p.trip.spec.totalDays, 12);
+  assert.deepEqual(p.diff.placesRemoved, ['huaraz']);
+  assertProposalValid(p);
+  assert.equal(applyProposal(hz, p).ok, true);
+});
+
+test('R.Remove.2: removing a required optional refuses required_place; removing one not present refuses not_included', () => {
+  const req = filled(spec(PERU, 12, ['huaraz']));
+  assert.equal(req.routePlan.optionals[0].selectionSource, 'required');
+  const r = previewRemoveOptional(req, 'huaraz');
+  assert.deepEqual([r.ok, r.why], [false, 'required_place']);
+
+  const backbone = filled(spec(PERU, 10));
+  const none = previewRemoveOptional(backbone, 'huaraz');
+  assert.deepEqual([none.ok, none.why], [false, 'not_included']);
+});
+
+test('R.Move.1: moving Huaraz to the held position refuses order_fixed and never builds a proposal', () => {
+  const hz = huarazChosen();
+  const r = previewMoveOptional(hz, 'huaraz', 'after_machu_picchu');
+  assert.deepEqual([r.ok, r.why], [false, 'order_fixed']);
+  assert.equal(typeof r.message, 'string');
+  assert.deepEqual(r.alternatives, []);
+});
+
+test('R.Move.2: same position refuses already_included; an optional not in the trip refuses not_included; unknown position refuses not_in_family', () => {
+  const hz = huarazChosen();
+  const same = previewMoveOptional(hz, 'huaraz', 'after_lima_in');
+  assert.deepEqual([same.ok, same.why], [false, 'already_included']);
+
+  const backbone = filled(spec(PERU, 10));
+  const notIncluded = previewMoveOptional(backbone, 'huaraz', 'after_lima_in');
+  assert.deepEqual([notIncluded.ok, notIncluded.why], [false, 'not_included']);
+
+  const badPosition = previewMoveOptional(hz, 'huaraz', 'nowhere');
+  assert.deepEqual([badPosition.ok, badPosition.why], [false, 'not_in_family']);
+});
+
+test('R.AddRemoveMove determinism: identical input gives identical output; every resulting proposal is a real, servable, never-held variant', () => {
+  const runs = [
+    () => previewAddOptional(filled(spec(PERU, 14)), 'huaraz', 'after_lima_in'),
+    () => previewAddOptional(filled(spec(PERU, 10)), 'huaraz'),
+    () => previewRemoveOptional(huarazChosen(12), 'huaraz'),
+    () => previewMoveOptional(huarazChosen(12), 'huaraz', 'after_machu_picchu')
+  ];
+  for (const run of runs) {
+    const a = run();
+    const b = run();
+    assert.deepStrictEqual(a, b);
+    for (const p of a.ok ? a.proposals : a.alternatives) assertProposalValid(p);
+  }
 });
