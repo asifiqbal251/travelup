@@ -114,12 +114,24 @@ test('R2.4: buildTripFromRoutePlan builds a held variant (engine only) and appli
   assert.deepEqual(refused.detail.connectionIds, ['conn_lim_cuz_air']);
 });
 
+/**
+ * Step 3 added trip.routePlan and bumped versions.schema to door2-v6 on purpose. Everything else
+ * must be byte-identical to the snapshot, so strip exactly those two changes (key order is kept).
+ */
+function asPreStep3(r) {
+  if (r.ok === false) return r;
+  const { routePlan, ...rest } = r;
+  assert.equal(r.versions.schema, 'door2-v6');
+  assert.equal(routePlan.variantId, r.spec.routeTemplateId);
+  return { ...rest, versions: { ...r.versions, schema: 'door2-v5' } };
+}
+
 test('R2.5 regression: buildSkeletonTrip output is byte-identical to the pre-step-2 snapshot for every fixture', () => {
   const snapshot = JSON.parse(readFileSync(new URL('./fixtures/skeleton-pre-step2.json', import.meta.url), 'utf8'));
   let checked = 0;
   for (const [k, s] of Object.entries(SKELETON_FIXTURES)) {
     for (const policy of ['allow_drafts', 'strict']) {
-      const r = buildSkeletonTrip(s, PILOT_DATA, { reviewPolicy: policy });
+      const r = asPreStep3(buildSkeletonTrip(s, PILOT_DATA, { reviewPolicy: policy }));
       const hash = createHash('sha256').update(JSON.stringify(r)).digest('hex');
       assert.equal(hash, snapshot[`${k}:${policy}`], `${k}:${policy}`);
       checked += 1;
