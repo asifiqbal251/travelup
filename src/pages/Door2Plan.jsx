@@ -1622,9 +1622,15 @@ export default function Door2Plan() {
                   </button>
                 </div>
 
-                <p className="text-center text-xs text-slate-700 pt-4">
-                  Draft data — pilot connections unreviewed. Not for real travellers.
-                </p>
+                {activeTrip.status === "draft" ? (
+                  <p className="text-center text-xs text-amber-500/80 pt-4">
+                    Draft data — pilot connections unreviewed. Not for real travellers.
+                  </p>
+                ) : (
+                  <p className="text-center text-xs text-slate-500 pt-4">
+                    Pilot preview — Peru itineraries only. Other destinations are limited or not yet available.
+                  </p>
+                )}
               </>
             )}
           </div>

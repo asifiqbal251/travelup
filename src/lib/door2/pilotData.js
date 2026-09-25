@@ -5,13 +5,12 @@
 
 import { compileFamilies } from './families.js';
 
-// Pilot catalogue v2: DRAFT DATA.
+// Pilot catalogue v2.
 //
-// Every connection is unreviewed (reviewedBy/reviewedAt null). The engine
-// treats these as drafts: the default 'strict' review policy refuses them, and
-// only the hidden dev harness runs with 'allow_drafts'. Every row must be
-// upgraded to primary sources and marked reviewed before any real traveller
-// sees this engine.
+// Connection review status lives on each Connection row (reviewedBy/reviewedAt), not here.
+// As of 2026-09-23 all 8 Peru connections have been reviewed against live sources —
+// see build-brief-connection-catalogue-review-2026-09-23.md. New rows (e.g. a future
+// Eastern Canada family) start unreviewed until checked; don't assume this whole file is reviewed.
 //
 // Data note: with its own localTransferHours, Vancouver->Lima's usable time
 // lost is 17.45h: 12.7 elapsed (4.6 + 6.6 in-vehicle + 1.5 layover) + 2.5 +
