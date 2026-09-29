@@ -83,7 +83,8 @@ const HISTORY_CAP = 20;
 function finish(newTrip, preTrip, newDays, updatedChoices) {
   const withDays = { ...newTrip, days: newDays, spec: { ...newTrip.spec, choices: updatedChoices } };
   const withMeta = applyMeta(withDays, preTrip.status, preTrip.warnings);
-  const history = [...(preTrip.history ?? []), preTrip];
+  // Snapshot without its own history: entries that carried their stacks made the saved size double per edit.
+  const history = [...(preTrip.history ?? []), { ...preTrip, history: [] }];
   const capped = history.length > HISTORY_CAP ? history.slice(history.length - HISTORY_CAP) : history;
   const result = { ...withMeta, history: capped };
   validateEditInvariant(result, preTrip);
@@ -455,5 +456,7 @@ export function swappableDays(trip, dayNumber, content = PILOT_CONTENT) {
  */
 export function undo(trip) {
   if (!trip.history?.length) return { ok: false, reason: 'nothing_to_undo', message: 'Nothing to undo.' };
-  return { ok: true, trip: trip.history[trip.history.length - 1] };
+  // Entries are stored without history, so the remaining stack is rebuilt from the outer array.
+  const prior = trip.history[trip.history.length - 1];
+  return { ok: true, trip: { ...prior, history: trip.history.slice(0, -1) } };
 }

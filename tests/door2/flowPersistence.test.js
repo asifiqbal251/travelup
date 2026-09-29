@@ -10,7 +10,7 @@ const M = await loadDoor2PlanModule();
 after(teardown);
 const { screen } = await import('@testing-library/react');
 
-test('B9: save (with edits) -> start over -> load -> delete, identical trip including the edits', async () => {
+test('B9: save (with edits) -> start over -> load -> delete, same itinerary including the edits (undo history is not persisted)', async () => {
   const { user, trip: originalTrip } = await mountWithBuiltTrip(M, peruSpec({ totalDays: 10 }));
 
   // Make an edit: swap + make a day lighter.
@@ -36,7 +36,9 @@ test('B9: save (with edits) -> start over -> load -> delete, identical trip incl
   await screen.findByText('Your trip at a glance');
   const reloadedGlance = screen.getByText(/\d+ days ·/).textContent;
   assert.equal(reloadedGlance, editedGlance, 'reloaded trip matches the edited trip (same itinerary summary)');
-  assert.ok(screen.getByText('Undo last change'), 'reloaded trip still carries its edit history');
+  // F1: a draft is a saved plan, not an editing session; history is stripped on save (undo works only within a session).
+  assert.ok(screen.queryByText('Undo last change') === null, 'reloaded draft carries no undo history');
+  assert.equal(M.listDraftTrips()[0].trip.history.length, 0, 'the stored draft holds no history');
 
   // Delete every saved draft and confirm the list clears (in-memory and localStorage).
   await user.click(screen.getByText('Start a new trip'));

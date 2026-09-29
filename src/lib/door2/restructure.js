@@ -813,7 +813,7 @@ export function applyProposal(trip, proposal) {
   const nightsChanged =
     proposal.trip.routePlan.stops.length !== trip.routePlan.stops.length ||
     proposal.trip.routePlan.stops.some((s) => before[s.key] !== s.nights);
-  const history = [...(trip.history ?? []), trip];
+  const history = [...(trip.history ?? []), { ...trip, history: [] }];
   const capped = history.length > HISTORY_CAP ? history.slice(history.length - HISTORY_CAP) : history;
   const routePlan = nightsChanged ? { ...proposal.trip.routePlan, nightsSource: 'user' } : proposal.trip.routePlan;
   return { ok: true, trip: { ...proposal.trip, routePlan, history: capped } };

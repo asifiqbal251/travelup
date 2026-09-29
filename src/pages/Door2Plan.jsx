@@ -1341,7 +1341,8 @@ export default function Door2Plan() {
     const t = activeTrip;
     if (!t) return;
     try {
-      saveDraftTrip(t, autoLabel(t.spec));
+      // A draft is a saved plan, not an editing session: undo history is not persisted.
+      saveDraftTrip({ ...t, history: [] }, autoLabel(t.spec));
       setSaveMsg("Saved");
       setTimeout(() => setSaveMsg(null), 2500);
     } catch {
