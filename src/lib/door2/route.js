@@ -213,14 +213,22 @@ export function selectRoutes(spec, data, options = {}) {
     );
   }
 
-  // 4. Rank: fewest unasked-for places, then fewest stops, then id.
+  // 4. Rank: fewest unasked-for places, then fewest stops, then catalogue order.
+  //
+  // The last tiebreak is product policy, not a detail: it decides which trip a
+  // traveller gets by default when routes are otherwise equal. The two
+  // directions of a reversible family always tie on places and stops, so this
+  // is what makes the canonical direction (declared first, and emitted first
+  // by compileFamilies) the default. Comparing id strings would hand that
+  // decision to the alphabet.
   const askedFor = new Set(requiredPlaceIds);
   if (destination.kind === 'place') askedFor.add(destination.id);
+  const catalogueIndex = new Map(routePackages.map((pkg, i) => [pkg, i]));
   const ranked = [...candidates].sort(
     (a, b) =>
       unplannedPlaceCount(a, askedFor) - unplannedPlaceCount(b, askedFor) ||
       a.stops.length - b.stops.length ||
-      (a.id < b.id ? -1 : a.id > b.id ? 1 : 0)
+      catalogueIndex.get(a) - catalogueIndex.get(b)
   );
   // If the caller requested a specific route package, bubble it to the front.
   // A package's aliases (old ids kept for saved drafts) count as its id.

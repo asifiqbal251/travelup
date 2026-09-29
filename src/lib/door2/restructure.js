@@ -8,6 +8,7 @@ import { activityFor, classifySlot, eligibleItemsForBlock, fillTrip } from './fi
 import { PILOT_CONTENT } from './pilotContent.js';
 import { PILOT_DATA, buildTripFromRoutePlan, findRoutePackage } from './planner.js';
 import { PILOT_ROUTE_FAMILIES } from './pilotData.js';
+import { familyVariantId } from './families.js';
 import { buildRouteResult, getPlace } from './route.js';
 import { scheduleRoute } from './schedule.js';
 import { validateFilled } from './validate.js';
@@ -423,10 +424,10 @@ export function previewChangeLength(trip, newTotalDays, options = {}) {
  */
 function shorterRouteAlternative(trip, newTotalDays, ctx) {
   const rp = trip.routePlan;
-  if (rp.variantId === rp.familyId) return null;
+  if (rp.variantId === backboneVariantId(rp)) return null;
   const removed = rp.stops.filter((s) => s.optionalId);
   if (removed.some((s) => s.selectionSource === 'required' || s.selectionSource === 'user_added')) return null;
-  const backbone = findRoutePackage(ctx.data, rp.familyId);
+  const backbone = findRoutePackage(ctx.data, backboneVariantId(rp));
   if (!backbone || backbone.held) return null;
   const spec = { ...trip.spec, totalDays: newTotalDays };
   const minDays = packageMinDays(backbone, spec, ctx.data);
@@ -480,7 +481,9 @@ function shorterRouteAlternative(trip, newTotalDays, ctx) {
 // (optIndex, posIndex) order, and makeRoutePlan copies it through
 // unchanged). Recomputing the target variantId is then just: take that list,
 // add/remove/replace one entry, put it back in family order, and rebuild the
-// same '{familyId}+{optionalId}@{positionId}+...' string compileFamily uses.
+// id with the same familyVariantId compileFamily uses: '{familyId}' or, for a
+// reversible family, '{familyId}#{directionId}', then '+{optionalId}@{positionId}'
+// per pick. The direction comes from routePlan.directionId, never the id string.
 // findRoutePackage does an exact-id lookup, so a combination families.js
 // didn't compile (exclusiveWith) or that only exists held simply won't
 // resolve to a servable package — that's a refusal, not a bug.
@@ -516,8 +519,22 @@ function orderedPicks(family, choices) {
   return picks;
 }
 
-function variantIdFor(family, picks) {
-  return picks.length === 0 ? family.id : `${family.id}+${picks.map((p) => `${p.optionalId}@${p.positionId}`).join('+')}`;
+/**
+ * The variant id for `picks` in the trip's own direction. The direction must
+ * come along: without it, adding a stop to a reversed trip would resolve to
+ * the canonical variant and silently flip the trip end for end.
+ */
+function variantIdFor(family, picks, routePlan) {
+  return familyVariantId(family.id, routePlan.directionId, picks);
+}
+
+/**
+ * The backbone (no optionals) variant in this trip's direction. Equals the
+ * family id only for a family without directions.
+ * @param {RoutePlan} routePlan
+ */
+function backboneVariantId(routePlan) {
+  return familyVariantId(routePlan.familyId, routePlan.directionId, []);
 }
 
 /**
@@ -618,7 +635,7 @@ export function previewAddOptional(trip, optionalId, positionId, options = {}) {
 
   const choices = new Map(rp.optionals.map((o) => [o.optionalId, o.positionId]));
   choices.set(optionalId, pos.id);
-  const pkg = findRoutePackage(ctx.data, variantIdFor(family, orderedPicks(family, choices)));
+  const pkg = findRoutePackage(ctx.data, variantIdFor(family, orderedPicks(family, choices), rp));
   if (!pkg || pkg.held) {
     return refusal('exclusive_optional', `${optional.label} can't be combined with what's already in your trip.`, []);
   }
@@ -662,7 +679,7 @@ export function previewRemoveOptional(trip, optionalId, options = {}) {
   }
 
   const choices = new Map(rp.optionals.filter((o) => o.optionalId !== optionalId).map((o) => [o.optionalId, o.positionId]));
-  const pkg = findRoutePackage(ctx.data, variantIdFor(family, orderedPicks(family, choices)));
+  const pkg = findRoutePackage(ctx.data, variantIdFor(family, orderedPicks(family, choices), rp));
   if (!pkg || pkg.held) {
     return refusal('not_available', `${optional.label} can't be removed from your trip right now.`, []);
   }
@@ -678,7 +695,7 @@ export function previewRemoveOptional(trip, optionalId, options = {}) {
     const alternatives = [];
     if (isDurationFlexible(trip.spec)) {
       const candidates = [pkg];
-      const backbone = findRoutePackage(ctx.data, family.id);
+      const backbone = findRoutePackage(ctx.data, backboneVariantId(rp));
       if (backbone && !backbone.held && backbone.id !== pkg.id) candidates.push(backbone);
       for (const cand of candidates) {
         const candMin = cand === pkg ? minDays : packageMinDays(cand, trip.spec, ctx.data);
@@ -727,7 +744,7 @@ export function previewMoveOptional(trip, optionalId, positionId, options = {}) 
 
   const choices = new Map(rp.optionals.map((o) => [o.optionalId, o.positionId]));
   choices.set(optionalId, pos.id);
-  const pkg = findRoutePackage(ctx.data, variantIdFor(family, orderedPicks(family, choices)));
+  const pkg = findRoutePackage(ctx.data, variantIdFor(family, orderedPicks(family, choices), rp));
   if (!pkg || pkg.held) {
     return refusal('not_available', `${optional.label} can't move there right now.`, []);
   }
@@ -760,7 +777,11 @@ export function listMoveOptions(trip, optionalId, options = {}) {
   const optional = findOptional(family, optionalId);
   const current = trip.routePlan.optionals.find((o) => o.optionalId === optionalId);
   if (!optional || !current) return { current: null, options: [] };
-  const afterOf = (pos) => (pos ? (family.stops[pos.after]?.placeId ?? null) : null);
+  // A `between` position has no `after`: the place it follows is the
+  // segment's first stop in the direction this trip travels.
+  const reversed = trip.routePlan.directionId != null && trip.routePlan.directionId !== family.directions?.[0]?.id;
+  const anchorKey = (pos) => (pos.between ? pos.between[reversed ? 1 : 0] : pos.after);
+  const afterOf = (pos) => (pos ? (family.stops[anchorKey(pos)]?.placeId ?? null) : null);
   const moves = [];
   for (const pos of optional.positions) {
     if (pos.id === current.positionId || pos.status !== 'approved') continue;

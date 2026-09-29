@@ -91,9 +91,10 @@
  * @property {string} [preferredGatewayId]  ➕ Prefer connections with this gateway.
  * @property {string} [familyId]         ➕ RF: Route Family this package was compiled from.
  * @property {string} [variantId]        ➕ RF: compiled variant id (equals `id`).
+ * @property {string} [directionId]      ➕ C3a: direction of a reversible family's variant; absent otherwise. Read this, never parse the id.
  * @property {Array<{optionalId: string, positionId: string, stopKeys: string[]}>} [optionals]  ➕ RF: optionals present, with the stop keys each inserted.
  * @property {string[]} [aliases]        ➕ RF: old ids that still resolve to this package (e.g. 'peru_classic_huaraz').
- * @property {boolean} [held]            ➕ RF: true when any position is 'pending_review'; held packages are never served.
+ * @property {boolean} [held]            ➕ RF: true when any authored choice in it (a position or its direction) is 'pending_review'; held packages are never served.
  */
 
 /**
@@ -109,8 +110,10 @@
  * ➕ RF: where an optional may sit. `insert` and `overrides` are per position (design §0.1 F).
  * @typedef {Object} RouteFamilyPosition
  * @property {string} id                 e.g. 'after_lima_in'.
- * @property {string} after              Stop key the insert follows.
- * @property {string[]} insert           Stop keys inserted, as a unit, after `after`.
+ * @property {string} [after]            Stop key the insert follows. Exactly one of `after` / `between`; not allowed in a reversible family.
+ * @property {[string, string]} [between]  ➕ C3a: two backbone keys, adjacent and in backbone order; the insert goes between them.
+ * @property {number} [segmentOrder]     ➕ C3a: order among `between` inserts in the same segment; lower is nearer the segment's first stop.
+ * @property {string[]} insert           Stop keys inserted, as a unit, at the anchor.
  * @property {'approved'|'pending_review'} status  Only all-approved variants are served (§0.1 G).
  * @property {string} [variantName]      Name of the variant when this is the only optional present.
  * @property {Object<string, {minNights?: number, maxNights?: number}>} [overrides]  Stop limits in this variant only.
@@ -131,7 +134,7 @@
 /**
  * ➕ RF: a backbone plus optional stops, compiled into RoutePackages by families.js.
  * @typedef {Object} RouteFamily
- * @property {string} id                 Also the backbone variant's id.
+ * @property {string} id                 Also the backbone variant's id, unless the family has directions ('{id}#{directionId}').
  * @property {string} name               Also the backbone variant's name.
  * @property {string} countryId
  * @property {Object<string, RouteFamilyStop>} stops  Family-scoped stop keys.
@@ -140,6 +143,16 @@
  * @property {string[]} [assumptions]
  * @property {string} [preferredGatewayId]
  * @property {Object<string, string[]>} [aliases]  Compiled variant id → old ids that resolve to it.
+ * @property {RouteFamilyDirection[]} [directions]  ➕ C3a: at most two. The first is canonical (backbone order);
+ *   the second is derived by mirroring each compiled canonical variant. Requires `between` positions.
+ */
+
+/**
+ * ➕ C3a: one direction a reversible family can be travelled in.
+ * @typedef {Object} RouteFamilyDirection
+ * @property {string} id                 e.g. 'a_to_c'. Appears in variant ids after '#'.
+ * @property {string} label              Traveller-facing, e.g. 'A to C'.
+ * @property {'approved'|'pending_review'} status  A pending direction holds every variant in it.
  */
 
 /**
@@ -327,6 +340,7 @@
  * @typedef {Object} RoutePlan
  * @property {string} familyId
  * @property {string} variantId          Compiled variant id (= spec.routeTemplateId).
+ * @property {string} [directionId]      ➕ C3a: present when the family has directions. Structural edits keep it.
  * @property {'authored'|'composed'} source
  * @property {RoutePlanStop[]} stops     Ordered, pass-throughs included.
  * @property {'auto'|'user'} nightsSource  'user' once any night was set by hand.

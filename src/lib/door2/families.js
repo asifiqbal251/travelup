@@ -16,14 +16,32 @@ import { validateSkeleton } from './validate.js';
 // Stop keys are family-scoped, so a stop keeps its identity (and so its block
 // ids and content) across variants.
 //
-// Servability is controlled by position status: a variant with any
-// 'pending_review' position is "held". Held variants are compiled and checked
-// like every other variant, but compileFamilies() only returns them when
-// includePending is true.
+// Servability is controlled by review status: a variant is "held" when any
+// authored choice in it is 'pending_review' — one of its positions, or its
+// direction. Held variants are compiled and checked like every other variant,
+// but compileFamilies() only returns them when includePending is true.
+//
+// Directions (C3a). A family may declare `directions`: at most two, the first
+// canonical (the authored backbone order), the second its mirror. The
+// canonical direction compiles exactly as a family without directions would.
+// The mirror is NOT compiled from the authoring: each compiled canonical
+// variant is copied with its stop list reversed, so every inserted group
+// reverses along with it. Positions are never re-resolved against a reversed
+// backbone (C1-F4: doing that by hand put a spur on the wrong side of a
+// mid-route stop). Variant ids carry the direction after '#':
+// 'demo#a_to_c', 'demo#a_to_c+mid@ab'. A family without `directions` keeps
+// its plain ids ('peru_classic', 'peru_classic+huaraz@after_lima_in').
+// Code reads the direction from `directionId`, never by parsing the id.
+//
+// MAX_VARIANTS_PER_FAMILY applies after the direction expansion, so a
+// two-direction family has half the budget for optional combinations (12).
 //
 // Pure and deterministic: no randomness, no Date.now().
 
 export const MAX_VARIANTS_PER_FAMILY = 24;
+export const MAX_DIRECTIONS_PER_FAMILY = 2;
+
+const REVIEW_STATUSES = ['approved', 'pending_review'];
 
 /** A family that can't be compiled or scheduled as authored. Thrown for the author, never shown to a traveller. */
 export class FamilyAuthoringError extends Error {
@@ -102,6 +120,20 @@ function checkFamilyShape(family) {
   for (const key of family.backbone) {
     if (!family.stops[key]) fail('unknown_stop_key', { stopKey: key, where: 'backbone' });
   }
+  const reversible = family.directions !== undefined;
+  if (reversible) {
+    if (!Array.isArray(family.directions) || family.directions.length === 0) fail('directions_empty');
+    if (family.directions.length > MAX_DIRECTIONS_PER_FAMILY) {
+      fail('too_many_directions', { count: family.directions.length, max: MAX_DIRECTIONS_PER_FAMILY });
+    }
+    const directionIds = new Set();
+    for (const dir of family.directions) {
+      if (!dir?.id) fail('direction_without_id');
+      if (directionIds.has(dir.id)) fail('duplicate_direction_id', { directionId: dir.id });
+      directionIds.add(dir.id);
+      if (!REVIEW_STATUSES.includes(dir.status)) fail('invalid_direction_status', { directionId: dir.id, status: dir.status });
+    }
+  }
   const optionalIds = new Set();
   for (const opt of family.optional ?? []) {
     if (optionalIds.has(opt.id)) fail('duplicate_optional_id', { optionalId: opt.id });
@@ -114,6 +146,7 @@ function checkFamilyShape(family) {
       if (pos.status !== 'approved' && pos.status !== 'pending_review') {
         fail('invalid_position_status', { optionalId: opt.id, positionId: pos.id, status: pos.status });
       }
+      checkPositionAnchor(family, opt, pos, reversible, fail);
       for (const key of pos.insert ?? []) {
         if (!family.stops[key]) fail('unknown_stop_key', { stopKey: key, where: `${opt.id}@${pos.id}` });
       }
@@ -122,6 +155,134 @@ function checkFamilyShape(family) {
       }
     }
   }
+  checkSegmentOrders(family, fail);
+}
+
+/**
+ * A position is anchored by `after` (a stop key it follows) or by `between`
+ * (two keys adjacent in the backbone, named in backbone order), never both.
+ * A family with directions must use `between`: "after X" has no meaning once
+ * the order can flip.
+ */
+function checkPositionAnchor(family, opt, pos, reversible, fail) {
+  const where = { optionalId: opt.id, positionId: pos.id };
+  const hasAfter = pos.after !== undefined;
+  const hasBetween = pos.between !== undefined;
+  if (hasAfter && hasBetween) fail('position_anchor_ambiguous', where);
+  if (reversible && !hasBetween) fail('after_position_in_reversible_family', where);
+  if (pos.segmentOrder !== undefined) {
+    if (!hasBetween) fail('segment_order_without_between', where);
+    if (!Number.isInteger(pos.segmentOrder)) fail('invalid_segment_order', { ...where, segmentOrder: pos.segmentOrder });
+  }
+  // `after` is resolved (and a missing key reported) at compile time, as before.
+  if (!hasBetween) return;
+  if (!Array.isArray(pos.between) || pos.between.length !== 2) fail('segment_not_adjacent', { ...where, between: pos.between });
+  for (const key of pos.between) {
+    if (!family.stops[key]) fail('unknown_stop_key', { stopKey: key, where: `${opt.id}@${pos.id} between` });
+  }
+  const [from, to] = pos.between;
+  const i = family.backbone.indexOf(from);
+  if (i < 0 || family.backbone[i + 1] !== to) fail('segment_not_adjacent', { ...where, between: [...pos.between] });
+}
+
+/**
+ * Two positions that can be picked together (different optionals, not
+ * exclusive) and share a `between` segment must both give a segmentOrder, and
+ * different ones: their relative order is authored, never an accident of
+ * declaration order.
+ */
+function checkSegmentOrders(family, fail) {
+  const exclusive = (a, b) => (a.exclusiveWith ?? []).includes(b.id) || (b.exclusiveWith ?? []).includes(a.id);
+  const inSegment = [];
+  for (const opt of family.optional ?? []) {
+    for (const pos of opt.positions) if (pos.between) inSegment.push({ opt, pos, segment: pos.between.join('|') });
+  }
+  for (let i = 0; i < inSegment.length; i++) {
+    for (let j = i + 1; j < inSegment.length; j++) {
+      const a = inSegment[i];
+      const b = inSegment[j];
+      if (a.segment !== b.segment || a.opt === b.opt || exclusive(a.opt, b.opt)) continue;
+      const detail = { segment: [...a.pos.between], positions: [`${a.opt.id}@${a.pos.id}`, `${b.opt.id}@${b.pos.id}`] };
+      if (a.pos.segmentOrder === undefined || b.pos.segmentOrder === undefined) fail('segment_order_missing', detail);
+      if (a.pos.segmentOrder === b.pos.segmentOrder) fail('segment_order_duplicate', detail);
+    }
+  }
+}
+
+/**
+ * Ordered stop keys for one choice of optionals, in the canonical direction.
+ *
+ * `between` picks go first: each segment's groups, lowest segmentOrder first
+ * (nearest the segment's first stop), are placed directly before the
+ * segment's second stop.
+ *
+ * `after` picks keep their original rule exactly: in declaration order, each
+ * insert is spliced directly after its anchor. So two optionals anchored after
+ * the same key land in REVERSE declaration order (the later splice goes in
+ * front of the earlier one). That is an accident of splice, but Peru's
+ * compiled output is pinned to this rule: don't "fix" it. Use `between` +
+ * `segmentOrder` when the order of neighbouring optionals matters.
+ */
+function orderedStopKeys(family, picks, variantId) {
+  const keys = [...family.backbone];
+  const bySegment = new Map();
+  for (const pick of picks) {
+    if (!pick.pos.between) continue;
+    const segment = pick.pos.between.join('|');
+    if (!bySegment.has(segment)) bySegment.set(segment, []);
+    bySegment.get(segment).push(pick);
+  }
+  for (const group of bySegment.values()) {
+    group.sort((a, b) => (a.pos.segmentOrder ?? 0) - (b.pos.segmentOrder ?? 0));
+    keys.splice(keys.indexOf(group[0].pos.between[1]), 0, ...group.flatMap(({ pos }) => pos.insert));
+  }
+  for (const { opt, pos } of picks) {
+    if (pos.between) continue;
+    const at = keys.indexOf(pos.after);
+    if (at < 0) {
+      throw new FamilyAuthoringError('after_key_missing', { familyId: family.id, variantId, optionalId: opt.id, positionId: pos.id, after: pos.after });
+    }
+    keys.splice(at + 1, 0, ...pos.insert);
+  }
+  return keys;
+}
+
+/**
+ * The variant id for a family, a direction (null when the family has none)
+ * and its picks in family declaration order. restructure.js rebuilds ids with
+ * this too, so the two can never disagree.
+ * @param {string} familyId
+ * @param {string|null|undefined} directionId
+ * @param {Array<{optionalId: string, positionId: string}>} picks
+ */
+export function familyVariantId(familyId, directionId, picks) {
+  const base = directionId == null ? familyId : `${familyId}#${directionId}`;
+  return picks.length === 0 ? base : `${base}+${picks.map((p) => `${p.optionalId}@${p.positionId}`).join('+')}`;
+}
+
+/**
+ * The reverse-direction twin of a compiled canonical variant: the same
+ * package with its stops reversed (C1-F4). Nothing is re-resolved.
+ */
+function mirrorVariant(family, direction, { pkg: canonical, picks }) {
+  const variantId = familyVariantId(family.id, direction.id, picks.map(({ opt, pos }) => ({ optionalId: opt.id, positionId: pos.id })));
+  const pkg = routePackage({
+    id: variantId,
+    name: canonical.name,
+    countryId: canonical.countryId,
+    ...(canonical.assumptions !== undefined ? { assumptions: [...canonical.assumptions] } : {}),
+    ...(canonical.preferredGatewayId ? { preferredGatewayId: canonical.preferredGatewayId } : {}),
+    stops: [...canonical.stops].reverse().map((s) => ({ ...s, excursions: s.excursions.map((ex) => ({ ...ex })) }))
+  });
+  return {
+    ...pkg,
+    familyId: family.id,
+    variantId,
+    directionId: direction.id,
+    optionals: canonical.optionals.map((o) => ({ ...o, stopKeys: [...o.stopKeys] })),
+    aliases: [...(family.aliases?.[variantId] ?? [])],
+    held: picks.some(({ pos }) => pos.status === 'pending_review') || direction.status === 'pending_review'
+  };
 }
 
 /**
@@ -132,28 +293,22 @@ function compileFamily(family) {
   checkFamilyShape(family);
   const optionals = family.optional ?? [];
   const combos = enumerateCombos(family);
-  if (combos.length > MAX_VARIANTS_PER_FAMILY) {
+  const [canonicalDir = null, mirrorDir = null] = family.directions ?? [];
+  const count = combos.length * (mirrorDir ? 2 : 1);
+  if (count > MAX_VARIANTS_PER_FAMILY) {
     throw new FamilyAuthoringError('too_many_variants', {
       familyId: family.id,
-      count: combos.length,
+      count,
       max: MAX_VARIANTS_PER_FAMILY,
-      message: `Family "${family.id}" compiles to ${combos.length} variants (max ${MAX_VARIANTS_PER_FAMILY}).`
+      message: `Family "${family.id}" compiles to ${count} variants (max ${MAX_VARIANTS_PER_FAMILY}).`
     });
   }
 
-  const packages = combos.map((combo) => {
+  const canonical = combos.map((combo) => {
     const picks = combo.map(({ optIndex, posIndex }) => ({ opt: optionals[optIndex], pos: optionals[optIndex].positions[posIndex] }));
-    const variantId = picks.length === 0 ? family.id : `${family.id}+${picks.map((p) => `${p.opt.id}@${p.pos.id}`).join('+')}`;
+    const variantId = familyVariantId(family.id, canonicalDir?.id, picks.map(({ opt, pos }) => ({ optionalId: opt.id, positionId: pos.id })));
 
-    // Ordered stop keys: splice each position's insert after its `after` key.
-    const keys = [...family.backbone];
-    for (const { opt, pos } of picks) {
-      const at = keys.indexOf(pos.after);
-      if (at < 0) {
-        throw new FamilyAuthoringError('after_key_missing', { familyId: family.id, variantId, optionalId: opt.id, positionId: pos.id, after: pos.after });
-      }
-      keys.splice(at + 1, 0, ...pos.insert);
-    }
+    const keys = orderedStopKeys(family, picks, variantId);
     const seen = new Set();
     for (const key of keys) {
       if (seen.has(key)) throw new FamilyAuthoringError('duplicate_stop_key', { familyId: family.id, variantId, stopKey: key });
@@ -196,14 +351,22 @@ function compileFamily(family) {
       stops
     });
     return {
-      ...pkg,
-      familyId: family.id,
-      variantId,
-      optionals: picks.map(({ opt, pos }) => ({ optionalId: opt.id, positionId: pos.id, stopKeys: [...pos.insert] })),
-      aliases: [...(family.aliases?.[variantId] ?? [])],
-      held: picks.some(({ pos }) => pos.status === 'pending_review')
+      picks,
+      pkg: {
+        ...pkg,
+        familyId: family.id,
+        variantId,
+        ...(canonicalDir ? { directionId: canonicalDir.id } : {}),
+        optionals: picks.map(({ opt, pos }) => ({ optionalId: opt.id, positionId: pos.id, stopKeys: [...pos.insert] })),
+        aliases: [...(family.aliases?.[variantId] ?? [])],
+        held: picks.some(({ pos }) => pos.status === 'pending_review') || canonicalDir?.status === 'pending_review'
+      }
     };
   });
+
+  // Catalogue order: every canonical variant, then every mirrored one. route.js
+  // breaks ranking ties by this order, so the canonical direction is the default.
+  const packages = [...canonical.map((c) => c.pkg), ...(mirrorDir ? canonical.map((c) => mirrorVariant(family, mirrorDir, c)) : [])];
 
   for (const variantId of Object.keys(family.aliases ?? {})) {
     if (!packages.some((p) => p.id === variantId)) {

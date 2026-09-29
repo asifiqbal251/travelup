@@ -59,6 +59,8 @@ export function makeRoutePlan({ pkg, stops, connectionIds, minDays, source = 'au
   return {
     familyId: pkg.familyId ?? pkg.id,
     variantId: pkg.variantId ?? pkg.id,
+    // Only reversible families have a direction; Peru's plans don't gain the key.
+    ...(pkg.directionId != null ? { directionId: pkg.directionId } : {}),
     source,
     stops: planStops,
     nightsSource,
