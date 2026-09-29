@@ -498,10 +498,10 @@ export const PILOT_ROUTE_FAMILIES = [
       ec_quebec: familyStop('quebec_city', 1, 3),
       ec_ottawa: familyStop('ottawa', 1, 2),
       ec_niagara: familyStop('niagara_falls', 1, 2),
-      // Hub night back in Toronto after the Niagara spur. Verified to work at 0
-      // nights (the same-day continuation clears the ground-arrival guard), so
-      // unlike Peru's Lima hub this one does not have to be 1–1.
-      ec_toronto_hub: familyStop('toronto', 0, 1)
+      // A night back in Toronto after the Niagara spur. Not 0-1: at 0 the
+      // default trip puts Niagara -> Toronto -> Montreal (9.1h of travel) on
+      // one day. Same reason Peru's Lima hub is 1-1.
+      ec_toronto_hub: familyStop('toronto', 1, 1)
     },
     backbone: ['ec_toronto', 'ec_montreal', 'ec_quebec'],
     optional: [

@@ -27,12 +27,12 @@ const QC = 'Québec City';
 const OTW = 'Ottawa';
 const NF = 'Niagara Falls';
 
-// §4, canonical rows. Each mirror is the same row reversed, same min/max.
+// §4, canonical rows (Niagara minimums +1 in C3c: the Toronto hub is 1-1). Each mirror is the same row reversed, same min/max.
 const EXPECTED = [
   { picks: [], stops: [TOR, MTL, QC], minDays: 6, maxDays: 12 },
   { picks: [OTT], stops: [TOR, OTW, MTL, QC], minDays: 7, maxDays: 14 },
-  { picks: [NIA], stops: [TOR, NF, TOR, MTL, QC], minDays: 7, maxDays: 15 },
-  { picks: [OTT, NIA], stops: [TOR, NF, TOR, OTW, MTL, QC], minDays: 8, maxDays: 17 }
+  { picks: [NIA], stops: [TOR, NF, TOR, MTL, QC], minDays: 8, maxDays: 15 },
+  { picks: [OTT, NIA], stops: [TOR, NF, TOR, OTW, MTL, QC], minDays: 9, maxDays: 17 }
 ];
 
 const packages = PILOT_ROUTE_PACKAGES.filter((p) => p.familyId === FAMILY);
@@ -236,4 +236,22 @@ test('E9: every variant fills at its maximum length with no empty activity slot'
     PILOT_CONTENT.filter((c) => c.source?.note?.startsWith('Written for the Eastern Canada pilot family')).length,
     33
   );
+});
+
+test('E10: with both optionals at minimum length, no day carries more than one ground leg between different stops', () => {
+  // C3c: at 0 hub nights the default trip put Niagara -> Toronto -> Montréal
+  // (9.1h) on one day. The Toronto hub is now 1-1, like Peru's Lima hub.
+  const ranges = checkVariantsSchedulable(packages, PILOT_DATA);
+  for (const dir of [W, E]) {
+    const id = vid(dir, OTT, NIA);
+    const { minDays } = ranges.find((r) => r.variantId === id);
+    const trip = buildOn(id, minDays);
+    for (const day of trip.days) {
+      const legs = day.blocks
+        .filter((b) => b.type === 'travel' && b.transport && !b.transport.mode.startsWith('flight'))
+        .filter((b) => b.transport.fromPlaceId !== b.transport.toPlaceId)
+        .map((b) => `${b.transport.fromPlaceId} -> ${b.transport.toPlaceId}`);
+      assert.ok(legs.length <= 1, `${id} at ${minDays} days, day ${day.dayNumber}: ${legs.join(', ')}`);
+    }
+  }
 });
