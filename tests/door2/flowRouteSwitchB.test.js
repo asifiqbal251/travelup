@@ -15,7 +15,7 @@ function nightsButtonFor(placeName) {
 test('B8b: switching route after an edit shows the F6 confirm; "Keep my trip" preserves edits, "Switch route" discards them', async () => {
   // (1) content edit + "Keep my trip"
   {
-    const { user } = await mountAndBuildPeruViaIntake(M, { totalDays: 10 });
+    const { user } = await mountAndBuildPeruViaIntake(M, { totalDays: 14 });
     await user.click(screen.getAllByText('Swap')[0]);
     await screen.findByText('Swapped');
     const beforeGlance = screen.getByText('Your trip at a glance').closest('div').textContent;
@@ -25,15 +25,15 @@ test('B8b: switching route after an edit shows the F6 confirm; "Keep my trip" pr
 
     assert.ok(await screen.findByText('Switch to this route?'), 'F6 confirm appears after a content edit');
     await user.click(screen.getByRole('button', { name: 'Keep my trip' }));
-    assert.equal(screen.queryByText('Switch to this route?'), null, 'prompt closes');
+    assert.ok(screen.queryByText('Switch to this route?') === null, 'prompt closes');
     assert.ok(screen.getByText('Undo last change'), 'edit is still intact');
     const afterGlance = screen.getByText('Your trip at a glance').closest('div').textContent;
     assert.equal(afterGlance, beforeGlance, 'trip byte-identical to before the switch attempt');
   }
 
-  // (2) structural edit + "Switch route"
+  // (2) structural edit + "Switch route" (12 days: long enough for an alternative to fit, short enough that Cusco +1 night has a valid plan)
   {
-    const { user } = await mountAndBuildPeruViaIntake(M, { totalDays: 10 });
+    const { user } = await mountAndBuildPeruViaIntake(M, { totalDays: 12 });
     await user.click(nightsButtonFor('Cusco'));
     await user.click(await screen.findByText('More time here (+1 night)'));
     await user.click((await screen.findAllByText('Use this plan'))[0]);
@@ -46,6 +46,6 @@ test('B8b: switching route after an edit shows the F6 confirm; "Keep my trip" pr
     await user.click(screen.getByRole('button', { name: 'Switch route' }));
 
     await screen.findByText('Route changed');
-    assert.equal(screen.queryByText('Undo last change'), null, 'edits gone: rebuild has no history');
+    assert.ok(screen.queryByText('Undo last change') === null, 'edits gone: rebuild has no history');
   }
 });

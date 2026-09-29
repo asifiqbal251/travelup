@@ -1232,7 +1232,23 @@ export default function Door2Plan() {
     setDayNotices({});
     if (!thrown && result && result.ok !== false) {
       const routes = selectRoutes(spec, PILOT_DATA, { reviewPolicy: "allow_drafts" });
-      setRouteAlternatives(routes.ok ? routes.value.slice(1, 3) : []);
+      // selectRoutes ignores spec.totalDays, so keep only alternatives that
+      // actually build at the chosen length.
+      const buildable = routes.ok
+        ? routes.value.slice(1).filter((alt) => {
+            try {
+              const r = buildFilledTrip(
+                { ...spec, routeTemplateId: alt.routePackageId },
+                PILOT_DATA,
+                { reviewPolicy: "allow_drafts" },
+              );
+              return r && r.ok !== false;
+            } catch {
+              return false;
+            }
+          })
+        : [];
+      setRouteAlternatives(buildable.slice(0, 2));
     } else {
       setRouteAlternatives([]);
     }
