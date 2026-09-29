@@ -914,6 +914,39 @@ export function StructureSheet({ sheet, trip, onMoreTime, onLessTime, onRemoveOp
   );
 }
 
+function RouteSwitchConfirm({ open, onSwitch, onKeep }) {
+  if (!open) return null;
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60" onClick={onKeep}>
+      <div
+        className="w-full max-w-2xl rounded-t-2xl bg-slate-900 border-t border-slate-700 p-6 space-y-4"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <h2 className="text-lg font-bold text-white">Switch to this route?</h2>
+        <p className="text-sm text-slate-300">
+          Switching routes starts this trip over, so the changes you&apos;ve made will be lost.
+        </p>
+        <div className="flex gap-3">
+          <button
+            type="button"
+            onClick={onSwitch}
+            className="flex-1 bg-teal text-slate-900 rounded-lg px-4 py-2.5 font-bold text-sm hover:opacity-90 transition-opacity"
+          >
+            Switch route
+          </button>
+          <button
+            type="button"
+            onClick={onKeep}
+            className="flex-1 bg-slate-700 border border-slate-600 text-white rounded-lg px-4 py-2.5 font-semibold text-sm hover:bg-slate-600 transition-colors"
+          >
+            Keep my trip
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function SwapDayPicker({ picker, onConfirm, onClose }) {
   if (!picker) return null;
   return (
@@ -1126,6 +1159,7 @@ export default function Door2Plan() {
   const [structureSheet, setStructureSheet] = useState(null);
   const [dayMenu, setDayMenu] = useState(null);
   const [swapPicker, setSwapPicker] = useState(null);
+  const [pendingRouteSwitch, setPendingRouteSwitch] = useState(null);
   const [toast, setToast] = useState(null);
   const toastTimer = useRef(null);
 
@@ -1257,10 +1291,28 @@ export default function Door2Plan() {
     runBuild(newForm);
   }
 
-  function handleChangeRoute(routePackageId) {
+  function doChangeRoute(routePackageId) {
     const newSpec = { ...currentSpec, routeTemplateId: routePackageId };
     runBuildFromSpec(newSpec);
     showToast("Route changed");
+  }
+
+  function handleChangeRoute(routePackageId) {
+    if (activeTrip?.history?.length > 0) {
+      setPendingRouteSwitch(routePackageId);
+      return;
+    }
+    doChangeRoute(routePackageId);
+  }
+
+  function handleConfirmRouteSwitch() {
+    const routePackageId = pendingRouteSwitch;
+    setPendingRouteSwitch(null);
+    if (routePackageId) doChangeRoute(routePackageId);
+  }
+
+  function handleKeepTripInsteadOfSwitch() {
+    setPendingRouteSwitch(null);
   }
 
   function handleApplyRefine() {
@@ -1663,6 +1715,12 @@ export default function Door2Plan() {
       />
 
       <SwapDayPicker picker={swapPicker} onConfirm={handleConfirmSwapDay} onClose={() => setSwapPicker(null)} />
+
+      <RouteSwitchConfirm
+        open={pendingRouteSwitch !== null}
+        onSwitch={handleConfirmRouteSwitch}
+        onKeep={handleKeepTripInsteadOfSwitch}
+      />
 
       {toast && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-slate-700 border border-slate-600 text-white text-sm px-4 py-2 rounded-full shadow-lg">
