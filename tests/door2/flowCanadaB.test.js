@@ -85,3 +85,55 @@ test('F6: Peru still builds from intake, and Huaraz can be added and removed', a
   assert.ok(!glanceStops().includes('Huaraz'), 'Huaraz removed');
   assert.ok(screen.queryByText(/can't be built yet/) === null, 'trip valid after removal');
 });
+
+// ADR-002 graduation question 1: does reconciliation by stable block id hold for a
+// MID-ROUTE insertion? B12a/c use a nights change and B12b a removal; F5 adds Ottawa
+// to a trip with no prior edit, so nothing was at risk. Here an edit already exists
+// at a stop the insertion does not touch.
+const sectionOf = (placeName) => {
+  const h3 = screen.getAllByRole('heading', { level: 3 }).find((h) => h.textContent.startsWith(`${placeName} ·`));
+  assert.ok(h3, `${placeName} section is on the page`);
+  return h3.parentElement;
+};
+/** Activity titles at one stop, in page order. */
+const titlesAt = (placeName) =>
+  [...sectionOf(placeName).querySelectorAll('button')]
+    .filter((b) => b.textContent === 'Swap')
+    .map((b) => b.parentElement.querySelector('p.font-medium').textContent);
+
+test('F7: an activity swapped at Québec City survives adding Ottawa mid-route; undoing both restores the original byte-identical', async () => {
+  const { user } = await mountAndBuildViaIntake(M, { destination: 'Canada', totalDays: 10 });
+  assert.deepEqual(glanceStops(), ['Toronto', 'Montréal', 'Québec City']);
+  const strip = (t) => { const { history, ...rest } = t; return rest; };
+
+  await user.click(screen.getByRole('button', { name: 'Save' }));
+  const original = M.listDraftTrips()[0].trip;
+  const beforeTitles = titlesAt('Québec City');
+  assert.ok(beforeTitles.length > 0, 'Québec City has activities to swap');
+
+  // Swap the first Québec City activity: Ottawa's insertion (between Toronto and Montréal) does not touch that stop.
+  await user.click([...sectionOf('Québec City').querySelectorAll('button')].find((b) => b.textContent === 'Swap'));
+  await screen.findByText('Swapped');
+  const swappedTitles = titlesAt('Québec City');
+  assert.notEqual(swappedTitles[0], beforeTitles[0], 'the swap changed the first Québec City activity');
+
+  await user.click(await screen.findByText('Ottawa'));
+  await user.click(await screen.findByText('Add Ottawa'));
+  await user.click((await screen.findAllByText('Use this plan'))[0]);
+  await screen.findByText('Trip updated');
+  assert.ok(screen.queryByText(/can't be built yet/) === null, 'trip valid after the insertion');
+  assert.deepEqual(glanceStops(), ['Toronto', 'Ottawa', 'Montréal', 'Québec City'], 'Ottawa sits mid-route');
+
+  const afterTitles = titlesAt('Québec City');
+  assert.equal(afterTitles[0], swappedTitles[0], `the swapped Québec City activity "${swappedTitles[0]}" must survive the insertion (got "${afterTitles[0]}")`);
+  // The insertion takes a night from Québec City (2 to 1), so its later block goes; the swapped first block is the one that must remain.
+  assert.ok(afterTitles.length <= swappedTitles.length, 'the insertion cannot add Québec City content');
+
+  await user.click(screen.getByText('Undo last change'));
+  await screen.findByText('Undone');
+  await user.click(screen.getByText('Undo last change'));
+  await screen.findByText('Undone');
+  await user.click(screen.getByRole('button', { name: 'Save' }));
+  const restored = M.listDraftTrips()[0].trip;
+  assert.deepEqual(strip(restored), strip(original), 'byte-identical to before the swap and the insertion');
+});
