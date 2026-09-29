@@ -45,9 +45,9 @@ test('B1: Intake -> build (Peru, October, 10 days, couple)', async () => {
   assert.match(text, /Aguas Calientes/);
   assert.match(text, /1 night(?!s)/);
 
-  assert.equal(screen.queryByText(/can't be built yet/), null, 'no failure panel');
-  assert.equal(screen.queryByText(/Nothing curated for this slot/), null, 'no content gaps');
-  assert.equal(screen.queryByText(/Draft data/), null, 'no stale-data banner (reviewed pilot data)');
+  assert.ok(screen.queryByText(/can't be built yet/) === null, 'no failure panel');
+  assert.ok(screen.queryByText(/Nothing curated for this slot/) === null, 'no content gaps');
+  assert.ok(screen.queryByText(/Draft data/) === null, 'no stale-data banner (reviewed pilot data)');
 });
 
 test('B2: duration_too_short at 5 days offers "Add 3 days", which yields a valid 8-day trip', async () => {
@@ -64,7 +64,7 @@ test('B2: duration_too_short at 5 days offers "Add 3 days", which yields a valid
 
   assert.ok(await screen.findByText('Your trip at a glance'), 'trip built after extending');
   assert.match(screen.getByText(/\d+ days ·/).textContent, /^8 days ·/, '8-day trip');
-  assert.equal(screen.queryByText(/can't be built yet/), null, 'no more failure panel');
+  assert.ok(screen.queryByText(/can't be built yet/) === null, 'no more failure panel');
 });
 
 test('B3: required_place_conflict (Huaraz + Machu Picchu, 9 days) offers both remedies', async () => {
@@ -125,7 +125,7 @@ test('B11a: NYC (US) builds a valid trip', async () => {
   await user.click(await screen.findByText('United States'));
   await user.click(screen.getByRole('button', { name: 'Build my trip' }));
   await screen.findByText('Your trip at a glance');
-  assert.equal(screen.queryByText(/can't be built yet/), null, 'NYC builds');
+  assert.ok(screen.queryByText(/can't be built yet/) === null, 'NYC builds');
 });
 
 test('B11b: Tokyo 10 days builds and honestly shows its 2 known content gaps', async () => {
@@ -135,7 +135,7 @@ test('B11b: Tokyo 10 days builds and honestly shows its 2 known content gaps', a
   await setDays(user, 10);
   await user.click(screen.getByRole('button', { name: 'Build my trip' }));
   await screen.findByText('Your trip at a glance');
-  assert.equal(screen.queryByText(/can't be built yet/), null, 'Tokyo builds (no thrown/failure)');
+  assert.ok(screen.queryByText(/can't be built yet/) === null, 'Tokyo builds (no thrown/failure)');
   const gaps = screen.queryAllByText(/Nothing curated for this slot yet/);
   assert.equal(gaps.length, 2, 'exactly 2 honestly-shown content gaps, never hidden or papered over');
 });

@@ -44,7 +44,7 @@ test('B9: save (with edits) -> start over -> load -> delete, identical trip incl
   for (const btn of screen.getAllByRole('button', { name: 'Delete' })) {
     await user.click(btn);
   }
-  assert.equal(screen.queryByRole('button', { name: 'Delete' }), null, 'no drafts left in the UI');
+  assert.ok(screen.queryByRole('button', { name: 'Delete' }) === null, 'no drafts left in the UI');
   assert.equal(M.listDraftTrips().length, 0, 'no drafts left in localStorage');
 });
 

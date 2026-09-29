@@ -32,7 +32,7 @@ test('B4: two swaps through the page, then undo x2, restores the original trip (
   await user.click(scr.getByText('Undo last change'));
   await scr.findByText('Undone');
 
-  assert.equal(scr.queryByText('Undo last change'), null, 'undo control disappears once history is exhausted (fully rewound)');
+  assert.ok(scr.queryByText('Undo last change') === null, 'undo control disappears once history is exhausted (fully rewound)');
 
   // Save the fully-undone trip and read it back to compare against the pristine build.
   await user.click(scr.getByRole('button', { name: 'Save' }));

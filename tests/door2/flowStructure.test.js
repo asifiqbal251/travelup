@@ -37,7 +37,7 @@ test('B6: add Huaraz (proposal -> apply), then remove it', async () => {
 
   let glanceText = screen.getByText('Your trip at a glance').closest('div').textContent;
   assert.match(glanceText, /Huaraz/, 'Huaraz added to the trip');
-  assert.equal(screen.queryByText(/can't be built yet/), null, 'trip still valid');
+  assert.ok(screen.queryByText(/can't be built yet/) === null, 'trip still valid');
 
   // Now remove it via its nights sheet.
   await user.click(nightsButtonFor('Huaraz'));
@@ -47,7 +47,7 @@ test('B6: add Huaraz (proposal -> apply), then remove it', async () => {
 
   const itinerarySummary = screen.getByText(/\d+ days ·/).textContent;
   assert.doesNotMatch(itinerarySummary, /Huaraz/, 'Huaraz removed from the itinerary (may be offered again as addable)');
-  assert.equal(screen.queryByText(/can't be built yet/), null, 'trip still valid after removal');
+  assert.ok(screen.queryByText(/can't be built yet/) === null, 'trip still valid after removal');
 });
 
 test('B7: move Huaraz between its two positions (before/after columns actually differ, both directions work)', async () => {
