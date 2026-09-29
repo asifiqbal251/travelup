@@ -224,11 +224,15 @@ export function selectRoutes(spec, data, options = {}) {
   const askedFor = new Set(requiredPlaceIds);
   if (destination.kind === 'place') askedFor.add(destination.id);
   const catalogueIndex = new Map(routePackages.map((pkg, i) => [pkg, i]));
+  // Candidates all come from routePackages today. If one ever didn't, get()
+  // would return undefined and the comparator NaN, silently corrupting the
+  // sort; rank such a package last instead.
+  const indexOf = (pkg) => catalogueIndex.get(pkg) ?? Number.MAX_SAFE_INTEGER;
   const ranked = [...candidates].sort(
     (a, b) =>
       unplannedPlaceCount(a, askedFor) - unplannedPlaceCount(b, askedFor) ||
       a.stops.length - b.stops.length ||
-      catalogueIndex.get(a) - catalogueIndex.get(b)
+      indexOf(a) - indexOf(b)
   );
   // If the caller requested a specific route package, bubble it to the front.
   // A package's aliases (old ids kept for saved drafts) count as its id.

@@ -38,6 +38,10 @@ const CUSCO = { kind: 'extracted', bundleId: '6a7ced35c41497521b54e0c5', bundleN
 const HUARAZ = { kind: 'extracted', bundleId: '6a7e984900175cfc5fe20055', bundleName: 'Huaraz and the Cordillera Blanca' };
 const TOKYO = { kind: 'extracted', bundleId: '6a7ced35c41497521b54e0bc', bundleName: 'Tokyo & Kyoto, Japan' };
 const AUTHORED = { kind: 'authored', note: 'Written for the Door 2 pilot; no standalone content existed.' };
+const AUTHORED_CA = {
+  kind: 'authored',
+  note: 'Written for the Eastern Canada pilot family (Phase C); no Base44 bundle exists for these places.'
+};
 
 const ex = (base, templateTitle, edited = false) => ({ ...base, templateTitle, ...(edited ? { edited: true } : {}) });
 
@@ -267,5 +271,143 @@ export const PILOT_CONTENT = Object.freeze([
   { id: 'tyo_tsukiji_ginza', placeId: 'tokyo', title: 'Tsukiji, Ginza & Hamarikyu', slots: ['full', 'half'], intensity: 'Light', interests: ['Food', 'Cities'],
     summary: 'Breakfast at the Tsukiji outer market, Ginza, and Hamarikyu garden.',
     morning: 'Breakfast at the Tsukiji outer market.', afternoon: 'Ginza, then Hamarikyu garden.', evening: 'Dinner in Ginza.',
-    foodNote: 'Tamagoyaki and fresh sushi at Tsukiji.', source: AUTHORED }
+    foodNote: 'Tamagoyaki and fresh sushi at Tsukiji.', source: AUTHORED },
+
+  // ---------------- Eastern Canada (C2, Phase C Route Family #2) ----------------
+  // All authored: WhereNova has no Base44 Destination bundle for these five
+  // places. Enough for minimum-to-typical trip lengths plus evenings.
+  //   Toronto 9 · Montréal 8 · Québec City 6 · Ottawa 5 · Niagara Falls 5 = 33
+  // The Toronto hub stop on the Niagara spur draws from the Toronto items:
+  // content is keyed by placeId, and fill.js won't repeat an item in a trip.
+
+  // ------------------------------- Toronto -------------------------------
+  { id: 'tor_market_distillery', placeId: 'toronto', title: 'St Lawrence Market & the Distillery District', slots: ['full'], intensity: 'Light', interests: ['Food', 'History and culture'],
+    summary: 'The city’s oldest market in the morning, Victorian warehouses and galleries after lunch.',
+    morning: 'St Lawrence Market and the streets around it.', afternoon: 'The Distillery District’s galleries and courtyards.', evening: 'Dinner in the Distillery District.',
+    foodNote: 'Peameal bacon on a bun at the market.', arrivalFriendly: true, source: AUTHORED_CA },
+  { id: 'tor_cn_harbourfront', placeId: 'toronto', title: 'CN Tower & the harbourfront', slots: ['full'], intensity: 'Moderate', interests: ['Cities', 'Photography'],
+    summary: 'Up the tower first, then the lake shore and the Ripley aquarium.',
+    morning: 'The CN Tower observation deck.', afternoon: 'Harbourfront and the aquarium.', evening: 'Dinner by the water.',
+    source: AUTHORED_CA },
+  { id: 'tor_islands', placeId: 'toronto', title: 'The Toronto Islands', slots: ['full'], intensity: 'Light', interests: ['Nature', 'Relaxation'],
+    summary: 'A short ferry to car-free islands, beaches and the best view back at the skyline.',
+    morning: 'Ferry across and walk to Ward’s Island.', afternoon: 'Beaches, bikes and the boardwalk.', evening: 'Ferry back for dinner downtown.',
+    source: AUTHORED_CA },
+  { id: 'tor_rom_yorkville', placeId: 'toronto', title: 'The ROM & Yorkville', slots: ['full'], intensity: 'Light', interests: ['History and culture', 'Cities'],
+    summary: 'The Royal Ontario Museum, then the shops and patios of Yorkville.',
+    morning: 'The Royal Ontario Museum.', afternoon: 'Yorkville and the university campus.', evening: 'Dinner in Yorkville.',
+    source: AUTHORED_CA },
+  { id: 'tor_kensington_ago', placeId: 'toronto', title: 'Kensington Market & the AGO', slots: ['full'], intensity: 'Light', interests: ['Food', 'Cities'],
+    summary: 'A market full of food stalls and vintage shops, next door to the art gallery.',
+    morning: 'Kensington Market and Chinatown.', afternoon: 'The Art Gallery of Ontario.', evening: 'Dinner on Dundas West.',
+    foodNote: 'Graze the market rather than sitting down for lunch.', source: AUTHORED_CA },
+  { id: 'tor_high_park_west', placeId: 'toronto', title: 'High Park & the west end', slots: ['full'], intensity: 'Moderate', interests: ['Nature', 'Cities'],
+    summary: 'The city’s big park in the morning, then the cafés of Roncesvalles and Queen West.',
+    morning: 'High Park and the ponds.', afternoon: 'Roncesvalles and West Queen West.', evening: 'Dinner on Ossington.',
+    source: AUTHORED_CA },
+  { id: 'tor_theatre_evening', placeId: 'toronto', title: 'An evening in the theatre district', slots: ['evening'], intensity: 'Light', interests: ['Cities', 'Relaxation'],
+    summary: 'A show on King Street with dinner before it.',
+    source: AUTHORED_CA },
+  { id: 'tor_waterfront_evening', placeId: 'toronto', title: 'The skyline after dark', slots: ['evening', 'half'], intensity: 'Light', interests: ['Photography', 'Relaxation'],
+    summary: 'The lake shore at dusk, with the tower lit behind you.',
+    source: AUTHORED_CA },
+  { id: 'tor_short_market', placeId: 'toronto', title: 'An hour at the market', slots: ['short', 'half'], intensity: 'Light', interests: ['Food'],
+    summary: 'A quick wander through St Lawrence Market when there isn’t time for more.',
+    arrivalFriendly: true, source: AUTHORED_CA },
+
+  // ------------------------------- Montréal ------------------------------
+  { id: 'mtl_vieux_montreal', placeId: 'montreal', title: 'Vieux-Montréal & the old port', slots: ['full'], intensity: 'Light', interests: ['History and culture', 'Cities'],
+    summary: 'Cobbled streets, the basilica, and the waterfront the city grew from.',
+    morning: 'Notre-Dame Basilica and Place d’Armes.', afternoon: 'The old port and the waterfront.', evening: 'Dinner in Vieux-Montréal.',
+    arrivalFriendly: true, source: AUTHORED_CA },
+  { id: 'mtl_plateau_mile_end', placeId: 'montreal', title: 'The Plateau & Mile End', slots: ['full'], intensity: 'Light', interests: ['Food', 'Cities'],
+    summary: 'Spiral staircases, murals and the bagel-and-smoked-meat argument, settled in person.',
+    morning: 'Walk the Plateau’s side streets and murals.', afternoon: 'Mile End’s shops and cafés.', evening: 'Dinner on Saint-Laurent.',
+    foodNote: 'A wood-fired bagel, then smoked meat. Both, ideally.', source: AUTHORED_CA },
+  { id: 'mtl_mont_royal', placeId: 'montreal', title: 'Mont-Royal & the lookout', slots: ['full'], intensity: 'Moderate', interests: ['Nature', 'Photography'],
+    summary: 'Up through the park to the Kondiaronk lookout, then down the other side.',
+    morning: 'Climb through Parc du Mont-Royal.', afternoon: 'The lookout, then down to Outremont.', evening: 'Dinner in Outremont.',
+    source: AUTHORED_CA },
+  { id: 'mtl_museums_downtown', placeId: 'montreal', title: 'Museum of Fine Arts & downtown', slots: ['full'], intensity: 'Light', interests: ['History and culture', 'Cities'],
+    summary: 'The Musée des beaux-arts, then the Golden Square Mile and the underground city.',
+    morning: 'The Musée des beaux-arts.', afternoon: 'Sainte-Catherine and the underground city.', evening: 'Dinner downtown.',
+    source: AUTHORED_CA },
+  { id: 'mtl_jean_talon', placeId: 'montreal', title: 'Jean-Talon Market & Little Italy', slots: ['full'], intensity: 'Light', interests: ['Food'],
+    summary: 'One of North America’s big open-air markets, with Little Italy around it.',
+    morning: 'Jean-Talon Market.', afternoon: 'Little Italy and Mile Ex.', evening: 'Dinner in Little Italy.',
+    foodNote: 'Buy lunch in pieces from the stalls.', source: AUTHORED_CA },
+  { id: 'mtl_olympic_gardens', placeId: 'montreal', title: 'Olympic Park & the Botanical Garden', slots: ['full'], intensity: 'Moderate', interests: ['Nature', 'History and culture'],
+    summary: 'The 1976 stadium and tower, next to one of the largest botanical gardens anywhere.',
+    morning: 'The Olympic Park and the tower.', afternoon: 'The Botanical Garden and the Biodôme.', evening: 'Dinner back in the centre.',
+    source: AUTHORED_CA },
+  { id: 'mtl_evening_saint_laurent', placeId: 'montreal', title: 'An evening on Saint-Laurent', slots: ['evening'], intensity: 'Light', interests: ['Food', 'Relaxation'],
+    summary: 'The Main after dark: bars, late food and whatever is playing.',
+    source: AUTHORED_CA },
+  { id: 'mtl_short_old_port', placeId: 'montreal', title: 'An hour in the old port', slots: ['short', 'half'], intensity: 'Light', interests: ['Relaxation'],
+    summary: 'A short walk along the waterfront when there isn’t time for more.',
+    arrivalFriendly: true, source: AUTHORED_CA },
+
+  // ----------------------------- Québec City -----------------------------
+  { id: 'qc_vieux_quebec', placeId: 'quebec_city', title: 'Vieux-Québec & the Château', slots: ['full'], intensity: 'Light', interests: ['History and culture', 'Cities'],
+    summary: 'The walled upper town, the Château Frontenac, and Dufferin Terrace above the river.',
+    morning: 'The upper town and Place d’Armes.', afternoon: 'Dufferin Terrace and the ramparts.', evening: 'Dinner in the old town.',
+    arrivalFriendly: true, source: AUTHORED_CA },
+  { id: 'qc_petit_champlain', placeId: 'quebec_city', title: 'Petit-Champlain & the lower town', slots: ['full'], intensity: 'Light', interests: ['Food', 'Cities'],
+    summary: 'The oldest commercial street in North America, reached by the funicular or the breakneck stairs.',
+    morning: 'Quartier Petit-Champlain and Place-Royale.', afternoon: 'The old port and the antique district.', evening: 'Dinner in the lower town.',
+    foodNote: 'Poutine, properly, at least once.', source: AUTHORED_CA },
+  { id: 'qc_citadelle_plains', placeId: 'quebec_city', title: 'The Citadelle & the Plains of Abraham', slots: ['full'], intensity: 'Moderate', interests: ['History and culture', 'Nature'],
+    summary: 'The star-shaped fort, then the battlefield park along the cliff.',
+    morning: 'The Citadelle and the changing of the guard.', afternoon: 'The Plains of Abraham and the Musée national.', evening: 'Dinner on Grande Allée.',
+    source: AUTHORED_CA },
+  { id: 'qc_montmorency_orleans', placeId: 'quebec_city', title: 'Montmorency Falls & Île d’Orléans', slots: ['full'], intensity: 'Moderate', interests: ['Nature', 'Food'],
+    summary: 'A waterfall taller than Niagara, and a farm island in the river beyond it.',
+    morning: 'Montmorency Falls and the suspension bridge.', afternoon: 'Île d’Orléans and its farm stands.', evening: 'Return for dinner in town.',
+    foodNote: 'Cider and cheese from the island’s producers.', source: AUTHORED_CA },
+  { id: 'qc_evening_terrasse', placeId: 'quebec_city', title: 'Dufferin Terrace at dusk', slots: ['evening', 'half'], intensity: 'Light', interests: ['Photography', 'Relaxation'],
+    summary: 'The boardwalk above the St Lawrence as the lights come on.',
+    source: AUTHORED_CA },
+  { id: 'qc_short_ramparts', placeId: 'quebec_city', title: 'A walk on the ramparts', slots: ['short', 'half'], intensity: 'Light', interests: ['History and culture'],
+    summary: 'A short circuit of the only walled city north of Mexico.',
+    arrivalFriendly: true, source: AUTHORED_CA },
+
+  // -------------------------------- Ottawa -------------------------------
+  { id: 'ott_parliament_byward', placeId: 'ottawa', title: 'Parliament Hill & the ByWard Market', slots: ['full'], intensity: 'Light', interests: ['History and culture', 'Food'],
+    summary: 'The Gothic revival parliament buildings, then the market quarter behind them.',
+    morning: 'Parliament Hill and the grounds.', afternoon: 'The ByWard Market and the locks.', evening: 'Dinner in the market.',
+    foodNote: 'A BeaverTail by the canal.', arrivalFriendly: true, source: AUTHORED_CA },
+  { id: 'ott_national_gallery', placeId: 'ottawa', title: 'The National Gallery & the war museum', slots: ['full'], intensity: 'Light', interests: ['History and culture'],
+    summary: 'Two of the country’s best collections, a short walk apart.',
+    morning: 'The National Gallery of Canada.', afternoon: 'The Canadian War Museum.', evening: 'Dinner in Westboro or the market.',
+    source: AUTHORED_CA },
+  { id: 'ott_canal_glebe', placeId: 'ottawa', title: 'The Rideau Canal & the Glebe', slots: ['full'], intensity: 'Moderate', interests: ['Nature', 'Relaxation'],
+    summary: 'The canal path out of the centre, with the Glebe’s shops at the far end.',
+    morning: 'Walk or cycle the canal path.', afternoon: 'The Glebe and Lansdowne.', evening: 'Dinner in the Glebe.',
+    source: AUTHORED_CA },
+  { id: 'ott_evening_byward', placeId: 'ottawa', title: 'An evening in the ByWard Market', slots: ['evening'], intensity: 'Light', interests: ['Food', 'Relaxation'],
+    summary: 'The market quarter after dark, which is where Ottawa eats.',
+    source: AUTHORED_CA },
+  { id: 'ott_short_canal', placeId: 'ottawa', title: 'A short walk along the canal', slots: ['short', 'half'], intensity: 'Light', interests: ['Relaxation'],
+    summary: 'The locks and the canal edge, when there is only an hour.',
+    arrivalFriendly: true, source: AUTHORED_CA },
+
+  // ---------------------------- Niagara Falls ----------------------------
+  { id: 'nia_falls_close', placeId: 'niagara_falls', title: 'The falls, up close', slots: ['full'], intensity: 'Light', interests: ['Nature', 'Photography'],
+    summary: 'Table Rock, the boat beneath the Horseshoe Falls, and the tunnels behind them.',
+    morning: 'Table Rock and the brink of the Horseshoe Falls.', afternoon: 'The boat trip and the tunnels behind the falls.', evening: 'Dinner overlooking the falls.',
+    arrivalFriendly: true, source: AUTHORED_CA },
+  { id: 'nia_on_the_lake', placeId: 'niagara_falls', title: 'Niagara-on-the-Lake & the wine route', slots: ['full'], intensity: 'Light', interests: ['Food', 'Relaxation'],
+    summary: 'The parkway north along the river to a 19th-century town surrounded by vineyards.',
+    morning: 'The Niagara Parkway and the river.', afternoon: 'Niagara-on-the-Lake and a winery or two.', evening: 'Dinner in town before heading back.',
+    foodNote: 'Icewine is the local speciality, and it is very sweet.', source: AUTHORED_CA },
+  { id: 'nia_gorge_whirlpool', placeId: 'niagara_falls', title: 'The gorge and the whirlpool', slots: ['full'], intensity: 'Moderate', interests: ['Hiking', 'Nature'],
+    summary: 'The white-water walk downstream, the whirlpool, and the aero car above it.',
+    morning: 'The white-water walk along the gorge.', afternoon: 'The whirlpool and the aero car.', evening: 'Dinner back near the falls.',
+    source: AUTHORED_CA },
+  { id: 'nia_evening_illumination', placeId: 'niagara_falls', title: 'The falls lit at night', slots: ['evening'], intensity: 'Light', interests: ['Photography', 'Relaxation'],
+    summary: 'The illumination after dark, which is the version most people remember.',
+    source: AUTHORED_CA },
+  { id: 'nia_short_table_rock', placeId: 'niagara_falls', title: 'Table Rock and the brink', slots: ['short', 'half'], intensity: 'Light', interests: ['Nature'],
+    summary: 'The closest you can stand to the edge, when there is only an hour.',
+    arrivalFriendly: true, source: AUTHORED_CA }
 ]);

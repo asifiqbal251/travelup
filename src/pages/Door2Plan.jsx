@@ -21,6 +21,7 @@ const DESTINATIONS = [
   { value: "country:PE", label: "Peru" },
   { value: "country:US", label: "United States" },
   { value: "country:JP", label: "Japan" },
+  { value: "country:CA", label: "Canada" },
   ...Object.values(PILOT_PLACES)
     .filter((p) => p.id !== "vancouver")
     .map((p) => ({ value: `place:${p.id}`, label: p.name })),

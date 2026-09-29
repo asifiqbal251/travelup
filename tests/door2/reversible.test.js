@@ -171,9 +171,10 @@ test('C3a-T1: every mirrored variant is its canonical twin with the stops revers
     const m = mirrored[i];
     assert.equal(m.variantId, c.variantId.replace(`#${FWD}`, `#${REV}`));
     assert.deepEqual(m.stops, [...c.stops].reverse(), `${m.id} is ${c.id} reversed`);
-    // Only id, directionId and stop order differ.
+    // Only id, directionId, stop order and the name's direction label differ (C3b).
     assert.equal(m.familyId, c.familyId);
-    assert.equal(m.name, c.name);
+    assert.equal(m.name, c.name.replace('A to C', 'C to A'));
+    assert.notEqual(m.name, c.name);
     assert.deepEqual(m.optionals, c.optionals);
     assert.deepEqual(m.visitRules, c.visitRules);
     assert.equal(m.held, c.held);
@@ -417,7 +418,9 @@ const peruSpec = (totalDays, extra = {}) => ({
 });
 
 test('C3a-T7: Peru compiles to the same ids, stop keys and order as before', () => {
-  const compiled = compileFamilies(PILOT_ROUTE_FAMILIES, { includePending: true });
+  // The fixture predates Eastern Canada (C3b), which is additive: compare the
+  // families it captured.
+  const compiled = compileFamilies(PILOT_ROUTE_FAMILIES.filter((f) => f.id !== 'ec_corridor'), { includePending: true });
   assert.deepEqual(
     compiled.map((p) => ({ id: p.id, stopKeys: keysOf(p) })),
     GOLDEN.compiled

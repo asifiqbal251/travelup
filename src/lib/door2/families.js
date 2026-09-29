@@ -32,6 +32,8 @@ import { validateSkeleton } from './validate.js';
 // 'demo#a_to_c', 'demo#a_to_c+mid@ab'. A family without `directions` keeps
 // its plain ids ('peru_classic', 'peru_classic+huaraz@after_lima_in').
 // Code reads the direction from `directionId`, never by parsing the id.
+// Each variant is named after its own direction (variantName), so a mirror
+// never shares its canonical twin's name.
 //
 // MAX_VARIANTS_PER_FAMILY applies after the direction expansion, so a
 // two-direction family has half the budget for optional combinations (12).
@@ -261,6 +263,22 @@ export function familyVariantId(familyId, directionId, picks) {
 }
 
 /**
+ * A variant's traveller-facing name. A family with directions leads with the
+ * direction's label, because on a corridor that is what tells the two apart
+ * ('Toronto to Québec City, with Ottawa'). A family without directions keeps
+ * its original rule: the family name, a single position's variantName, or
+ * '<family name> with <labels>'.
+ * @param {RouteFamily} family
+ * @param {{label: string}|null} direction
+ */
+function variantName(family, direction, picks) {
+  const labels = picks.map((p) => p.opt.label).join(' and ');
+  if (direction) return picks.length === 0 ? direction.label : `${direction.label}, with ${labels}`;
+  if (picks.length === 0) return family.name;
+  return picks.length === 1 && picks[0].pos.variantName ? picks[0].pos.variantName : `${family.name} with ${labels}`;
+}
+
+/**
  * The reverse-direction twin of a compiled canonical variant: the same
  * package with its stops reversed (C1-F4). Nothing is re-resolved.
  */
@@ -268,7 +286,7 @@ function mirrorVariant(family, direction, { pkg: canonical, picks }) {
   const variantId = familyVariantId(family.id, direction.id, picks.map(({ opt, pos }) => ({ optionalId: opt.id, positionId: pos.id })));
   const pkg = routePackage({
     id: variantId,
-    name: canonical.name,
+    name: variantName(family, direction, picks),
     countryId: canonical.countryId,
     ...(canonical.assumptions !== undefined ? { assumptions: [...canonical.assumptions] } : {}),
     ...(canonical.preferredGatewayId ? { preferredGatewayId: canonical.preferredGatewayId } : {}),
@@ -340,11 +358,9 @@ function compileFamily(family) {
       ...(family.assumptions ?? []),
       ...picks.flatMap(({ opt, pos }) => [...(opt.assumptions ?? []), ...(pos.assumptions ?? [])])
     ];
-    const name = picks.length === 0 ? family.name : picks.length === 1 && picks[0].pos.variantName ? picks[0].pos.variantName : `${family.name} with ${picks.map((p) => p.opt.label).join(' and ')}`;
-
     const pkg = routePackage({
       id: variantId,
-      name,
+      name: variantName(family, canonicalDir, picks),
       countryId: family.countryId,
       ...(family.assumptions !== undefined || assumptions.length > 0 ? { assumptions } : {}),
       ...(family.preferredGatewayId ? { preferredGatewayId: family.preferredGatewayId } : {}),

@@ -124,6 +124,11 @@ export async function teardown() {
  * alternatives or handleChangeRoute (B7, B8), since those only exist when
  * the trip was built through runBuildFromSpec. */
 export async function mountAndBuildPeruViaIntake(M, { totalDays = 10 } = {}) {
+  return mountAndBuildViaIntake(M, { destination: 'Peru', totalDays });
+}
+
+/** mountAndBuildPeruViaIntake for any quick-pick destination ('Peru', 'Canada', ...). */
+export async function mountAndBuildViaIntake(M, { destination, totalDays = 10 }) {
   const { render, screen, cleanup } = await import('@testing-library/react');
   const userEvent = (await import('@testing-library/user-event')).default;
   cleanup();
@@ -132,17 +137,17 @@ export async function mountAndBuildPeruViaIntake(M, { totalDays = 10 } = {}) {
   render(M.React.createElement(M.MemoryRouter, { initialEntries: ['/plan?key=door2'] }, M.React.createElement(M.Door2Plan)));
   const user = userEvent.setup();
 
-  await user.click(await screen.findByText('Peru'));
+  await user.click(await screen.findByText(destination));
   let current = Number(screen.getByText(/\d+ days/).textContent.match(/\d+/)[0]);
   let guard = 0;
   while (current < totalDays) {
-    if (++guard > 200) throw new Error(`mountAndBuildPeruViaIntake: stuck incrementing days (current=${current}, target=${totalDays})`);
+    if (++guard > 200) throw new Error(`mountAndBuildViaIntake: stuck incrementing days (current=${current}, target=${totalDays})`);
     await user.click(screen.getByRole('button', { name: '+' }));
     current += 1;
   }
   guard = 0;
   while (current > totalDays) {
-    if (++guard > 200) throw new Error(`mountAndBuildPeruViaIntake: stuck decrementing days (current=${current}, target=${totalDays})`);
+    if (++guard > 200) throw new Error(`mountAndBuildViaIntake: stuck decrementing days (current=${current}, target=${totalDays})`);
     await user.click(screen.getByRole('button', { name: '−' }));
     current -= 1;
   }

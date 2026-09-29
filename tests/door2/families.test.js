@@ -105,16 +105,21 @@ function heldFamilies() {
   return fams;
 }
 
-test('RF1: pilot families compile to 5 served packages (all approved); a pending position is compiled but held', () => {
-  assert.deepEqual(PILOT_ROUTE_PACKAGES.map((p) => p.id), ['nyc_city', 'tokyo_city', 'peru_classic', HUARAZ_VARIANT, HELD_VARIANT]);
+// Eastern Canada (C3b): 4 canonical variants, then their 4 mirrors.
+const EC_IDS = ['west_to_east', 'east_to_west'].flatMap((dir) =>
+  ['', '+ottawa@corridor', '+niagara@toronto_spur', '+ottawa@corridor+niagara@toronto_spur'].map((picks) => `ec_corridor#${dir}${picks}`)
+);
+
+test('RF1: pilot families compile to 13 served packages (all approved); a pending position is compiled but held', () => {
+  assert.deepEqual(PILOT_ROUTE_PACKAGES.map((p) => p.id), ['nyc_city', 'tokyo_city', 'peru_classic', HUARAZ_VARIANT, HELD_VARIANT, ...EC_IDS]);
   assert.deepEqual(compileFamilies(PILOT_ROUTE_FAMILIES).map((p) => p.id), PILOT_ROUTE_PACKAGES.map((p) => p.id));
   assert.deepEqual(compileFamilies(PILOT_ROUTE_FAMILIES, { includePending: true }), PILOT_ROUTE_PACKAGES_ALL);
-  assert.deepEqual(PILOT_ROUTE_PACKAGES_ALL.map((p) => p.held), [false, false, false, false, false]);
+  assert.ok(PILOT_ROUTE_PACKAGES_ALL.every((p) => p.held === false), 'nothing in the pilot is held');
   const fams = heldFamilies();
-  assert.deepEqual(compileFamilies(fams).map((p) => p.id), ['nyc_city', 'tokyo_city', 'peru_classic', HUARAZ_VARIANT]);
+  assert.deepEqual(compileFamilies(fams).map((p) => p.id), ['nyc_city', 'tokyo_city', 'peru_classic', HUARAZ_VARIANT, ...EC_IDS]);
   const all = compileFamilies(fams, { includePending: true });
-  assert.deepEqual(all.map((p) => p.id), ['nyc_city', 'tokyo_city', 'peru_classic', HUARAZ_VARIANT, HELD_VARIANT]);
-  assert.deepEqual(all.map((p) => p.held), [false, false, false, false, true]);
+  assert.deepEqual(all.map((p) => p.id), ['nyc_city', 'tokyo_city', 'peru_classic', HUARAZ_VARIANT, HELD_VARIANT, ...EC_IDS]);
+  assert.deepEqual(all.map((p) => p.held), [false, false, false, false, true, ...EC_IDS.map(() => false)]);
   const held = all.find((p) => p.id === HELD_VARIANT);
   assert.equal(held.name, 'Peru classic, then Huaraz');
   assert.deepEqual(held.stops.map((s) => s.id).slice(-3), ['pc_lima_out', 'pc_huaraz', 'pc_lima_hub']);
@@ -255,7 +260,8 @@ test('RF9: enumeration order, exclusiveWith, overrides per variant, names and de
 });
 
 test('RF10: checkVariantsSchedulable passes for every served variant; the held variant is reported', () => {
-  const served = checkVariantsSchedulable(PILOT_ROUTE_PACKAGES, PILOT_DATA);
+  // Eastern Canada's ranges are pinned separately (easternCanada.test.js E1/E3).
+  const served = checkVariantsSchedulable(PILOT_ROUTE_PACKAGES.filter((p) => p.familyId !== 'ec_corridor'), PILOT_DATA);
   assert.deepEqual(served, [
     { variantId: 'nyc_city', held: false, minDays: 3, maxDays: 11 },
     { variantId: 'tokyo_city', held: false, minDays: 5, maxDays: 12 },
