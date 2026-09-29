@@ -137,3 +137,19 @@ test('F7: an activity swapped at Québec City survives adding Ottawa mid-route; 
   const restored = M.listDraftTrips()[0].trip;
   assert.deepEqual(strip(restored), strip(original), 'byte-identical to before the swap and the insertion');
 });
+
+// H7: the route-switch warning is not just for swaps; a structural edit puts history in the same state.
+test('F4b: after a structural edit (adding Ottawa), switching direction also asks first', async () => {
+  const { user } = await mountAndBuildViaIntake(M, { destination: 'Canada', totalDays: 10 });
+  await user.click(await screen.findByText('Ottawa'));
+  await user.click(await screen.findByText('Add Ottawa'));
+  await user.click((await screen.findAllByText('Use this plan'))[0]);
+  await screen.findByText('Trip updated');
+  assert.deepEqual(glanceStops(), ['Toronto', 'Ottawa', 'Montréal', 'Québec City']);
+
+  await user.click(reverseButton());
+  assert.ok(await screen.findByText('Switch to this route?'), 'confirm sheet appears after a structural edit');
+  await user.click(screen.getByRole('button', { name: 'Keep my trip' }));
+  assert.deepEqual(glanceStops(), ['Toronto', 'Ottawa', 'Montréal', 'Québec City'], 'Keep my trip changes nothing');
+  assert.ok(screen.getByText('Undo last change'), 'the edit is still there');
+});

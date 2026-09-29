@@ -109,11 +109,14 @@ test('placeIntegrity throws, naming the offending id', () => {
 test('pilot data: every connection is reviewed and resolves; package placeIds are derived', () => {
   // 8 rows reviewed 23 Sep (v3), then 7 Eastern Canada rows reviewed 28 Sep (v1, C1).
   assert.equal(PILOT_CONNECTIONS.length, 15);
-  for (const [i, c] of PILOT_CONNECTIONS.entries()) {
+  const ORIGINAL_EIGHT = new Set(['conn_yvr_nyc_air', 'conn_yvr_lim_air', 'conn_yvr_tokyo_air_nrt', 'conn_lim_cuz_air', 'conn_cuz_olly_road', 'conn_olly_agc_train', 'conn_agc_mp_shuttle', 'conn_lim_huz_coach']);
+  assert.equal(PILOT_CONNECTIONS.filter((c) => ORIGINAL_EIGHT.has(c.id)).length, 8, 'all eight original ids present');
+  for (const c of PILOT_CONNECTIONS) {
+    const original = ORIGINAL_EIGHT.has(c.id);
     assert.equal(typeof c.reviewedBy, 'string');
     assert.ok(c.reviewedBy.length > 0);
-    assert.equal(c.reviewedAt, i < 8 ? '2026-09-23' : '2026-09-28');
-    assert.equal(c.version, i < 8 ? 3 : 1);
+    assert.equal(c.reviewedAt, original ? '2026-09-23' : '2026-09-28');
+    assert.equal(c.version, original ? 3 : 1);
     assert.equal(c.direction, 'bidirectional');
     assertConnectionPlacesResolve(c, PILOT_PLACES);
     if (c.segments) {

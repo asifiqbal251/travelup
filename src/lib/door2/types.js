@@ -93,6 +93,8 @@
  * @property {string} [variantId]        ➕ RF: compiled variant id (equals `id`).
  * @property {string} [directionId]      ➕ C3a: direction of a reversible family's variant; absent otherwise. Read this, never parse the id.
  * @property {Array<{optionalId: string, positionId: string, stopKeys: string[]}>} [optionals]  ➕ RF: optionals present, with the stop keys each inserted.
+ *   `stopKeys` is an unordered membership list (its only reader is the stop→optional map in routePlan.js): it is not
+ *   guaranteed to be in trip order, and a mirrored variant copies it unchanged.
  * @property {string[]} [aliases]        ➕ RF: old ids that still resolve to this package (e.g. 'peru_classic_huaraz').
  * @property {boolean} [held]            ➕ RF: true when any authored choice in it (a position or its direction) is 'pending_review'; held packages are never served.
  */

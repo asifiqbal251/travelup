@@ -48,6 +48,10 @@ test('B1: Intake -> build (Peru, October, 10 days, couple)', async () => {
   assert.ok(screen.queryByText(/can't be built yet/) === null, 'no failure panel');
   assert.ok(screen.queryByText(/Nothing curated for this slot/) === null, 'no content gaps');
   assert.ok(screen.queryByText(/Draft data/) === null, 'no stale-data banner (reviewed pilot data)');
+  assert.ok(
+    screen.getByText('Pilot preview — Peru and Eastern Canada itineraries. Other destinations are limited or not yet available.'),
+    'footer names both pilot regions'
+  );
 });
 
 test('B2: duration_too_short at 5 days offers "Add 3 days", which yields a valid 8-day trip', async () => {

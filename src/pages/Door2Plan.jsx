@@ -1697,7 +1697,7 @@ export default function Door2Plan() {
                   </p>
                 ) : (
                   <p className="text-center text-xs text-slate-500 pt-4">
-                    Pilot preview — Peru itineraries only. Other destinations are limited or not yet available.
+                    Pilot preview — Peru and Eastern Canada itineraries. Other destinations are limited or not yet available.
                   </p>
                 )}
               </>

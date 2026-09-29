@@ -398,6 +398,52 @@ test('C3a: the canonical direction is the default trip, by catalogue order rathe
 // ---------------------------------------------------------------------------
 // Peru: pinned to fixtures/peru-pre-c3a.json, generated from 30e901b (before
 // C3a) by the same code as below. Hashes are sha256 of JSON.stringify.
+//
+// Provenance (verified 29 Sep 2026): 30e901b is the direct parent of e0d5c06 (C3a) and an
+// ancestor of it. The generator was never committed; this is the script that reproduces the
+// fixture byte-for-byte (cmp) when run against a clean checkout of 30e901b:
+//   git worktree add /tmp/wn-pre-c3a 30e901b && ln -s "$PWD/node_modules" /tmp/wn-pre-c3a/node_modules
+//   node gen-peru-pre-c3a.mjs /tmp/wn-pre-c3a > peru-pre-c3a.json
+//   git worktree remove /tmp/wn-pre-c3a   # (remove the symlink first)
+// gen-peru-pre-c3a.mjs:
+//   // Regenerates tests/door2/fixtures/peru-pre-c3a.json from a checkout of 30e901b (pre-C3a).
+//   // Usage: node gen-peru-pre-c3a.mjs <repo-root> > out.json
+//   import { createHash } from 'node:crypto';
+//   const root = process.argv[2];
+//   const imp = (p) => import(`${root}/src/lib/door2/${p}`);
+//   const { checkVariantsSchedulable, compileFamilies } = await imp('families.js');
+//   const { PILOT_ROUTE_FAMILIES, PILOT_ROUTE_PACKAGES } = await imp('pilotData.js');
+//   const { PILOT_DATA, buildFilledTrip } = await imp('planner.js');
+//   const R = await imp('restructure.js');
+//   const sha = (x) => createHash('sha256').update(JSON.stringify(x)).digest('hex');
+//   const peruSpec = (totalDays, extra = {}) => ({
+//     originPlaceId: 'vancouver', destination: { kind: 'country', id: 'PE' }, travelMonth: 10, totalDays,
+//     travellerType: 'couple', interests: [], pace: 'balanced', budget: 'mid', requiredPlaceIds: [],
+//     routeTemplateId: null, stops: [], choices: { pinned: [], rejected: [], placed: [] }, ...extra
+//   });
+//   const compiled = compileFamilies(PILOT_ROUTE_FAMILIES, { includePending: true });
+//   const out = { compiled: compiled.map((p) => ({ id: p.id, stopKeys: p.stops.map((s) => s.id) })), compiledHash: sha(compiled), trips: {}, intake: {}, edits: {}, ranges: null };
+//   const ranges = checkVariantsSchedulable(PILOT_ROUTE_PACKAGES.filter((p) => p.familyId === 'peru_classic'), PILOT_DATA);
+//   for (const { variantId, minDays, maxDays } of ranges) {
+//     for (let d = minDays; d <= maxDays; d++) {
+//       const k = `${variantId}:${d}`;
+//       const t = buildFilledTrip(peruSpec(d, { routeTemplateId: variantId }));
+//       out.trips[k] = sha(t);
+//       out.edits[`${k}:add`] = sha(R.previewAddOptional(t, 'huaraz'));
+//       out.edits[`${k}:remove`] = sha(R.previewRemoveOptional(t, 'huaraz'));
+//       out.edits[`${k}:move_lima`] = sha(R.previewMoveOptional(t, 'huaraz', 'after_lima_in'));
+//       out.edits[`${k}:move_mp`] = sha(R.previewMoveOptional(t, 'huaraz', 'after_machu_picchu'));
+//       out.edits[`${k}:moves`] = sha(R.listMoveOptions(t, 'huaraz'));
+//       out.edits[`${k}:len-3`] = sha(R.previewChangeLength(t, d - 3));
+//       out.edits[`${k}:len+1`] = sha(R.previewChangeLength(t, d + 1));
+//     }
+//   }
+//   for (let d = 4; d <= 20; d++) {
+//     out.intake[`PE:${d}`] = sha(buildFilledTrip(peruSpec(d)));
+//     out.intake[`PE+hz:${d}`] = sha(buildFilledTrip(peruSpec(d, { requiredPlaceIds: ['huaraz'] })));
+//   }
+//   out.ranges = ranges;
+//   process.stdout.write(JSON.stringify(out, null, 2) + '\n');
 
 const GOLDEN = JSON.parse(readFileSync(new URL('./fixtures/peru-pre-c3a.json', import.meta.url), 'utf8'));
 const sha = (x) => createHash('sha256').update(JSON.stringify(x)).digest('hex');
@@ -457,4 +503,34 @@ test('C3a-T8: Peru trips, intake builds and structural edits are byte-identical 
     assert.equal(sha(buildFilledTrip(peruSpec(d))), GOLDEN.intake[`PE:${d}`], `intake ${d}`);
     assert.equal(sha(buildFilledTrip(peruSpec(d, { requiredPlaceIds: ['huaraz'] }))), GOLDEN.intake[`PE+hz:${d}`], `intake+huaraz ${d}`);
   }
+});
+
+test('H8: the default option set is the backbone by ranking criteria, whatever the catalogue or id order', () => {
+  // Real Eastern Canada data, 10 days, nothing required. Variants with optionals carry an
+  // unasked-for place, so they must lose on the ranking criteria, not on where they sit.
+  const canada = {
+    originPlaceId: 'vancouver', destination: { kind: 'country', id: 'CA' }, travelMonth: 10, totalDays: 10,
+    travellerType: 'couple', interests: [], pace: 'balanced', budget: 'mid', requiredPlaceIds: [],
+    routeTemplateId: null, stops: [], choices: { pinned: [], rejected: [], placed: [] }
+  };
+  const ec = PILOT_ROUTE_PACKAGES.filter((p) => p.familyId === 'ec_corridor');
+  assert.ok(ec.some((p) => (p.optionals ?? []).length > 0), 'the catalogue has optional-bearing variants');
+  const backbones = ec.filter((p) => (p.optionals ?? []).length === 0);
+  assert.equal(backbones.length, 2, 'one backbone per direction');
+
+  const pick = (routePackages) => {
+    const r = selectRoutes(canada, { ...PILOT_DATA, routePackages });
+    assert.equal(r.ok, true);
+    return ec.find((p) => p.id === r.value[0].routePackageId);
+  };
+  const optionalFirst = [...PILOT_ROUTE_PACKAGES].sort((a, b) => ((b.optionals ?? []).length - (a.optionals ?? []).length));
+  const idDescending = [...PILOT_ROUTE_PACKAGES].sort((a, b) => (a.id < b.id ? 1 : a.id > b.id ? -1 : 0));
+  for (const [label, order] of [['catalogue', PILOT_ROUTE_PACKAGES], ['reversed catalogue', [...PILOT_ROUTE_PACKAGES].reverse()], ['optionals first', optionalFirst], ['ids descending', idDescending]]) {
+    assert.equal((pick(order).optionals ?? []).length, 0, `${label}: default has no optionals`);
+  }
+  // Direction is the catalogue-order tiebreak (policy, see selectRoutes): declared order gives west_to_east,
+  // and it flips only when the catalogue itself is reversed, never with the ids.
+  assert.equal(pick(PILOT_ROUTE_PACKAGES).directionId, 'west_to_east');
+  assert.equal(pick(idDescending.filter((p) => p.familyId !== 'ec_corridor').concat(ec)).directionId, 'west_to_east', 'id order does not decide the direction');
+  assert.equal(pick([...ec].reverse()).directionId, 'east_to_west', 'catalogue order does');
 });

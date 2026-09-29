@@ -2,6 +2,8 @@
 // Door2Plan page.
 import { test, after } from 'node:test';
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
+import { readFileSync } from 'node:fs';
 import { loadDoor2PlanModule, mountWithBuiltTrip, peruSpec, teardown } from './helpers/domHarness.js';
 
 const M = await loadDoor2PlanModule();
@@ -85,3 +87,35 @@ test('B10: applying a stale structural preview is refused and does not mutate th
   await screen.findByText('Trip updated');
   assert.match(screen.getByText('Your trip at a glance').closest('div').textContent, /Huaraz/, 'fresh preview applies');
 });
+
+// H6: Peru drafts saved before C3a (variant ids gained '#direction' and routePlan.directionId
+// was added for reversible families only) must still open. peru-pre-c3a.json pins the sha256 of
+// pre-C3a trips, so a trip whose hash matches IS byte-identical to what such a draft holds.
+const GOLDEN = JSON.parse(readFileSync(new URL('./fixtures/peru-pre-c3a.json', import.meta.url), 'utf8'));
+const sha = (x) => createHash('sha256').update(JSON.stringify(x)).digest('hex');
+// Key order matters to the hash: same spec shape (and order) as reversible.test.js's peruSpec.
+const preC3aSpec = (totalDays, routeTemplateId) => ({
+  originPlaceId: 'vancouver', destination: { kind: 'country', id: 'PE' }, travelMonth: 10, totalDays,
+  travellerType: 'couple', interests: [], pace: 'balanced', budget: 'mid', requiredPlaceIds: [],
+  routeTemplateId, stops: [], choices: { pinned: [], rejected: [], placed: [] }
+});
+
+for (const variantId of ['peru_classic', 'peru_classic+huaraz@after_lima_in']) {
+  test(`H6: a pre-C3a Peru draft on ${variantId} loads compatible, renders and edits`, async () => {
+    const totalDays = variantId === 'peru_classic' ? 10 : 12;
+    const { user, trip } = await mountWithBuiltTrip(M, preC3aSpec(totalDays, variantId));
+    assert.equal(sha(trip), GOLDEN.trips[`${variantId}:${totalDays}`], 'the saved trip is byte-identical to a pre-C3a trip');
+    assert.equal('directionId' in trip.routePlan, false, 'no direction, as before C3a');
+    assert.equal(trip.routePlan.variantId, variantId);
+
+    const loaded = M.loadDraftTrip(M.listDraftTrips()[0].id);
+    assert.equal(loaded.compatible, true);
+    assert.deepEqual(loaded.trip, JSON.parse(JSON.stringify(trip)), 'loaded exactly as saved');
+
+    assert.ok(screen.queryByText(/can't be built yet/) === null, 'renders');
+    assert.ok(screen.getByText('Your trip at a glance'));
+    if (variantId !== 'peru_classic') assert.ok(screen.getAllByText('Huaraz').length > 0, 'Huaraz stop shown');
+    await user.click(screen.getAllByText('Swap')[0]);
+    await screen.findByText('Swapped');
+  });
+}
