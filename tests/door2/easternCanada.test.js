@@ -192,6 +192,7 @@ test('E6: variant names lead with the direction (§5.1); Peru, NYC and Tokyo nam
     [
       ['nyc_city', 'New York City'],
       ['tokyo_city', 'Tokyo'],
+      ['tokyo_city+kyoto@after_tokyo', 'Tokyo with Kyoto'],
       ['peru_classic', 'Peru classic: Lima, Cusco, Sacred Valley, Machu Picchu'],
       ['peru_classic+huaraz@after_lima_in', 'Peru classic with Huaraz'],
       ['peru_classic+huaraz@after_machu_picchu', 'Peru classic, then Huaraz']

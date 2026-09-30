@@ -133,6 +133,8 @@ test('B11a: NYC (US) builds a valid trip', async () => {
 });
 
 test('B11b: Tokyo 10 days builds and honestly shows its 2 known content gaps', async () => {
+  // Also J13 (E3b): the same build on the Japan family with its Kyoto spur and day-trip
+  // menus. Nothing is preselected, so the page shows the Tokyo-only trip and the same 2 gaps.
   await mountDoor2Plan(M);
   const user = userEvent.setup();
   await user.click(await screen.findByText('Japan'));

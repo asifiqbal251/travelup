@@ -110,16 +110,16 @@ const EC_IDS = ['west_to_east', 'east_to_west'].flatMap((dir) =>
   ['', '+ottawa@corridor', '+niagara@toronto_spur', '+ottawa@corridor+niagara@toronto_spur'].map((picks) => `ec_corridor#${dir}${picks}`)
 );
 
-test('RF1: pilot families compile to 13 served packages (all approved); a pending position is compiled but held', () => {
-  assert.deepEqual(PILOT_ROUTE_PACKAGES.map((p) => p.id), ['nyc_city', 'tokyo_city', 'peru_classic', HUARAZ_VARIANT, HELD_VARIANT, ...EC_IDS]);
+test('RF1: pilot families compile to 14 served packages (all approved); a pending position is compiled but held', () => {
+  assert.deepEqual(PILOT_ROUTE_PACKAGES.map((p) => p.id), ['nyc_city', 'tokyo_city', 'tokyo_city+kyoto@after_tokyo', 'peru_classic', HUARAZ_VARIANT, HELD_VARIANT, ...EC_IDS]);
   assert.deepEqual(compileFamilies(PILOT_ROUTE_FAMILIES).map((p) => p.id), PILOT_ROUTE_PACKAGES.map((p) => p.id));
   assert.deepEqual(compileFamilies(PILOT_ROUTE_FAMILIES, { includePending: true }), PILOT_ROUTE_PACKAGES_ALL);
   assert.ok(PILOT_ROUTE_PACKAGES_ALL.every((p) => p.held === false), 'nothing in the pilot is held');
   const fams = heldFamilies();
-  assert.deepEqual(compileFamilies(fams).map((p) => p.id), ['nyc_city', 'tokyo_city', 'peru_classic', HUARAZ_VARIANT, ...EC_IDS]);
+  assert.deepEqual(compileFamilies(fams).map((p) => p.id), ['nyc_city', 'tokyo_city', 'tokyo_city+kyoto@after_tokyo', 'peru_classic', HUARAZ_VARIANT, ...EC_IDS]);
   const all = compileFamilies(fams, { includePending: true });
-  assert.deepEqual(all.map((p) => p.id), ['nyc_city', 'tokyo_city', 'peru_classic', HUARAZ_VARIANT, HELD_VARIANT, ...EC_IDS]);
-  assert.deepEqual(all.map((p) => p.held), [false, false, false, false, true, ...EC_IDS.map(() => false)]);
+  assert.deepEqual(all.map((p) => p.id), ['nyc_city', 'tokyo_city', 'tokyo_city+kyoto@after_tokyo', 'peru_classic', HUARAZ_VARIANT, HELD_VARIANT, ...EC_IDS]);
+  assert.deepEqual(all.map((p) => p.held), [false, false, false, false, false, true, ...EC_IDS.map(() => false)]);
   const held = all.find((p) => p.id === HELD_VARIANT);
   assert.equal(held.name, 'Peru classic, then Huaraz');
   assert.deepEqual(held.stops.map((s) => s.id).slice(-3), ['pc_lima_out', 'pc_huaraz', 'pc_lima_hub']);
@@ -130,7 +130,9 @@ test('RF2: backbone identity — compiled packages equal the old hand-written on
   for (const id of ['nyc_city', 'tokyo_city', 'peru_classic']) {
     const compiled = PILOT_ROUTE_PACKAGES.find((p) => p.id === id);
     const old = OLD_PACKAGES.find((p) => p.id === id);
-    assert.deepStrictEqual(withoutNewFields(compiled), old, id);
+    // E3b: Tokyo's base stop gained a day-trip menu; everything else about it is unchanged.
+    const bare = id === 'tokyo_city' ? { ...compiled, stops: compiled.stops.map(({ excursionMenu, ...s }) => s) } : compiled;
+    assert.deepStrictEqual(withoutNewFields(bare), old, id);
     assert.equal(compiled.familyId, id);
     assert.equal(compiled.variantId, id);
     assert.deepEqual(compiled.optionals, []);
@@ -265,6 +267,7 @@ test('RF10: checkVariantsSchedulable passes for every served variant; the held v
   assert.deepEqual(served, [
     { variantId: 'nyc_city', held: false, minDays: 3, maxDays: 11 },
     { variantId: 'tokyo_city', held: false, minDays: 5, maxDays: 12 },
+    { variantId: 'tokyo_city+kyoto@after_tokyo', held: false, minDays: 8, maxDays: 18 },
     { variantId: 'peru_classic', held: false, minDays: 8, maxDays: 14 },
     { variantId: HUARAZ_VARIANT, held: false, minDays: 11, maxDays: 18 },
     { variantId: HELD_VARIANT, held: false, minDays: 11, maxDays: 19 }

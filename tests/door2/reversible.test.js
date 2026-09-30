@@ -464,14 +464,18 @@ const peruSpec = (totalDays, extra = {}) => ({
 });
 
 test('C3a-T7: Peru compiles to the same ids, stop keys and order as before', () => {
-  // The fixture predates Eastern Canada (C3b), which is additive: compare the
-  // families it captured.
-  const compiled = compileFamilies(PILOT_ROUTE_FAMILIES.filter((f) => f.id !== 'ec_corridor'), { includePending: true });
+  // The fixture predates Eastern Canada (C3b), which is additive, and Tokyo's shape
+  // moved on at E3b (the Kyoto spur and excursion menus): compare the families it
+  // captured that have not changed since, Peru and NYC.
+  const moved = new Set(['ec_corridor', 'tokyo_city']);
+  const compiled = compileFamilies(PILOT_ROUTE_FAMILIES.filter((f) => !moved.has(f.id)), { includePending: true });
   assert.deepEqual(
     compiled.map((p) => ({ id: p.id, stopKeys: keysOf(p) })),
-    GOLDEN.compiled
+    GOLDEN.compiled.filter((p) => !moved.has(p.id.split(/[#+]/)[0]))
   );
-  assert.equal(sha(compiled), GOLDEN.compiledHash);
+  // GOLDEN.compiledHash covered Tokyo too, so it is no longer asserted here (the file stays
+  // as the historical record). Peru's and NYC's full compiled packages are pinned per family,
+  // more strictly, by compiled.peru_classic and compiled.nyc_city in pre-e3a.json (preE3a.test.js A0).
   for (const p of compiled) assert.equal('directionId' in p, false);
 });
 

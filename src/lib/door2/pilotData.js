@@ -526,9 +526,13 @@ export const PILOT_CONNECTIONS = [
 // RoutePackage shape route.js and schedule.js already read. The backbone of
 // `peru_classic` compiles to exactly the package that used to be written here.
 
-/** @returns {import('./types.js').RouteFamilyStop} */
-function familyStop(placeId, minNights, maxNights, excursions = []) {
-  return { placeId, minNights, maxNights, excursions };
+/**
+ * `excursionMenu` is the traveller-selectable day trips (E3a); the key is left out when
+ * a stop has none, so families without menus compile exactly as before.
+ * @returns {import('./types.js').RouteFamilyStop}
+ */
+function familyStop(placeId, minNights, maxNights, excursions = [], excursionMenu) {
+  return { placeId, minNights, maxNights, excursions, ...(excursionMenu ? { excursionMenu } : {}) };
 }
 
 const MACHU_PICCHU_EXCURSION = Object.freeze({
@@ -550,6 +554,22 @@ const EC_CORRIDOR_RAIL =
 const NIAGARA_SPUR_HUB =
   'Niagara Falls is an out-and-back from Toronto: the route returns to Toronto before continuing along the corridor.';
 
+const KYOTO_SPUR_HUB =
+  'Kyoto is an out-and-back from Tokyo: the route returns to Tokyo for a night before the flight home, which leaves from Tokyo (Narita).';
+
+// Day trips the traveller may add (E3a menus; nothing is ever preselected). Hours on
+// site are E2's (A7): Kamakura is 6.0, not 5.0, so its day leaves no orphan evening
+// block at Tokyo (E2-F5). Nikko at 4.0 is the marginal one: it fits at up to 4.64.
+const TOKYO_DAY_TRIPS = [
+  { id: 'nikko', placeId: 'nikko', connectionId: 'conn_tyo_nikko_train', hoursOnSite: 4.0, status: 'approved' },
+  { id: 'kamakura', placeId: 'kamakura', connectionId: 'conn_tyo_kamakura_train', hoursOnSite: 6.0, status: 'approved' }
+];
+
+const KYOTO_DAY_TRIPS = [
+  { id: 'nara', placeId: 'nara', connectionId: 'conn_kyo_nara_train', hoursOnSite: 5.0, status: 'approved' },
+  { id: 'osaka', placeId: 'osaka', connectionId: 'conn_kyo_osaka_train', hoursOnSite: 6.0, status: 'approved' }
+];
+
 /** @type {import('./types.js').RouteFamily[]} */
 export const PILOT_ROUTE_FAMILIES = [
   {
@@ -561,13 +581,31 @@ export const PILOT_ROUTE_FAMILIES = [
     optional: []
   },
   {
+    // Hub-and-spoke (Phase E): a Tokyo base with an optional Kyoto spur, the Huaraz and
+    // Niagara pattern. The id stays 'tokyo_city': saved drafts and intake point at it.
+    // The name stays 'Tokyo' so the variants read "Tokyo" and "Tokyo with Kyoto".
     id: 'tokyo_city',
     name: 'Tokyo',
     countryId: 'JP',
     preferredGatewayId: 'NRT',
-    stops: { tokyo_base: familyStop('tokyo', 3, 10) },
+    stops: {
+      tokyo_base: familyStop('tokyo', 3, 10, [], TOKYO_DAY_TRIPS),
+      kyo_base: familyStop('kyoto', 2, 5, [], KYOTO_DAY_TRIPS),
+      // The night back in Tokyo before flying home. 1-1 like Peru's Lima hub, and no
+      // menu: a day trip from a single hub night is not a trip we want to offer.
+      tokyo_hub: familyStop('tokyo', 1, 1)
+    },
     backbone: ['tokyo_base'],
-    optional: []
+    optional: [
+      {
+        id: 'kyoto',
+        label: 'Kyoto',
+        pitch: 'Temples, gardens and the old wooden lanes, a little over two hours west of Tokyo by bullet train.',
+        assumptions: [KYOTO_SPUR_HUB],
+        exclusiveWith: [],
+        positions: [{ id: 'after_tokyo', after: 'tokyo_base', insert: ['kyo_base', 'tokyo_hub'], status: 'approved' }]
+      }
+    ]
   },
   {
     id: 'peru_classic',

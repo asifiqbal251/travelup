@@ -615,8 +615,10 @@ test('A16 / Q3: a held menu item is never offered or addable; a withdrawn one is
 });
 
 test('A17: Peru\'s compiled packages carry no menu key, and no Peru trip or preview grows an excursion key', () => {
+  // E3b: only Japan's two bases carry a menu; every other stop, Tokyo's hub night included, has no key.
+  const MENU_STOPS = new Set(['tokyo_city/tokyo_base', 'tokyo_city/kyo_base']);
   for (const pkg of PILOT_DATA.allRoutePackages) {
-    for (const s of pkg.stops) assert.equal('excursionMenu' in s, false, `${pkg.id}/${s.id}`);
+    for (const s of pkg.stops) assert.equal('excursionMenu' in s, MENU_STOPS.has(`${pkg.familyId}/${s.id}`), `${pkg.id}/${s.id}`);
   }
 });
 
