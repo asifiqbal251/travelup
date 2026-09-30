@@ -36,6 +36,7 @@ test('C1a: Japan 10 days offers Nikko and Kamakura from the Tokyo base, nothing 
   await user.click(menuRow('Tokyo', 'Nikko'));
   assert.ok(await screen.findByText('How this would look'), 'the existing preview sheet');
   assert.ok(screen.getByText('Add a day trip to Nikko'), 'card header');
+  assert.ok(screen.getByText('Adds a day trip to Nikko.'), 'the diff line (C5 on the page)');
   assert.ok(screen.getByRole('button', { name: 'Use this plan' }));
   assert.ok(screen.getByRole('button', { name: 'Keep my trip' }));
   assert.ok(!screen.queryByText(/^Day trip: /), 'nothing applied while previewing');
@@ -64,6 +65,13 @@ test('C1a (hub): with the Kyoto spur, Tokyo base and Kyoto each get a section an
   const kyotoRows = within(dayTripSection('Kyoto')).getAllByRole('button').map((b) => b.textContent);
   assert.match(kyotoRows[0], /^Nara/);
   assert.match(kyotoRows[1], /^Osaka/);
+
+  // Removing the spur while a Kyoto day trip is chosen says so before confirming (C5 on the page).
+  await addDayTrip(user, 'Kyoto', 'Nara');
+  await user.click(screen.getByRole('button', { name: '2 nights' }));
+  await user.click(await screen.findByText('Remove Kyoto from your trip'));
+  assert.ok(await screen.findByText('Your day trip to Nara goes with it.'), 'the preview names the day trip that goes');
+  assert.ok(screen.getByText('Day trip: Nara'), 'nothing applied yet');
 });
 
 test('C1b: Remove previews and waits; "Keep my trip" leaves the trip identical; "Use this plan" removes it and the displaced activity comes back', async () => {

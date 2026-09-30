@@ -5,7 +5,7 @@ import { makeDayLighter, swapActivity, swapDays, swappableDays, undo } from "@/l
 import { PILOT_DATA, buildFilledTrip } from "@/lib/door2/planner";
 import { PILOT_PLACES, PILOT_ROUTE_FAMILIES, PILOT_ROUTE_PACKAGES } from "@/lib/door2/pilotData";
 import { selectRoutes } from "@/lib/door2/route";
-import { backToMove, pickMove, positionLabel, proposalColumns } from "@/lib/door2/proposalView";
+import { backToMove, dayTripChangeLines, pickMove, positionLabel, proposalColumns } from "@/lib/door2/proposalView";
 import {
   applyProposal,
   isDurationFlexible,
@@ -916,6 +916,9 @@ function ProposalCard({ trip, proposal, title, onUse, onKeep }) {
       </div>
 
       <p className="text-sm text-slate-300 leading-relaxed">{summarizeDiff(proposal.diff)}</p>
+      {dayTripChangeLines(proposal.diff, placeName).map((line) => (
+        <p key={line} className="text-sm text-slate-300 leading-relaxed">{line}</p>
+      ))}
       {keptItemsAffected.length > 0 && (
         <p className="text-sm text-amber-400 leading-relaxed">
           {DAY_TRIP_COPY.keptItemsMoved(keptItemsAffected.map((k) => k.title).join(" & "))}

@@ -45,3 +45,28 @@ export function pickMove(sheet, proposal) {
 export function backToMove(sheet) {
   return { ...sheet, stage: 'move', proposal: undefined };
 }
+
+// What a proposal does to the traveller's day trips. The engine only includes
+// excursionsAdded / excursionsRemoved when they have something to say, so an
+// absent (or empty) key renders nothing.
+const DAY_TRIP_REMOVED_LINES = {
+  traveller_removed: (name) => `Removes your day trip to ${name}.`,
+  stop_removed: (name) => `Your day trip to ${name} goes with it.`,
+  no_longer_offered: (name) => `Your day trip to ${name} is no longer available.`
+};
+
+/**
+ * One line per day trip a proposal adds or removes.
+ * @param {{excursionsAdded?: {placeId: string}[], excursionsRemoved?: {placeId?: string, excursionId: string, reason: string}[]}} diff
+ * @param {(placeId: string) => string} nameOf display name for a place id
+ * @returns {string[]}
+ */
+export function dayTripChangeLines(diff, nameOf) {
+  const added = (diff?.excursionsAdded ?? []).map((e) => `Adds a day trip to ${nameOf(e.placeId)}.`);
+  const removed = (diff?.excursionsRemoved ?? []).map((e) => {
+    // An unknown reason still tells the traveller the day trip is going, never silently.
+    const line = DAY_TRIP_REMOVED_LINES[e.reason] ?? DAY_TRIP_REMOVED_LINES.no_longer_offered;
+    return line(nameOf(e.placeId ?? e.excursionId));
+  });
+  return [...added, ...removed];
+}
