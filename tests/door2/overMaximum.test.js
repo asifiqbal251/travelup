@@ -203,6 +203,30 @@ test('EF1-T3: every preview and listExcursionMenu returns on stretched Japan, Ne
   assert.deepEqual(failures, [], `previews threw:\n${failures.slice(0, 15).join('\n')}`);
 });
 
+test('EF1-T3b: switching variants on a stretched trip keeps or reduces the stretch instead of refusing; a clamp that fits is unchanged', () => {
+  // Peru 25: clamping every stretched stop to its maximum leaves nights nowhere to go, so this
+  // used to refuse ("doesn't fit alongside the rest of your trip"). Now the stretch is kept.
+  const peru25 = build(PE, 25, 'peru_classic');
+  for (const pos of ['after_lima_in', 'after_machu_picchu']) {
+    const r = R.previewAddOptional(peru25, 'huaraz', pos);
+    assert.equal(r.ok, true, `add Huaraz ${pos}: ${JSON.stringify(r).slice(0, 200)}`);
+    const after = nightsOf(r.proposals[0].trip);
+    assert.equal(r.proposals[0].trip.spec.totalDays, 25);
+    for (const s of peru25.routePlan.stops) assert.ok(after[s.key] <= s.nights, `${pos}: ${s.key} raised from ${s.nights} to ${after[s.key]}`);
+  }
+  const huarazFirst = build(PE, 25, 'peru_classic+huaraz@after_lima_in');
+  const moved = R.previewMoveOptional(huarazFirst, 'huaraz', 'after_machu_picchu');
+  assert.equal(moved.ok, true, JSON.stringify(moved).slice(0, 200));
+
+  // Peru 15: the clamp fits, so the proposal is exactly today's (Lima-in clamped to the variant's 2).
+  const peru15 = build(PE, 15, 'peru_classic');
+  const r = R.previewAddOptional(peru15, 'huaraz', 'after_lima_in');
+  assert.equal(r.ok, true);
+  assert.deepEqual(nightsOf(r.proposals[0].trip), {
+    pc_lima_in: 2, pc_huaraz: 2, pc_lima_hub: 1, pc_cusco: 4, pc_sacred_valley: 1, pc_aguas: 1, pc_olly_return: 0, pc_cusco_return: 0, pc_lima_out: 1
+  });
+});
+
 test('EF1-T4: no proposal raises a stop above max(authored maximum, its nights before); "More time here" at the maximum still refuses', () => {
   const violations = [];
   let checked = 0;

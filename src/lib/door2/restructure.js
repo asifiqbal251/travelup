@@ -531,12 +531,9 @@ function shorterRouteAlternative(trip, newTotalDays, ctx) {
   const minDays = packageMinDays(kept.pkg, spec, ctx.data);
   if (minDays == null || minDays > newTotalDays) return null;
 
-  const current = nightsMap(rp);
   const carried = planSelection(rp);
   const stops = kept.pkg.stops.map((s) => ({ key: s.id, placeId: s.placeId, minNights: s.minNights, maxNights: s.maxNights }));
-  const start = Object.fromEntries(stops.map((s) => [s.key, Math.min(Math.max(current[s.key] ?? s.minNights, s.minNights), s.maxNights)]));
-  const startDays = minDays + stops.reduce((sum, s) => sum + (start[s.key] - s.minNights), 0);
-  const nights = startDays === newTotalDays ? start : redistribute(stops, start, newTotalDays - startDays);
+  const nights = allocationFor(kept.pkg, rp, newTotalDays, minDays);
   if (!nights) return null;
 
   const plan = {
@@ -645,16 +642,31 @@ function backboneVariantId(routePlan) {
 /**
  * Nights for `pkg` at `totalDays`, starting from the trip's current
  * allocation (kept stops clamped to the new package's limits; stops new to
- * this package start at their minimum), then redistributed to fit — the same
- * pattern shorterRouteAlternative uses for a variant switch. Null if it
- * can't fit.
+ * this package start at their minimum), then redistributed to fit. Used for
+ * every variant switch. Null if it can't fit.
+ *
+ * EF1: a stop the scheduler stretched past its maximum on this trip may be
+ * kept or reduced, never raised. Clamping it to the maximum is tried first
+ * (today's allocation, unchanged whenever it fits); only if that can't sum
+ * to `totalDays` does the stretched stop start from its current nights.
  */
-function allocationFor(pkg, current, totalDays, minDays) {
+function allocationFor(pkg, routePlan, totalDays, minDays) {
   const stops = pkg.stops.map((s) => ({ key: s.id, minNights: s.minNights, maxNights: s.maxNights }));
-  const start = Object.fromEntries(stops.map((s) => [s.key, Math.min(Math.max(current[s.key] ?? s.minNights, s.minNights), s.maxNights)]));
-  const startDays = minDays + stops.reduce((sum, s) => sum + (start[s.key] - s.minNights), 0);
-  if (startDays === totalDays) return start;
-  return redistribute(stops, start, totalDays - startDays);
+  const planStops = new Map(routePlan.stops.map((s) => [s.key, s]));
+  const fit = (keepStretched) => {
+    const start = Object.fromEntries(
+      stops.map((s) => {
+        const cur = planStops.get(s.key);
+        const ceiling = keepStretched && cur && cur.nights > cur.maxNights ? cur.nights : s.maxNights;
+        return [s.key, Math.min(Math.max(cur?.nights ?? s.minNights, s.minNights), ceiling)];
+      })
+    );
+    const startDays = minDays + stops.reduce((sum, s) => sum + (start[s.key] - s.minNights), 0);
+    if (startDays === totalDays) return start;
+    return redistribute(stops, start, totalDays - startDays);
+  };
+  const stretched = routePlan.stops.some((s) => s.nights > s.maxNights);
+  return fit(false) ?? (stretched ? fit(true) : null);
 }
 
 /**
@@ -664,7 +676,7 @@ function allocationFor(pkg, current, totalDays, minDays) {
  */
 function proposeVariantChange(trip, pkg, minDays, { id, kind, label }, ctx, totalDays) {
   if (minDays == null || minDays > totalDays) return null;
-  const nights = allocationFor(pkg, nightsMap(trip.routePlan), totalDays, minDays);
+  const nights = allocationFor(pkg, trip.routePlan, totalDays, minDays);
   if (!nights) return null;
   return buildVariantProposal(trip, { id, kind, label, pkg, nights, totalDays }, ctx);
 }

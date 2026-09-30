@@ -56,9 +56,11 @@ function isReviewed(connection) {
  * @param {{places: Object|Map, connections: Object[]}} data
  * @param {{config?: typeof SCHEDULE_CONFIG, bufferRuleset?: typeof DEFAULT_BUFFER_RULESET, nightsOverride?: Object<string, number>}} [options]
  *   nightsOverride (Route Families §5.1): nights per stop id, covering every stop. Skips round-robin
- *   allocation. Must satisfy min ≤ n ≤ max per stop and minDays + Σ(n − min) === spec.totalDays;
+ *   allocation. Must satisfy n ≥ min per stop and minDays + Σ(n − min) === spec.totalDays;
  *   a violation throws a plain Error (engine bug: the solver only asks for valid allocations).
- *   Without it, behaviour is unchanged.
+ *   n above a stop's max is allowed (EF1): the round-robin below stretches past it on a long trip,
+ *   so an override must be able to keep or reduce that; it carries the same warning. The ceiling
+ *   is restructure.js's to hold. Without it, behaviour is unchanged.
  */
 export function scheduleRoute(routeResult, spec, data, { config = SCHEDULE_CONFIG, bufferRuleset = DEFAULT_BUFFER_RULESET, nightsOverride } = {}) {
   const origin = getPlace(data.places, spec.originPlaceId);
@@ -379,7 +381,7 @@ export function scheduleRoute(routeResult, spec, data, { config = SCHEDULE_CONFI
     for (const s of stops) {
       const n = nightsOverride[s.id];
       if (!Number.isInteger(n)) throw new Error(`${where}: stop "${s.id}" has no integer nights (got ${n})`);
-      if (n < s.minNights || n > s.maxNights) {
+      if (n < s.minNights) {
         throw new Error(`${where}: stop "${s.id}" nights ${n} outside ${s.minNights}–${s.maxNights}`);
       }
       extra += n - s.minNights;
@@ -387,7 +389,8 @@ export function scheduleRoute(routeResult, spec, data, { config = SCHEDULE_CONFI
     if (minDays + extra !== N) {
       throw new Error(`${where}: minDays ${minDays} + extra nights ${extra} = ${minDays + extra}, expected totalDays ${N}`);
     }
-    return emit(simulate({ ...nightsOverride }), []);
+    const stretched = stops.some((s) => nightsOverride[s.id] > s.maxNights);
+    return emit(simulate({ ...nightsOverride }), stretched ? ['nights_above_package_max'] : []);
   }
 
   /** Sanity-check the home arrival, then emit Days 1..N. */
