@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 
 import { FamilyAuthoringError, checkVariantsSchedulable, compileFamilies } from '../../src/lib/door2/families.js';
 import { tripFingerprint } from '../../src/lib/door2/fingerprint.js';
-import { PILOT_DATA, buildFilledTrip, resolveExcursions } from '../../src/lib/door2/planner.js';
+import { PILOT_DATA, buildFilledTrip, buildTripFromRoutePlan, resolveExcursions } from '../../src/lib/door2/planner.js';
 import * as R from '../../src/lib/door2/restructure.js';
 import { swapActivity, undo } from '../../src/lib/door2/edit.js';
 import { buildRouteResult } from '../../src/lib/door2/route.js';
@@ -791,4 +791,23 @@ test('the API: unknown stops throw, refusals are precise, and nothing new appear
   }
   // A refusal that is not about excursions has no `detail` either.
   assert.equal('detail' in R.previewAdjustNights(trip, 'lx_base', -1, OPTS), false);
+});
+
+test('J11 (E3a R2): a selected menu place never makes its stop required; a required fixed excursion place still does', () => {
+  // withFixedRequirement (planner.js), through its one caller. pt_base has a FIXED excursion
+  // (syn_castle) and a menu; lx_base has only a menu.
+  const trip = add(add(build(SPUR, 9), 'lx_base', 'sintra'), 'pt_base', 'douro');
+  const required = (placeIds) => {
+    const rebuilt = buildTripFromRoutePlan({ ...trip.spec, requiredPlaceIds: placeIds }, trip.routePlan, B.data);
+    assert.ok(rebuilt.routePlan, JSON.stringify(rebuilt.detail ?? rebuilt.state));
+    assert.deepEqual(selections(rebuilt), { lx_base: ['sintra'], pt_base: ['douro'] }, 'both selections are in play');
+    return Object.fromEntries(rebuilt.routePlan.stops.map((s) => [s.key, s.isRequired]));
+  };
+  // A selected menu place named in requiredPlaceIds: not a required stop (E3a Q5).
+  assert.deepEqual(required(['syn_sintra']), { lx_base: false, pt_base: false, lx_hub: false });
+  assert.deepEqual(required(['syn_douro']), { lx_base: false, pt_base: false, lx_hub: false });
+  // A fixed excursion place: required, even though the stop also has a selection.
+  assert.deepEqual(required(['syn_castle']), { lx_base: false, pt_base: true, lx_hub: false });
+  // The stop's own place still counts.
+  assert.deepEqual(required(['syn_porto']), { lx_base: false, pt_base: true, lx_hub: false });
 });

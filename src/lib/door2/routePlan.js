@@ -46,8 +46,9 @@ export function makeRoutePlan({ pkg, stops, connectionIds, minDays, source = 'au
       selectionSource,
       isRequired: s.isRequired,
       excursions: (s.excursions ?? []).map((ex) => ({ ...ex })),
-      // Traveller state (E3a): menu ids in menu order. Omitted when empty, so a plan without any is unchanged.
-      selectedExcursionIds: s.selectedExcursionIds?.length > 0 ? [...s.selectedExcursionIds] : undefined
+      // Traveller state (E3a): menu ids in menu order. The key is absent when empty, so a plan
+      // without any is unchanged (to JSON, Object.keys and deepStrictEqual alike).
+      ...(s.selectedExcursionIds?.length > 0 ? { selectedExcursionIds: [...s.selectedExcursionIds] } : {})
     });
   });
 
