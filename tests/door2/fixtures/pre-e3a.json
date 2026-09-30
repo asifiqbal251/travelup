@@ -1,20 +1,33 @@
 {
-  "compiledHash": "f88cf80e7d9f087918d5e8556b7e590d8f4f10a5eb5b09148d586f422645ba4d",
-  "compiledIds": [
-    "nyc_city",
-    "tokyo_city",
-    "peru_classic",
-    "peru_classic+huaraz@after_lima_in",
-    "peru_classic+huaraz@after_machu_picchu",
-    "ec_corridor#west_to_east",
-    "ec_corridor#west_to_east+ottawa@corridor",
-    "ec_corridor#west_to_east+niagara@toronto_spur",
-    "ec_corridor#west_to_east+ottawa@corridor+niagara@toronto_spur",
-    "ec_corridor#east_to_west",
-    "ec_corridor#east_to_west+ottawa@corridor",
-    "ec_corridor#east_to_west+niagara@toronto_spur",
-    "ec_corridor#east_to_west+ottawa@corridor+niagara@toronto_spur"
-  ],
+  "compiled": {
+    "peru_classic": "8acd61724c6057d9e48df23542c7b6cd552d3f3f9af29d48568af51c233bf38d",
+    "ec_corridor": "284a3fd8915087f5ed3dc93d94445e897f15cfe4d5b06a29be69b629f30953d3",
+    "tokyo_city": "ca83e9d2f4fe1e911a6d3affa0cc3a4a696dd4874dbf5777e94fca9151759179",
+    "nyc_city": "5e912b4b7336679b3b32f5db3ce974394d26fb475bc3b02fa68efdfe5d5aee71"
+  },
+  "compiledIds": {
+    "peru_classic": [
+      "peru_classic",
+      "peru_classic+huaraz@after_lima_in",
+      "peru_classic+huaraz@after_machu_picchu"
+    ],
+    "ec_corridor": [
+      "ec_corridor#west_to_east",
+      "ec_corridor#west_to_east+ottawa@corridor",
+      "ec_corridor#west_to_east+niagara@toronto_spur",
+      "ec_corridor#west_to_east+ottawa@corridor+niagara@toronto_spur",
+      "ec_corridor#east_to_west",
+      "ec_corridor#east_to_west+ottawa@corridor",
+      "ec_corridor#east_to_west+niagara@toronto_spur",
+      "ec_corridor#east_to_west+ottawa@corridor+niagara@toronto_spur"
+    ],
+    "tokyo_city": [
+      "tokyo_city"
+    ],
+    "nyc_city": [
+      "nyc_city"
+    ]
+  },
   "ranges": {
     "peru_classic": "fb44164ed0c22f02e73e0cb59f2a504026080ddde3f9587c39d6573fbd8eeca6",
     "ec_corridor": "1a5da58a1962f8a301f782e86cd83fb6e2c306621487d422cfa45a71f3911310",
