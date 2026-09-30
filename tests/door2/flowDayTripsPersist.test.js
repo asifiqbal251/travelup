@@ -1,11 +1,11 @@
 // E3c C2 (DOM part) and C3 on the real page. C6 is flowDayTripCopyGuard.test.js.
 //
 // C2: no day-trip refusal is reachable through the live Japan data at any offered
-// length (5-12 days, with or without the Kyoto spur, one or two day trips; 13+ days
-// on the Tokyo-only route the preview throws instead of refusing, an E3a engine
-// defect). So the DOM half of C2 drives that throw and checks the traveller gets the
-// place-specific fallback, a console.error, and an unchanged trip. The refusal copy
-// for every classified case is covered in dayTripCopy.test.js on constructed refusals.
+// length (5-12 days, with or without the Kyoto spur, one or two day trips). At 13+
+// days on the Tokyo-only route the preview used to throw (Tokyo stretched past its
+// maximum) and the traveller saw a false refusal; EF1 fixed that, so the DOM half of
+// C2 now checks the day trip previews, adds and saves there. The refusal copy for
+// every classified case is covered in dayTripCopy.test.js on constructed refusals.
 import { test, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { loadDoor2PlanModule, mountAndBuildViaIntake, teardown } from './helpers/domHarness.js';
@@ -33,29 +33,35 @@ function assertNoEngineVocabulary(state) {
 
 const itineraryText = () => [...document.querySelectorAll('h3')].map((h) => h.parentElement.textContent).join('|');
 
-test('C2 (DOM): at 13 days the preview throws; the traveller sees the place-specific fallback, the throw is logged, the trip is unchanged', async () => {
+test('C2 (DOM): at 13 days (Tokyo stretched past its maximum) Nikko previews, adds and saves; nothing is logged', async () => {
   const { user } = await mountAndBuildViaIntake(M, { destination: 'Japan', totalDays: 13 });
   const t0 = await savedTrip(M, user);
+  assert.equal(t0.routePlan.stops.find((s) => s.key === 'tokyo_base').nights, 11, 'Tokyo is stretched to 11 nights (max 10)');
 
   const errors = [];
   const original = console.error;
   console.error = (...args) => errors.push(args);
   try {
     await user.click(menuRow('Tokyo', 'Nikko'));
+    await screen.findByText('Add a day trip to Nikko');
   } finally {
     console.error = original;
   }
-  assert.ok(await screen.findByText("Nikko doesn't fit this trip right now."), 'fallback copy names the place');
-  assert.equal(errors.length, 1, 'the caught throw is logged once, not swallowed');
-  assert.match(String(errors[0][1]?.message ?? errors[0][1]), /nights 11 outside 3–10/, 'the engine error is what was logged');
-  assert.equal(screen.queryByText(/We can't build a route|still working on a route/), null, 'not the generic route copy');
-  assert.equal(screen.queryByRole('button', { name: 'Use this plan' }), null, 'nothing to apply');
-  assertNoEngineVocabulary('refusal (fallback)');
+  assert.deepEqual(errors, [], 'no engine throw was caught and logged');
+  assert.equal(screen.queryByText("Nikko doesn't fit this trip right now."), null, 'no false refusal');
+  assertNoEngineVocabulary('add preview (13 days)');
 
   await user.click(screen.getByRole('button', { name: 'Keep my trip' }));
-  assert.equal(screen.queryByText("Nikko doesn't fit this trip right now."), null, 'card closed');
   const t1 = await savedTrip(M, user);
-  assert.equal(M.tripFingerprint(t1), M.tripFingerprint(t0), 'trip unchanged after the refusal');
+  assert.equal(M.tripFingerprint(t1), M.tripFingerprint(t0), 'trip unchanged after keeping it');
+
+  await addDayTrip(user, 'Tokyo', 'Nikko');
+  const t2 = await savedTrip(M, user);
+  const tokyo = t2.routePlan.stops.find((s) => s.key === 'tokyo_base');
+  assert.deepEqual(tokyo.selectedExcursionIds, ['nikko'], 'the selection is saved');
+  assert.equal(tokyo.nights, 11, 'nights unchanged');
+  assert.equal(t2.spec.totalDays, 13, 'length unchanged');
+  assert.ok(exBlockIds(t2).length > 0, 'the saved days carry the day trip');
 });
 
 test('C3: a day trip survives Save → Start a new trip → Continue, identical; deleting the draft removes it', async () => {

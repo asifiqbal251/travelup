@@ -20,18 +20,13 @@ function assertNoEngineVocabulary(state) {
   assert.equal(hit, null, `${state}: engine vocabulary on screen: "${hit?.[0]}"`);
 }
 
-test('C6: the refusal fallback (13 days) shows no engine vocabulary', async () => {
+test('C6: at 13 days (Tokyo stretched past its maximum) the Nikko preview shows no engine vocabulary', async () => {
   const { user } = await mountAndBuildViaIntake(M, { destination: 'Japan', totalDays: 13 });
   assertNoEngineVocabulary('menu (13 days)');
-  const original = console.error;
-  console.error = () => {};
-  try {
-    await user.click(menuRow('Tokyo', 'Nikko'));
-  } finally {
-    console.error = original;
-  }
-  await screen.findByText("Nikko doesn't fit this trip right now.");
-  assertNoEngineVocabulary('refusal');
+  await user.click(menuRow('Tokyo', 'Nikko'));
+  await screen.findByText('Add a day trip to Nikko');
+  assert.equal(screen.queryByText("Nikko doesn't fit this trip right now."), null, 'no false refusal (EF1)');
+  assertNoEngineVocabulary('add preview (13 days)');
 });
 
 test('C6: no engine vocabulary on screen in any day-trip state', async () => {

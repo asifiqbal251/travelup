@@ -93,14 +93,14 @@ test('R2.2: the round-robin allocation through buildTripFromRoutePlan equals bui
   assert.deepStrictEqual(buildTripFromRoutePlan(s, plan, PILOT_DATA, DRAFTS), auto);
 });
 
-test('R2.3: an invalid allocation throws (below min, above max, wrong sum, missing or unknown stop)', () => {
+test('R2.3: an invalid allocation throws (below min, wrong sum, missing or unknown stop); above max is accepted (EF1)', () => {
   const s10 = spec(PERU, 10);
   const [best] = selectRoutes(s10, PILOT_DATA, DRAFTS).value;
   const override = (alloc) => Object.fromEntries(pcPlan(alloc).stops.map((x) => [x.key, x.nights]));
   // Sanity: a valid override schedules.
   assert.equal(scheduleRoute(best, s10, PILOT_DATA, { nightsOverride: override([2, 3, 0, 1, 1]) }).ok, true);
   assert.throws(() => scheduleRoute(best, s10, PILOT_DATA, { nightsOverride: override([3, 1, 0, 1, 1]) }), /pc_cusco.*outside 2–4/);
-  assert.throws(() => scheduleRoute(best, s10, PILOT_DATA, { nightsOverride: override([1, 2, 0, 3, 1]) }), /pc_aguas.*outside 1–2/);
+  assert.equal(scheduleRoute(best, s10, PILOT_DATA, { nightsOverride: override([1, 2, 0, 3, 1]) }).ok, true);
   assert.throws(() => scheduleRoute(best, spec(PERU, 11), PILOT_DATA, { nightsOverride: override([2, 3, 0, 1, 1]) }), /expected totalDays 11/);
   const missing = override([2, 3, 0, 1, 1]);
   delete missing.pc_lima_out;
