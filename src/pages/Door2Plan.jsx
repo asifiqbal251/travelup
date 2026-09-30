@@ -114,6 +114,28 @@ export const DAY_TRIP_COPY = {
   removeUnavailable: (place) => `Your day trip to ${place} can't be removed right now.`,
 };
 
+// Confirms before a rebuild that would throw away the traveller's work. Day trips
+// are mentioned only when the trip has some; otherwise the edits-only wording.
+export const DISCARD_COPY = {
+  keepMyTrip: "Keep my trip",
+  routeSwitch: {
+    confirm: "Switch route",
+    edits: {
+      title: "Switch to this route?",
+      body: "Switching routes starts this trip over, so the changes you've made will be lost.",
+    },
+    dayTrips: {
+      title: "Switch to a different route",
+      body: "This will replace your trip, and your day trips won't carry over.",
+    },
+  },
+  refine: {
+    confirm: "Rebuild",
+    edits: { title: "Refine your trip", body: "Refining rebuilds it from scratch. You'll lose your edits." },
+    dayTrips: { title: "Refine your trip", body: "Refining rebuilds it from scratch. You'll lose your edits and day trips." },
+  },
+};
+
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function placeName(id) {
@@ -174,6 +196,16 @@ function addableOptionalsFor(trip) {
 /** The optional's traveller-facing label for a stop that belongs to one (e.g. "Huaraz & the Cordillera Blanca"). */
 function optionalLabelFor(trip, optionalId) {
   return familyFor(trip)?.optional?.find((o) => o.id === optionalId)?.label ?? optionalId;
+}
+
+function hasDayTrips(trip) {
+  return (trip?.routePlan?.stops || []).some((s) => s.selectedExcursionIds?.length > 0);
+}
+
+// true when the traveller has work that a rebuild would throw away
+export function hasTravellerWork(trip) {
+  if (trip?.history?.length > 0) return true;
+  return hasDayTrips(trip);
 }
 
 /** 4 → "4", 4.5 → "4.5": whole numbers stay whole, anything else gets one decimal. */
@@ -1061,32 +1093,31 @@ export function StructureSheet({ sheet, trip, onMoreTime, onLessTime, onRemoveOp
   );
 }
 
-function RouteSwitchConfirm({ open, onSwitch, onKeep }) {
-  if (!open) return null;
+function DiscardConfirm({ copy, withDayTrips, onConfirm, onKeep }) {
+  if (!copy) return null;
+  const { title, body } = withDayTrips ? copy.dayTrips : copy.edits;
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60" onClick={onKeep}>
       <div
         className="w-full max-w-2xl rounded-t-2xl bg-slate-900 border-t border-slate-700 p-6 space-y-4"
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 className="text-lg font-bold text-white">Switch to this route?</h2>
-        <p className="text-sm text-slate-300">
-          Switching routes starts this trip over, so the changes you&apos;ve made will be lost.
-        </p>
+        <h2 className="text-lg font-bold text-white">{title}</h2>
+        <p className="text-sm text-slate-300">{body}</p>
         <div className="flex gap-3">
           <button
             type="button"
-            onClick={onSwitch}
+            onClick={onConfirm}
             className="flex-1 bg-teal text-slate-900 rounded-lg px-4 py-2.5 font-bold text-sm hover:opacity-90 transition-opacity"
           >
-            Switch route
+            {copy.confirm}
           </button>
           <button
             type="button"
             onClick={onKeep}
             className="flex-1 bg-slate-700 border border-slate-600 text-white rounded-lg px-4 py-2.5 font-semibold text-sm hover:bg-slate-600 transition-colors"
           >
-            Keep my trip
+            {DISCARD_COPY.keepMyTrip}
           </button>
         </div>
       </div>
@@ -1307,6 +1338,7 @@ export default function Door2Plan() {
   const [dayMenu, setDayMenu] = useState(null);
   const [swapPicker, setSwapPicker] = useState(null);
   const [pendingRouteSwitch, setPendingRouteSwitch] = useState(null);
+  const [pendingRefine, setPendingRefine] = useState(false);
   const [toast, setToast] = useState(null);
   const toastTimer = useRef(null);
 
@@ -1461,7 +1493,7 @@ export default function Door2Plan() {
   }
 
   function handleChangeRoute(routePackageId) {
-    if (activeTrip?.history?.length > 0) {
+    if (hasTravellerWork(activeTrip)) {
       setPendingRouteSwitch(routePackageId);
       return;
     }
@@ -1479,8 +1511,17 @@ export default function Door2Plan() {
   }
 
   function handleApplyRefine() {
-    runBuild(form);
     setShowRefine(false);
+    if (hasTravellerWork(activeTrip)) {
+      setPendingRefine(true);
+      return;
+    }
+    runBuild(form);
+  }
+
+  function handleConfirmRefine() {
+    setPendingRefine(false);
+    runBuild(form);
   }
 
   function handleSaveDraft() {
@@ -1930,10 +1971,18 @@ export default function Door2Plan() {
 
       <SwapDayPicker picker={swapPicker} onConfirm={handleConfirmSwapDay} onClose={() => setSwapPicker(null)} />
 
-      <RouteSwitchConfirm
-        open={pendingRouteSwitch !== null}
-        onSwitch={handleConfirmRouteSwitch}
+      <DiscardConfirm
+        copy={pendingRouteSwitch !== null ? DISCARD_COPY.routeSwitch : null}
+        withDayTrips={hasDayTrips(activeTrip)}
+        onConfirm={handleConfirmRouteSwitch}
         onKeep={handleKeepTripInsteadOfSwitch}
+      />
+
+      <DiscardConfirm
+        copy={pendingRefine ? DISCARD_COPY.refine : null}
+        withDayTrips={hasDayTrips(activeTrip)}
+        onConfirm={handleConfirmRefine}
+        onKeep={() => setPendingRefine(false)}
       />
 
       {toast && (

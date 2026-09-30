@@ -1,4 +1,5 @@
 // E3c C2 (copy half): the day-trip refusal copy on constructed refusal objects.
+// Also the C4 predicate, hasTravellerWork, which both discard confirms share.
 // No refusal is reachable through the live Japan data (see flowDayTripsPersist.test.js),
 // so every classified row of the brief's §5.4 table is exercised here against the
 // shape previewAddExcursion returns, and the "add a night" row is clicked in the real
@@ -17,7 +18,7 @@ const outfile = fileURLToPath(new URL(`./.dayTripCopy.bundle.${process.pid}.mjs`
 buildSync({
   stdin: {
     contents: `
-      export { DAY_TRIP_COPY, dayTripRefusalView, StructureSheet } from './src/pages/Door2Plan.jsx';
+      export { DAY_TRIP_COPY, dayTripRefusalView, hasTravellerWork, StructureSheet } from './src/pages/Door2Plan.jsx';
       export { PILOT_DATA, buildFilledTrip } from './src/lib/door2/planner.js';
       export { previewAddExcursion } from './src/lib/door2/restructure.js';
       export { default as React } from 'react';`,
@@ -136,4 +137,12 @@ test('C2: in the real sheet, the refusal shows the copy and "Keep my trip"; the 
   assert.equal(opened[0].proposal, realProposal, 'the row hands over the engine alternative for the normal preview card');
   await user.click(screen.getByRole('button', { name: 'Keep my trip' }));
   assert.equal(closed, 1);
+});
+
+test('C4: hasTravellerWork is true for edit history, or for a day trip with no history (a reloaded draft); false for neither', () => {
+  assert.equal(M.hasTravellerWork(trip), false, 'fresh build');
+  assert.equal(M.hasTravellerWork({ ...trip, history: [trip] }), true, 'an edit');
+  const withDayTrip = { ...realProposal.trip, history: [] };
+  assert.equal(M.hasTravellerWork(withDayTrip), true, 'a day trip with no history');
+  assert.equal(M.hasTravellerWork(null), false);
 });
