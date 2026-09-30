@@ -6,12 +6,12 @@
 import { tripFingerprint } from './fingerprint.js';
 import { activityFor, classifySlot, eligibleItemsForBlock, fillTrip } from './fill.js';
 import { PILOT_CONTENT } from './pilotContent.js';
-import { PILOT_DATA, buildTripFromRoutePlan, findRoutePackage } from './planner.js';
+import { PILOT_DATA, buildTripFromRoutePlan, findRoutePackage, planSelection, resolveExcursions } from './planner.js';
 import { PILOT_ROUTE_FAMILIES } from './pilotData.js';
 import { familyVariantId } from './families.js';
 import { buildRouteResult, getPlace } from './route.js';
 import { scheduleRoute } from './schedule.js';
-import { validateFilled } from './validate.js';
+import { validateExcursionSelections, validateFilled } from './validate.js';
 
 // Trip editor (design §4–§6, v2 §0.1): structural changes as previews.
 //
@@ -50,8 +50,83 @@ function plural(n, word) {
   return `${n} ${word}${n === 1 ? '' : 's'}`;
 }
 
-function refusal(why, message, alternatives = []) {
-  return { ok: false, reason: 'change_not_feasible', why, message, alternatives };
+// `detail` exists only on the excursion refusals (E3a); every older refusal keeps its exact shape.
+function refusal(why, message, alternatives = [], detail) {
+  return { ok: false, reason: 'change_not_feasible', why, message, alternatives, ...(detail ? { detail } : {}) };
+}
+
+// ---------------------------------------------------------------------------
+// Excursion helpers (E3a). The menu is authored data on the compiled stop; the
+// selection is ids on the plan stop. Nothing below ever selects on its own.
+
+function joinNames(names) {
+  return names.length <= 1 ? names.join('') : `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`;
+}
+
+/** The compiled menu of one stop of the trip's variant (every item, held ones included). */
+function menuOf(data, routePlan, stopKey) {
+  return findRoutePackage(data, routePlan.variantId)?.stops.find((s) => s.id === stopKey)?.excursionMenu ?? [];
+}
+
+function authoredMinNights(data, routePlan, stopKey) {
+  return findRoutePackage(data, routePlan.variantId)?.stops.find((s) => s.id === stopKey)?.minNights ?? null;
+}
+
+/** Stops whose plan minimum sits above the authored one because of their selection. */
+function raisedStops(data, routePlan) {
+  return routePlan.stops.filter((s) => s.selectedExcursionIds?.length > 0 && s.minNights > (authoredMinNights(data, routePlan, s.key) ?? s.minNights));
+}
+
+function excursionNames(data, routePlan, stopKey, ids) {
+  const menu = menuOf(data, routePlan, stopKey);
+  return joinNames(ids.map((id) => placeName(data, menu.find((m) => m.id === id)?.placeId ?? id)));
+}
+
+/**
+ * Selections the rebuilt plan no longer holds, other than the ones the traveller
+ * just removed (`skip`). A stop that is gone reports 'stop_removed'; a kept stop
+ * whose item is no longer offered reports 'no_longer_offered'. Never silent.
+ */
+function lostExcursions(oldPlan, newPlan, data, skip = new Set()) {
+  const lost = [];
+  for (const s of oldPlan.stops) {
+    for (const id of s.selectedExcursionIds ?? []) {
+      if (skip.has(`${s.key}|${id}`)) continue;
+      const kept = newPlan.stops.find((n) => n.key === s.key);
+      if (kept?.selectedExcursionIds?.includes(id)) continue;
+      const placeId = menuOf(data, oldPlan, s.key).find((m) => m.id === id)?.placeId;
+      lost.push({ stopKey: s.key, excursionId: id, ...(placeId ? { placeId } : {}), reason: kept ? 'no_longer_offered' : 'stop_removed' });
+    }
+  }
+  return lost;
+}
+
+/** Adds excursionsAdded / excursionsRemoved to a diff, only when they have something to say. */
+function withExcursionDiff(diff, trip, newTrip, ctx, { added = [], removed = [] } = {}) {
+  const skip = new Set(removed.map((r) => `${r.stopKey}|${r.excursionId}`));
+  const lost = [...removed, ...lostExcursions(trip.routePlan, newTrip.routePlan, ctx.data, skip)];
+  return { ...diff, ...(added.length > 0 ? { excursionsAdded: added } : {}), ...(lost.length > 0 ? { excursionsRemoved: lost } : {}) };
+}
+
+/** The trip's selection resolved against `pkg`: a derived package at effective minimums, or why it can't be kept. */
+function withSelections(trip, pkg, ctx) {
+  return resolveExcursions(pkg, planSelection(trip.routePlan), trip.spec, ctx.data, { dropUnresolved: true });
+}
+
+/** A change that would need fewer nights (or a different shape) than a selection allows refuses; it never drops the selection. */
+function excursionRefusal(trip, resolved, ctx) {
+  if (resolved.reason !== 'excursion_does_not_fit') {
+    return refusal('not_available', "That change isn't available with the day trips you've chosen.", []);
+  }
+  const rp = trip.routePlan;
+  const base = placeName(ctx.data, rp.stops.find((s) => s.key === resolved.stopKey)?.placeId ?? resolved.stopKey);
+  const names = excursionNames(ctx.data, rp, resolved.stopKey, resolved.excursionIds);
+  return refusal(
+    'excursion_does_not_fit',
+    `${base} doesn't have room for your day trip to ${names} on that route.`,
+    [],
+    { stopKey: resolved.stopKey, excursionIds: [...resolved.excursionIds] }
+  );
 }
 
 function activityBlocks(trip) {
@@ -173,6 +248,7 @@ function buildNightsProposal(trip, { id, label, kind, nights, totalDays }, ctx) 
   if (skeleton.ok === false) return null;
   const rec = reconcile(trip, skeleton, ctx.content);
   const newTrip = { ...rec.trip, history: [] };
+  validateExcursionSelections(newTrip, ctx.data);
   return {
     id,
     kind,
@@ -180,19 +256,24 @@ function buildNightsProposal(trip, { id, label, kind, nights, totalDays }, ctx) 
     baseFingerprint: ctx.baseFingerprint,
     routePlan: newTrip.routePlan,
     trip: newTrip,
-    diff: {
-      nights: rp.stops
-        .filter((s) => nights[s.key] !== s.nights)
-        .map((s) => ({ stopKey: s.key, placeId: s.placeId, from: s.nights, to: nights[s.key] })),
-      totalDays: { from: trip.spec.totalDays, to: totalDays },
-      placesAdded: [],
-      placesRemoved: [],
-      activitiesLost: rec.activitiesLost,
-      activitiesAdded: rec.activitiesAdded,
-      keptItemsAffected: rec.keptItemsAffected,
-      newTravelDay: false,
-      contentGaps: newTrip.contentGaps.length
-    }
+    diff: withExcursionDiff(
+      {
+        nights: rp.stops
+          .filter((s) => nights[s.key] !== s.nights)
+          .map((s) => ({ stopKey: s.key, placeId: s.placeId, from: s.nights, to: nights[s.key] })),
+        totalDays: { from: trip.spec.totalDays, to: totalDays },
+        placesAdded: [],
+        placesRemoved: [],
+        activitiesLost: rec.activitiesLost,
+        activitiesAdded: rec.activitiesAdded,
+        keptItemsAffected: rec.keptItemsAffected,
+        newTravelDay: false,
+        contentGaps: newTrip.contentGaps.length
+      },
+      trip,
+      newTrip,
+      ctx
+    )
   };
 }
 
@@ -251,6 +332,15 @@ export function previewAdjustNights(trip, stopKey, delta, options = {}) {
         ? `${name} is a stop on the way; the route doesn't stay overnight there.`
         : `${plural(target.maxNights, 'night')} is the most that works in ${name}.`;
     return refusal('allocation_maximum', message, alternatives);
+  }
+  if (delta < 0 && target.nights <= target.minNights && target.minNights > (authoredMinNights(ctx.data, rp, target.key) ?? target.minNights)) {
+    // The minimum is above the authored one because of a selection: say which excursion holds the night.
+    return refusal(
+      'excursion_does_not_fit',
+      `${name} needs ${plural(target.minNights, 'night')} to keep your day trip to ${excursionNames(ctx.data, rp, target.key, target.selectedExcursionIds)}.`,
+      [],
+      { stopKey: target.key, excursionIds: [...target.selectedExcursionIds], nightsNeeded: target.minNights }
+    );
   }
   if (delta < 0 && target.nights <= target.minNights) {
     return refusal(
@@ -403,7 +493,12 @@ export function previewChangeLength(trip, newTotalDays, options = {}) {
     const alternatives = [];
     const shorter = shorterRouteAlternative(trip, newTotalDays, ctx);
     if (shorter) alternatives.push(shorter);
-    return refusal('insufficient_days', `This route needs at least ${plural(rp.minDays, 'day')}. You picked ${newTotalDays}.`, alternatives);
+    const raised = raisedStops(ctx.data, rp);
+    const because =
+      raised.length > 0
+        ? ` to keep your day trip to ${joinNames(raised.map((s) => excursionNames(ctx.data, rp, s.key, s.selectedExcursionIds)))}`
+        : '';
+    return refusal('insufficient_days', `This route needs at least ${plural(rp.minDays, 'day')}${because}. You picked ${newTotalDays}.`, alternatives);
   }
   const nights = redistribute(rp.stops, nightsMap(rp), newTotalDays - N);
   if (!nights) {
@@ -430,11 +525,15 @@ function shorterRouteAlternative(trip, newTotalDays, ctx) {
   const backbone = findRoutePackage(ctx.data, backboneVariantId(rp));
   if (!backbone || backbone.held) return null;
   const spec = { ...trip.spec, totalDays: newTotalDays };
-  const minDays = packageMinDays(backbone, spec, ctx.data);
+  // Selections on stops the backbone keeps are carried; ones on removed stops are reported below.
+  const kept = withSelections(trip, backbone, ctx);
+  if (!kept.ok) return null;
+  const minDays = packageMinDays(kept.pkg, spec, ctx.data);
   if (minDays == null || minDays > newTotalDays) return null;
 
   const current = nightsMap(rp);
-  const stops = backbone.stops.map((s) => ({ key: s.id, placeId: s.placeId, minNights: s.minNights, maxNights: s.maxNights }));
+  const carried = planSelection(rp);
+  const stops = kept.pkg.stops.map((s) => ({ key: s.id, placeId: s.placeId, minNights: s.minNights, maxNights: s.maxNights }));
   const start = Object.fromEntries(stops.map((s) => [s.key, Math.min(Math.max(current[s.key] ?? s.minNights, s.minNights), s.maxNights)]));
   const startDays = minDays + stops.reduce((sum, s) => sum + (start[s.key] - s.minNights), 0);
   const nights = startDays === newTotalDays ? start : redistribute(stops, start, newTotalDays - startDays);
@@ -442,13 +541,14 @@ function shorterRouteAlternative(trip, newTotalDays, ctx) {
 
   const plan = {
     variantId: backbone.id,
-    stops: stops.map((s) => ({ key: s.key, nights: nights[s.key] })),
+    stops: stops.map((s) => ({ key: s.key, nights: nights[s.key], ...(carried[s.key] ? { selectedExcursionIds: carried[s.key] } : {}) })),
     nightsSource: 'user'
   };
   const skeleton = buildTripFromRoutePlan({ ...spec, routeTemplateId: backbone.id }, plan, ctx.data, { reviewPolicy: ctx.reviewPolicy });
   if (skeleton.ok === false) return null;
   const rec = reconcile(trip, skeleton, ctx.content);
   const newTrip = { ...rec.trip, history: [] };
+  validateExcursionSelections(newTrip, ctx.data);
   const newPlaces = new Set(newTrip.routePlan.stops.filter((s) => s.nights > 0).map((s) => s.placeId));
   const placesRemoved = [...new Set(removed.map((s) => s.placeId))].filter((p) => !newPlaces.has(p));
   return {
@@ -458,17 +558,22 @@ function shorterRouteAlternative(trip, newTotalDays, ctx) {
     baseFingerprint: ctx.baseFingerprint,
     routePlan: newTrip.routePlan,
     trip: newTrip,
-    diff: {
-      nights: [],
-      totalDays: { from: trip.spec.totalDays, to: newTotalDays },
-      placesAdded: [],
-      placesRemoved,
-      activitiesLost: rec.activitiesLost,
-      activitiesAdded: rec.activitiesAdded,
-      keptItemsAffected: rec.keptItemsAffected,
-      newTravelDay: false,
-      contentGaps: newTrip.contentGaps.length
-    }
+    diff: withExcursionDiff(
+      {
+        nights: [],
+        totalDays: { from: trip.spec.totalDays, to: newTotalDays },
+        placesAdded: [],
+        placesRemoved,
+        activitiesLost: rec.activitiesLost,
+        activitiesAdded: rec.activitiesAdded,
+        keptItemsAffected: rec.keptItemsAffected,
+        newTravelDay: false,
+        contentGaps: newTrip.contentGaps.length
+      },
+      trip,
+      newTrip,
+      ctx
+    )
   };
 }
 
@@ -567,11 +672,18 @@ function proposeVariantChange(trip, pkg, minDays, { id, kind, label }, ctx, tota
 /** Rebuilds the trip for a new variant/allocation (buildNightsProposal's sibling for a changed stop set). */
 function buildVariantProposal(trip, { id, kind, label, pkg, nights, totalDays }, ctx) {
   const spec = { ...trip.spec, totalDays, routeTemplateId: pkg.id };
-  const plan = { variantId: pkg.id, stops: pkg.stops.map((s) => ({ key: s.id, nights: nights[s.id] })), nightsSource: 'user' };
+  // Selections travel by stop key; a stop the new variant lacks is reported in the diff, never carried blindly.
+  const carried = planSelection(trip.routePlan);
+  const plan = {
+    variantId: pkg.id,
+    stops: pkg.stops.map((s) => ({ key: s.id, nights: nights[s.id], ...(carried[s.id] ? { selectedExcursionIds: carried[s.id] } : {}) })),
+    nightsSource: 'user'
+  };
   const skeleton = buildTripFromRoutePlan(spec, plan, ctx.data, { reviewPolicy: ctx.reviewPolicy });
   if (skeleton.ok === false) return null;
   const rec = reconcile(trip, skeleton, ctx.content);
   const newTrip = { ...rec.trip, history: [] };
+  validateExcursionSelections(newTrip, ctx.data);
   const oldNights = nightsMap(trip.routePlan);
   const oldPlaces = new Set(trip.routePlan.stops.filter((s) => s.nights > 0).map((s) => s.placeId));
   const newPlaces = new Set(newTrip.routePlan.stops.filter((s) => s.nights > 0).map((s) => s.placeId));
@@ -582,19 +694,24 @@ function buildVariantProposal(trip, { id, kind, label, pkg, nights, totalDays },
     baseFingerprint: ctx.baseFingerprint,
     routePlan: newTrip.routePlan,
     trip: newTrip,
-    diff: {
-      nights: pkg.stops
-        .filter((s) => (oldNights[s.id] ?? null) !== nights[s.id])
-        .map((s) => ({ stopKey: s.id, placeId: s.placeId, from: oldNights[s.id] ?? 0, to: nights[s.id] })),
-      totalDays: { from: trip.spec.totalDays, to: totalDays },
-      placesAdded: [...newPlaces].filter((p) => !oldPlaces.has(p)),
-      placesRemoved: [...oldPlaces].filter((p) => !newPlaces.has(p)),
-      activitiesLost: rec.activitiesLost,
-      activitiesAdded: rec.activitiesAdded,
-      keptItemsAffected: rec.keptItemsAffected,
-      newTravelDay: false,
-      contentGaps: newTrip.contentGaps.length
-    }
+    diff: withExcursionDiff(
+      {
+        nights: pkg.stops
+          .filter((s) => (oldNights[s.id] ?? null) !== nights[s.id])
+          .map((s) => ({ stopKey: s.id, placeId: s.placeId, from: oldNights[s.id] ?? 0, to: nights[s.id] })),
+        totalDays: { from: trip.spec.totalDays, to: totalDays },
+        placesAdded: [...newPlaces].filter((p) => !oldPlaces.has(p)),
+        placesRemoved: [...oldPlaces].filter((p) => !newPlaces.has(p)),
+        activitiesLost: rec.activitiesLost,
+        activitiesAdded: rec.activitiesAdded,
+        keptItemsAffected: rec.keptItemsAffected,
+        newTravelDay: false,
+        contentGaps: newTrip.contentGaps.length
+      },
+      trip,
+      newTrip,
+      ctx
+    )
   };
 }
 
@@ -640,19 +757,22 @@ export function previewAddOptional(trip, optionalId, positionId, options = {}) {
     return refusal('exclusive_optional', `${optional.label} can't be combined with what's already in your trip.`, []);
   }
 
+  const kept = withSelections(trip, pkg, ctx);
+  if (!kept.ok) return excursionRefusal(trip, kept, ctx);
+
   const N = trip.spec.totalDays;
   const flexible = isDurationFlexible(trip.spec);
-  const minDays = packageMinDays(pkg, trip.spec, ctx.data);
+  const minDays = packageMinDays(kept.pkg, trip.spec, ctx.data);
   if (minDays == null) return refusal('not_available', `${optional.label} isn't available to add yet.`, []);
   if (minDays > N) {
     const alternatives = [];
     if (flexible) {
-      const extended = proposeVariantChange(trip, pkg, minDays, { id: `add:${optionalId}:extend`, kind: 'extend', label: `Add ${optional.label}` }, ctx, minDays);
+      const extended = proposeVariantChange(trip, kept.pkg, minDays, { id: `add:${optionalId}:extend`, kind: 'extend', label: `Add ${optional.label}` }, ctx, minDays);
       if (extended) alternatives.push({ ...extended, label: `Add ${plural(minDays - N, 'day')} and include ${optional.label}` });
     }
     return refusal('insufficient_days', `${optional.label} needs ${plural(minDays, 'day')} in total. You have ${plural(N, 'day')}.`, alternatives);
   }
-  const proposal = proposeVariantChange(trip, pkg, minDays, { id: `add:${optionalId}`, kind: 'add_optional', label: `Add ${optional.label}` }, ctx, N);
+  const proposal = proposeVariantChange(trip, kept.pkg, minDays, { id: `add:${optionalId}`, kind: 'add_optional', label: `Add ${optional.label}` }, ctx, N);
   if (!proposal) return refusal('allocation_maximum', `${optional.label} doesn't fit alongside the rest of your trip.`, []);
   return { ok: true, proposals: [proposal] };
 }
@@ -684,21 +804,28 @@ export function previewRemoveOptional(trip, optionalId, options = {}) {
     return refusal('not_available', `${optional.label} can't be removed from your trip right now.`, []);
   }
 
+  // Selections on the removed stops are the traveller's own doing: they go, and the diff says so.
+  const kept = withSelections(trip, pkg, ctx);
+  if (!kept.ok) return excursionRefusal(trip, kept, ctx);
+
   const N = trip.spec.totalDays;
-  const minDays = packageMinDays(pkg, trip.spec, ctx.data);
+  const minDays = packageMinDays(kept.pkg, trip.spec, ctx.data);
   if (minDays == null) return refusal('not_available', `${optional.label} can't be removed from your trip right now.`, []);
-  const proposal = proposeVariantChange(trip, pkg, minDays, { id: `remove:${optionalId}`, kind: 'remove_optional', label: `Remove ${optional.label}` }, ctx, N);
+  const proposal = proposeVariantChange(trip, kept.pkg, minDays, { id: `remove:${optionalId}`, kind: 'remove_optional', label: `Remove ${optional.label}` }, ctx, N);
   if (!proposal) {
     // The remaining route can't absorb the freed nights at this length. Offer
     // to shrink the trip by them (symmetric to add's "add N days"), falling
     // back to the plain backbone route if that variant can't be shrunk to fit.
     const alternatives = [];
     if (isDurationFlexible(trip.spec)) {
-      const candidates = [pkg];
+      const candidates = [kept.pkg];
       const backbone = findRoutePackage(ctx.data, backboneVariantId(rp));
-      if (backbone && !backbone.held && backbone.id !== pkg.id) candidates.push(backbone);
+      if (backbone && !backbone.held && backbone.id !== pkg.id) {
+        const backboneKept = withSelections(trip, backbone, ctx);
+        if (backboneKept.ok) candidates.push(backboneKept.pkg);
+      }
       for (const cand of candidates) {
-        const candMin = cand === pkg ? minDays : packageMinDays(cand, trip.spec, ctx.data);
+        const candMin = cand === kept.pkg ? minDays : packageMinDays(cand, trip.spec, ctx.data);
         if (candMin == null) continue;
         const candMax = candMin + cand.stops.reduce((sum, st) => sum + (st.maxNights - st.minNights), 0);
         if (candMax >= N) continue;
@@ -749,13 +876,16 @@ export function previewMoveOptional(trip, optionalId, positionId, options = {}) 
     return refusal('not_available', `${optional.label} can't move there right now.`, []);
   }
 
+  const kept = withSelections(trip, pkg, ctx);
+  if (!kept.ok) return excursionRefusal(trip, kept, ctx);
+
   const N = trip.spec.totalDays;
-  const minDays = packageMinDays(pkg, trip.spec, ctx.data);
+  const minDays = packageMinDays(kept.pkg, trip.spec, ctx.data);
   if (minDays == null) return refusal('not_available', `${optional.label} can't move there right now.`, []);
   if (minDays > N) {
     return refusal('insufficient_days', `Moving ${optional.label} needs ${plural(minDays, 'day')} in total. You have ${plural(N, 'day')}.`, []);
   }
-  const proposal = proposeVariantChange(trip, pkg, minDays, { id: `move:${optionalId}:${positionId}`, kind: 'move_optional', label: `Move ${optional.label}` }, ctx, N);
+  const proposal = proposeVariantChange(trip, kept.pkg, minDays, { id: `move:${optionalId}:${positionId}`, kind: 'move_optional', label: `Move ${optional.label}` }, ctx, N);
   if (!proposal) return refusal('allocation_maximum', `${optional.label} doesn't fit there alongside the rest of your trip.`, []);
   return { ok: true, proposals: [proposal] };
 }
@@ -792,6 +922,184 @@ export function listMoveOptions(trip, optionalId, options = {}) {
     current: { positionId: current.positionId, after: afterOf(optional.positions.find((p) => p.id === current.positionId)) },
     options: moves
   };
+}
+
+// ---------------------------------------------------------------------------
+// Same-day excursions (E3a): previewAddExcursion / previewRemoveExcursion /
+// listExcursionMenu. The menu is authored on the base stop; the traveller's
+// choice is `selectedExcursionIds` on the plan stop. Adding never changes
+// nights or the trip length (unless the traveller takes the extend alternative);
+// the engine never picks an excursion for the traveller.
+
+/** Rebuilds the trip with `selection` at the given nights and length, reconciles content, and wraps it as a Proposal. Null if the rebuild fails. */
+function buildExcursionProposal(trip, { id, kind, label, nights, totalDays, selection, added = [], removed = [] }, ctx) {
+  const rp = trip.routePlan;
+  const plan = {
+    ...rp,
+    stops: rp.stops.map(({ selectedExcursionIds, ...rest }) => ({
+      ...rest,
+      nights: nights[rest.key],
+      ...(selection[rest.key]?.length > 0 ? { selectedExcursionIds: selection[rest.key] } : {})
+    }))
+  };
+  const skeleton = buildTripFromRoutePlan({ ...trip.spec, totalDays }, plan, ctx.data, { reviewPolicy: ctx.reviewPolicy });
+  if (skeleton.ok === false) return null;
+  const rec = reconcile(trip, skeleton, ctx.content);
+  const newTrip = { ...rec.trip, history: [] };
+  validateExcursionSelections(newTrip, ctx.data);
+  return {
+    id,
+    kind,
+    label,
+    baseFingerprint: ctx.baseFingerprint,
+    routePlan: newTrip.routePlan,
+    trip: newTrip,
+    diff: withExcursionDiff(
+      {
+        nights: rp.stops
+          .filter((s) => nights[s.key] !== s.nights)
+          .map((s) => ({ stopKey: s.key, placeId: s.placeId, from: s.nights, to: nights[s.key] })),
+        totalDays: { from: trip.spec.totalDays, to: totalDays },
+        placesAdded: [],
+        placesRemoved: [],
+        activitiesLost: rec.activitiesLost,
+        activitiesAdded: rec.activitiesAdded,
+        keptItemsAffected: rec.keptItemsAffected,
+        newTravelDay: false,
+        contentGaps: newTrip.contentGaps.length
+      },
+      trip,
+      newTrip,
+      ctx,
+      { added, removed }
+    )
+  };
+}
+
+function stopFor(trip, stopKey, who) {
+  const stop = trip.routePlan.stops.find((s) => s.key === stopKey);
+  if (!stop) throw new Error(`${who}: unknown stop "${stopKey}"`);
+  return stop;
+}
+
+/**
+ * Add one same-day excursion from a base stop's menu. The trip keeps its nights
+ * and length; if the stop needs another night for it (A5), the answer is a
+ * refusal that offers "Add a night and include X", never a silent change.
+ * @param {Trip} trip
+ * @param {string} stopKey
+ * @param {string} excursionId
+ * @param {{data?: Object, content?: ContentItem[], reviewPolicy?: 'strict'|'allow_drafts', families?: Object[]}} [options]
+ */
+export function previewAddExcursion(trip, stopKey, excursionId, options = {}) {
+  const ctx = context(trip, options);
+  const rp = trip.routePlan;
+  const stop = stopFor(trip, stopKey, 'previewAddExcursion');
+  const base = placeName(ctx.data, stop.placeId);
+  const menu = menuOf(ctx.data, rp, stopKey);
+  const item = menu.find((m) => m.id === excursionId);
+  if (!item) return refusal('not_in_menu', `${base} doesn't offer that day trip.`, []);
+  const place = placeName(ctx.data, item.placeId);
+  if (item.status !== 'approved') return refusal('not_available', `${place} isn't available to add yet.`, []);
+  const current = stop.selectedExcursionIds ?? [];
+  if (current.includes(excursionId)) return refusal('already_included', `${place} is already part of your trip.`, []);
+
+  // Menu order, never click order: adding A then B equals adding B then A.
+  const ids = menu.filter((m) => m.status === 'approved' && (current.includes(m.id) || m.id === excursionId)).map((m) => m.id);
+  const selection = { ...planSelection(rp), [stopKey]: ids };
+  const added = [{ stopKey, excursionId, placeId: item.placeId }];
+  const names = joinNames(ids.map((id) => placeName(ctx.data, menu.find((m) => m.id === id).placeId)));
+
+  const pkg = findRoutePackage(ctx.data, rp.variantId);
+  const resolved = resolveExcursions(pkg, selection, trip.spec, ctx.data, { dropUnresolved: true });
+  if (!resolved.ok) {
+    if (resolved.reason !== 'excursion_does_not_fit') return refusal('not_available', `${place} isn't available to add right now.`, []);
+    return refusal('excursion_does_not_fit', `${names} needs a full day and this trip doesn't have one to give.`, [], {
+      stopKey: resolved.stopKey,
+      excursionIds: [...resolved.excursionIds]
+    });
+  }
+
+  const N = trip.spec.totalDays;
+  const needed = resolved.effectiveMinNights[stopKey];
+  if (needed > stop.nights) {
+    const extra = needed - stop.nights;
+    const detail = { stopKey, excursionIds: [...ids], nightsNeeded: needed };
+    const lead = `There isn't a full day free at ${base} for ${names}.`;
+    if (!isDurationFlexible(trip.spec)) {
+      return refusal('excursion_does_not_fit', `${lead} Your trip dates are fixed, so it can't be made longer.`, [], detail);
+    }
+    const label = `Add ${extra === 1 ? 'a night' : plural(extra, 'night')} in ${base} and include ${place}`;
+    const extend = buildExcursionProposal(
+      trip,
+      { id: `excursion:add:${stopKey}:${excursionId}:extend`, kind: 'extend', label, nights: { ...nightsMap(rp), [stopKey]: needed }, totalDays: N + extra, selection, added },
+      ctx
+    );
+    return refusal('excursion_does_not_fit', extend ? `${lead} ${label} →` : lead, extend ? [extend] : [], detail);
+  }
+
+  const proposal = buildExcursionProposal(
+    trip,
+    { id: `excursion:add:${stopKey}:${excursionId}`, kind: 'add_excursion', label: `Add a day trip to ${place}`, nights: nightsMap(rp), totalDays: N, selection, added },
+    ctx
+  );
+  if (!proposal) return refusal('not_available', `${place} isn't available to add right now.`, []);
+  return { ok: true, proposals: [proposal] };
+}
+
+/**
+ * Remove one selected excursion. Allowed even if the item has since been held.
+ * Nights and length are unchanged; the stop's effective minimum may fall.
+ * @param {Trip} trip
+ * @param {string} stopKey
+ * @param {string} excursionId
+ * @param {{data?: Object, content?: ContentItem[], reviewPolicy?: 'strict'|'allow_drafts', families?: Object[]}} [options]
+ */
+export function previewRemoveExcursion(trip, stopKey, excursionId, options = {}) {
+  const ctx = context(trip, options);
+  const rp = trip.routePlan;
+  const stop = stopFor(trip, stopKey, 'previewRemoveExcursion');
+  const base = placeName(ctx.data, stop.placeId);
+  const item = menuOf(ctx.data, rp, stopKey).find((m) => m.id === excursionId);
+  if (!item) return refusal('not_in_menu', `${base} doesn't offer that day trip.`, []);
+  const place = placeName(ctx.data, item.placeId);
+  const current = stop.selectedExcursionIds ?? [];
+  if (!current.includes(excursionId)) return refusal('not_included', `${place} isn't part of your trip.`, []);
+
+  const selection = { ...planSelection(rp), [stopKey]: current.filter((id) => id !== excursionId) };
+  const proposal = buildExcursionProposal(
+    trip,
+    {
+      id: `excursion:remove:${stopKey}:${excursionId}`,
+      kind: 'remove_excursion',
+      label: `Remove the day trip to ${place}`,
+      nights: nightsMap(rp),
+      totalDays: trip.spec.totalDays,
+      selection,
+      removed: [{ stopKey, excursionId, placeId: item.placeId, reason: 'traveller_removed' }]
+    },
+    ctx
+  );
+  if (!proposal) return refusal('not_available', `${place} can't be removed right now.`, []);
+  return { ok: true, proposals: [proposal] };
+}
+
+/**
+ * The day trips a base stop offers right now: approved items only (a held item is
+ * never listed), in menu order, each marked selected or not. Builds no proposals.
+ * @param {Trip} trip
+ * @param {string} stopKey
+ * @param {{data?: Object}} [options]
+ * @returns {Array<{excursionId: string, placeId: string, hoursOnSite: number, selected: boolean}>}
+ */
+export function listExcursionMenu(trip, stopKey, options = {}) {
+  if (!trip.routePlan) throw new Error('restructure: trip has no routePlan (door2-v6 required)');
+  const data = options.data ?? PILOT_DATA;
+  const stop = stopFor(trip, stopKey, 'listExcursionMenu');
+  const selected = new Set(stop.selectedExcursionIds ?? []);
+  return menuOf(data, trip.routePlan, stopKey)
+    .filter((m) => m.status === 'approved')
+    .map((m) => ({ excursionId: m.id, placeId: m.placeId, hoursOnSite: m.hoursOnSite, selected: selected.has(m.id) }));
 }
 
 // ---------------------------------------------------------------------------

@@ -2,7 +2,8 @@
 /** @typedef {import('./types.js').RoutePackage} RoutePackage */
 /** @typedef {import('./types.js').RoutePackageStop} RoutePackageStop */
 
-import { selectRoutes } from './route.js';
+import { orientConnection } from './bufferRuleset.js';
+import { getPlace, selectRoutes } from './route.js';
 import { PackageAuthoringError, scheduleRoute } from './schedule.js';
 import { validateSkeleton } from './validate.js';
 
@@ -37,6 +38,13 @@ import { validateSkeleton } from './validate.js';
 //
 // MAX_VARIANTS_PER_FAMILY applies after the direction expansion, so a
 // two-direction family has half the budget for optional combinations (12).
+//
+// Excursion menus (E3a). A family stop may carry an authored `excursionMenu`: same-day
+// trips the traveller can add or remove (restructure.js previewAddExcursion /
+// previewRemoveExcursion). A menu is data on the compiled stop, copied through
+// verbatim (deep-copied in the mirror); it is NOT a variant dimension, so it never
+// touches MAX_VARIANTS_PER_FAMILY, and its places stay out of `placeIds`. A stop
+// without a menu compiles byte-identically to before (the key is omitted).
 //
 // Pure and deterministic: no randomness, no Date.now().
 
@@ -158,6 +166,33 @@ function checkFamilyShape(family) {
     }
   }
   checkSegmentOrders(family, fail);
+  checkExcursionMenus(family, fail);
+}
+
+/**
+ * Shape checks that need no data: statuses, ids unique in the family, no two
+ * excursions (fixed or menu) at one stop sharing a place (their block ids would
+ * collide), no menu on a pass-through, and no menu place equal to its own base.
+ * Places, connections and schedulability are checked in checkVariantsSchedulable.
+ */
+function checkExcursionMenus(family, fail) {
+  const menuIds = new Set();
+  for (const [stopKey, def] of Object.entries(family.stops)) {
+    if (def.excursionMenu === undefined) continue;
+    if (!Array.isArray(def.excursionMenu)) fail('excursion_menu_invalid', { stopKey });
+    if (def.excursionMenu.length > 0 && def.maxNights === 0) fail('excursion_menu_on_pass_through', { stopKey });
+    const placeIds = new Set((def.excursions ?? []).map((ex) => ex.placeId));
+    for (const menuItem of def.excursionMenu) {
+      if (typeof menuItem?.id !== 'string' || menuItem.id === '') fail('excursion_without_id', { stopKey });
+      if (menuIds.has(menuItem.id)) fail('duplicate_excursion_id', { stopKey, excursionId: menuItem.id });
+      menuIds.add(menuItem.id);
+      if (!REVIEW_STATUSES.includes(menuItem.status)) fail('invalid_excursion_status', { stopKey, excursionId: menuItem.id, status: menuItem.status });
+      if (menuItem.placeId === def.placeId) fail('excursion_place_is_base', { stopKey, excursionId: menuItem.id, placeId: menuItem.placeId });
+      if (placeIds.has(menuItem.placeId)) fail('duplicate_excursion_place', { stopKey, excursionId: menuItem.id, placeId: menuItem.placeId });
+      placeIds.add(menuItem.placeId);
+      if (!(menuItem.hoursOnSite > 0)) fail('invalid_excursion_hours', { stopKey, excursionId: menuItem.id, hoursOnSite: menuItem.hoursOnSite });
+    }
+  }
 }
 
 /**
@@ -290,7 +325,12 @@ function mirrorVariant(family, direction, { pkg: canonical, picks }) {
     countryId: canonical.countryId,
     ...(canonical.assumptions !== undefined ? { assumptions: [...canonical.assumptions] } : {}),
     ...(canonical.preferredGatewayId ? { preferredGatewayId: canonical.preferredGatewayId } : {}),
-    stops: [...canonical.stops].reverse().map((s) => ({ ...s, excursions: s.excursions.map((ex) => ({ ...ex })) }))
+    stops: [...canonical.stops].reverse().map((s) => ({
+      ...s,
+      excursions: s.excursions.map((ex) => ({ ...ex })),
+      // A spread would share the canonical stop's menu with its mirror.
+      ...(s.excursionMenu ? { excursionMenu: s.excursionMenu.map((m) => ({ ...m })) } : {})
+    }))
   });
   return {
     ...pkg,
@@ -345,10 +385,15 @@ function compileFamily(family) {
         placeId: def.placeId,
         minNights: limits[key]?.minNights ?? def.minNights,
         maxNights: limits[key]?.maxNights ?? def.maxNights,
-        excursions: (def.excursions ?? []).map((ex) => ({ ...ex }))
+        excursions: (def.excursions ?? []).map((ex) => ({ ...ex })),
+        ...(def.excursionMenu?.length > 0 ? { excursionMenu: def.excursionMenu.map((m) => ({ ...m })) } : {})
       };
     });
     for (const s of stops) {
+      // A position override can take a stop's maxNights to 0 in one variant only.
+      if (s.excursionMenu && s.maxNights === 0) {
+        throw new FamilyAuthoringError('excursion_menu_on_pass_through', { familyId: family.id, variantId, stopKey: s.id });
+      }
       if (!(Number.isInteger(s.minNights) && Number.isInteger(s.maxNights) && s.minNights >= 0 && s.minNights <= s.maxNights)) {
         throw new FamilyAuthoringError('invalid_night_limits', { familyId: family.id, variantId, stopKey: s.id, minNights: s.minNights, maxNights: s.maxNights });
       }
@@ -460,6 +505,7 @@ export function checkVariantsSchedulable(packages, data, { originPlaceId = 'vanc
       if (!scheduled.ok) fail('not_schedulable_at_min_days', { minDays, state: scheduled.state });
       const v = validateSkeleton(scheduled, routeResult, atMin, soloData, { reviewPolicy: 'allow_drafts' });
       if (!v.ok) fail('not_valid_at_min_days', { minDays, state: v.state });
+      checkMenus(pkg, routeResult, spec, soloData, fail);
     } catch (err) {
       if (err instanceof FamilyAuthoringError) throw err;
       if (err instanceof PackageAuthoringError) fail(`package_authoring:${err.reason}`, { packageDetail: err.detail });
@@ -467,5 +513,41 @@ export function checkVariantsSchedulable(packages, data, { originPlaceId = 'vanc
     }
     const maxDays = minDays + pkg.stops.reduce((sum, s) => sum + (s.maxNights - s.minNights), 0);
     return { variantId: pkg.id, held: pkg.held === true, minDays, maxDays };
+  });
+}
+
+/**
+ * Every menu item, held ones included, must name a known place and a connection
+ * that serves base <-> place both ways, and must be able to be selected: fixed
+ * excursions plus that one item have to fit at the stop's maxNights (more nights
+ * never un-fit an excursion, so if it does not fit there it never can).
+ */
+function checkMenus(pkg, routeResult, spec, data, fail) {
+  pkg.stops.forEach((stop, i) => {
+    for (const menuItem of stop.excursionMenu ?? []) {
+      const where = { stopKey: stop.id, excursionId: menuItem.id };
+      if (!getPlace(data.places, menuItem.placeId)) fail('excursion_unknown_place', { ...where, placeId: menuItem.placeId });
+      const row = data.connections.find((c) => c.id === menuItem.connectionId);
+      if (!row) fail('excursion_unknown_connection', { ...where, connectionId: menuItem.connectionId });
+      if (!orientConnection(row, stop.placeId, menuItem.placeId) || !orientConnection(row, menuItem.placeId, stop.placeId)) {
+        fail('excursion_connection_mismatch', { ...where, connectionId: row.id });
+      }
+      const probe = {
+        ...routeResult,
+        stops: routeResult.stops.map((s, j) =>
+          j === i
+            ? { ...s, nights: s.maxNights, minNights: s.maxNights, excursions: [...s.excursions, { placeId: menuItem.placeId, connectionId: menuItem.connectionId, hoursOnSite: menuItem.hoursOnSite }] }
+            : s
+        )
+      };
+      try {
+        scheduleRoute(probe, { ...spec, totalDays: 1 }, data);
+      } catch (err) {
+        if (err instanceof PackageAuthoringError && err.reason === 'excursion_does_not_fit') {
+          fail('excursion_never_fits', { ...where, maxNights: stop.maxNights });
+        }
+        throw err;
+      }
+    }
   });
 }

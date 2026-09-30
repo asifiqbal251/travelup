@@ -409,3 +409,57 @@ export function validateEditInvariant(newTrip, previousTrip) {
 
   return makeSuccess({ warnings: [...(newTrip.warnings ?? [])] });
 }
+
+// ---------------------------------------------------------------------------
+// Excursion selections (E3a)
+
+function excursionInvariant(condition, message) {
+  if (!condition) throw new Error(`validateExcursionSelections invariant violated: ${message}`);
+}
+
+/**
+ * The trip's excursion site blocks must be exactly what its plan says: for every
+ * plan stop, the `ex:<stop>:<place>:site` blocks equal the stop's fixed excursions
+ * plus its resolved selection, and every selected id is an approved item of that
+ * stop's compiled menu. Throws on a mismatch (an engine bug, never a traveller
+ * outcome); restructure.js runs it on every proposal trip before returning it.
+ *
+ * @param {Object} trip  A Trip with a routePlan.
+ * @param {{routePackages?: Object[], allRoutePackages?: Object[]}} data  Where the plan's variant is looked up.
+ */
+export function validateExcursionSelections(trip, data) {
+  const plan = trip.routePlan;
+  excursionInvariant(plan, 'trip has no routePlan');
+  const known = [...(data.routePackages ?? []), ...(data.allRoutePackages ?? [])];
+  const pkg = known.find((p) => p.id === plan.variantId) ?? known.find((p) => (p.aliases ?? []).includes(plan.variantId));
+  excursionInvariant(pkg, `unknown variant "${plan.variantId}"`);
+
+  const actual = new Map();
+  for (const day of trip.days) {
+    for (const b of day.blocks) {
+      const m = /^ex:(.+):([^:]+):site$/.exec(b.id);
+      if (!m) continue;
+      if (!actual.has(m[1])) actual.set(m[1], []);
+      actual.get(m[1]).push(m[2]);
+    }
+  }
+  const sameSet = (a, b) => a.length === b.length && [...a].sort().join('|') === [...b].sort().join('|');
+
+  for (const stop of plan.stops) {
+    const menu = pkg.stops.find((s) => s.id === stop.key)?.excursionMenu ?? [];
+    const chosen = (stop.selectedExcursionIds ?? []).map((id) => {
+      const item = menu.find((m) => m.id === id && m.status === 'approved');
+      excursionInvariant(item, `stop "${stop.key}" selects "${id}", which is not an approved item of its menu`);
+      return item.placeId;
+    });
+    const expected = [...stop.excursions.map((ex) => ex.placeId), ...chosen];
+    const found = actual.get(stop.key) ?? [];
+    excursionInvariant(
+      sameSet(expected, found),
+      `stop "${stop.key}" plans excursions [${expected}] but its days hold site blocks for [${found}]`
+    );
+  }
+  for (const key of actual.keys()) {
+    excursionInvariant(plan.stops.some((s) => s.key === key), `site blocks exist for "${key}", which is not a plan stop`);
+  }
+}

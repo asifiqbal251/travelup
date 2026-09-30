@@ -68,6 +68,18 @@
  */
 
 /**
+ * ➕ E3a: an authored, optional same-day excursion from a base stop (a "menu item"). Same numbers as a fixed
+ * `RoutePackageExcursion`, plus an id (unique in the family) and a review status. Menu places are not in
+ * `RoutePackage.placeIds`. A 'pending_review' item is compiled and authoring-checked, never offered or addable.
+ * @typedef {Object} RoutePackageExcursionMenuItem
+ * @property {string} id
+ * @property {string} placeId
+ * @property {string} connectionId
+ * @property {number} hoursOnSite
+ * @property {'approved'|'pending_review'} status
+ */
+
+/**
  * ➕ One stop in an authored route package.
  * `nights: 0` means pass-through: the traveller changes transport there and doesn't stay.
  * @typedef {Object} RoutePackageStop
@@ -75,7 +87,8 @@
  * @property {string} placeId            Where the stop is.
  * @property {number} minNights          Fewest nights at this stop.
  * @property {number} maxNights          Most nights at this stop (0 = always pass-through).
- * @property {RoutePackageExcursion[]} excursions  Day trips from this stop.
+ * @property {RoutePackageExcursion[]} excursions  Day trips from this stop (FIXED: always part of the route).
+ * @property {RoutePackageExcursionMenuItem[]} [excursionMenu]  ➕ E3a: same-day trips the traveller may add; present only when the family stop declares a non-empty menu.
  */
 
 /**
@@ -106,6 +119,7 @@
  * @property {number} minNights
  * @property {number} maxNights
  * @property {RoutePackageExcursion[]} [excursions]
+ * @property {RoutePackageExcursionMenuItem[]} [excursionMenu]  ➕ E3a: the traveller-selectable same-day trips from this stop. Not allowed on a pass-through (maxNights 0).
  */
 
 /**
@@ -334,7 +348,10 @@
  * @property {string} [optionalId]       Present when the stop came from an optional's insert.
  * @property {'default'|'required'|'user_added'} selectionSource  Why the stop is present (design §0.1 C).
  * @property {boolean} isRequired        The stop or one of its excursions is a required place.
- * @property {RoutePackageExcursion[]} excursions
+ * @property {RoutePackageExcursion[]} excursions  The stop's FIXED excursions, from the package (E3a: never the selected ones).
+ * @property {string[]} [selectedExcursionIds]  ➕ E3a: traveller state: ids of the menu items the traveller chose, in menu order
+ *   (never click order). Present only when non-empty; the engine never adds or removes one on its own. `minNights` is the
+ *   EFFECTIVE minimum: the authored one, raised to the smallest night count at which the selection fits.
  */
 
 /**

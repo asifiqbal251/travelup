@@ -15,7 +15,7 @@ function compact(obj) {
 /**
  * @param {Object} args
  * @param {RoutePackage} args.pkg      The compiled variant (or a hand-written package).
- * @param {Array<{key: string, placeId: string, nights: number, minNights: number, maxNights: number, isRequired: boolean, excursions: Object[]}>} args.stops
+ * @param {Array<{key: string, placeId: string, nights: number, minNights: number, maxNights: number, isRequired: boolean, excursions: Object[], selectedExcursionIds?: string[]}>} args.stops
  * @param {string[]} args.connectionIds
  * @param {number} args.minDays
  * @param {'authored'|'composed'} [args.source]
@@ -45,7 +45,9 @@ export function makeRoutePlan({ pkg, stops, connectionIds, minDays, source = 'au
       optionalId,
       selectionSource,
       isRequired: s.isRequired,
-      excursions: (s.excursions ?? []).map((ex) => ({ ...ex }))
+      excursions: (s.excursions ?? []).map((ex) => ({ ...ex })),
+      // Traveller state (E3a): menu ids in menu order. Omitted when empty, so a plan without any is unchanged.
+      selectedExcursionIds: s.selectedExcursionIds?.length > 0 ? [...s.selectedExcursionIds] : undefined
     });
   });
 
