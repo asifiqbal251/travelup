@@ -127,7 +127,7 @@ export function blockContext(trip, block) {
  * Returns the subset of `content` eligible for `block`, minus items already
  * used in the trip (from activity blocks) and any caller-supplied exclusions.
  * An item that spends its day at another place (`visitsPlaceId`) is not eligible
- * while this stop already visits that place as an excursion, on any of its days.
+ * while the trip already spends time at that place, from any stop on any day.
  * The block itself is never counted as "used" — callers exclude its current
  * content via excludeContentIds when they need to.
  *
@@ -138,15 +138,15 @@ export function blockContext(trip, block) {
  * @returns {ContentItem[]}
  */
 export function eligibleItemsForBlock(trip, block, content, { excludeContentIds = [] } = {}) {
-  const { slot, stopId, dayOffset } = blockContext(trip, block);
+  const { slot, dayOffset } = blockContext(trip, block);
   const accepted = ACCEPTED_SLOTS[slot];
 
   const used = new Set();
-  // Places this stop visits as an excursion: its non-travel blocks at another place.
-  const visitedFromStop = new Set();
+  // Places the trip already spends time at, other than this block's own: non-travel blocks anywhere.
+  const visitedElsewhere = new Set();
   for (const day of trip.days) {
     for (const b of day.blocks) {
-      if (b.anchor?.stopId === stopId && b.type !== 'travel' && b.placeId !== block.placeId) visitedFromStop.add(b.placeId);
+      if (b.type !== 'travel' && b.placeId !== block.placeId) visitedElsewhere.add(b.placeId);
       if (b.id === block.id) continue;
       if (b.type === 'activity' && b.anchor?.contentId) used.add(b.anchor.contentId);
     }
@@ -160,7 +160,7 @@ export function eligibleItemsForBlock(trip, block, content, { excludeContentIds 
     if (excludeSet.has(item.id)) return false;
     if (!item.slots.some((s) => accepted.includes(s))) return false;
     if ((item.minDayAtStop ?? 0) > dayOffset) return false;
-    if (item.visitsPlaceId != null && visitedFromStop.has(item.visitsPlaceId)) return false;
+    if (item.visitsPlaceId != null && visitedElsewhere.has(item.visitsPlaceId)) return false;
     return true;
   });
 }

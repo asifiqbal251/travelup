@@ -170,6 +170,19 @@ test('J6: with Nikko selected, the Tokyo "Day trip to Nikko" is gone; deselected
   assert.ok(offers(unused).every(Boolean), 'eligible on every Tokyo full day again');
 });
 
+test('J6b: with the Kyoto spur and Nikko selected at the Tokyo base, "Day trip to Nikko" is nowhere in the trip, hub afternoon included', () => {
+  const trip = build(8, SPUR);
+  const hub = () => blocks(trip).filter((b) => b.anchor?.stopId === 'tokyo_hub' && b.type === 'activity');
+  assert.deepEqual(hub().map((b) => [b.anchor.contentId, b.startTime]), [['tyo_nikko', '12:45']], 'without Nikko it fills the hub afternoon');
+  const withNikko = add(trip, 'tokyo_base', 'nikko');
+  assert.equal(contentIds(withNikko).includes('tyo_nikko'), false, 'nowhere in the trip');
+  const hubBlocks = withNikko.days.flatMap((d) => d.blocks).filter((b) => b.anchor?.stopId === 'tokyo_hub' && b.type !== 'travel');
+  assert.ok(hubBlocks.length > 0);
+  for (const b of hubBlocks) {
+    assert.equal(eligibleItemsForBlock(withNikko, b, PILOT_CONTENT).some((i) => i.id === 'tyo_nikko'), false, `${b.id} will not take it`);
+  }
+});
+
 test('J7: two day trips at a 2-night Kyoto refuse, naming both; "Add a night" gives 3 nights and both', () => {
   const trip = add(build(8, SPUR), 'kyo_base', 'nara');
   assert.deepEqual(nightsOf(trip), { tokyo_base: 3, kyo_base: 2, tokyo_hub: 1 }, 'one fits at 2 nights');

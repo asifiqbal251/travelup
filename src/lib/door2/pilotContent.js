@@ -265,8 +265,8 @@ export const PILOT_CONTENT = Object.freeze([
     summary: 'Meiji Shrine forest, Omotesando boutiques and the Shibuya skyline.',
     morning: 'Quiet morning at the Meiji Shrine forest.', afternoon: 'Cat Street and Omotesando design boutiques.', evening: 'Shibuya skyline view and ramen dinner.',
     foodNote: 'Try a tonkotsu ramen counter.', source: ex(TOKYO, 'Meiji Shrine, Harajuku & Shibuya') },
-  // visitsPlaceId: this Tokyo day is spent at Nikko, so it is not offered while the
-  // Nikko excursion is selected from the same stop (E3b, decision E2-1 (c)).
+  // visitsPlaceId: this Tokyo day is spent at Nikko, so it is not offered anywhere in a
+  // trip that already visits Nikko, e.g. with the Nikko excursion selected (E3b, E2-1 (c)).
   { id: 'tyo_nikko', placeId: 'tokyo', visitsPlaceId: 'nikko', title: 'Day trip to Nikko', slots: ['full'], intensity: 'High', interests: ['History and culture', 'Nature', 'Photography'],
     summary: "Train north to Nikko's Toshogu shrine, Kegon Falls and Lake Chuzenji.",
     morning: "Train north to Nikko's ornate Toshogu shrine.", afternoon: 'Kegon Falls and Lake Chuzenji.', evening: 'Return to Tokyo for a relaxed dinner.',
