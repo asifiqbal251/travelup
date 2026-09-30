@@ -10,7 +10,8 @@
 // family id, and `trips`, `edits` and `applies` by keys that start with a variant id,
 // which starts with its family id. So one family can be re-pinned without touching
 // the others. Re-pin a family ONLY when its own data changed on purpose, and never
-// the whole file. Re-pins so far: none.
+// the whole file. Re-pins so far:
+//   tokyo_city, E3b (Kyoto spur and day-trip menus).
 //
 //   node tests/door2/fixtures/pre-e3a-generate.mjs [repoRoot] > tests/door2/fixtures/pre-e3a.json
 //   node tests/door2/fixtures/pre-e3a-generate.mjs [repoRoot] --family tokyo_city --into tests/door2/fixtures/pre-e3a.json
