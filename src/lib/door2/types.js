@@ -291,6 +291,8 @@
  * @property {string} [foodNote]
  * @property {boolean} [arrivalFriendly] Good as the first thing at a new stop.
  * @property {number} [minDayAtStop]     Not before this many days after arriving (altitude safety).
+ * @property {string} [visitsPlaceId]    ➕ E3b: the place this item visits for the day, when that is not where the traveller
+ *   is sleeping; used to stop a day-trip item and a selected excursion double-booking the same place (fill.js).
  * @property {ContentSource} source      Provenance back to the source bundle, or 'authored'.
  */
 

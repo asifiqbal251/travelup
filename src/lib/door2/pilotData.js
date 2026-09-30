@@ -52,7 +52,15 @@ export const PILOT_PLACES = Object.freeze({
   ottawa:        place('ottawa',        'Ottawa',        'CA', 45.42, -75.70, -4),
   montreal:      place('montreal',      'Montréal',      'CA', 45.50, -73.57, -4),
   quebec_city:   place('quebec_city',   'Québec City',   'CA', 46.81, -71.21, -4),
-  niagara_falls: place('niagara_falls', 'Niagara Falls', 'CA', 43.09, -79.08, -4)
+  niagara_falls: place('niagara_falls', 'Niagara Falls', 'CA', 43.09, -79.08, -4),
+  // Japan (E1, Phase E Route Family #3). UTC+9 all year, no daylight saving.
+  // Nikko, Kamakura, Nara and Osaka are day-trip sites (visitKind 'attraction',
+  // like Machu Picchu): never an overnight base in this family.
+  kyoto:    place('kyoto',    'Kyoto',    'JP', 35.01, 135.77, 9),               // base (the optional spur)
+  nikko:    place('nikko',    'Nikko',    'JP', 36.75, 139.60, 9, 'attraction'),
+  kamakura: place('kamakura', 'Kamakura', 'JP', 35.32, 139.55, 9, 'attraction'),
+  nara:     place('nara',     'Nara',     'JP', 34.69, 135.80, 9, 'attraction'),
+  osaka:    place('osaka',    'Osaka',    'JP', 34.69, 135.50, 9, 'attraction')
 });
 
 const DRAFT_ROW = Object.freeze({
@@ -380,8 +388,137 @@ export const PILOT_CONNECTIONS = [
     reviewedBy: "Claude (chat, 28 Sep 2026 live-research pass — mode choice is a reviewed judgment, see assumptions)",
     reviewedAt: "2026-09-28",
     version: 1
+  },
+  // Japan (E1, 29 Sep 2026): copied verbatim from e1-japan-connections-2026-09-29.js.
+  // All five are bidirectional trains. conn_tyo_kyo_shinkansen carries the Kyoto spur
+  // both ways; the other four are excursion connections, used out AND back in a day.
+  {
+    ...DRAFT_ROW,
+    id: 'conn_tyo_kyo_shinkansen',
+    fromPlaceId: 'tokyo',
+    toPlaceId: 'kyoto',
+    mode: 'train',
+    inVehicleHours: 2.2,
+    typicalRangeHours: { min: 2.1, max: 2.8 },
+    localTransferHours: { origin: 0.4, destination: 0.4 },
+    assumptions: [
+      "Tokaido Shinkansen, Tokyo Station to Kyoto Station. Nozomi is the fastest at about 2h10m (a source quotes 2h10m; the JR Central-derived Tokyo-Shin-Osaka figure of 2h21m implies roughly 2h15m to Kyoto). 2.2h is a round average. The range maximum of 2.8h is the Hikari (2h48m), for a traveller who does not take the Nozomi.",
+      "Trains leave about every 5-10 minutes; the first Tokyo departure is about 06:00. Sources DISAGREE on the last Tokyo departure (19:50 on one guide, 21:24 on another that quotes the timetable). The engine departs at 09:00 and never needs the last train, so the conflict changes nothing here; the later figure is the better-sourced one.",
+      "Modelled with the ordinary `train` buffer rule (0.5h before, 0.25h after). No high-speed mode is added: that would be a new engine concept for a difference of a few minutes. Both stations are large city-centre hubs, so 0.4h local transfers at each end.",
+      "The same row serves the hub-night return Kyoto -> Tokyo, reversed by orientConnection.",
+      "Fares are not modelled. Note for later copy: the Nozomi is not covered by the Japan Rail Pass; the Hikari is."
+    ],
+    sources: [
+      "https://www.insidekyoto.com/how-to-get-from-tokyo-to-kyoto (Nozomi 2h10m, Hikari 2h48m, Kodama 3h37m; a train about every 10 minutes; first about 06:00; year-round)",
+      "https://www.jrailpass.com/blog/nozomi-shinkansen (Tokyo-Shin-Osaka 2h21m; a train every 5 minutes at peak; first 06:00, last Tokyo departure 21:24)"
+    ],
+    reviewedBy: "Claude (chat, 29 Sep 2026 live-research pass; last-train conflict between sources flagged, not needed by the engine)",
+    reviewedAt: "2026-09-29",
+    version: 1
+  },
+  {
+    ...DRAFT_ROW,
+    id: 'conn_tyo_nikko_train',
+    fromPlaceId: 'tokyo',
+    toPlaceId: 'nikko',
+    mode: 'train',
+    inVehicleHours: 1.83,
+    typicalRangeHours: { min: 1.8, max: 2.3 },
+    localTransferHours: { origin: 0.5, destination: 0.6 },
+    assumptions: [
+      "THE MARGINAL ONE (review doc finding E1-F1). Modelled as the Tobu limited express (Kegon / Spacia), Asakusa to Tobu-Nikko, about 1h50m. The JR route (limited express from Shinjuku, or shinkansen plus the JR Nikko line via Utsunomiya) takes about 2 hours, which is the range maximum.",
+      "Tobu runs 6 services on weekdays and 7 at weekends/holidays; the first Asakusa departure is 07:30. NOT VERIFIED: that a service leaves near 09:30 on a weekday (the engine departs from the hotel at 09:00, then adds its buffers). The fetched source gave the count and the first and last services but not the middle of the day.",
+      "Nikko station to the Toshogu area is a 10-minute bus (350 yen) or a 30-40 minute walk; 0.6h destination transfer allows for the bus wait.",
+      "Service is year-round (a regular scheduled limited express). Seasonal DEMAND (mid-October to early November foliage) is not seasonal AVAILABILITY and is not modelled.",
+      "FIT: with the scheduler's per-direction allowances this leg costs 3.68h each way, so a round trip is 7.36h and the day trip fits inside the 09:00-21:00 window only if hoursOnSite is at most 4.6h. The family should author hoursOnSite: 4.0. That is a thin Nikko (the main shrines and temples in half a day) and the note says so."
+    ],
+    sources: [
+      "https://www.asakusastation.com/tobu-limited-express-spacia-kegon-for-nikko/ (about 1h50m; 6 weekday and 7 weekend services; first 07:30 from Asakusa; runs daily)",
+      "https://jprail.com/destinations/how-to-get-nikko.html (three routes from Tokyo, each about 2 hours; the article confirms it works as a day trip)",
+      "https://www.japan-guide.com/e/e3801.html (Toshogu is a 30-40 minute walk or 10-minute bus from Tobu or JR Nikko station; bus 350 yen)"
+    ],
+    reviewedBy: "Claude (chat, 29 Sep 2026 live-research pass — mid-day departures unverified; on-site time is a flagged authoring judgment)",
+    reviewedAt: "2026-09-29",
+    version: 1
+  },
+  {
+    ...DRAFT_ROW,
+    id: 'conn_tyo_kamakura_train',
+    fromPlaceId: 'tokyo',
+    toPlaceId: 'kamakura',
+    mode: 'train',
+    inVehicleHours: 0.95,
+    typicalRangeHours: { min: 0.85, max: 1.15 },
+    localTransferHours: { origin: 0.4, destination: 0.4 },
+    assumptions: [
+      "JR Yokosuka line from Tokyo Station, just under an hour, direct. From Shinjuku the Shonan-Shinjuku line takes about an hour, but only trains bound for Zushi (roughly every second train, about two an hour) run through without a change at Ofuna. That is why the range maximum is 1.15h: a traveller starting from Shinjuku may change.",
+      "Kamakura is a spread-out place: Kita-Kamakura (Zen temples), Kamakura (Hachimangu) and Hase (Great Buddha, on the Enoden line) are different stops. The pilot treats Kamakura as one place and does not model the Enoden hop. Same simplification as Niagara Falls.",
+      "Year-round. Frequent all-day service; no timetable dependency at the engine's 09:00 departure.",
+      "FIT: 2.50h each way, 5.0h round trip; fits with hoursOnSite up to 7.0h. The family should author 6.0h, not 5.0h: at 5.0h the day ends at 19:00 and leaves a 2-hour evening block at the Tokyo base that the thin Tokyo shelf cannot fill (E2 finding E2-F5); at 6.0h the leftover is under the 1.5h minimum and no orphan block is produced. Six hours is an honest Kamakura day (Great Buddha, Hase-dera, Hachimangu, Komachi-dori)."
+    ],
+    sources: [
+      "https://www.japan-guide.com/e/e3115.html (JR Yokosuka line just under one hour from Tokyo Station, 1,040 yen; Shonan-Shinjuku line about one hour from Shinjuku, only Zushi-bound trains direct, about two per hour, otherwise change at Ofuna; Kita-Kamakura, Kamakura and Hase serve different sights)"
+    ],
+    reviewedBy: "Claude (chat, 29 Sep 2026 live-research pass — single source; frequency of the Yokosuka line not stated in it)",
+    reviewedAt: "2026-09-29",
+    version: 1
+  },
+  {
+    ...DRAFT_ROW,
+    id: 'conn_kyo_nara_train',
+    fromPlaceId: 'kyoto',
+    toPlaceId: 'nara',
+    mode: 'train',
+    inVehicleHours: 0.75,
+    typicalRangeHours: { min: 0.58, max: 0.9 },
+    localTransferHours: { origin: 0.4, destination: 0.4 },
+    assumptions: [
+      "MODELLED AS THE JR MIYAKOJI RAPID (45 minutes, about every 30 minutes, 720 yen, covered by the Japan Rail Pass), a deliberate choice that keeps the row on the mainstream service. Kintetsu is faster (limited express about 35 minutes, twice an hour) and its Nara station is a few steps from Nara Park, so 0.58h is the range minimum and the JR figure is the honest planning value for a traveller using a rail pass.",
+      "The JR Nara station is a 15-20 minute walk from Nara Park, which is why the destination transfer is 0.4h rather than the 0.25h a city-centre station would justify. The Kintetsu option would remove most of that walk. Recorded, not modelled.",
+      "Year-round, frequent, all day. Very practical as a day trip (the source says so explicitly).",
+      "FIT: 2.30h each way, 4.6h round trip; fits with hoursOnSite up to 7.4h. The family should author about 5.0h."
+    ],
+    sources: [
+      "https://www.japan-guide.com/e/e4107.html (JR Miyakoji Rapid 45 minutes, about every 30 minutes, 720 yen; Kintetsu limited express about 35 minutes twice hourly, 1,280 yen; JR station 15-20 minute walk from the park, Kintetsu station a few steps away)"
+    ],
+    reviewedBy: "Claude (chat, 29 Sep 2026 live-research pass — single source; the JR-versus-Kintetsu choice is a flagged judgment)",
+    reviewedAt: "2026-09-29",
+    version: 1
+  },
+  {
+    ...DRAFT_ROW,
+    id: 'conn_kyo_osaka_train',
+    fromPlaceId: 'kyoto',
+    toPlaceId: 'osaka',
+    mode: 'train',
+    inVehicleHours: 0.5,
+    typicalRangeHours: { min: 0.25, max: 0.8 },
+    localTransferHours: { origin: 0.4, destination: 0.5 },
+    assumptions: [
+      "JR Special Rapid, Kyoto Station to Osaka Station, about 29 minutes, first about 06:55 and last about 23:32 in the Kyoto-to-Osaka direction, 580 yen. The shinkansen covers Kyoto to Shin-Osaka in 13-15 minutes but stops at Shin-Osaka, not central Osaka, and costs 1,450 yen; it is the range minimum.",
+      "Osaka is a large city, treated here as ONE place for a day trip. The destination transfer is 0.5h because most of the sights need a further subway ride from Osaka Station. A day in Osaka is a different product from a day in Kyoto; the content pass (E2) decides what fits a single block.",
+      "Year-round, very frequent. Very practical as a day trip (the source says so explicitly).",
+      "FIT: 2.15h each way, 4.3h round trip; fits with hoursOnSite up to 7.7h. The family should author about 6.0h."
+    ],
+    sources: [
+      "https://www.jrailpass.com/blog/osaka-to-kyoto (JR Special Rapid about 29 minutes, stops only at Osaka, Shin-Osaka, Takatsuki and Kyoto, first about 06:55, last about 23:32; shinkansen 13-15 minutes to Shin-Osaka; a day trip is very practical)"
+    ],
+    reviewedBy: "Claude (chat, 29 Sep 2026 live-research pass — single source; Osaka-as-one-place is a flagged simplification)",
+    reviewedAt: "2026-09-29",
+    version: 1
   }
 ];
+
+// ------------------------------------------------------- FIT TABLE (E1) ---
+// Scheduler rule (schedule.js L259-283): a day trip needs
+//   out + hoursOnSite + back  <=  12h   (09:00 to 21:00, dayStartHour..dayEndHour)
+// where out = back = in-vehicle + train pre 0.5 + post 0.25 + origin + destination.
+//
+// excursion   one way   round trip   max on site   authored   slack
+// Nikko       3.68h     7.36h        4.64h         4.0h       0.64h   <- marginal
+// Kamakura    2.50h     5.00h        7.00h         6.0h       1.00h   (was 5.0h; see E2-F5)
+// Nara        2.30h     4.60h        7.40h         5.0h       2.40h
+// Osaka       2.15h     4.30h        7.70h         6.0h       1.70h
 
 // ---------------------------------------------------------------------------
 // Route Families (design-door2-route-families v2). The hand-written package

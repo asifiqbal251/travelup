@@ -263,7 +263,7 @@ test('G14: PILOT_CONTENT integrity', () => {
   const SLOTS = new Set(['full', 'half', 'evening', 'short']);
   const INTENSITIES = new Set(['Light', 'Moderate', 'High', 'Highly active']);
   assert.equal(PILOT_CONTENT_VERSION, 'pilot-content-v1');
-  assert.equal(PILOT_CONTENT.length, 89); // 56 + 33 Eastern Canada (C3b)
+  assert.equal(PILOT_CONTENT.length, 107); // 56 + 33 Eastern Canada (C3b) + 18 Japan (E3b)
   assert.equal(new Set(PILOT_CONTENT.map((i) => i.id)).size, PILOT_CONTENT.length, 'ids are unique');
   for (const item of PILOT_CONTENT) {
     assert.ok(Object.prototype.hasOwnProperty.call(PILOT_PLACES, item.placeId), `${item.id}: unknown place ${item.placeId}`);

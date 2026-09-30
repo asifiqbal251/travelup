@@ -107,15 +107,18 @@ test('placeIntegrity throws, naming the offending id', () => {
 
 // 72eb2d7: every connection row now carries reviewedBy/reviewedAt '2026-09-23' and version 3.
 test('pilot data: every connection is reviewed and resolves; package placeIds are derived', () => {
-  // 8 rows reviewed 23 Sep (v3), then 7 Eastern Canada rows reviewed 28 Sep (v1, C1).
-  assert.equal(PILOT_CONNECTIONS.length, 15);
+  // 8 rows reviewed 23 Sep (v3), then 7 Eastern Canada rows reviewed 28 Sep (v1, C1),
+  // then 5 Japan rows reviewed 29 Sep (v1, E1).
+  assert.equal(PILOT_CONNECTIONS.length, 20);
+  const JAPAN_FIVE = new Set(['conn_tyo_kyo_shinkansen', 'conn_tyo_nikko_train', 'conn_tyo_kamakura_train', 'conn_kyo_nara_train', 'conn_kyo_osaka_train']);
+  assert.equal(PILOT_CONNECTIONS.filter((c) => JAPAN_FIVE.has(c.id)).length, 5, 'all five Japan ids present');
   const ORIGINAL_EIGHT = new Set(['conn_yvr_nyc_air', 'conn_yvr_lim_air', 'conn_yvr_tokyo_air_nrt', 'conn_lim_cuz_air', 'conn_cuz_olly_road', 'conn_olly_agc_train', 'conn_agc_mp_shuttle', 'conn_lim_huz_coach']);
   assert.equal(PILOT_CONNECTIONS.filter((c) => ORIGINAL_EIGHT.has(c.id)).length, 8, 'all eight original ids present');
   for (const c of PILOT_CONNECTIONS) {
     const original = ORIGINAL_EIGHT.has(c.id);
     assert.equal(typeof c.reviewedBy, 'string');
     assert.ok(c.reviewedBy.length > 0);
-    assert.equal(c.reviewedAt, original ? '2026-09-23' : '2026-09-28');
+    assert.equal(c.reviewedAt, original ? '2026-09-23' : JAPAN_FIVE.has(c.id) ? '2026-09-29' : '2026-09-28');
     assert.equal(c.version, original ? 3 : 1);
     assert.equal(c.direction, 'bidirectional');
     assertConnectionPlacesResolve(c, PILOT_PLACES);

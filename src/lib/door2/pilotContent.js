@@ -43,6 +43,11 @@ const AUTHORED_CA = {
   note: 'Written for the Eastern Canada pilot family (Phase C); no Base44 bundle exists for these places.'
 };
 
+const AUTHORED_JP = {
+  kind: 'authored',
+  note: 'Written for the Japan pilot family (Phase E); no standalone Base44 content exists for this place.'
+};
+
 const ex = (base, templateTitle, edited = false) => ({ ...base, templateTitle, ...(edited ? { edited: true } : {}) });
 
 export const PILOT_CONTENT = Object.freeze([
@@ -260,7 +265,9 @@ export const PILOT_CONTENT = Object.freeze([
     summary: 'Meiji Shrine forest, Omotesando boutiques and the Shibuya skyline.',
     morning: 'Quiet morning at the Meiji Shrine forest.', afternoon: 'Cat Street and Omotesando design boutiques.', evening: 'Shibuya skyline view and ramen dinner.',
     foodNote: 'Try a tonkotsu ramen counter.', source: ex(TOKYO, 'Meiji Shrine, Harajuku & Shibuya') },
-  { id: 'tyo_nikko', placeId: 'tokyo', title: 'Day trip to Nikko', slots: ['full'], intensity: 'High', interests: ['History and culture', 'Nature', 'Photography'],
+  // visitsPlaceId: this Tokyo day is spent at Nikko, so it is not offered while the
+  // Nikko excursion is selected from the same stop (E3b, decision E2-1 (c)).
+  { id: 'tyo_nikko', placeId: 'tokyo', visitsPlaceId: 'nikko', title: 'Day trip to Nikko', slots: ['full'], intensity: 'High', interests: ['History and culture', 'Nature', 'Photography'],
     summary: "Train north to Nikko's Toshogu shrine, Kegon Falls and Lake Chuzenji.",
     morning: "Train north to Nikko's ornate Toshogu shrine.", afternoon: 'Kegon Falls and Lake Chuzenji.', evening: 'Return to Tokyo for a relaxed dinner.',
     foodNote: 'Try yuba tofu-skin dishes in Nikko.', source: ex(TOKYO, 'Day trip to Nikko') },
@@ -409,5 +416,83 @@ export const PILOT_CONTENT = Object.freeze([
     source: AUTHORED_CA },
   { id: 'nia_short_table_rock', placeId: 'niagara_falls', title: 'Table Rock and the brink', slots: ['short', 'half'], intensity: 'Light', interests: ['Nature'],
     summary: 'The closest you can stand to the edge, when there is only an hour.',
-    arrivalFriendly: true, source: AUTHORED_CA }
+    arrivalFriendly: true, source: AUTHORED_CA },
+
+  // ---------------- Japan (E2, Phase E Route Family #3) ----------------
+  // Copied verbatim from e2-japan-content-2026-09-29.js. All authored: WhereNova's only
+  // Japan bundle has Tokyo-based days and nothing standalone for these five places.
+  //   Kyoto 10 (a base, the optional spur) · Nikko 2 · Kamakura 2 · Nara 2 · Osaka 2 = 18
+  // Kyoto items are ordinary base items. Nikko, Kamakura, Nara and Osaka are excursion
+  // sites: the scheduler gives each ONE site block of its hoursOnSite (Nikko 4, Kamakura 6,
+  // Nara 5, Osaka 6), a 'half' slot, so their items are slots: ['half'] and each fits its
+  // own site's hours (the Nikko pair fit 4 hours; Kegon Falls and Lake Chuzenji do not).
+  // -------------------------------- Kyoto --------------------------------
+  { id: 'kyo_higashiyama', placeId: 'kyoto', title: 'Higashiyama: Kiyomizu-dera & the old lanes', slots: ['full'], intensity: 'Moderate', interests: ['History and culture', 'Photography'],
+    summary: 'The hillside temple, the stone lanes below it, and Gion as the light goes.',
+    morning: 'Kiyomizu-dera and its wooden veranda over the city.', afternoon: 'Ninenzaka and Sannenzaka, then Yasaka Shrine.', evening: 'Dinner in Gion and a walk along Hanamikoji.',
+    foodNote: 'Matcha sweets on the lanes below the temple.', source: AUTHORED_JP },
+  { id: 'kyo_fushimi_inari', placeId: 'kyoto', title: 'Fushimi Inari & Tofuku-ji', slots: ['full', 'half'], intensity: 'Moderate', interests: ['Hiking', 'Photography', 'History and culture'],
+    summary: 'Thousands of vermilion gates up a wooded hill, then a quiet Zen garden nearby.',
+    morning: 'Walk the torii gates at Fushimi Inari, as far up the hill as you like.', afternoon: 'Tofuku-ji and its gardens.', evening: 'Dinner back in the centre.',
+    source: AUTHORED_JP },
+  { id: 'kyo_arashiyama', placeId: 'kyoto', title: 'Arashiyama & the bamboo grove', slots: ['full'], intensity: 'Moderate', interests: ['Nature', 'Photography', 'History and culture'],
+    summary: 'A river valley on the western edge of the city: a Zen temple, a bamboo grove and a wooden bridge.',
+    morning: 'Tenryu-ji and its garden, then the bamboo grove.', afternoon: 'Togetsukyo bridge and the riverside.', evening: 'Dinner in Arashiyama or back in the centre.',
+    foodNote: 'Yudofu, the simmered-tofu dish Kyoto is known for.', source: AUTHORED_JP },
+  { id: 'kyo_kinkakuji_north', placeId: 'kyoto', title: 'Kinkaku-ji & the north-west temples', slots: ['full'], intensity: 'Light', interests: ['History and culture', 'Photography'],
+    summary: 'The Golden Pavilion, a famous rock garden, and a hillside shrine.',
+    morning: 'Kinkaku-ji, the Golden Pavilion.', afternoon: 'Ryoan-ji’s rock garden and Kitano Tenmangu.', evening: 'Dinner near Kitano.',
+    source: AUTHORED_JP },
+  { id: 'kyo_philosophers_path', placeId: 'kyoto', title: 'The Philosopher’s Path', slots: ['full'], intensity: 'Light', interests: ['Nature', 'History and culture', 'Relaxation'],
+    summary: 'A canal-side walk between two temples, with a big Zen temple at one end.',
+    morning: 'Ginkaku-ji, the Silver Pavilion.', afternoon: 'The Philosopher’s Path, then Nanzen-ji.', evening: 'Dinner near Okazaki.',
+    source: AUTHORED_JP },
+  { id: 'kyo_nijo_nishiki', placeId: 'kyoto', title: 'Nijo Castle & Nishiki Market', slots: ['full'], intensity: 'Light', interests: ['Food', 'History and culture', 'Cities'],
+    summary: 'A shogun’s castle in the morning, then the covered food market in the centre.',
+    morning: 'Nijo Castle and its garden.', afternoon: 'Nishiki Market and the arcades around it.', evening: 'Dinner in Pontocho.',
+    foodNote: 'Graze the market: pickles, skewers and rolled omelette.', source: AUTHORED_JP },
+  { id: 'kyo_sanjusangendo', placeId: 'kyoto', title: 'Sanjusangendo & the station quarter', slots: ['half'], intensity: 'Light', interests: ['History and culture'],
+    summary: 'A long temple hall holding a thousand gilded statues.',
+    source: AUTHORED_JP },
+  { id: 'kyo_gion_evening', placeId: 'kyoto', title: 'Gion and Pontocho after dark', slots: ['evening'], intensity: 'Light', interests: ['Food', 'Cities', 'Relaxation'],
+    summary: 'Lantern-lit lanes on both sides of the river, and somewhere small to eat.',
+    arrivalFriendly: true, source: AUTHORED_JP },
+  { id: 'kyo_kamo_evening', placeId: 'kyoto', title: 'The Kamo River at dusk', slots: ['evening', 'half'], intensity: 'Light', interests: ['Relaxation', 'Photography'],
+    summary: 'The riverbank walk through the middle of the city as the lights come on.',
+    arrivalFriendly: true, source: AUTHORED_JP },
+  { id: 'kyo_short_station', placeId: 'kyoto', title: 'Kyoto Station & Higashi Honganji', slots: ['short', 'half'], intensity: 'Light', interests: ['Cities', 'History and culture'],
+    summary: 'The huge modern station with a rooftop view, and a great temple hall a few minutes’ walk away.',
+    arrivalFriendly: true, source: AUTHORED_JP },
+
+  // --------------------- Nikko (excursion site, 4 hours) ---------------------
+  { id: 'nik_toshogu', placeId: 'nikko', title: 'Toshogu shrine & the sacred bridge', slots: ['half'], intensity: 'Moderate', interests: ['History and culture', 'Photography'],
+    summary: 'The Shinkyo bridge, then the richly carved shrine complex of the first Tokugawa shogun.',
+    foodNote: 'Yuba, the local tofu-skin dishes, for lunch.', source: AUTHORED_JP },
+  { id: 'nik_rinnoji_futarasan', placeId: 'nikko', title: 'Rinno-ji, Futarasan Shrine & the abyss walk', slots: ['half'], intensity: 'Light', interests: ['History and culture', 'Nature', 'Relaxation'],
+    summary: 'A quieter circuit: a great temple hall, a forest shrine, and a riverside path lined with stone statues.',
+    source: AUTHORED_JP },
+
+  // -------------------- Kamakura (excursion site, 6 hours) --------------------
+  { id: 'kam_buddha_hase', placeId: 'kamakura', title: 'The Great Buddha & Hase-dera', slots: ['half'], intensity: 'Light', interests: ['History and culture', 'Photography'],
+    summary: 'The outdoor bronze Buddha, then a hillside temple with a view over the bay.',
+    source: AUTHORED_JP },
+  { id: 'kam_hachimangu_komachi', placeId: 'kamakura', title: 'Hachimangu & Komachi-dori', slots: ['half'], intensity: 'Moderate', interests: ['History and culture', 'Food', 'Cities'],
+    summary: 'The main shrine at the end of a long approach, and the snack street that leads to the station.',
+    foodNote: 'Street snacks along Komachi-dori.', source: AUTHORED_JP },
+
+  // ---------------------- Nara (excursion site, 5 hours) ----------------------
+  { id: 'nar_todaiji_park', placeId: 'nara', title: 'Todai-ji & the deer of Nara Park', slots: ['half'], intensity: 'Light', interests: ['History and culture', 'Nature', 'Photography'],
+    summary: 'The world’s largest wooden hall, its giant bronze Buddha, and the park’s free-roaming deer.',
+    foodNote: 'Buy the special deer crackers sold in the park; other food is bad for the deer.', source: AUTHORED_JP },
+  { id: 'nar_kasuga_naramachi', placeId: 'nara', title: 'Kasuga Taisha & the old merchant town', slots: ['half'], intensity: 'Light', interests: ['History and culture', 'Nature', 'Cities'],
+    summary: 'A lantern-lined forest shrine, then the preserved streets of the old town.',
+    source: AUTHORED_JP },
+
+  // --------------------- Osaka (excursion site, 6 hours) ---------------------
+  { id: 'osa_castle_town', placeId: 'osaka', title: 'Osaka Castle & the old town', slots: ['half'], intensity: 'Moderate', interests: ['History and culture', 'Cities', 'Photography'],
+    summary: 'The rebuilt castle keep and its park, then the temples and back streets nearby.',
+    source: AUTHORED_JP },
+  { id: 'osa_dotonbori_kuromon', placeId: 'osaka', title: 'Dotonbori & Kuromon Market food crawl', slots: ['half'], intensity: 'Light', interests: ['Food', 'Cities'],
+    summary: 'The neon canal street and the covered market beside it, eaten in small pieces.',
+    foodNote: 'Takoyaki, okonomiyaki and kushikatsu are the local trio.', source: AUTHORED_JP }
 ]);
