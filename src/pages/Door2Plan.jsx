@@ -77,7 +77,7 @@ const MODE_LABELS = {
   ferry: "ferry",
 };
 
-const DEFAULT_FORM = {
+export const DEFAULT_FORM = {
   destination: "",
   totalDays: 10,
   travelMonth: 10,
@@ -86,6 +86,21 @@ const DEFAULT_FORM = {
   interests: [],
   required: [],
 };
+
+/** The intake form that produced this trip, so Refine rebuilds the same trip.
+ *  Inverse of the spec construction in runBuild. */
+export function formFromSpec(spec) {
+  if (!spec?.destination?.kind || !spec.destination.id) return null;
+  return {
+    destination: `${spec.destination.kind}:${spec.destination.id}`,
+    totalDays: spec.totalDays,
+    travelMonth: spec.travelMonth,
+    travellerType: spec.travellerType,
+    pace: spec.pace,
+    interests: spec.interests ?? [],
+    required: spec.requiredPlaceIds ?? [],
+  };
+}
 
 // Every traveller-facing string of the day-trip picker (E3c). On screen it is a
 // "day trip", never the engine's word for it. Reword here; the tests assert
@@ -1550,7 +1565,11 @@ export default function Door2Plan() {
     setDayNotices({});
     setSaveMsg(null);
     setRouteAlternatives([]);
-    setCurrentSpec(null);
+    // A reload leaves the form at DEFAULT_FORM; restore it from the trip's own
+    // spec so Refine rebuilds this trip instead of one with no destination.
+    const restored = formFromSpec(trip?.spec);
+    if (restored) setForm(restored);
+    setCurrentSpec(trip?.spec ?? null);
     setStep("basics");
   }
 
