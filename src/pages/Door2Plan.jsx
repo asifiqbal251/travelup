@@ -6,7 +6,17 @@ import { PILOT_DATA, buildFilledTrip } from "@/lib/door2/planner";
 import { PILOT_PLACES, PILOT_ROUTE_FAMILIES, PILOT_ROUTE_PACKAGES } from "@/lib/door2/pilotData";
 import { selectRoutes } from "@/lib/door2/route";
 import { backToMove, pickMove, positionLabel, proposalColumns } from "@/lib/door2/proposalView";
-import { applyProposal, listMoveOptions, previewAddOptional, previewAdjustNights, previewRemoveOptional } from "@/lib/door2/restructure";
+import {
+  applyProposal,
+  isDurationFlexible,
+  listExcursionMenu,
+  listMoveOptions,
+  previewAddExcursion,
+  previewAddOptional,
+  previewAdjustNights,
+  previewRemoveExcursion,
+  previewRemoveOptional,
+} from "@/lib/door2/restructure";
 import { MONTHS } from "@/lib/options";
 import {
   deleteDraftTrip,
@@ -77,6 +87,33 @@ const DEFAULT_FORM = {
   required: [],
 };
 
+// Every traveller-facing string of the day-trip picker (E3c). On screen it is a
+// "day trip", never the engine's word for it. Reword here; the tests assert
+// against these.
+export const DAY_TRIP_COPY = {
+  sectionHeading: (base) => `+ Add a day trip from ${base}`,
+  addLabel: "Add",
+  // hoursOnSite is time at the place, not the round trip.
+  duration: (hours) => `About ${formatHours(hours)} hours there, plus travel`,
+  nothingAdded: "Nothing is added until you choose it.",
+  previewAddTitle: (place) => `Add a day trip to ${place}`,
+  previewRemoveTitle: (place) => `Remove the day trip to ${place}`,
+  keptItemsMoved: (list) => `${list} moved to make room.`,
+  glanceRow: (place) => `Day trip: ${place}`,
+  removeLabel: "Remove",
+  keepMyTrip: "Keep my trip",
+  previewLabel: "Preview",
+  refusalOneMoreNight: (place, base) => `${place} needs one more night in ${base} to fit.`,
+  refusalMoreNights: (place, base, n) => `${place} needs ${n} more nights in ${base} to fit.`,
+  refusalExtendRow: (place, base, n) =>
+    n === 1 ? `Add a night in ${base} and include ${place}` : `Add ${n} nights in ${base} and include ${place}`,
+  refusalFullDay: (place) => `${place} needs a full day, and this trip doesn't have one to give.`,
+  refusalDatesFixed: (place, base) => `${place} needs more time in ${base}, and your dates are fixed.`,
+  refusalNotAvailable: (place) => `${place} isn't available as a day trip yet.`,
+  refusalFallback: (place) => `${place} doesn't fit this trip right now.`,
+  removeUnavailable: (place) => `Your day trip to ${place} can't be removed right now.`,
+};
+
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function placeName(id) {
@@ -137,6 +174,44 @@ function addableOptionalsFor(trip) {
 /** The optional's traveller-facing label for a stop that belongs to one (e.g. "Huaraz & the Cordillera Blanca"). */
 function optionalLabelFor(trip, optionalId) {
   return familyFor(trip)?.optional?.find((o) => o.id === optionalId)?.label ?? optionalId;
+}
+
+/** 4 → "4", 4.5 → "4.5": whole numbers stay whole, anything else gets one decimal. */
+function formatHours(hours) {
+  return Number.isInteger(hours) ? String(hours) : hours.toFixed(1);
+}
+
+/** Every stop whose day-trip menu has at least one item, in route order. Driven
+ * entirely by listExcursionMenu: no stop is named here. */
+function dayTripMenusFor(trip) {
+  if (!trip?.routePlan) return [];
+  return trip.routePlan.stops
+    .map((s) => ({ stopKey: s.key, placeId: s.placeId, items: listExcursionMenu(trip, s.key) }))
+    .filter((m) => m.items.length > 0);
+}
+
+/**
+ * Traveller-facing copy for a day trip that can't be added as asked. Never shows
+ * the engine's own message; anything it can't classify (including a preview that
+ * threw, passed as null) gets the place-specific fallback.
+ * @returns {{message: string, alternative: {label: string, proposal: Object} | null}}
+ */
+export function dayTripRefusalView(result, { place, base, stop, spec }) {
+  const C = DAY_TRIP_COPY;
+  const only = (message) => ({ message, alternative: null });
+  if (!result || result.ok !== false) return only(C.refusalFallback(place));
+  if (result.why === "not_available") return only(C.refusalNotAvailable(place));
+  if (result.why !== "excursion_does_not_fit" || !result.detail) return only(C.refusalFallback(place));
+  const needed = result.detail.nightsNeeded;
+  if (needed == null || needed > stop.maxNights) return only(C.refusalFullDay(place));
+  if (!isDurationFlexible(spec)) return only(C.refusalDatesFixed(place, base));
+  const extra = needed - stop.nights;
+  if (!(extra >= 1)) return only(C.refusalFallback(place));
+  const proposal = result.alternatives?.[0] ?? null;
+  return {
+    message: extra === 1 ? C.refusalOneMoreNight(place, base) : C.refusalMoreNights(place, base, extra),
+    alternative: proposal ? { label: C.refusalExtendRow(place, base, extra), proposal } : null,
+  };
 }
 
 function summarizeDiff(diff) {
@@ -469,9 +544,11 @@ function BasicsStep({ form, updateForm, onBack, onSubmit }) {
 
 // ── Results: trip at a glance ───────────────────────────────────────────────
 
-function TripAtAGlance({ trip, routeAlternatives, onChangeRoute, onOpenNightsSheet, addableOptionals, onOpenOptionalSheet }) {
+function TripAtAGlance({ trip, routeAlternatives, onChangeRoute, onOpenNightsSheet, addableOptionals, onOpenOptionalSheet, dayTripMenus, onOpenDayTrip, onRemoveDayTrip }) {
   const { nodes, edges } = tripAtGlanceSegments(trip);
   if (nodes.length === 0) return null;
+  const selectedDayTrips = (stopKey) =>
+    (dayTripMenus ?? []).find((m) => m.stopKey === stopKey)?.items.filter((item) => item.selected) ?? [];
 
   return (
     <div className="rounded-xl bg-slate-800 border border-slate-700 p-5 space-y-4">
@@ -499,6 +576,19 @@ function TripAtAGlance({ trip, routeAlternatives, onChangeRoute, onOpenNightsShe
                 <span className="text-sm text-slate-400">{nightsLabel(node.nights)}</span>
               )}
             </div>
+            {node.routeStop &&
+              selectedDayTrips(node.routeStop.key).map((item) => (
+                <div key={item.excursionId} className="flex items-baseline gap-2 pl-4 pt-1">
+                  <span className="text-sm text-slate-300">{DAY_TRIP_COPY.glanceRow(placeName(item.placeId))}</span>
+                  <button
+                    type="button"
+                    onClick={() => onRemoveDayTrip(node.routeStop.key, item)}
+                    className="text-xs text-teal hover:opacity-80 font-medium transition-opacity"
+                  >
+                    {DAY_TRIP_COPY.removeLabel}
+                  </button>
+                </div>
+              ))}
           </div>
         ))}
       </div>
@@ -519,6 +609,33 @@ function TripAtAGlance({ trip, routeAlternatives, onChangeRoute, onOpenNightsShe
           ))}
         </div>
       )}
+
+      {(dayTripMenus ?? []).map((menu) => {
+        const open = menu.items.filter((item) => !item.selected);
+        if (open.length === 0) return null;
+        return (
+          <div key={menu.stopKey} className="pt-3 border-t border-slate-700 space-y-2">
+            <p className="text-xs font-medium text-slate-400 uppercase tracking-wide">
+              {DAY_TRIP_COPY.sectionHeading(placeName(menu.placeId))}
+            </p>
+            {open.map((item) => (
+              <button
+                key={item.excursionId}
+                type="button"
+                onClick={() => onOpenDayTrip(menu.stopKey, item)}
+                className="w-full flex items-center justify-between gap-3 px-3.5 py-2.5 rounded-lg bg-slate-900/60 border border-slate-700 hover:border-slate-500 text-left transition-colors"
+              >
+                <span className="min-w-0">
+                  <span className="block text-sm font-medium text-white">{placeName(item.placeId)}</span>
+                  <span className="block text-xs text-slate-500">{DAY_TRIP_COPY.duration(item.hoursOnSite)}</span>
+                </span>
+                <span className="text-xs text-slate-500 shrink-0">{DAY_TRIP_COPY.addLabel}</span>
+              </button>
+            ))}
+            <p className="text-xs text-slate-500">{DAY_TRIP_COPY.nothingAdded}</p>
+          </div>
+        );
+      })}
 
       {routeAlternatives?.length > 0 && (
         <div className="pt-3 border-t border-slate-700 space-y-2">
@@ -728,13 +845,14 @@ function PlaceSection({ placeId, nights, days, dayNotices, dayErrors, blockError
 
 // ── Results: structural edit sheet (nights chips → preview → apply) ────────
 
-function ProposalCard({ trip, proposal, onUse, onKeep }) {
+function ProposalCard({ trip, proposal, title, onUse, onKeep }) {
   const columns = proposalColumns(trip.routePlan, proposal.routePlan);
+  const keptItemsAffected = proposal.diff.keptItemsAffected ?? [];
 
   return (
     <div className="rounded-xl bg-slate-800 border border-slate-700 p-5 space-y-4">
       <div className="flex items-center justify-between gap-3">
-        <span className="text-sm font-semibold text-white">{proposal.label}</span>
+        <span className="text-sm font-semibold text-white">{title ?? proposal.label}</span>
         {proposal.diff.contentGaps === 0 ? (
           <span className="text-xs font-medium text-emerald-400">No gaps</span>
         ) : (
@@ -766,6 +884,11 @@ function ProposalCard({ trip, proposal, onUse, onKeep }) {
       </div>
 
       <p className="text-sm text-slate-300 leading-relaxed">{summarizeDiff(proposal.diff)}</p>
+      {keptItemsAffected.length > 0 && (
+        <p className="text-sm text-amber-400 leading-relaxed">
+          {DAY_TRIP_COPY.keptItemsMoved(keptItemsAffected.map((k) => k.title).join(" & "))}
+        </p>
+      )}
 
       <div className="flex gap-3">
         <button
@@ -787,7 +910,7 @@ function ProposalCard({ trip, proposal, onUse, onKeep }) {
   );
 }
 
-export function StructureSheet({ sheet, trip, onMoreTime, onLessTime, onRemoveOptional, onAddOptional, onMoveOptional, onPickMove, onBackToMove, onUseProposal, onClose }) {
+export function StructureSheet({ sheet, trip, onMoreTime, onLessTime, onRemoveOptional, onAddOptional, onMoveOptional, onPickMove, onBackToMove, onUseProposal, onPreviewAlternative, onClose }) {
   if (!sheet) return null;
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60" onClick={onClose}>
@@ -903,10 +1026,33 @@ export function StructureSheet({ sheet, trip, onMoreTime, onLessTime, onRemoveOp
           </div>
         )}
 
+        {sheet.stage === "day_trip_refusal" && (
+          <div className="space-y-3">
+            <p className="text-sm text-slate-300">{sheet.message}</p>
+            {sheet.alternative && (
+              <button
+                type="button"
+                onClick={() => onPreviewAlternative(sheet.alternative)}
+                className="w-full flex items-center justify-between gap-3 px-3.5 py-2.5 rounded-lg bg-slate-800 border border-slate-600 hover:border-slate-400 text-left transition-colors"
+              >
+                <span className="text-sm font-medium text-white">{sheet.alternative.label}</span>
+                <span className="text-xs text-slate-500 shrink-0">{DAY_TRIP_COPY.previewLabel}</span>
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={onClose}
+              className="w-full bg-slate-700 border border-slate-600 text-white rounded-lg px-4 py-2.5 font-semibold text-sm hover:bg-slate-600 transition-colors"
+            >
+              {DAY_TRIP_COPY.keepMyTrip}
+            </button>
+          </div>
+        )}
+
         {sheet.stage === "proposals" && (
           <div className="space-y-4">
             {sheet.proposals.map((p) => (
-              <ProposalCard key={p.id} trip={trip} proposal={p} onUse={onUseProposal} onKeep={onClose} />
+              <ProposalCard key={p.id} trip={trip} proposal={p} title={sheet.title} onUse={onUseProposal} onKeep={onClose} />
             ))}
           </div>
         )}
@@ -1497,6 +1643,52 @@ export default function Door2Plan() {
     }
   }
 
+  // ── Day-trip handlers (menu row / Remove → preview → apply) ──────────────
+
+  function dayTripContext(t, stopKey, item) {
+    const stop = t.routePlan.stops.find((s) => s.key === stopKey);
+    return { place: placeName(item.placeId), base: placeName(stop?.placeId), stop, spec: t.spec };
+  }
+
+  function handleOpenDayTrip(stopKey, item) {
+    const t = activeTrip;
+    if (!t) return;
+    const ctx = dayTripContext(t, stopKey, item);
+    let result = null;
+    try {
+      result = previewAddExcursion(t, stopKey, item.excursionId);
+    } catch (err) {
+      // An engine throw is a defect, not a refusal: say it plainly in the console, show the fallback.
+      console.error("Door2Plan: day-trip preview failed", err);
+    }
+    if (result?.ok) {
+      setStructureSheet({ stage: "proposals", proposals: result.proposals, title: DAY_TRIP_COPY.previewAddTitle(ctx.place) });
+    } else {
+      setStructureSheet({ stage: "day_trip_refusal", ...dayTripRefusalView(result, ctx) });
+    }
+  }
+
+  function handleRemoveDayTrip(stopKey, item) {
+    const t = activeTrip;
+    if (!t) return;
+    const place = placeName(item.placeId);
+    let result = null;
+    try {
+      result = previewRemoveExcursion(t, stopKey, item.excursionId);
+    } catch (err) {
+      console.error("Door2Plan: day-trip removal preview failed", err);
+    }
+    if (result?.ok) {
+      setStructureSheet({ stage: "proposals", proposals: result.proposals, title: DAY_TRIP_COPY.previewRemoveTitle(place) });
+    } else {
+      setStructureSheet({ stage: "day_trip_refusal", message: DAY_TRIP_COPY.removeUnavailable(place), alternative: null });
+    }
+  }
+
+  function handlePreviewAlternative(alternative) {
+    setStructureSheet({ stage: "proposals", proposals: [alternative.proposal], title: alternative.label });
+  }
+
   function handleUseProposal(proposal) {
     const t = activeTrip;
     if (!t) return;
@@ -1649,6 +1841,9 @@ export default function Door2Plan() {
                   onOpenNightsSheet={handleOpenNightsSheet}
                   addableOptionals={addableOptionalsFor(activeTrip)}
                   onOpenOptionalSheet={handleOpenOptionalSheet}
+                  dayTripMenus={dayTripMenusFor(activeTrip)}
+                  onOpenDayTrip={handleOpenDayTrip}
+                  onRemoveDayTrip={handleRemoveDayTrip}
                 />
 
                 <div className="space-y-5">
@@ -1729,6 +1924,7 @@ export default function Door2Plan() {
         onPickMove={handlePickMove}
         onBackToMove={handleBackToMove}
         onUseProposal={handleUseProposal}
+        onPreviewAlternative={handlePreviewAlternative}
         onClose={() => setStructureSheet(null)}
       />
 
