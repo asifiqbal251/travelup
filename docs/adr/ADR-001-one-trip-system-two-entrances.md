@@ -165,3 +165,42 @@ The shorthand stays readable as shorthand; the typed contract in Phase F is in n
 ### 5. Review trigger — not tripped
 
 ADR-001's review trigger asks whether Phase F concluded that Door 1 itineraries **cannot** be expressed in Door 2's block shape without a lossy migration or an engine special case. **It did not.** The three items that would be lossy if handled carelessly — multi-place bundles (Q13), automatic recovery days (F1-D5c) and travel-day content (F1-D18 / Q15) — are each resolved by an explicit decision rather than a silent drop. The trigger stands as written for any future finding.
+
+---
+
+## Amendment, 1 October 2026 (second) — three corrections to the handoff, found before any code was written
+
+- **Source:** `claude/design-f1-option-b-2026-09-30.md` v6.6; the F3 stop-report, raised by Claude Code before it wrote a line, and ruled on by Rockstar with ChatGPT.
+- **Status of ADR-001 itself:** unchanged — **Accepted (direction)**. This corrects three factual errors in how the handoff was described. **No decision changes.**
+
+### 1. The requested-length field is `spec.totalDays`. `spec.requestedDays` does not exist.
+
+This ADR and the Phase F design both named the traveller's requested duration `spec.requestedDays`. **There is no such field and there never has been.** The live field is `spec.totalDays` — *"Departure day through home-arrival day, inclusive"* (`types.js:217`).
+
+> **The decision stands exactly as written:** the length the traveller asks for and the length the trip turns out to be are **different quantities, compared and never conflated**. Only the name was wrong. **The live field is not renamed.**
+
+The correction matters because the requested field and the handoff's derived field now share the name `totalDays`, so `totalDays: trip.spec.totalDays` reads as correct and is precisely the conflation the rule forbids.
+
+### 2. The handoff's connection list includes the journey out and the journey home
+
+§Decision 4 describes the handoff as a sequence of places with allocated time. It never said what carries the legs, and the first attempt to type it guessed wrong.
+
+> **`connectionIds` holds `stops + 1` legs — the journey out from the origin, every leg between stops, and the journey home.** Measured: Peru 10d, 7 stops, 8 legs; a single-base trip, 1 stop, 2 legs.
+>
+> **Every entry owns the leg arriving at it, the first entry included** — its inbound leg is the journey out. **The leg home belongs to the sequence, not to any entry**, and the typed contract carries it as `returnConnectionId`.
+
+**The journey home is part of the handoff, not an afterthought.** A sequence that cannot name it cannot reconstruct the trip, and nothing could ever attach to the journey home. `origin` stays `{ placeId }`: no home entry is invented.
+
+These are invariants of **today's round-trip model**. Open-jaw routing remains a named future item and is not covered here.
+
+### 3. Excursion requirements travel with the handoff
+
+The first draft of the typed contract filed a stop's excursions under planning provenance — things the handoff leaves behind.
+
+> **That was wrong.** The itinerary engine consumes an excursion's **place, connection and on-site duration** to place it and to refuse a build when it does not fit. A handoff without them is **unschedulable** without reaching back into the curated family and package — which is the precise coupling §Decision 5 exists to remove.
+
+So the handoff carries the **resolved** requirements, both the author's fixed excursions and the traveller's selected ones. The traveller's selection ids are carried as well and are a different thing: the selection is the edit, the resolved requirement is its consequence.
+
+### Why this amendment exists at all
+
+All three errors were in documents that had been reviewed four times, and all three were caught by **reading the source before writing code rather than after**. That is the practice this ADR's own review trigger depends on, and it is recorded here because the next contract to be typed — Door 1's, at Phase F8 — will be described from a document in exactly the same way.
