@@ -382,7 +382,7 @@ export function scheduleRoute(routeResult, spec, data, { config = SCHEDULE_CONFI
       const n = nightsOverride[s.id];
       if (!Number.isInteger(n)) throw new Error(`${where}: stop "${s.id}" has no integer nights (got ${n})`);
       if (n < s.minNights) {
-        throw new Error(`${where}: stop "${s.id}" nights ${n} outside ${s.minNights}–${s.maxNights}`);
+        throw new Error(`${where}: stop "${s.id}" nights ${n} below minimum ${s.minNights}`);
       }
       extra += n - s.minNights;
     }

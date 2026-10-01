@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 
 import { computeUsableTimeLost } from '../../src/lib/door2/bufferRuleset.js';
 import { checkVariantsSchedulable } from '../../src/lib/door2/families.js';
-import { eligibleItemsForBlock } from '../../src/lib/door2/fill.js';
+import { classifySlot, eligibleItemsForBlock } from '../../src/lib/door2/fill.js';
 import { PILOT_CONTENT } from '../../src/lib/door2/pilotContent.js';
 import { PILOT_CONNECTIONS, PILOT_ROUTE_PACKAGES } from '../../src/lib/door2/pilotData.js';
 import { PILOT_DATA, buildFilledTrip } from '../../src/lib/door2/planner.js';
@@ -173,13 +173,22 @@ test('J6: with Nikko selected, the Tokyo "Day trip to Nikko" is gone; deselected
 test('J6b: with the Kyoto spur and Nikko selected at the Tokyo base, "Day trip to Nikko" is nowhere in the trip, hub afternoon included', () => {
   const trip = build(8, SPUR);
   const hub = () => blocks(trip).filter((b) => b.anchor?.stopId === 'tokyo_hub' && b.type === 'activity');
-  assert.deepEqual(hub().map((b) => [b.anchor.contentId, b.startTime]), [['tyo_nikko', '12:45']], 'without Nikko it fills the hub afternoon');
+  // U1: the hub afternoon opens at 12:45, too late for a full day, so a half-day hub item fills it (was tyo_nikko).
+  assert.deepEqual(hub().map((b) => [b.anchor.contentId, b.startTime]), [['tyo_short_yurakucho', '12:45']], 'without Nikko a hub item fills the hub afternoon');
   const withNikko = add(trip, 'tokyo_base', 'nikko');
   assert.equal(contentIds(withNikko).includes('tyo_nikko'), false, 'nowhere in the trip');
   const hubBlocks = withNikko.days.flatMap((d) => d.blocks).filter((b) => b.anchor?.stopId === 'tokyo_hub' && b.type !== 'travel');
   assert.ok(hubBlocks.length > 0);
+  const offersNikko = (t, b) => eligibleItemsForBlock(t, b, PILOT_CONTENT).some((i) => i.id === 'tyo_nikko');
   for (const b of hubBlocks) {
-    assert.equal(eligibleItemsForBlock(withNikko, b, PILOT_CONTENT).some((i) => i.id === 'tyo_nikko'), false, `${b.id} will not take it`);
+    assert.equal(offersNikko(withNikko, b), false, `${b.id} will not take it`);
+    // Since U1 the 12:45 block refuses every full-day item, so the line above no longer exercises the
+    // cross-stop Nikko rule. The same block with a morning start is a full day: it must still refuse
+    // Nikko once Nikko is selected at the base, and offer it when it is not.
+    const morning = { ...b, startTime: '09:00' };
+    assert.equal(classifySlot(morning), 'full');
+    assert.equal(offersNikko(withNikko, morning), false, `${b.id} with a morning start will not take it`);
+    assert.equal(offersNikko(trip, morning), true, `${b.id} with a morning start offers it without Nikko`);
   }
 });
 

@@ -12,6 +12,7 @@
 // the others. Re-pin a family ONLY when its own data changed on purpose, and never
 // the whole file. Re-pins so far:
 //   tokyo_city, E3b (Kyoto spur and day-trip menus).
+//   tokyo_city and ec_corridor, U1 (a full slot must start by 12:00; their 12:45 and 12:21 arrivals became half).
 //
 //   node tests/door2/fixtures/pre-e3a-generate.mjs [repoRoot] > tests/door2/fixtures/pre-e3a.json
 //   node tests/door2/fixtures/pre-e3a-generate.mjs [repoRoot] --family tokyo_city --into tests/door2/fixtures/pre-e3a.json

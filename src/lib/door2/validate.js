@@ -212,7 +212,8 @@ function isDeepEqual(a, b) {
 
 function slotClassOf(block) {
   const startHour = parseClock(block.startTime);
-  if (block.durationHours >= 8) return 'full';
+  // A full day needs >= 8 h and a start at or before 12:00.
+  if (block.durationHours >= 8 && startHour <= 12) return 'full';
   if (startHour >= 17) return 'evening';
   if (block.durationHours >= 3) return 'half';
   return 'short';

@@ -25,13 +25,25 @@ const ACCEPTED_SLOTS = Object.freeze({
 });
 
 /**
+ * Slot-class thresholds. Durations are hours; start times are local clock
+ * hours (parseClock). A full day needs a real morning as well as the hours: a
+ * block that opens after FULL_LATEST_START_HOUR is classed by the rules below
+ * it, the same way a block opening at EVENING_START_HOUR or later is never half.
+ */
+export const FULL_MIN_HOURS = 8;
+export const FULL_LATEST_START_HOUR = 12;
+export const EVENING_START_HOUR = 17;
+export const HALF_MIN_HOURS = 3;
+
+/**
  * @param {{startTime: string, durationHours: number}} block
  * @returns {'full'|'half'|'evening'|'short'}
  */
 export function classifySlot(block) {
-  if (block.durationHours >= 8) return 'full';
-  if (parseClock(block.startTime) >= 17) return 'evening';
-  if (block.durationHours >= 3) return 'half';
+  const start = parseClock(block.startTime);
+  if (block.durationHours >= FULL_MIN_HOURS && start <= FULL_LATEST_START_HOUR) return 'full';
+  if (start >= EVENING_START_HOUR) return 'evening';
+  if (block.durationHours >= HALF_MIN_HOURS) return 'half';
   return 'short';
 }
 

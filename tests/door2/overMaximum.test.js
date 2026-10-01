@@ -329,7 +329,7 @@ test('EF1-T5: the floor is untouched: a day trip still holds its night, and noth
   assert.equal(scheduleRoute(routeResult, { ...tokyo.spec, totalDays: 14 }, PILOT_DATA, { nightsOverride: { tokyo_base: 12 } }).ok, true);
   assert.throws(
     () => scheduleRoute(routeResult, { ...tokyo.spec, totalDays: 4 }, PILOT_DATA, { nightsOverride: { tokyo_base: 2 } }),
-    /tokyo_base.*nights 2 outside 3–10/
+    /tokyo_base.*nights 2 below minimum 3/
   );
 });
 
@@ -351,8 +351,11 @@ test('EF1-T6: every proposal on a stretched trip sums to its own length', () => 
   assert.deepEqual(violations, [], violations.slice(0, 10).join('\n'));
 });
 
-test('EF1-T7: both fixtures are byte-identical to their EF1 base', () => {
+// peru-pre-c3a.json never moves. pre-e3a.json moves only when a family is re-pinned on purpose
+// (`--family <id> --into`), so its pin here is re-based with each such re-pin: H9 (tokyo_city) and
+// U1 (tokyo_city, ec_corridor). Anything else that changes either file fails this test.
+test('EF1-T7: both fixture files match their pins (Peru unchanged since EF1; pre-e3a as last re-pinned, at U1)', () => {
   const sha = (name) => createHash('sha256').update(readFileSync(new URL(`./fixtures/${name}`, import.meta.url))).digest('hex');
   assert.equal(sha('peru-pre-c3a.json'), '88ebac1796c33c0a2921ae3e93fa4c0832924b2f7fb1cc268e572925f9e91e5d');
-  assert.equal(sha('pre-e3a.json'), '749f3043daa37296b587382f08ab695bc26e9d6f9f504725312ba12ae85c08f0');
+  assert.equal(sha('pre-e3a.json'), 'd3f97744265ea1bf33c194d2a7fb532b302ad55ae15e87091092658f65b8491d');
 });

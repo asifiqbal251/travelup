@@ -1,9 +1,10 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { classifySlot, normalisePace } from '../../src/lib/door2/fill.js';
+import { parseClock } from '../../src/lib/door2/calendarConvention.js';
+import { classifySlot, eligibleItemsForBlock, normalisePace } from '../../src/lib/door2/fill.js';
 import { PILOT_CONTENT, PILOT_CONTENT_VERSION } from '../../src/lib/door2/pilotContent.js';
-import { PILOT_PLACES } from '../../src/lib/door2/pilotData.js';
+import { PILOT_PLACES, PILOT_ROUTE_PACKAGES } from '../../src/lib/door2/pilotData.js';
 import { PILOT_DATA, buildFilledTrip, buildSkeletonTrip } from '../../src/lib/door2/planner.js';
 import { validateFilled } from '../../src/lib/door2/validate.js';
 
@@ -297,11 +298,45 @@ test('G15: slot classification and pace normalisation', () => {
   assert.equal(classifySlot({ durationHours: 3.15, startTime: '17:51' }), 'evening');
   assert.equal(classifySlot({ durationHours: 2.1, startTime: '18:54' }), 'evening');
   assert.equal(classifySlot({ durationHours: 2.5, startTime: '10:00' }), 'short');
-  assert.equal(classifySlot({ durationHours: 8, startTime: '18:00' }), 'full');
+  // U1: a full day also needs a start at or before 12:00; an 18:00 start is evening.
+  assert.equal(classifySlot({ durationHours: 8, startTime: '18:00' }), 'evening');
+  assert.equal(classifySlot({ durationHours: 8, startTime: '12:00' }), 'full');
+  assert.equal(classifySlot({ durationHours: 9.5, startTime: '11:30' }), 'full');
+  assert.equal(classifySlot({ durationHours: 8.25, startTime: '12:45' }), 'half');
+  assert.equal(classifySlot({ durationHours: 8.65, startTime: '12:01' }), 'half');
   assert.equal(normalisePace('Relaxed'), 'relaxed');
   assert.equal(normalisePace('Fast-paced'), 'fast');
   assert.equal(normalisePace('balanced'), 'neutral');
   assert.equal(normalisePace(undefined), 'neutral');
+});
+
+test('U1: a block with 8+ open hours but an afternoon start never receives a full-day item', () => {
+  // Two families, so the rule is shown to be general: the Tokyo hub and Kyoto arrivals
+  // open at 12:45 for 8.25 h, and Montreal after Ottawa opens at 12:21 for 8.65 h.
+  const cases = [
+    ['tokyo_city+kyoto@after_tokyo', 14, ['op:kyo_base:d0', 'op:tokyo_hub:d0']],
+    ['ec_corridor#west_to_east+ottawa@corridor', 12, ['op:ec_montreal:d0']]
+  ];
+  for (const [variantId, totalDays, expectedLate] of cases) {
+    const pkg = PILOT_ROUTE_PACKAGES.find((p) => p.id === variantId);
+    const s = spec({ kind: 'country', id: pkg.countryId }, totalDays, [], { routeTemplateId: variantId });
+    const trip = buildFilledTrip(s);
+    const late = trip.days.flatMap((d) => d.blocks).filter((b) => (b.type === 'open' || b.type === 'activity') && b.durationHours >= 8 && parseClock(b.startTime) > 12);
+    assert.deepEqual(late.map((b) => b.id), expectedLate, `${variantId}: the late long blocks`);
+    for (const b of late) {
+      assert.equal(b.type, 'activity', `${variantId} ${b.id} is filled`);
+      assert.notEqual(b.activity.slot, 'full', `${variantId} ${b.id} at ${b.startTime}`);
+      assert.equal(eligibleItemsForBlock(trip, b, PILOT_CONTENT).some((i) => i.slots.every((x) => x === 'full')), false, `${variantId} ${b.id}: no full-only item is eligible`);
+    }
+    // The validator holds the same line independently: a full item forced onto the block is rejected.
+    const fullOnly = PILOT_CONTENT.find((i) => i.placeId === late[0].placeId && i.slots.every((x) => x === 'full'));
+    assert.ok(fullOnly, `${variantId}: a full-only item exists at ${late[0].placeId}`);
+    const forced = clone(trip);
+    const target = forced.days.flatMap((d) => d.blocks).find((b) => b.id === late[0].id);
+    target.anchor.contentId = fullOnly.id;
+    target.activity = { ...target.activity, templateId: fullOnly.id, slot: 'full' };
+    assert.throws(() => validateFilled(forced, buildSkeletonTrip(s, PILOT_DATA, DRAFTS), s, PILOT_CONTENT), /is a half slot/);
+  }
 });
 
 test('G16: validateFilled catches tampering', () => {

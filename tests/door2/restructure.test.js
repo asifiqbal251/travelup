@@ -99,7 +99,7 @@ test('R2.3: an invalid allocation throws (below min, wrong sum, missing or unkno
   const override = (alloc) => Object.fromEntries(pcPlan(alloc).stops.map((x) => [x.key, x.nights]));
   // Sanity: a valid override schedules.
   assert.equal(scheduleRoute(best, s10, PILOT_DATA, { nightsOverride: override([2, 3, 0, 1, 1]) }).ok, true);
-  assert.throws(() => scheduleRoute(best, s10, PILOT_DATA, { nightsOverride: override([3, 1, 0, 1, 1]) }), /pc_cusco.*outside 2–4/);
+  assert.throws(() => scheduleRoute(best, s10, PILOT_DATA, { nightsOverride: override([3, 1, 0, 1, 1]) }), /pc_cusco.*nights 1 below minimum 2/);
   assert.equal(scheduleRoute(best, s10, PILOT_DATA, { nightsOverride: override([1, 2, 0, 3, 1]) }).ok, true);
   assert.throws(() => scheduleRoute(best, spec(PERU, 11), PILOT_DATA, { nightsOverride: override([2, 3, 0, 1, 1]) }), /expected totalDays 11/);
   const missing = override([2, 3, 0, 1, 1]);
@@ -107,7 +107,7 @@ test('R2.3: an invalid allocation throws (below min, wrong sum, missing or unkno
   assert.throws(() => scheduleRoute(best, s10, PILOT_DATA, { nightsOverride: missing }), /pc_lima_out/);
   assert.throws(() => scheduleRoute(best, s10, PILOT_DATA, { nightsOverride: { ...override([2, 3, 0, 1, 1]), pc_nowhere: 0 } }), /unknown stop/);
   // Through the planner: the same checks throw (engine bug), never a traveller failure.
-  assert.throws(() => buildTripFromRoutePlan(s10, pcPlan([1, 1, 0, 1, 1]), PILOT_DATA, DRAFTS), /outside/);
+  assert.throws(() => buildTripFromRoutePlan(s10, pcPlan([1, 1, 0, 1, 1]), PILOT_DATA, DRAFTS), /below minimum/);
   assert.throws(() => buildTripFromRoutePlan(s10, { variantId: 'nope', stops: [] }, PILOT_DATA, DRAFTS), /unknown variant/);
   assert.throws(
     () => buildTripFromRoutePlan(s10, { variantId: 'peru_classic', stops: [{ key: 'pc_cusco', nights: 3 }] }, PILOT_DATA, DRAFTS),
