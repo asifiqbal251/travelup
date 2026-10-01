@@ -138,13 +138,30 @@ test('E5: unpinActivity then swapActivity succeeds', () => {
   assert.equal(swapped.ok, true);
 });
 
-// E6: Reject D7 block in G5 (Tokyo, thin content) until pool is exhausted
-test('E6: rejectActivity exhausts Tokyo content; block becomes a gap on first rejection', () => {
+// E6: Reject D7 block in G5 (Tokyo, 10 days) until pool is exhausted
+test('E6: rejectActivity exhausts Tokyo content; block becomes a gap once the pool is empty', () => {
   // G5: op:tokyo_base:d5 = D7 = tyo_tsukiji_ginza.
-  // D2-D6 have used all other full-slot Tokyo items → pool is empty on first rejection.
-  const trip = filledTrip(spec(TOKYO, 10));
+  // After the E5-4 content pass the pool holds six more full-slot items, so the block
+  // is replaced six times, in this order, and the seventh rejection leaves a gap.
+  let trip = filledTrip(spec(TOKYO, 10));
   const blockId = 'op:tokyo_base:d5';
   assert.equal(blockById(trip, blockId)?.activity?.templateId, 'tyo_tsukiji_ginza');
+
+  const replacements = [
+    'tyo_imperial_marunouchi',
+    'tyo_shimokita_setagaya',
+    'tyo_sumida_skytree',
+    'tyo_takao_hike',
+    'tyo_roppongi_art',
+    'tyo_koenji_nakano'
+  ];
+  for (const expected of replacements) {
+    const step = rejectActivity(trip, blockId);
+    assert.equal(step.ok, true);
+    assert.equal(blockById(step.trip, blockId)?.activity?.templateId, expected);
+    assert.equal(step.trip.status, 'valid');
+    trip = step.trip;
+  }
 
   const r = rejectActivity(trip, blockId);
   assert.equal(r.ok, true);
@@ -297,8 +314,12 @@ test('E12: regression — fill output is identical after the eligibility extract
   assert.equal(blockById(G2, 'op:pc_cusco:d0')?.activity?.templateId, 'cusco_acclimatise');
   assert.equal(G2.contentGaps.length, 0);
 
-  // G5 runs out of content
-  assert.equal(G5.status, 'incomplete');
-  assert.ok(G5.warnings.includes('content_insufficient'));
-  assert.equal(G5.contentGaps.length, 2);
+  // G5 no longer runs out of content (E5-4); 18 days still does, with the same 2 gaps
+  assert.equal(G5.status, 'valid');
+  assert.ok(!G5.warnings.includes('content_insufficient'));
+  assert.equal(G5.contentGaps.length, 0);
+  const G5long = filledTrip(spec(TOKYO, 18));
+  assert.equal(G5long.status, 'incomplete');
+  assert.ok(G5long.warnings.includes('content_insufficient'));
+  assert.equal(G5long.contentGaps.length, 2);
 });

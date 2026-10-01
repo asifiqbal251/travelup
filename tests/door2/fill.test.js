@@ -40,6 +40,7 @@ const G = {
   G3: spec(PERU, 12, ['huaraz', 'machu_picchu']),
   G4: spec(TOKYO, 7),
   G5: spec(TOKYO, 10),
+  G5b: spec(TOKYO, 18),
   G6: spec(PERU, 14),
   G7: spec(PERU, 10, [], { interests: ['Hiking'] }),
   G8: spec(PERU, 10, [], { interests: ['Adventure'] }),
@@ -141,7 +142,7 @@ test('G4: Tokyo, 7 days', () => {
   assert.equal(trip.contentGaps.length, 0);
 });
 
-test('G5: Tokyo, 10 days runs out of content (content_insufficient)', () => {
+test('G5: Tokyo, 10 days is filled from the full Tokyo shelf (E5-4); no content gaps', () => {
   const trip = filled(G.G5);
   assert.deepEqual(ids(trip), [
     'D2 tyo_shinjuku',
@@ -150,15 +151,23 @@ test('G5: Tokyo, 10 days runs out of content (content_insufficient)', () => {
     'D5 tyo_nikko',
     'D6 tyo_ueno_yanaka',
     'D7 tyo_tsukiji_ginza',
-    'D8 GAP',
-    'D9 GAP'
+    'D8 tyo_odaiba_bay',
+    'D9 tyo_yanesen_rivers'
   ]);
+  assert.equal(trip.status, 'valid');
+  assert.ok(!trip.warnings.includes('content_insufficient'));
+  assert.equal(trip.contentGaps.length, 0);
+  assert.deepEqual(trip.contentGaps.map((g) => g.blockId), []);
+});
+
+test('G5b: Tokyo, 18 days still runs out of content (content_insufficient)', () => {
+  const trip = filled(G.G5b);
   assert.equal(trip.status, 'incomplete');
   assert.ok(trip.warnings.includes('content_insufficient'));
   assert.equal(trip.contentGaps.length, 2);
   assert.deepEqual(
     trip.contentGaps.map((g) => g.blockId),
-    ['op:tokyo_base:d6', 'op:tokyo_base:d7']
+    ['op:tokyo_base:d14', 'op:tokyo_base:d15']
   );
   for (const g of trip.contentGaps) {
     const b = blockById(trip, g.blockId);
@@ -222,11 +231,16 @@ test('G9: Peru, 16 days, Huaraz + MP, Hiking: Wilcacocha at offset 1, Laguna 69 
   assert.equal(blockById(trip, 'op:pc_huaraz:d2').anchor.contentId, 'huz_laguna69');
 });
 
-test('G10: Tokyo, 7 days, relaxed: no Nikko; Fast-paced is identical to G4', () => {
+test('G10: Tokyo, 7 days, relaxed: no Nikko; Fast-paced differs from G4 only on the last day (E5-4)', () => {
   const relaxed = fills(filled(G.G10)).map((x) => x.contentId);
-  assert.deepEqual(relaxed, ['tyo_shinjuku', 'tyo_ueno_yanaka', 'tyo_tsukiji_ginza', 'tyo_asakusa', 'tyo_meiji_shibuya']);
+  assert.deepEqual(relaxed, ['tyo_short_yurakucho', 'tyo_ueno_yanaka', 'tyo_tsukiji_ginza', 'tyo_odaiba_bay', 'tyo_yanesen_rivers']);
   assert.ok(!relaxed.includes('tyo_nikko'));
-  assert.deepEqual(filled(spec(TOKYO, 7, [], { pace: 'Fast-paced' })).days, filled(G.G4).days);
+  // E5-4: Fast-paced is no longer identical to G4. The new Moderate item tyo_sumida_skytree
+  // outranks tyo_ueno_yanaka for the last day on the fast pace; the first four days are unchanged.
+  const fast = fills(filled(spec(TOKYO, 7, [], { pace: 'Fast-paced' }))).map((x) => x.contentId);
+  const g4 = fills(filled(G.G4)).map((x) => x.contentId);
+  assert.deepEqual(g4, ['tyo_shinjuku', 'tyo_asakusa', 'tyo_meiji_shibuya', 'tyo_nikko', 'tyo_ueno_yanaka']);
+  assert.deepEqual(fast, ['tyo_shinjuku', 'tyo_asakusa', 'tyo_meiji_shibuya', 'tyo_nikko', 'tyo_sumida_skytree']);
 });
 
 test('G11: Peru, 5 days: the skeleton failure is returned unchanged', () => {
@@ -263,7 +277,7 @@ test('G14: PILOT_CONTENT integrity', () => {
   const SLOTS = new Set(['full', 'half', 'evening', 'short']);
   const INTENSITIES = new Set(['Light', 'Moderate', 'High', 'Highly active']);
   assert.equal(PILOT_CONTENT_VERSION, 'pilot-content-v1');
-  assert.equal(PILOT_CONTENT.length, 107); // 56 + 33 Eastern Canada (C3b) + 18 Japan (E3b)
+  assert.equal(PILOT_CONTENT.length, 118); // 56 + 33 Eastern Canada (C3b) + 18 Japan (E3b) + 11 Tokyo content pass (E5-4)
   assert.equal(new Set(PILOT_CONTENT.map((i) => i.id)).size, PILOT_CONTENT.length, 'ids are unique');
   for (const item of PILOT_CONTENT) {
     assert.ok(Object.prototype.hasOwnProperty.call(PILOT_PLACES, item.placeId), `${item.id}: unknown place ${item.placeId}`);
@@ -322,7 +336,7 @@ test('G16: validateFilled catches tampering', () => {
   assert.throws(() => validateFilled(d, skeleton, G.G2, PILOT_CONTENT), /startTime/);
 
   // (e) status draft while a gap exists
-  const skeleton5 = buildSkeletonTrip(G.G5, PILOT_DATA, DRAFTS);
-  const e = tamper(filled(G.G5), (t) => { t.status = 'draft'; });
-  assert.throws(() => validateFilled(e, skeleton5, G.G5, PILOT_CONTENT), /status "draft" with 2 gaps/);
+  const skeleton5 = buildSkeletonTrip(G.G5b, PILOT_DATA, DRAFTS);
+  const e = tamper(filled(G.G5b), (t) => { t.status = 'draft'; });
+  assert.throws(() => validateFilled(e, skeleton5, G.G5b, PILOT_CONTENT), /status "draft" with 2 gaps/);
 });

@@ -279,6 +279,58 @@ export const PILOT_CONTENT = Object.freeze([
     summary: 'Breakfast at the Tsukiji outer market, Ginza, and Hamarikyu garden.',
     morning: 'Breakfast at the Tsukiji outer market.', afternoon: 'Ginza, then Hamarikyu garden.', evening: 'Dinner in Ginza.',
     foodNote: 'Tamagoyaki and fresh sushi at Tsukiji.', source: AUTHORED },
+  // Tokyo content pass (E5-4): eight further full-day items and three light hub/evening items.
+  { id: 'tyo_odaiba_bay', placeId: 'tokyo', title: 'Odaiba & the bay', slots: ['full', 'half'], intensity: 'Light', interests: ['Cities', 'Photography'],
+    summary: 'The waterfront island, the bayside parks and the Rainbow Bridge at dusk.',
+    morning: 'Cross to Odaiba and walk the waterfront parks.', afternoon: 'The bayside promenade and the science museum.', evening: 'The Rainbow Bridge lit from the seafront.',
+    foodNote: 'Seafood at a bayside counter.', source: AUTHORED_JP },
+
+  { id: 'tyo_yanesen_rivers', placeId: 'tokyo', title: 'Kagurazaka & the Kanda river', slots: ['full'], intensity: 'Light', interests: ['Cities', 'Food', 'History and culture'],
+    summary: 'The old geisha quarter of Kagurazaka, then the quiet canals toward Iidabashi.',
+    morning: 'The sloping lanes and hidden alleys of Kagurazaka.', afternoon: 'Follow the Kanda river canals toward Iidabashi.', evening: 'A small kappo counter in Kagurazaka.',
+    foodNote: 'Kagurazaka keeps a cluster of old French-Japanese bistros.', source: AUTHORED_JP },
+
+  { id: 'tyo_imperial_marunouchi', placeId: 'tokyo', title: 'The Imperial Palace & Marunouchi', slots: ['full', 'half'], intensity: 'Light', interests: ['History and culture', 'Cities'],
+    summary: 'The East Gardens inside the old castle walls, then the brick streets of Marunouchi.',
+    morning: 'The Imperial Palace East Gardens and the castle keep foundations.', afternoon: 'Marunouchi, Tokyo Station’s brick facade and the galleries around it.', evening: 'Dinner in the Marunouchi arcades.',
+    source: AUTHORED_JP },
+
+  { id: 'tyo_shimokita_setagaya', placeId: 'tokyo', title: 'Shimokitazawa & the west side', slots: ['full'], intensity: 'Light', interests: ['Cities', 'Food'],
+    summary: 'Second-hand shops, small theatres and coffee in Tokyo’s low-rise west.',
+    morning: 'Shimokitazawa’s second-hand shops and record stores.', afternoon: 'Setagaya’s backstreets and a neighbourhood coffee stop.', evening: 'A tiny live house or an izakaya counter.',
+    foodNote: 'The curry shops here are a local institution.', source: AUTHORED_JP },
+
+  { id: 'tyo_sumida_skytree', placeId: 'tokyo', title: 'Ryogoku & the Skytree side', slots: ['full'], intensity: 'Moderate', interests: ['History and culture', 'Cities', 'Photography'],
+    summary: 'The sumo district and the Edo-Tokyo museum, then east across the river to the Skytree.',
+    morning: 'Ryogoku: the sumo stables district and the Edo history museum.', afternoon: 'East across the Sumida to the Skytree and the shops beneath it.', evening: 'The city from above after dark.',
+    foodNote: 'Chanko-nabe, the sumo stew, is the local dish.', source: AUTHORED_JP },
+
+  { id: 'tyo_takao_hike', placeId: 'tokyo', title: 'Mount Takao', slots: ['full'], intensity: 'Highly active', interests: ['Nature', 'Photography'],
+    summary: 'A forested climb at the western edge of the city, with the ridge path and the mountain temple.',
+    morning: 'Train west, then climb the forest trail to Yakuo-in temple.', afternoon: 'The ridge path and the long way down.', evening: 'Back in the city for a late, easy dinner.',
+    source: AUTHORED_JP },
+
+  { id: 'tyo_roppongi_art', placeId: 'tokyo', title: 'The Roppongi art triangle', slots: ['full', 'half'], intensity: 'Light', interests: ['History and culture', 'Cities'],
+    summary: 'Three major galleries within a few streets, and the garden between them.',
+    morning: 'The National Art Center and its glass hall.', afternoon: 'Mori Art Museum and the Suntory collection, with the garden in between.', evening: 'The city from the Roppongi observation deck.',
+    source: AUTHORED_JP },
+
+  { id: 'tyo_koenji_nakano', placeId: 'tokyo', title: 'Nakano & Koenji', slots: ['full'], intensity: 'Light', interests: ['Cities', 'Food'],
+    summary: 'The covered arcades of Nakano and the second-hand streets of Koenji.',
+    morning: 'Nakano Broadway’s warren of small shops.', afternoon: 'Koenji’s vintage clothing streets and backstreet cafés.', evening: 'A standing bar under the railway line.',
+    foodNote: 'This is one of the city’s best areas for cheap, late food.', source: AUTHORED_JP },
+
+  { id: 'tyo_short_yurakucho', placeId: 'tokyo', title: 'Under the tracks at Yurakucho', slots: ['short', 'half', 'evening'], intensity: 'Light', interests: ['Food', 'Cities'],
+    summary: 'The grill counters tucked under the railway arches.',
+    foodNote: 'Yakitori and a beer standing up.', arrivalFriendly: true, source: AUTHORED_JP },
+
+  { id: 'tyo_short_depachika', placeId: 'tokyo', title: 'A department-store food hall', slots: ['short', 'half'], intensity: 'Light', interests: ['Food'],
+    summary: 'The basement food halls — a last hour well spent before a flight.',
+    foodNote: 'Boxed sweets and bento travel well.', arrivalFriendly: true, source: AUTHORED_JP },
+
+  { id: 'tyo_eve_golden_gai', placeId: 'tokyo', title: 'Golden Gai after dark', slots: ['evening'], intensity: 'Light', interests: ['Cities', 'Food'],
+    summary: 'Six alleys of tiny bars, each with room for about six people.',
+    source: AUTHORED_JP },
 
   // ---------------- Eastern Canada (C2, Phase C Route Family #2) ----------------
   // All authored: WhereNova has no Base44 Destination bundle for these five

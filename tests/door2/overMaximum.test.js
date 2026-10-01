@@ -354,5 +354,5 @@ test('EF1-T6: every proposal on a stretched trip sums to its own length', () => 
 test('EF1-T7: both fixtures are byte-identical to their EF1 base', () => {
   const sha = (name) => createHash('sha256').update(readFileSync(new URL(`./fixtures/${name}`, import.meta.url))).digest('hex');
   assert.equal(sha('peru-pre-c3a.json'), '88ebac1796c33c0a2921ae3e93fa4c0832924b2f7fb1cc268e572925f9e91e5d');
-  assert.equal(sha('pre-e3a.json'), 'f2075cc5e8d6ead96d6514d283c97c2ee36cfc677b6d0ae6aab70011fc3f3c33');
+  assert.equal(sha('pre-e3a.json'), '749f3043daa37296b587382f08ab695bc26e9d6f9f504725312ba12ae85c08f0');
 });

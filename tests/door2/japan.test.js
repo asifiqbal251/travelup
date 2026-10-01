@@ -89,13 +89,13 @@ test('J1: the family compiles to two served variants, Tokyo 5-12 days and Tokyo 
   assert.deepEqual(served.map((p) => p.placeIds), [['tokyo'], ['tokyo', 'kyoto']]);
 });
 
-test('J2: a default Japan build is Tokyo only, unchanged, with no excursion, and 10 days still shows exactly 2 gaps', () => {
+test('J2: a default Japan build is Tokyo only, unchanged, with no excursion, and 10 days now shows no gaps (E5-4)', () => {
   // Pinned from the pre-E3b build (identical to the old hand-written package, RF4).
   const expected = {
     5: { nights: 3, content: ['tyo_shinjuku', 'tyo_asakusa', 'tyo_meiji_shibuya'], gaps: 0 },
     7: { nights: 5, content: ['tyo_shinjuku', 'tyo_asakusa', 'tyo_meiji_shibuya', 'tyo_nikko', 'tyo_ueno_yanaka'], gaps: 0 },
-    10: { nights: 8, content: ['tyo_shinjuku', 'tyo_asakusa', 'tyo_meiji_shibuya', 'tyo_nikko', 'tyo_ueno_yanaka', 'tyo_tsukiji_ginza'], gaps: 2 },
-    12: { nights: 10, content: ['tyo_shinjuku', 'tyo_asakusa', 'tyo_meiji_shibuya', 'tyo_nikko', 'tyo_ueno_yanaka', 'tyo_tsukiji_ginza'], gaps: 4 }
+    10: { nights: 8, content: ['tyo_shinjuku', 'tyo_asakusa', 'tyo_meiji_shibuya', 'tyo_nikko', 'tyo_ueno_yanaka', 'tyo_tsukiji_ginza', 'tyo_odaiba_bay', 'tyo_yanesen_rivers'], gaps: 0 },
+    12: { nights: 10, content: ['tyo_shinjuku', 'tyo_asakusa', 'tyo_meiji_shibuya', 'tyo_nikko', 'tyo_ueno_yanaka', 'tyo_tsukiji_ginza', 'tyo_odaiba_bay', 'tyo_yanesen_rivers', 'tyo_imperial_marunouchi', 'tyo_shimokita_setagaya'], gaps: 0 }
   };
   for (const [days, want] of Object.entries(expected)) {
     const trip = build(Number(days));

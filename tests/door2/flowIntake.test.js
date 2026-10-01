@@ -132,13 +132,25 @@ test('B11a: NYC (US) builds a valid trip', async () => {
   assert.ok(screen.queryByText(/can't be built yet/) === null, 'NYC builds');
 });
 
-test('B11b: Tokyo 10 days builds and honestly shows its 2 known content gaps', async () => {
-  // Also J13 (E3b): the same build on the Japan family with its Kyoto spur and day-trip
-  // menus. Nothing is preselected, so the page shows the Tokyo-only trip and the same 2 gaps.
+// Also J13 (E3b): the same build on the Japan family with its Kyoto spur and day-trip
+// menus. Nothing is preselected, so the page shows the Tokyo-only trip.
+test('B11b: Tokyo 10 days builds with no content gaps (E5-4)', async () => {
   await mountDoor2Plan(M);
   const user = userEvent.setup();
   await user.click(await screen.findByText('Japan'));
   await setDays(user, 10);
+  await user.click(screen.getByRole('button', { name: 'Build my trip' }));
+  await screen.findByText('Your trip at a glance');
+  assert.ok(screen.queryByText(/can't be built yet/) === null, 'Tokyo builds (no thrown/failure)');
+  const gaps = screen.queryAllByText(/Nothing curated for this slot yet/);
+  assert.equal(gaps.length, 0, 'no content gaps after the E5-4 content pass');
+});
+
+test('B11c: Tokyo 18 days builds and honestly shows its 2 known content gaps', async () => {
+  await mountDoor2Plan(M);
+  const user = userEvent.setup();
+  await user.click(await screen.findByText('Japan'));
+  await setDays(user, 18);
   await user.click(screen.getByRole('button', { name: 'Build my trip' }));
   await screen.findByText('Your trip at a glance');
   assert.ok(screen.queryByText(/can't be built yet/) === null, 'Tokyo builds (no thrown/failure)');
