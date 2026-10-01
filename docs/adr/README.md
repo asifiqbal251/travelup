@@ -11,7 +11,7 @@
 | ADR | Title | Status |
 |---|---|---|
 | [ADR-001](./ADR-001-one-trip-system-two-entrances.md) | One trip system, two entrances | **Accepted (direction).** Implementation deferred to Phases F–G. **Amended 1 Oct 2026** — the handoff carries one *or more* entries; `RouteFamily` is a shared domain object a Destination record references; the handoff counts nights. |
-| [ADR-002](./ADR-002-structural-edits-preview-validate-apply.md) | Structural edits: preview → validate → apply, with reconciliation | **Provisional** as written. **Amended 1 Oct 2026** — *a preview never throws* added as an explicit invariant. **Status needs a call:** graduation questions 1–4 are clean across three families, question 5 is still unanswerable, and the file and the Phase E checkpoint disagree on whether that graduates it. See the amendment. |
+| [ADR-002](./ADR-002-structural-edits-preview-validate-apply.md) | Structural edits: preview → validate → apply, with reconciliation | **ACCEPTED 1 Oct 2026** — graduated on evidence from three route families, **carrying graduation question 5 (schedule-constrained Connections) as a named open item.** Also **amended 1 Oct 2026** — *a preview never throws* added as an explicit invariant. |
 | [ADR-003](./ADR-003-graph-data-discipline.md) | Graph data discipline | **Accepted. Amended 1 Oct 2026** — the fillable-content invariant recorded, and `ConnectionExperience` added as a distinct non-fillable type. Additive. |
 
 **How to change one:** an ADR is amended by a new dated section at the bottom, or superseded by a new ADR that names it. Never edit the decision text of an accepted ADR in place — the history is the point.

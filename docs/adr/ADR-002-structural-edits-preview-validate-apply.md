@@ -1,6 +1,6 @@
 # ADR-002: Structural edits — preview → validate → apply, with reconciliation
 
-- **Status:** **PROVISIONAL.** Validated against Peru (Route Family #1) only. Graduates to Accepted, or is revised, at the Phase D checkpoint using evidence from Eastern Canada (Route Family #2).
+- **Status:** **ACCEPTED, 1 October 2026** — graduated on evidence from three route families (Peru, Eastern Canada, Japan), carrying **graduation question 5 as a named open item**. See the graduation amendment at the bottom. *Was: PROVISIONAL, validated against Peru (Route Family #1) only, pending the Phase D checkpoint.*
 - **Date:** 28 September 2026
 - **Deciders:** Rockstar (Asif), Claude, ChatGPT
 - **Sources:** `claude/claude-response-to-chatgpt-review-2026-09-24.md` (Q1, Q4), `claude/design-door2-route-families-2026-09-23.md`, `claude/three-way-alignment-door2-2026-09-24.md` (step 2), verified directly against the source of `restructure.js` and `families.js` on 24 Sep
@@ -10,6 +10,8 @@
 ---
 
 ## Why this one is provisional
+
+> *Historical, kept as written. This section argued for provisional status while Peru was the only evidence. That condition ended: see **Graduation, 1 October 2026** at the bottom. Its caution — that a single family can produce a rule which merely claims generality — is the reason the graduation is evidence-based rather than a date.*
 
 Writing a general architecture rule from a single family risks writing a **Peru-shaped rule that merely claims generality.** Peru's shape is narrow in ways that were invisible until they were named: one linear backbone whose order is fixed by altitude acclimatization, one optional stop (Huaraz) that only ever attaches at the ends of the route, and connections that are all point-to-point duration estimates rather than real timetables.
 
@@ -93,6 +95,8 @@ Named plainly so that the ADR never implies more than the code does:
 
 ## How this ADR graduates
 
+> *Answered. The five questions below were put to Phase C and Phase E evidence; the verdicts are in **Graduation, 1 October 2026** at the bottom. Kept here as written because the questions are what the status rests on.*
+
 At the Phase D checkpoint, using Phase C evidence, answer:
 
 1. Did §3 (reconciliation by stable block id) hold for a **mid-route** insertion, not just an end-attached one?
@@ -139,3 +143,41 @@ That is the failure this invariant exists to name. It was closed by EF1 — the 
 This file still reads **PROVISIONAL**, graduating at the Phase D checkpoint. That checkpoint has since passed (29 Sep) and Phase E has closed (30 Sep). Of the five graduation questions: 1, 2, 3 and 4 are **clean across three families** — mid-route insertion (test F7), two simultaneous optionals, non-lossy full-skeleton rebuild now including excursion selections, and **no destination-specific branching, verified by grep**. **Question 5 (a schedule-constrained Connection) remains NOT ANSWERABLE** and has now been deferred by name a third time; it is the same open item as ADR-002 Q5 in the Phase F design.
 
 The Phase E checkpoint recorded *"no change of status"* while describing the ADR as accepted for what three families have proven. **This amendment does not resolve that ambiguity, because a status change is a decision and not a documentation fix.** It is flagged here so the next reader sees it rather than inferring one answer or the other.
+
+---
+
+## Graduation, 1 October 2026 — Accepted, with question 5 carried
+
+- **Decided by:** Rockstar (Asif), on the Phase D checkpoint (29 Sep) and Phase E checkpoint (30 Sep) evidence.
+- **Evidence:** `claude/checkpoint-route-families-2-2026-09-29.md`, `claude/checkpoint-phase-e-2026-09-30.md` §4.
+- **Status change:** PROVISIONAL → **ACCEPTED**.
+
+### The five graduation questions, answered
+
+| # | Question | Verdict |
+|---|---|---|
+| 1 | Reconciliation by stable block id on a **mid-route** insertion, not just an end-attached one | **CLEAN.** Closed by H5 (test F7) at Phase D; re-exercised by the Phase E excursion work |
+| 2 | Compiled enumeration with **two optionals active at once**, through compile, `checkVariantsSchedulable`, and add/remove in either order | **CLEAN.** Eastern Canada's Ottawa + Niagara combination. This was the empirical gap named in the original Consequences section |
+| 3 | Full-skeleton rebuild cheap and non-lossy for a **reversible backbone** | **CLEAN, and strengthened.** A selected excursion is now also non-lossy across every rebuild path (the Phase E J7 sweep) |
+| 4 | Any destination-, region- or country-specific branching in `route.js`, `families.js`, `schedule.js` or `restructure.js`? | **CLEAN — none**, across three destinations, verified by grep rather than by judgement |
+| 5 | Preview → validate → apply with a **schedule-constrained Connection**, infeasible rebuilt trips refused before apply | **NOT ANSWERABLE. Carried as an open item** — see below |
+
+### Why question 5 does not block graduation
+
+> **No schedule-constrained Connection exists in any of the three families.** The question cannot be answered by evidence because nothing has produced the evidence, and nothing will until such a Connection is authored.
+
+The original rule — *all five clean → Accepted* — assumed all five would be answerable. Holding the ADR provisional on a question with no available test case would have meant holding it indefinitely, which turns the label into noise rather than information. **Four questions clean across three families is what the graduation test was for.**
+
+So question 5 is **carried, by name, as an open item of this ADR**, and it is the same open item as:
+
+- **scope boundary 3** — `checkVariantsSchedulable` validates each variant once at `travelMonth: 1`, so a seasonal or schedule-constrained Connection is checked only for January;
+- **ADR-003 §3's** schedule-constrained Connection concept, which is declared and not implemented;
+- **ADR-002 Q5** in the Phase F design, where `availability.months` is **reserved, not implemented**, and which has now been deferred by name four times.
+
+**The condition for closing it:** the first authored schedule-constrained Connection ships with a test that drives a structural preview across it and asserts that an infeasible rebuilt trip is refused before apply. **Until then, this ADR is accepted for what three families have proven and silent about what none of them exercised.**
+
+### What graduation does not change
+
+- **Nothing in the decision text.** Sections 1–6 and the scope boundaries stand exactly as written.
+- **It does not retire the caution in "Why this one is provisional."** A rule written from one family can still claim a generality it does not have; what changed is that three families have now tested this one.
+- **It authorizes no build.** The Phase F identity work (question 8) remains the gate it has always been — this ADR's own Consequences section says reconciliation correctness depends entirely on stable block ids, and that is still true.
