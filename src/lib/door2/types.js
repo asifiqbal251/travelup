@@ -436,8 +436,9 @@
  */
 
 /**
- * ➕ F3: the one handoff both doors produce (design Q2, F1-D3, F1-D4, F1-D19b, F1-D24). PROVISIONAL: today it is only
- * projected from a built Trip (tripSequence.js) and nothing in the build path reads it.
+ * ➕ F3: the one handoff both doors produce (design Q2, F1-D3, F1-D4, F1-D19b, F1-D24). PROVISIONAL.
+ * ➕ F3b: produced from a plan before materialisation (tripSequenceFromPlan, totalDays absent) and materialised from
+ * the sequence and the graph alone (materialise.js). Nothing in the live build path produces or reads it yet.
  * @typedef {Object} TripSequence
  * @property {2} schemaVersion
  * @property {string} id                  Stable, client-generated. NOT the fingerprint (Q8).

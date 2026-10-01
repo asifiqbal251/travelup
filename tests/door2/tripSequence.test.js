@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 import { orientConnection } from '../../src/lib/door2/bufferRuleset.js';
 import { PILOT_DATA, buildFilledTrip } from '../../src/lib/door2/planner.js';
 import * as R from '../../src/lib/door2/restructure.js';
-import { checkTripSequence, tripSequenceFromTrip, tripSequenceRole } from '../../src/lib/door2/tripSequence.js';
+import { checkTripSequence, tripSequenceFromPlan, tripSequenceFromTrip, tripSequenceRole } from '../../src/lib/door2/tripSequence.js';
 
 // F3: the TripSequence contract, projected read-only from a built Door 2 Trip.
 // These tests prove the projection is faithful to the RoutePlan it reads. They
@@ -351,4 +351,159 @@ test('nothing in src/ imports the adapter yet', () => {
   const files = readdirSync(root, { recursive: true }).filter((f) => /\.(jsx?|tsx?)$/.test(f));
   const importers = files.filter((f) => !f.endsWith('door2/tripSequence.js') && /tripSequence(\.js)?['"]/.test(readFileSync(join(root, f), 'utf8')));
   assert.deepEqual(importers, []);
+});
+
+// ---------------------------------------------------------------------------
+// F3b: the stage-1 producer, from a plan (brief §2.1)
+
+/** The §3 cases: the reference trips, selections singly and together, and the stretch. */
+function f3bCases() {
+  const japan = build(JP, 14, 10, 'tokyo_city+kyoto@after_tokyo');
+  const withNikko = addExcursion(japan, 'tokyo_base', 'nikko');
+  return {
+    ...referenceTrips(),
+    'Japan 14d + Kyoto, Nikko': withNikko,
+    'Japan 14d + Kyoto, Nara': addExcursion(japan, 'kyo_base', 'nara'),
+    'Japan 14d + Kyoto, Nikko and Nara': addExcursion(withNikko, 'kyo_base', 'nara'),
+    'Japan 14d Tokyo, Kamakura then Nikko (menu order)': addExcursion(addExcursion(build(JP, 14, 10, 'tokyo_city'), 'tokyo_base', 'kamakura'), 'tokyo_base', 'nikko'),
+    'Japan 14d Tokyo, stretched': build(JP, 14, 10, 'tokyo_city')
+  };
+}
+
+test('F3b: tripSequenceFromPlan and tripSequenceFromTrip are identical apart from totalDays', () => {
+  for (const [name, trip] of Object.entries(f3bCases())) {
+    const fromPlan = tripSequenceFromPlan(trip.spec, trip.routePlan, { id: 'seq-test' });
+    const fromTrip = seqOf(trip);
+    assert.equal('totalDays' in fromPlan, false, `${name}: no realised day count before materialisation`);
+    const { totalDays, ...rest } = fromTrip;
+    assert.equal(totalDays, trip.days.length, name);
+    assert.deepEqual(fromPlan, rest, name);
+    assert.deepEqual(checkTripSequence(fromPlan, { data: PILOT_DATA }), [], name);
+  }
+});
+
+test('F3b: the producer reads the plan and the spec, never the days', () => {
+  const trip = build(PE, 10, 10, null);
+  // A plan and a spec, with no Trip around them at all.
+  const seq = tripSequenceFromPlan(structuredClone(trip.spec), structuredClone(trip.routePlan), { id: 'p' });
+  assert.deepEqual(seq.entries.map((e) => e.nights), trip.routePlan.stops.map((s) => s.nights));
+  assert.throws(() => tripSequenceFromPlan(trip.spec, trip.routePlan, {}), /must supply an id/);
+  assert.throws(() => tripSequenceFromPlan(trip.spec, undefined, { id: 'p' }), /no routePlan/);
+});
+
+// ---------------------------------------------------------------------------
+// F3b: the checker, hardened (brief §2.4). Each mutation was accepted at 6ac8c5d.
+
+const peruSeq = () => seqOf(build(PE, 10, 10, null));
+const full = (seq) => checkTripSequence(seq, { data: PILOT_DATA });
+const mutated = (fn) => {
+  const seq = structuredClone(peruSeq());
+  fn(seq);
+  return seq;
+};
+
+test('F3b mutation 1: a return leg that cannot reach home (Lima -> Cusco) is rejected, given the graph', () => {
+  const seq = mutated((s) => (s.returnConnectionId = 'conn_lim_cuz_air'));
+  assert.deepEqual(checkTripSequence(seq), [], 'structurally a valid id: the cheap check cannot see it');
+  assert.deepEqual(full(seq), ['returnConnectionId "conn_lim_cuz_air" does not serve lima -> vancouver']);
+});
+
+test('F3b mutation 2: an entry without a stopKey is rejected', () => {
+  const seq = mutated((s) => delete s.entries[2].stopKey);
+  assert.ok(checkTripSequence(seq).includes('entry #2: stopKey is missing'), checkTripSequence(seq).join('; '));
+});
+
+test('F3b mutation 3: two entries with the same stopKey are rejected', () => {
+  const seq = mutated((s) => (s.entries[2].stopKey = s.entries[1].stopKey));
+  assert.deepEqual(checkTripSequence(seq), ['entry pc_cusco: stopKey "pc_cusco" is not unique']);
+});
+
+test('F3b mutation 4: a fixed excursion without hoursOnSite is rejected', () => {
+  const seq = mutated((s) => delete s.entries.find((e) => e.stopKey === 'pc_aguas').excursions[0].hoursOnSite);
+  assert.deepEqual(checkTripSequence(seq), ['entry pc_aguas: excursion 0: hoursOnSite undefined is not a duration']);
+});
+
+test('F3b mutation 5: a fixed excursion without connectionId is rejected', () => {
+  const seq = mutated((s) => delete s.entries.find((e) => e.stopKey === 'pc_aguas').excursions[0].connectionId);
+  assert.deepEqual(checkTripSequence(seq), ['entry pc_aguas: excursion 0: connectionId is missing']);
+});
+
+test('F3b mutation 6: an inbound leg that does not serve its entry is rejected, given the graph', () => {
+  // Cusco's inbound swapped for the road leg Cusco -> Ollantaytambo: a real connection, the wrong endpoints.
+  const seq = mutated((s) => (s.entries[1].inboundConnectionId = 'conn_cuz_olly_road'));
+  assert.deepEqual(checkTripSequence(seq), []);
+  assert.deepEqual(full(seq), ['entry pc_cusco: inboundConnectionId "conn_cuz_olly_road" does not serve lima -> cusco']);
+});
+
+test('F3b mutation 7: an entry moved to an unrelated place is rejected, given the graph', () => {
+  const seq = mutated((s) => (s.entries[1].placeId = 'tokyo'));
+  assert.deepEqual(checkTripSequence(seq), []);
+  assert.deepEqual(full(seq), [
+    'entry pc_cusco: inboundConnectionId "conn_lim_cuz_air" does not serve lima -> tokyo',
+    'entry pc_sacred_valley: inboundConnectionId "conn_cuz_olly_road" does not serve tokyo -> ollantaytambo'
+  ]);
+});
+
+test('F3b: every required identifier must be a non-empty string, and every excursion source valid', () => {
+  const blank = mutated((s) => {
+    s.origin.placeId = '';
+    s.entries[0].placeId = '';
+    s.entries[0].inboundConnectionId = '';
+    s.returnConnectionId = '';
+  });
+  assert.deepEqual(checkTripSequence(blank), [
+    'origin.placeId is missing',
+    'returnConnectionId is missing',
+    'entry pc_lima_in: placeId is missing',
+    'entry pc_lima_in: inboundConnectionId is missing'
+  ]);
+  const aguas = (s) => s.entries.find((e) => e.stopKey === 'pc_aguas').excursions[0];
+  assert.deepEqual(checkTripSequence(mutated((s) => (aguas(s).placeId = ''))), ['entry pc_aguas: excursion 0: placeId is missing']);
+  assert.deepEqual(checkTripSequence(mutated((s) => (aguas(s).source = 'menu'))), ['entry pc_aguas: excursion 0: source "menu" is not fixed or selected']);
+  assert.deepEqual(checkTripSequence(mutated((s) => (aguas(s).hoursOnSite = 0))), ['entry pc_aguas: excursion 0: hoursOnSite 0 is not a duration']);
+});
+
+test('F3b: selected requirements must still match selectedExcursionIds, in order', () => {
+  const trip = addExcursion(addExcursion(build(JP, 14, 10, 'tokyo_city'), 'tokyo_base', 'kamakura'), 'tokyo_base', 'nikko');
+  const seq = structuredClone(seqOf(trip));
+  seq.entries[0].selectedExcursionIds.reverse();
+  assert.deepEqual(checkTripSequence(seq), ['entry tokyo_base: selected requirements do not match selectedExcursionIds']);
+});
+
+test('F3b: given the graph, unknown places and connections, and an excursion its base cannot reach, are rejected', () => {
+  assert.deepEqual(full(mutated((s) => (s.entries[0].placeId = 'atlantis'))), [
+    'entry pc_lima_in: unknown place "atlantis"',
+    'entry pc_lima_in: inboundConnectionId "conn_yvr_lim_air" does not serve vancouver -> atlantis',
+    'entry pc_cusco: inboundConnectionId "conn_lim_cuz_air" does not serve atlantis -> cusco'
+  ]);
+  assert.deepEqual(full(mutated((s) => (s.returnConnectionId = 'conn_nowhere'))), ['returnConnectionId: unknown connection "conn_nowhere"']);
+  const aguas = (s) => s.entries.find((e) => e.stopKey === 'pc_aguas').excursions[0];
+  assert.deepEqual(full(mutated((s) => (aguas(s).connectionId = 'conn_olly_agc_train'))), [
+    'entry pc_aguas: excursion 0: connection "conn_olly_agc_train" does not serve aguas_calientes <-> machu_picchu'
+  ]);
+});
+
+test('F3b: the structural check runs without the graph; the graph check runs only with it', () => {
+  for (const [name, trip] of Object.entries(referenceTrips())) {
+    const seq = seqOf(trip);
+    assert.deepEqual(checkTripSequence(seq), [], name);
+    assert.deepEqual(checkTripSequence(seq, {}), [], name);
+    assert.deepEqual(full(seq), [], name);
+  }
+});
+
+test('F3b, correcting F3: the leg COUNT guard does not reject an open-jaw journey; endpoint validation does', () => {
+  // Canada west-to-east, flying home from Toronto instead of Québec: stops + 1 legs, so the count is right
+  // and the structural check passes. Only the endpoints differ, and only the graph check sees them.
+  const seq = structuredClone(seqOf(build(CA, 12, 6, 'ec_corridor#west_to_east+ottawa@corridor')));
+  assert.equal(seq.returnConnectionId, 'conn_yvr_yqb_air');
+  seq.returnConnectionId = 'conn_yvr_yyz_air';
+  assert.equal(seq.entries.length + 1, [...seq.entries.map((e) => e.inboundConnectionId), seq.returnConnectionId].length);
+  assert.deepEqual(checkTripSequence(seq), []);
+  assert.deepEqual(full(seq), ['returnConnectionId "conn_yvr_yyz_air" does not serve quebec_city -> vancouver']);
+
+  // The producer runs the graph check, so a plan of that shape is refused at production.
+  const trip = structuredClone(build(CA, 12, 6, 'ec_corridor#west_to_east+ottawa@corridor'));
+  trip.routePlan.connectionIds[trip.routePlan.connectionIds.length - 1] = 'conn_yvr_yyz_air';
+  assert.throws(() => seqOf(trip), /returnConnectionId "conn_yvr_yyz_air" does not serve quebec_city -> vancouver/);
 });
