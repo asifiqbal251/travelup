@@ -437,8 +437,10 @@
 
 /**
  * ➕ F3: the one handoff both doors produce (design Q2, F1-D3, F1-D4, F1-D19b, F1-D24). PROVISIONAL.
- * ➕ F3b: produced from a plan before materialisation (tripSequenceFromPlan, totalDays absent) and materialised from
- * the sequence and the graph alone (materialise.js). Nothing in the live build path produces or reads it yet.
+ * ➕ F3b: converted from an already-allocated plan, before materialisation (tripSequenceFromPlan, totalDays absent),
+ * and scheduled into a timed skeleton from the validated sequence and the graph alone (materialise.js). Only the
+ * scheduling boundary is demonstrated; fill and edit are not. No existing live build path produces or reads it yet.
+ * It does NOT carry the planning outputs routePlan.minDays and Trip.warnings; their handoff is F4's design (v6.9 §Q2).
  * @typedef {Object} TripSequence
  * @property {2} schemaVersion
  * @property {string} id                  Stable, client-generated. NOT the fingerprint (Q8).

@@ -346,11 +346,20 @@ test('zero-night roles: Sacred Valley is a passthrough until a night is added, a
 // ---------------------------------------------------------------------------
 // Boundary (§3.1)
 
-test('nothing in src/ imports the adapter yet', () => {
+// F3b.1 §2.5 replaces F3's "nothing in src/ imports the adapter": that rule stopped the materialiser validating its
+// input. The F3b handoff modules may share code (materialise.js imports the checker); no existing live build path
+// may consume them.
+const HANDOFF_MODULES = ['lib/door2/tripSequence.js', 'lib/door2/materialise.js'];
+const IMPORTS_HANDOFF = /(?:from|import)\s*\(?\s*['"][^'"]*\/(?:tripSequence|materialise)(?:\.js)?['"]/;
+
+test('no existing live build path consumes the new handoff', () => {
   const root = fileURLToPath(new URL('../../src/', import.meta.url));
   const files = readdirSync(root, { recursive: true }).filter((f) => /\.(jsx?|tsx?)$/.test(f));
-  const importers = files.filter((f) => !f.endsWith('door2/tripSequence.js') && /tripSequence(\.js)?['"]/.test(readFileSync(join(root, f), 'utf8')));
+  const importers = files.filter((f) => !HANDOFF_MODULES.includes(f) && IMPORTS_HANDOFF.test(readFileSync(join(root, f), 'utf8')));
   assert.deepEqual(importers, []);
+  // The check is live: it sees the one permitted import between the handoff modules, and a dynamic import.
+  assert.match(readFileSync(join(root, 'lib/door2/materialise.js'), 'utf8'), IMPORTS_HANDOFF);
+  assert.match("const m = await import('./door2/materialise.js');", IMPORTS_HANDOFF);
 });
 
 // ---------------------------------------------------------------------------

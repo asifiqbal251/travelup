@@ -15,10 +15,22 @@ import { getPlace } from './route.js';
 // and stage 2, materialisation (materialise.js), which reads only the sequence,
 // the graph and declared runtime configuration.
 //
-// F3 projected a sequence read-only from a built Trip. F3b produces it from the
-// plan, before anything is materialised (tripSequenceFromPlan); the Trip
-// projection is now that plus the realised day count. Nothing in the live build
-// path calls either: route -> schedule -> fill -> edit still run on RoutePlan.
+// The sequence follows planning and allocation, which may use shared timing
+// simulations. It precedes final itinerary materialisation. That the current
+// planner fuses allocation and scheduling is an implementation fact, not an
+// architectural necessity.
+//
+// F3 projected a sequence read-only from a built Trip. F3b converts an
+// already-allocated plan into one (tripSequenceFromPlan); the Trip projection is
+// now that plus the realised day count. No existing live build path consumes
+// either: route -> schedule -> fill -> edit still run on RoutePlan. The stage-2
+// boundary demonstrated so far is scheduling only (materialise.js).
+//
+// Planning outputs the contract does not carry: the authored minimum duration
+// (routePlan.minDays) and the stretch warning (Trip.warnings,
+// nights_above_package_max) belong to stage 1 and must reach any assembled trip
+// (design v6.9 §Q2). Where they are held between stages and how assembly puts
+// them back is deferred to F4's design; nothing here produces or carries them.
 //
 // Pure: no randomness, no Date.now().
 
@@ -164,10 +176,12 @@ function graphProblems(seq, data) {
 }
 
 /**
- * Stage 1's output: a TripSequence from a plan, before anything is materialised.
- * No Trip and no days exist yet, so totalDays is absent: there is no realised day
- * count to report. The plan's nights are the allocation the planner computed
- * (scheduling is part of planning); they are carried, never recomputed.
+ * Stage 1's output: converts an ALREADY-ALLOCATED plan into a TripSequence. It
+ * does not perform route selection or initial allocation; the planner has
+ * already done both (using the scheduler's timing simulations) by the time a
+ * RoutePlan exists. It runs before materialisation: no Trip and no days are
+ * read, so totalDays is absent; there is no realised day count to report. The
+ * plan's nights are carried, never recomputed.
  *
  * The producer may read the package (to resolve selected excursions); the
  * consumer may not. Throws on a plan the contract cannot represent.
