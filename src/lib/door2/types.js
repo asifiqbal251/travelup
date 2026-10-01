@@ -305,12 +305,13 @@
  * ➕ F2: a content item's origin. Not the block-level `Provenance` above, which is a different record.
  * @typedef {Object} ContentProvenance
  * @property {'extracted'|'authored'} kind
- * @property {string} [sourceRecordId]   Base44 Destination record id.
- * @property {string} [sourceBundleId]   From the pilot's `source.bundleId`.
+ * @property {string} [sourceBundleId]   The legacy Destination record id. Absent on authored items.
  * @property {string} [sourceBundleName]
- * @property {string} [sourceTemplateId] The legacy day_template's id. No pilot item has one: the pilot recorded titles only.
- * @property {string} [sourceTemplateTitle]  The legacy day_template's title, from the pilot's `source.templateTitle`.
- * @property {string} [sourceFragmentId] The reviewed decomposition unit (F1-D23); 'default' for an unsplit template.
+ * @property {string} [sourceTemplateTitle]  The day_template's title. Unique within its record; EDITABLE source
+ *   text, so provenance only, never an identity.
+ * @property {number} [sourceTemplateIndex]  0-based position in the record's day_templates array. Corroborates the
+ *   title. NOT part of the exclusivity key.
+ * @property {string} sourceFragmentId   The reviewed decomposition unit (F1-D23); 'default' when unsplit.
  * @property {boolean} [edited]          Text was rewritten to fit a place or slot.
  * @property {string} [author]
  * @property {string} [draftedBy]

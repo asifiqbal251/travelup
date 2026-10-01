@@ -51,7 +51,9 @@ const ONE_ITEM_CASES = [
   ['signature_unsourced', good({ signature: 'x', review: { reviewedBy: 'r', reviewedAt: '2026-10-01T00:00:00Z', sourceName: 'Guide' } })],
   ['bad_status', good({ status: 'reviewed' })],
   ['bad_status', good({ status: undefined })],
-  ['unknown_visits_place', good({ visitsPlaceId: 'atlantis' })]
+  ['unknown_visits_place', good({ visitsPlaceId: 'atlantis' })],
+  ['provenance_incomplete', good({ provenance: { kind: 'extracted', sourceTemplateTitle: 'Kyoto day 2', sourceFragmentId: 'default' } })],
+  ['provenance_incomplete', good({ provenance: { kind: 'extracted', sourceBundleId: 'b_kyoto', sourceFragmentId: 'default' } })]
 ];
 
 for (const [code, item] of ONE_ITEM_CASES) {
@@ -74,18 +76,42 @@ test('F2-S5: duplicate_id is reported once per repeat', () => {
   assert.deepEqual(codes(r), ['duplicate_id']);
 });
 
-test('F2-S6: fragment_reused: one (sourceTemplateId, sourceFragmentId) pair, two items (F1-D23)', () => {
-  const prov = (sourceFragmentId) => ({ kind: 'extracted', sourceTemplateId: 'tpl_47_kyoto_day2', sourceFragmentId });
-  const r = validateContentCatalogue([good({ id: 'a', provenance: prov('default') }), good({ id: 'b', provenance: prov('default') })], { placeIds });
+/** Extracted provenance keyed on F2.1's triple; the index is corroboration only. */
+const extracted = (sourceFragmentId, extra = {}) => ({
+  kind: 'extracted',
+  sourceBundleId: 'b_kyoto',
+  sourceTemplateTitle: 'Kyoto day 2',
+  sourceTemplateIndex: 1,
+  sourceFragmentId,
+  ...extra
+});
+
+test('F2-S6: fragment_reused: one (sourceBundleId, sourceTemplateTitle, sourceFragmentId) triple, two items (F1-D23, F2.1)', () => {
+  const r = validateContentCatalogue([good({ id: 'a', provenance: extracted('default') }), good({ id: 'b', provenance: extracted('default') })], { placeIds });
   assert.deepEqual(codes(r), ['fragment_reused']);
   assert.equal(r.errors[0].itemId, 'b');
 
-  // One template may legitimately yield several fragments.
-  const split = validateContentCatalogue([good({ id: 'a', provenance: prov('morning') }), good({ id: 'b', provenance: prov('afternoon') })], { placeIds });
+  // Changing only the fragment id makes it pass: one template may legitimately yield several fragments.
+  const split = validateContentCatalogue([good({ id: 'a', provenance: extracted('default') }), good({ id: 'b', provenance: extracted('morning') })], { placeIds });
   assert.equal(split.ok, true);
+
+  // The same title in a different record is a different template.
+  const otherBundle = validateContentCatalogue([good({ id: 'a', provenance: extracted('default') }), good({ id: 'b', provenance: extracted('default', { sourceBundleId: 'b_tokyo' }) })], { placeIds });
+  assert.equal(otherBundle.ok, true);
 });
 
-test('F2-S7: items with no sourceTemplateId are exempt from the fragment check', () => {
+test('F2.1-S6b: sourceTemplateIndex is not part of the key: a differing index does not separate a reused fragment', () => {
+  const r = validateContentCatalogue([good({ id: 'a', provenance: extracted('default') }), good({ id: 'b', provenance: extracted('default', { sourceTemplateIndex: 7 }) })], { placeIds });
+  assert.deepEqual(codes(r), ['fragment_reused']);
+});
+
+test('F2.1-S6c: no title-only fallback: two extracted items missing sourceBundleId are incomplete, not matched to each other', () => {
+  const noBundle = { kind: 'extracted', sourceTemplateTitle: 'Kyoto day 2', sourceFragmentId: 'default' };
+  const r = validateContentCatalogue([good({ id: 'a', provenance: noBundle }), good({ id: 'b', provenance: noBundle })], { placeIds });
+  assert.deepEqual(codes(r), ['provenance_incomplete', 'provenance_incomplete']);
+});
+
+test('F2-S7: authored items are exempt from the fragment check', () => {
   const r = validateContentCatalogue([good({ id: 'a' }), good({ id: 'b' })], { placeIds });
   assert.equal(r.ok, true);
 });
@@ -98,10 +124,12 @@ test('F2-S8: the backfill is mechanical: every item pending, unreviewed, provena
     const p = item.provenance;
     assert.equal(p.kind, item.source.kind, item.id);
     assert.equal(p.sourceFragmentId, 'default', item.id);
-    assert.equal(p.sourceTemplateId, undefined, `${item.id}: the pilot has no template ids to carry`);
+    assert.equal(p.sourceTemplateId, undefined, `${item.id}: F2.1 removed sourceTemplateId`);
+    assert.equal(p.sourceRecordId, undefined, `${item.id}: F2.1 removed sourceRecordId (it duplicated sourceBundleId)`);
     if (item.source.kind === 'authored') {
       assert.deepEqual(p, { kind: 'authored', sourceFragmentId: 'default', author: 'claude', draftedBy: 'claude' }, item.id);
     } else {
+      assert.ok(Number.isInteger(p.sourceTemplateIndex) && p.sourceTemplateIndex >= 0, item.id);
       assert.equal(p.sourceBundleId, item.source.bundleId, item.id);
       assert.equal(p.sourceBundleName, item.source.bundleName, item.id);
       assert.equal(p.sourceTemplateTitle, item.source.templateTitle, item.id);
@@ -114,9 +142,19 @@ test('F2-S8: the backfill is mechanical: every item pending, unreviewed, provena
   );
 });
 
-test('F2-S9: until template ids exist, no two extracted items share a (bundle, template title)', () => {
-  // The fragment check is exempt for every pilot item (none has a sourceTemplateId), so this pins the same
-  // exclusivity on the pointer the pilot does have. F7 should replace it with the real (id, fragment) check.
-  const keys = PILOT_CONTENT.filter((i) => i.provenance.kind === 'extracted').map((i) => `${i.provenance.sourceBundleId}|${i.provenance.sourceTemplateTitle}`);
-  assert.equal(new Set(keys).size, keys.length);
+// F2-S9 (no two extracted items share a (bundle, template title)) is retired: it stood in for the inert
+// sourceTemplateId check, and F2-S1 now runs the real (bundle, title, fragment) check over the whole catalogue.
+// With every fragment 'default' that is the same assertion.
+
+test('F2.1-S10: template indices are 0-based and contiguous per bundle, in pilot file order', () => {
+  const byBundle = new Map();
+  for (const { provenance: p } of PILOT_CONTENT) {
+    if (p.kind !== 'extracted') continue;
+    const titles = byBundle.get(p.sourceBundleId) ?? new Map();
+    titles.set(p.sourceTemplateTitle, p.sourceTemplateIndex);
+    byBundle.set(p.sourceBundleId, titles);
+  }
+  for (const [bundleId, titles] of byBundle) {
+    assert.deepEqual([...titles.values()], [...titles.keys()].map((_, i) => i), bundleId);
+  }
 });

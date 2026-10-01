@@ -555,8 +555,31 @@ const ITEMS = [
     foodNote: 'Takoyaki, okonomiyaki and kushikatsu are the local trio.', source: AUTHORED_JP }
 ];
 
+/**
+ * F2.1: `sourceTemplateIndex` for each extracted (bundle, template title), numbered 0-based per bundle in the order
+ * the templates first appear in ITEMS.
+ *
+ * This is the pilot FILE's order, NOT a verified position in the Base44 record's day_templates array: nobody has
+ * checked that the two agree. It exists so the field is populated and its shape is right, not as evidence. F7 must
+ * re-derive the index from its migration source snapshot and must not trust this value.
+ */
+const templateIndexByKey = (() => {
+  const next = new Map(); // bundleId -> next index
+  const out = new Map(); // JSON [bundleId, templateTitle] -> index
+  for (const { source } of ITEMS) {
+    if (source.kind !== 'extracted') continue;
+    const key = JSON.stringify([source.bundleId, source.templateTitle]);
+    if (out.has(key)) continue;
+    const n = next.get(source.bundleId) ?? 0;
+    out.set(key, n);
+    next.set(source.bundleId, n + 1);
+  }
+  return out;
+})();
+
 /** F2: `provenance` derived mechanically from the item's `source`. Nothing here has been split, so every item is the
- * single 'default' fragment of its template (F1-D23). The pilot recorded template titles, never template ids. */
+ * single 'default' fragment of its template (F1-D23). The pilot recorded template titles, never template ids; F2.1
+ * keys exclusivity on (sourceBundleId, sourceTemplateTitle, sourceFragmentId). */
 function provenanceFromSource(source) {
   if (source.kind === 'authored') {
     return { kind: 'authored', sourceFragmentId: 'default', author: 'claude', draftedBy: 'claude' };
@@ -566,6 +589,7 @@ function provenanceFromSource(source) {
     sourceBundleId: source.bundleId,
     sourceBundleName: source.bundleName,
     sourceTemplateTitle: source.templateTitle,
+    sourceTemplateIndex: templateIndexByKey.get(JSON.stringify([source.bundleId, source.templateTitle])),
     sourceFragmentId: 'default',
     ...(source.edited ? { edited: true } : {})
   };

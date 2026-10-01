@@ -57,13 +57,21 @@ export function validateContentItem(item, { placeIds }) {
     errors.push(err('unknown_visits_place', id, `visitsPlaceId "${item.visitsPlaceId}" is not a known place`));
   }
 
+  // F2.1: an extracted item that cannot be keyed for F1-D23 is an error, not an exemption from the fragment check.
+  const p = item.provenance;
+  if (p?.kind === 'extracted' && (p.sourceBundleId === undefined || p.sourceTemplateTitle === undefined)) {
+    errors.push(err('provenance_incomplete', id, 'an extracted item needs sourceBundleId and sourceTemplateTitle (F1-D23)'));
+  }
+
   return { ok: errors.length === 0, errors };
 }
 
 /**
  * Every per-item rule, plus the two that need the whole catalogue: unique ids, and F1-D23's rule that a
- * (sourceTemplateId, sourceFragmentId) pair is used by at most one item. Items with no sourceTemplateId are exempt
- * from the second; today that is all of them, because the pilot recorded template titles, not ids.
+ * (sourceBundleId, sourceTemplateTitle, sourceFragmentId) triple is used by at most one item. sourceTemplateIndex is
+ * corroboration, not part of the key. Authored items have no source template and are exempt from the second; every
+ * extracted item is checked, and one that cannot be keyed is `provenance_incomplete` rather than silently exempt.
+ * The triple is migration provenance and de-duplication only: a template title is editable source text, never an id.
  * `warnings` is part of the contract; F2 defines no warning rules.
  * @param {ContentItem[]} items
  * @param {{placeIds: string[]|Set<string>|Object}} options
@@ -81,13 +89,12 @@ export function validateContentCatalogue(items, { placeIds }) {
     if (seenIds.has(item.id)) errors.push(err('duplicate_id', item.id, `id "${item.id}" is used more than once`));
     seenIds.add(item.id);
 
-    const templateId = item.provenance?.sourceTemplateId;
-    if (templateId !== undefined) {
-      const fragmentId = item.provenance.sourceFragmentId;
-      const key = JSON.stringify([templateId, fragmentId]);
+    const p = item.provenance;
+    if (p?.sourceBundleId !== undefined && p?.sourceTemplateTitle !== undefined) {
+      const key = JSON.stringify([p.sourceBundleId, p.sourceTemplateTitle, p.sourceFragmentId]);
       const first = seenFragments.get(key);
       if (first !== undefined) {
-        errors.push(err('fragment_reused', item.id, `template "${templateId}" fragment "${fragmentId}" is already used by "${first}" (F1-D23)`));
+        errors.push(err('fragment_reused', item.id, `bundle "${p.sourceBundleId}" template "${p.sourceTemplateTitle}" fragment "${p.sourceFragmentId}" is already used by "${first}" (F1-D23)`));
       } else {
         seenFragments.set(key, item.id);
       }
