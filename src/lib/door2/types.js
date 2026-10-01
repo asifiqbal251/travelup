@@ -293,7 +293,56 @@
  * @property {number} [minDayAtStop]     Not before this many days after arriving (altitude safety).
  * @property {string} [visitsPlaceId]    ➕ E3b: the place this item visits for the day, when that is not where the traveller
  *   is sleeping; used to stop a day-trip item and a selected excursion double-booking the same place (fill.js).
- * @property {ContentSource} source      Provenance back to the source bundle, or 'authored'.
+ * @property {ContentSource} source      Provenance back to the source bundle, or 'authored'. Read by fill.js and edit.js
+ *   (copied onto block provenance); F2 leaves it as it is.
+ * @property {'approved'|'pending_review'} status  ➕ F2: review state. Advisory only: no engine module reads it yet.
+ * @property {string} [signature]        ➕ F2: a reviewed factual attribute, NOT a score (F1-D1). Needs `review.sourceUrl`.
+ * @property {ContentProvenance} provenance  ➕ F2: where the item came from, in a form that survives record migration.
+ * @property {ContentReview} review      ➕ F2: who reviewed it, and against what.
+ */
+
+/**
+ * ➕ F2: a content item's origin. Not the block-level `Provenance` above, which is a different record.
+ * @typedef {Object} ContentProvenance
+ * @property {'extracted'|'authored'} kind
+ * @property {string} [sourceRecordId]   Base44 Destination record id.
+ * @property {string} [sourceBundleId]   From the pilot's `source.bundleId`.
+ * @property {string} [sourceBundleName]
+ * @property {string} [sourceTemplateId] The legacy day_template's id. No pilot item has one: the pilot recorded titles only.
+ * @property {string} [sourceTemplateTitle]  The legacy day_template's title, from the pilot's `source.templateTitle`.
+ * @property {string} [sourceFragmentId] The reviewed decomposition unit (F1-D23); 'default' for an unsplit template.
+ * @property {boolean} [edited]          Text was rewritten to fit a place or slot.
+ * @property {string} [author]
+ * @property {string} [draftedBy]
+ */
+
+/**
+ * ➕ F2: a content item's review record. Both null means unreviewed.
+ * @typedef {Object} ContentReview
+ * @property {string|null} reviewedBy
+ * @property {string|null} reviewedAt    ISO 8601.
+ * @property {string} [sourceName]
+ * @property {string} [sourceUrl]
+ */
+
+/**
+ * ➕ F2: a location being considered for Place status (F1-D16, placeRule.js). Only these four flags are read, and only
+ * the value `true` counts. Whether a site fills a whole day is deliberately not an input.
+ * @typedef {Object} PlaceRuleCandidate
+ * @property {string} id
+ * @property {boolean} [sleepsThere]          Travellers stay overnight there.
+ * @property {boolean} [independentRouting]   Routed to and from in its own right.
+ * @property {boolean} [reusableShelf]        Owns content other routes would reuse.
+ * @property {boolean} [graphParticipation]   Participates meaningfully in the connection graph.
+ */
+
+/**
+ * ➕ F2: the Place rule's verdict on one candidate, kept as evidence.
+ * @typedef {Object} PlaceRuleVerdict
+ * @property {string} candidateId
+ * @property {'place'|'not_place'} verdict
+ * @property {'overnight_base'|'promotion_criteria'|'content_on_base_or_excursion'} reason
+ * @property {Array<'sleepsThere'|'independentRouting'|'reusableShelf'|'graphParticipation'>} criteriaMet
  */
 
 /**

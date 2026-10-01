@@ -16,6 +16,12 @@
 //     two Tokyo days, a few evenings).
 // Nothing here is reviewed yet (reviewed: false), same as the connection data.
 //
+// F2 (ContentItem v2) adds three fields to every item, derived at the bottom
+// of this file: status ('pending_review' for all of them), provenance (the
+// same facts as `source`, in the form record migration will keep) and review
+// (reviewedBy/reviewedAt, both null). `source` is unchanged: fill.js and
+// edit.js still read it. See types.js and contentSchema.js.
+//
 // Item fields:
 //   id, placeId, title
 //   slots: which free-time slot kinds it fits:
@@ -50,7 +56,7 @@ const AUTHORED_JP = {
 
 const ex = (base, templateTitle, edited = false) => ({ ...base, templateTitle, ...(edited ? { edited: true } : {}) });
 
-export const PILOT_CONTENT = Object.freeze([
+const ITEMS = [
   // ---------------- New York (single-place bundle, reused as-is) ----------------
   { id: 'nyc_midtown', placeId: 'new_york', title: 'Midtown & Times Square', slots: ['full'], intensity: 'Moderate', interests: ['Cities', 'Photography'],
     summary: 'Rockefeller Center, Top of the Rock and Fifth Avenue.',
@@ -547,4 +553,31 @@ export const PILOT_CONTENT = Object.freeze([
   { id: 'osa_dotonbori_kuromon', placeId: 'osaka', title: 'Dotonbori & Kuromon Market food crawl', slots: ['half'], intensity: 'Light', interests: ['Food', 'Cities'],
     summary: 'The neon canal street and the covered market beside it, eaten in small pieces.',
     foodNote: 'Takoyaki, okonomiyaki and kushikatsu are the local trio.', source: AUTHORED_JP }
-]);
+];
+
+/** F2: `provenance` derived mechanically from the item's `source`. Nothing here has been split, so every item is the
+ * single 'default' fragment of its template (F1-D23). The pilot recorded template titles, never template ids. */
+function provenanceFromSource(source) {
+  if (source.kind === 'authored') {
+    return { kind: 'authored', sourceFragmentId: 'default', author: 'claude', draftedBy: 'claude' };
+  }
+  return {
+    kind: 'extracted',
+    sourceBundleId: source.bundleId,
+    sourceBundleName: source.bundleName,
+    sourceTemplateTitle: source.templateTitle,
+    sourceFragmentId: 'default',
+    ...(source.edited ? { edited: true } : {})
+  };
+}
+
+// F2 (ContentItem v2): every item gets status, provenance and review. An item's own fields win, so a reviewer
+// approves an item by giving it `status` and `review` on its line above; until then it is pending.
+export const PILOT_CONTENT = Object.freeze(
+  ITEMS.map((item) => ({
+    ...item,
+    status: item.status ?? 'pending_review',
+    provenance: item.provenance ?? provenanceFromSource(item.source),
+    review: item.review ?? { reviewedBy: null, reviewedAt: null }
+  }))
+);
