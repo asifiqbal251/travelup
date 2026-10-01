@@ -105,3 +105,37 @@ At the Phase D checkpoint, using Phase C evidence, answer:
 **All five clean → Accepted. Any one not clean → revise this ADR before Phase E.**
 
 The Phase B integration tests B10 (stale preview refused) and B12 (pin → structural change → apply → undo) exist specifically to test this ADR's promises where features *interact*, and should be treated as its executable specification.
+
+---
+
+## Amendment, 30 September 2026 (agreed) / 1 October 2026 (recorded) — a preview never throws
+
+- **Source:** `claude/checkpoint-phase-e-2026-09-30.md` §4; defect **EF1**, closed 30 Sep (`claude/ef1-diff-review-2026-09-30.md`).
+- **Deciders:** Rockstar (Asif), with ChatGPT review (the authoring / data-integrity carve-out is ChatGPT's correction 6).
+- **Status of ADR-002 itself:** unchanged by this amendment. See the note on status below.
+
+### The invariant
+
+> **A preview invoked from a valid, traveller-reachable trip state must return proposals or a structured refusal; it must not throw an uncaught exception. This does not prohibit authoring or data-integrity errors from throwing — a `FamilyAuthoringError` or `PackageAuthoringError` raised by invalid authored data is correct behaviour and remains so.**
+
+### Why it is an explicit invariant and not an implication of §1
+
+§1 already says every `preview*` returns ranked proposals **or** a structured refusal. Until EF1 that held only where the night allocation sat within authored limits.
+
+EF1: the round-robin scheduler deliberately stretches a stop past its authored maximum on a long trip (Tokyo at 12 nights against an authored max of 10, on a 14-day trip), but `emitOverride` in `schedule.js` rejected that same allocation and two clamps in `restructure.js` clamped it back down. Four separate previews threw, and the UI dutifully rendered the throw as a refusal.
+
+> **A refusal that is really a caught crash is worse than a crash, because it looks like a product decision.**
+
+That is the failure this invariant exists to name. It was closed by EF1 — the rule now enforced is *an over-maximum allocation may be kept or reduced, never raised; the minimum stays a hard floor; a preview never throws* — behind a 500-preview and a 466-day-trip sweep.
+
+### Scope, stated precisely
+
+- **The precondition is load-bearing.** "From a valid, traveller-reachable trip state" is what the invariant is scoped by. Caller-contract guards on invalid **arguments** — `previewAdjustNights` rejecting a `delta` other than ±1, an unknown `stopKey`, a trip with no `routePlan` — are programming-error guards, not reachable from a traveller's trip, and are not prohibited.
+- **Route-alternative switching is outside this invariant**, as it is outside the whole contract. Scope boundary 4 stands: `handleChangeRoute` is not a `preview*` function.
+- **Day-trip selection is inside it.** `buildTripFromRoutePlan` refuses rather than throws (Phase E), which is the same rule applied at the resolver.
+
+### A note on this ADR's status, for whoever reads it next
+
+This file still reads **PROVISIONAL**, graduating at the Phase D checkpoint. That checkpoint has since passed (29 Sep) and Phase E has closed (30 Sep). Of the five graduation questions: 1, 2, 3 and 4 are **clean across three families** — mid-route insertion (test F7), two simultaneous optionals, non-lossy full-skeleton rebuild now including excursion selections, and **no destination-specific branching, verified by grep**. **Question 5 (a schedule-constrained Connection) remains NOT ANSWERABLE** and has now been deferred by name a third time; it is the same open item as ADR-002 Q5 in the Phase F design.
+
+The Phase E checkpoint recorded *"no change of status"* while describing the ADR as accepted for what three families have proven. **This amendment does not resolve that ambiguity, because a status change is a decision and not a documentation fix.** It is flagged here so the next reader sees it rather than inferring one answer or the other.

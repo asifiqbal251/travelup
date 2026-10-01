@@ -100,3 +100,73 @@ Not now, and not implied by anything above: **Neo4j, GNN, RL, collaborative filt
 ## Review trigger
 
 Revisit if a Route Family genuinely cannot be expressed without either a region-specific field or region-specific branching. That is exactly the finding Phase C is designed to surface, and it belongs at the Phase D checkpoint — not worked around quietly in a build.
+
+---
+
+## Amendment, 1 October 2026 — the fillable-content invariant, and `ConnectionExperience`
+
+- **Source:** `claude/design-f1-option-b-2026-09-30.md` v6.1, decisions **F1-D19**, **F1-D19a**, **F1-D19b**, **F1-D23**.
+- **Deciders:** Rockstar (Asif), with ChatGPT review. Rockstar overruled Claude's recommendation; see §4 below.
+- **Status of ADR-003 itself:** unchanged — **Accepted**. This amendment is **additive**. No existing section is weakened, and §2 (no stored reward), §4 (no region-specific schema or branching) and §5 (the variety rule) apply to everything added here.
+
+### 0. One correction to how this amendment was described
+
+The Phase F design doc said this amendment would keep *"A `ContentItem` belongs to exactly one Place"* **as written in ADR-003**. **That sentence is not in ADR-003.** It has been an engine rule since Phase B and is stated in the F1 design doc's Q1, but it was never written into this ADR.
+
+So §1 below **records the invariant in ADR-003 for the first time**, at the level of precision Phase F needs, and §2 adds the one exception. It is still narrow and still additive — but it is an addition to this ADR's text, not a narrowing of text already here. Recorded so nobody later reads §1 as a restatement of something they cannot find.
+
+### 1. The fillable-content invariant
+
+> **Only Places own *fillable* content.**
+>
+> **Fillable content** is anything eligible to be selected into an itinerary slot by `fill.js` or `edit.js` — anything that can be returned by `eligibleItemsForBlock`. **`ContentItem` is the only fillable type, and a `ContentItem` belongs to exactly one Place.**
+
+A Destination record (Door 1) or a `RouteFamily` (Door 2, and shared — see the ADR-001 amendment of the same date) selects *which places, in what order, for how long*. **Neither contains content.**
+
+The invariant is load-bearing in five places, and every one of them is about *filling*: never-borrow and honest gaps; no stored reward (§2 above); the single eligibility/scoring entry point; shelf sizing against trip length; and thin-shelf honesty. The word **fillable** is what makes that explicit.
+
+### 2. `ConnectionExperience` — a distinct, restricted, non-fillable type
+
+§3 of this ADR gives a Connection a minimal factual model with nowhere to put an experience that *is* the journey: the Icefields Parkway, Tizi n'Tichka, the Hải Vân pass. The M0 audit found 21 such legacy templates. Attributing them to the arrival Place — Claude's recommendation — was **overruled**, correctly: a scenic drive is not an activity of the city it ends in.
+
+> **A Connection may carry a restricted class of en-route experiences, `experiences[]`, which render only inside that Connection's own travel block.**
+>
+> - **Place content** = an experience while **based at** a Place.
+> - **Connection experience** = an experience occurring **during travel between** Places.
+
+**Six constraints, which are the type's boundary:**
+
+| # | Constraint | How it is enforced |
+|---|---|---|
+| 1 | Does not participate in normal Place `fill.js` selection | A distinct type. `eligibleItemsForBlock` cannot return one |
+| 2 | Does not fill Place-content gaps — an empty Place shelf still shows an honest gap | Type separation, plus a test that a Place with an empty shelf still reports a gap on a trip whose inbound Connection carries experiences |
+| 3 | Does not substitute for destination activities — renders on the travel block only | There is no code path from a Connection to an activity slot |
+| 4 | Tied to that Connection; not a free-floating item a route reuses | Owned by the Connection row, resolved at build time from the entry's `inboundConnectionId` |
+| 5 | Stable identity, source and provenance | Permanent opaque id, never reused; `review.sourceUrl` required; `provenance.sourceTemplateId` where it came from a legacy template |
+| 6 | Never silently duplicated as Place content | Separate id spaces make one record being both impossible. For the textual case, a **`(sourceTemplateId, sourceFragmentId)` pair is consumed exactly once** — as Place content **or** as an experience — checked for uniqueness in the migration tooling. **One source template may legitimately yield several fragments** |
+
+**A distinct type, not a flag.** `ConnectionExperience` has its own type, its own id space, is never in the `ContentItem` collection and is never reachable from `eligibleItemsForBlock`. A boolean on `ContentItem` would have been one flag away from a general second content system. **A separate type cannot drift there without a visible, reviewable schema change** — which is the point.
+
+### 3. Time is recorded, never assumed
+
+> Each experience carries **`timeCost: 'within_connection' | 'requires_additional'`**.
+>
+> - **`within_connection`** — the experience happens inside the journey's existing duration, and the reviewed data genuinely means that. **These ship in Phase F v1.**
+> - **`requires_additional`** — the experience genuinely needs time the Connection does not contain. **Deferred, never rendered as though free.** The renderer refuses an experience whose `timeCost` it cannot honour.
+
+**Zero schedule time is not a rule of this architecture.** It is a description of what has been modelled so far. Baking it in would make the schema lie about the world. An en-route site that genuinely needs its own time has two honest futures — **promotion to a Place**, or a **modelled en-route stop** — each its own decision with its own evidence.
+
+### 4. Curated build output, not traveller state
+
+> A connection experience is **resolved** from the applicable curated Connection at build time. **It is not selectable, pinnable or swappable, and is not stored as a traveller edit.** It is recorded in the trip's evidence under a `connection` scope, per §6 of this ADR.
+
+It therefore adds **zero identity surface** to the Phase F block-identity work. Traveller-selectable en-route stops are a **named future feature**, not a deferred part of this one; if they ever ship they arrive with their own identity decision.
+
+**An estimated Connection never carries `experiences[]`.** An en-route experience is reviewed and source-backed by definition; a derived edge has nothing to attach one to. This also keeps the derivation axis of §2 clean: `derivation: 'curated' | 'estimated'` and review status stay orthogonal, an individual runtime estimate is derived rather than curated, and **the estimator ruleset itself is reviewed, versioned and tested** — a curated Connection always overrides an estimate.
+
+### 5. What this amendment does not do
+
+- It does **not** permit content on any other graph element.
+- It does **not** make a Connection a Place, or give it a shelf.
+- It does **not** relax §2: an experience is reviewed **content**, never a stored reward, score or appeal value.
+- It does **not** authorize a build or a record migration.

@@ -88,3 +88,80 @@ These are named so that nobody mistakes silence for a decision. Each needs its o
 ## Review trigger
 
 Revisit if the Phase F design doc concludes that Door 1 itineraries **cannot** be expressed in Door 2's block shape without either a lossy migration or a special case in the shared engine. That finding would be a real argument against this ADR, and it should reopen it rather than be worked around.
+
+---
+
+## Amendment, 1 October 2026 — the handoff carries one *or more* entries, and `RouteFamily` is shared
+
+- **Source:** `claude/design-f1-option-b-2026-09-30.md` v6.1, decisions **F1-D24**, **F1-D9/Q13**, **F1-D3**.
+- **Deciders:** Rockstar (Asif), with ChatGPT review. Phase F1 design approved 1 Oct 2026.
+- **Status of ADR-001 itself:** unchanged — **Accepted (direction)**. This amendment sharpens the handoff contract in §Decision 4 and names where the structural definition of a multi-base itinerary lives. **It authorizes no build and no record migration.**
+
+### 1. Both doors' sequences may have more than one entry
+
+§Decision 4 reads *"Travel Fit's sequence has one entry today; Door 2's has several."* That was a description of the legacy state, not a property of Door 1.
+
+> **After Option B, a Door 1 Destination record produces a `TripSequence` of one *or more* entries.** A single-base record produces one; a multi-place bundle record produces several, by an **authored** split.
+
+The M0 audit (30 Sep) established that the split **cannot be derived** from the legacy data: no `day_template` carries a place, day or nights field, and night allocation is ambiguous at every supported length for all 27 multi-base records. **A multi-entry Door 1 sequence is therefore authored, never inferred** (F1-D9, F1-D17, F1-D28).
+
+**Nothing in this clause changes Travel Fit's product promise.** §Decision 3 stands: Travel Fit ranks single Destination records, and that remains its ranking unit. A bundle record that already covers several places is being *represented* accurately, not turned into a multi-stop planner. The "explicitly undecided" item 1 — *should Travel Fit ever recommend multi-stop trips?* — stays undecided.
+
+### 2. `RouteFamily` is a shared WhereNova domain object, not a Door 2 construct
+
+This is the substantive change, and it is a **convergence**, not a new layer.
+
+> **The structural definition of a multi-base itinerary — which places, in what order, with what per-stop night ranges — lives once, in the shared layer, as a `RouteFamily`. Both doors read it. Neither owns it.**
+>
+> A Destination record carries its identity and scoring attributes plus **either**:
+> - a **`placeId`** — the record is single-base; or
+> - a **`routeFamilyId`** — the record is multi-base, with variant information **only where genuinely required**.
+>
+> The reference is **many-to-one**. Several Destination records may reference the same `RouteFamily`. **A record never owns a family, and no code may assume a 1:1 relationship.**
+
+**One producer, and this is binding.** Both references resolve through the **same** `TripSequence` producer. A single-base record yields a one-entry sequence through that same path.
+
+> **There is no separate single-base itinerary engine.** A second producer for the easy case is how two engines start, and one engine is the whole point of this ADR.
+>
+> **Invariant test:** for a single-base record and a one-stop family covering the same Place and range, the producer's output is identical apart from provenance.
+
+**What this does not change.** §Decision 3 — *selection stays separate, deliberately* — is untouched. Travel Fit ranks; Door 2 selects a curated family. This amendment is about the **structure** the selection hands on, not about how either door selects.
+
+### 3. The handoff is counted in nights
+
+§Decision 4's shorthand `(place, days)[]`, and the diagram's `[(Tokyo, 7)]`, predate F1-D3.
+
+> **`TripSequence` carries `nights` per entry. `totalDays` is derived, never stored as a second source of truth.** `spec.requestedDays` is a separate input and is not the same quantity.
+
+The shorthand stays readable as shorthand; the typed contract in Phase F is in nights.
+
+### 4. The diagram, redrawn
+
+```text
+                SHARED WORLD GRAPH (places + attributes + connections)
+                        │
+        SHARED STRUCTURE LAYER — RouteFamily
+        (ordered stops + per-stop night ranges; read by both doors)
+                        │
+          ┌─────────────┴─────────────┐
+       DOOR 1                       DOOR 2
+    Travel Fit                 traveller names destination
+  ranks single                       │
+  Destination records          selects a curated family
+          │                          │
+   record → placeId                  │
+        or routeFamilyId ────────────┤
+          └─────────────┬────────────┘
+             ONE TripSequence PRODUCER
+         [(Cusco, 3 nights), (Aguas Calientes, 1), …]
+                        ▼
+              SHARED ITINERARY ENGINE (fill.js)
+                        ▼
+                SHARED EDIT ENGINE (edit.js)
+                        ▼
+                  EDITABLE ITINERARY
+```
+
+### 5. Review trigger — not tripped
+
+ADR-001's review trigger asks whether Phase F concluded that Door 1 itineraries **cannot** be expressed in Door 2's block shape without a lossy migration or an engine special case. **It did not.** The three items that would be lossy if handled carelessly — multi-place bundles (Q13), automatic recovery days (F1-D5c) and travel-day content (F1-D18 / Q15) — are each resolved by an explicit decision rather than a silent drop. The trigger stands as written for any future finding.

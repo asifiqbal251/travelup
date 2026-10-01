@@ -10,9 +10,9 @@
 
 | ADR | Title | Status |
 |---|---|---|
-| [ADR-001](./ADR-001-one-trip-system-two-entrances.md) | One trip system, two entrances | **Accepted (direction).** Implementation deferred to Phases F–G. |
-| [ADR-002](./ADR-002-structural-edits-preview-validate-apply.md) | Structural edits: preview → validate → apply, with reconciliation | **Provisional**, pending validation against Route Family #2 (Eastern Canada). Revisited at the Phase D checkpoint. |
-| [ADR-003](./ADR-003-graph-data-discipline.md) | Graph data discipline | **Accepted.** |
+| [ADR-001](./ADR-001-one-trip-system-two-entrances.md) | One trip system, two entrances | **Accepted (direction).** Implementation deferred to Phases F–G. **Amended 1 Oct 2026** — the handoff carries one *or more* entries; `RouteFamily` is a shared domain object a Destination record references; the handoff counts nights. |
+| [ADR-002](./ADR-002-structural-edits-preview-validate-apply.md) | Structural edits: preview → validate → apply, with reconciliation | **Provisional** as written. **Amended 1 Oct 2026** — *a preview never throws* added as an explicit invariant. **Status needs a call:** graduation questions 1–4 are clean across three families, question 5 is still unanswerable, and the file and the Phase E checkpoint disagree on whether that graduates it. See the amendment. |
+| [ADR-003](./ADR-003-graph-data-discipline.md) | Graph data discipline | **Accepted. Amended 1 Oct 2026** — the fillable-content invariant recorded, and `ConnectionExperience` added as a distinct non-fillable type. Additive. |
 
 **How to change one:** an ADR is amended by a new dated section at the bottom, or superseded by a new ADR that names it. Never edit the decision text of an accepted ADR in place — the history is the point.
 
@@ -20,7 +20,7 @@
 
 ## Standing rule 1 — Peru feature freeze
 
-**Decided 24 September 2026. In force from now until the Phase D checkpoint.**
+**Decided 24 September 2026. In force from 24 Sep until the Phase D checkpoint — which passed on 29 September 2026, so this freeze has EXPIRED by its own terms.** Kept for the record; it no longer blocks work on Peru.
 
 The Peru pilot (Route Family #1) is **frozen for new features**. No new capability is added to it, no polish pass, no "while we're in there" additions.
 
