@@ -309,8 +309,9 @@
  * @property {string} [sourceBundleName]
  * @property {string} [sourceTemplateTitle]  The day_template's title. Unique within its record; EDITABLE source
  *   text, so provenance only, never an identity.
- * @property {number} [sourceTemplateIndex]  0-based position in the record's day_templates array. Corroborates the
- *   title. NOT part of the exclusivity key.
+ * @property {number} [sourceTemplateIndex]  Intended as the 0-based position in the record's day_templates array;
+ *   currently filled from the pilot file's own ordering, which has NOT been checked against Base44. Corroborates the
+ *   title. NOT part of the exclusivity key. F7 re-derives it from its migration source snapshot.
  * @property {string} sourceFragmentId   The reviewed decomposition unit (F1-D23); 'default' when unsplit.
  * @property {boolean} [edited]          Text was rewritten to fit a place or slot.
  * @property {string} [author]
@@ -432,6 +433,45 @@
  * @property {{engine: string, schema: string, content: string, routeData: string, bufferRuleset: string}} versions
  * @property {Object[]} history
  * @property {Array<{blockId: string, dayNumber: number, placeId: string, slot: string}>} [contentGaps]  ➕ Open blocks fill.js left unfilled (filled Trips only).
+ */
+
+/**
+ * ➕ F3: the one handoff both doors produce (design Q2, F1-D3, F1-D4, F1-D19b, F1-D24). PROVISIONAL: today it is only
+ * projected from a built Trip (tripSequence.js) and nothing in the build path reads it.
+ * @typedef {Object} TripSequence
+ * @property {2} schemaVersion
+ * @property {string} id                  Stable, client-generated. NOT the fingerprint (Q8).
+ * @property {'door1'|'door2'} source
+ * @property {{placeId: string}} origin
+ * @property {number} [travelMonth]       Carried, still not read by the engine (ADR-002 boundary 3).
+ * @property {number} [totalDays]         DERIVED, OPTIONAL post-build metadata: the realised day count. Never an input.
+ *   NOT `TripSpec.totalDays`, which is the requested length; the two share a name and must never be assigned to each other.
+ * @property {TripSequenceEntry[]} entries
+ * @property {string} returnConnectionId  The leg home (last entry → origin). No entry owns it.
+ * @property {Object} [evidence]          Reserved for Q7's reason codes (design §Q7); left absent until F6/F7 define it.
+ */
+
+/**
+ * ➕ F3: one stop of a TripSequence, pass-throughs included. An excursion is never an entry (F1-D4).
+ * @typedef {Object} TripSequenceEntry
+ * @property {string} placeId
+ * @property {string} stopKey             Stable within this sequence; block ids derive from it.
+ * @property {number} nights              THE AUTHORITATIVE ALLOCATION.
+ * @property {'base'|'hub'|'passthrough'} role  What the stop is in this itinerary (F1-D30), NOT RoutePlanStop.role:
+ *   nights 0 → passthrough; positive nights with a fixed or selected excursion → hub; otherwise base. Descriptive only.
+ * @property {string[]} [selectedExcursionIds]  Traveller state, in menu order; omitted when empty.
+ * @property {ResolvedExcursion[]} excursions   Resolved scheduling requirements: fixed, then selected.
+ * @property {string} inboundConnectionId  The leg ARRIVING here. On every entry, entry 0's being the journey out.
+ */
+
+/**
+ * ➕ F3: an excursion as a scheduling requirement: what schedule.js reads, plus where it came from.
+ * @typedef {Object} ResolvedExcursion
+ * @property {string} placeId
+ * @property {string} connectionId
+ * @property {number} hoursOnSite
+ * @property {'fixed'|'selected'} source
+ * @property {string} [excursionId]       The menu item's id, when source is 'selected'.
  */
 
 /**
