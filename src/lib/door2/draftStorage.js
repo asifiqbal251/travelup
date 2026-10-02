@@ -245,6 +245,10 @@ export function upgradeV5toV6(trip, packages = PILOT_ROUTE_PACKAGES_ALL) {
   }
 }
 
+// Removes only a listable entry with this id; malformed entries are skipped, never
+// thrown on, and left in storage. Nothing matched means nothing is written.
 export function deleteDraftTrip(id) {
-  writeAll(readAll().filter((d) => d.id !== id));
+  const { drafts } = readStore();
+  const kept = drafts.filter((d) => !(isListable(d) && d.id === id));
+  if (kept.length !== drafts.length) writeAll(kept);
 }

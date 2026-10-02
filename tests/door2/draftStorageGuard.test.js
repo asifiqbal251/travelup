@@ -8,7 +8,7 @@ import assert from 'node:assert/strict';
 // 6, 10, 11 and the read half of 12. Stage B (the writer) adds 5, 7, 8, 9, 13 and the
 // write half of 12.
 
-import { draftStorageStatus, listDraftTrips, loadDraftTrip, saveDraftTrip, upgradeV5toV6 } from '../../src/lib/door2/draftStorage.js';
+import { deleteDraftTrip, draftStorageStatus, listDraftTrips, loadDraftTrip, saveDraftTrip, upgradeV5toV6 } from '../../src/lib/door2/draftStorage.js';
 import { pinActivity, swapActivity } from '../../src/lib/door2/edit.js';
 import { compileFamilies } from '../../src/lib/door2/families.js';
 import { PILOT_DATA, buildFilledTrip } from '../../src/lib/door2/planner.js';
@@ -391,4 +391,15 @@ test('12 (read): empty is not unreadable', () => {
   store.set(KEY, '[]');
   assert.equal(draftStorageStatus(), 'ok');
   assert.deepEqual(listDraftTrips(), []);
+});
+
+test('11c: deleting beside a malformed entry never throws and leaves the malformed entry stored', () => {
+  seed([legacy(PERU, { id: 'd_good' }), null]);
+  assert.doesNotThrow(() => deleteDraftTrip('d_good'));
+  assert.deepEqual(JSON.parse(raw()), [null], 'the good draft is gone, the null entry is still there');
+  assert.deepEqual(listDraftTrips(), []);
+
+  const before = raw();
+  assert.doesNotThrow(() => deleteDraftTrip('d_absent'));
+  assert.equal(raw(), before, 'deleting an absent id changes no stored byte');
 });
