@@ -20,6 +20,7 @@ import {
 import { MONTHS } from "@/lib/options";
 import {
   deleteDraftTrip,
+  draftStorageStatus,
   listDraftTrips,
   loadDraftTrip,
   saveDraftTrip,
@@ -380,6 +381,7 @@ function groupDaysByPlace(trip) {
 
 function SavedTripsList({ onLoad }) {
   const [drafts, setDrafts] = useState(() => listDraftTrips());
+  const [unreadable] = useState(() => draftStorageStatus() === "unreadable");
   const [inlineErrors, setInlineErrors] = useState({});
 
   function handleDelete(id) {
@@ -394,6 +396,15 @@ function SavedTripsList({ onLoad }) {
     } else {
       setInlineErrors((e) => ({ ...e, [id]: r.reason }));
     }
+  }
+
+  if (unreadable) {
+    return (
+      <div className="rounded-xl bg-slate-800 border border-slate-700 p-5 space-y-1">
+        <h2 className="text-sm font-semibold text-slate-300">My saved trips</h2>
+        <p className="text-xs text-rose-400">Saved trips couldn't be read from this browser's storage.</p>
+      </div>
+    );
   }
 
   if (drafts.length === 0) return null;

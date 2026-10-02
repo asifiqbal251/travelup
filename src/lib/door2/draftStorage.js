@@ -3,16 +3,37 @@ import { makeRoutePlan } from './routePlan.js';
 
 const STORAGE_KEY = 'door2_drafts_v1';
 const SUPPORTED_SCHEMAS = ['door2-v5', 'door2-v6'];
+// Envelope version 2 (F4 persistence, Stage A): read, never written yet. Its payload
+// is stamped door2-v7 on a serialised copy at save time; in-memory trips stay door2-v6.
+const ENVELOPE_VERSION = 2;
+const ENVELOPE_SCHEMA = 'door2-v7';
 
-function readAll() {
+/**
+ * Reads the stored draft list without ever writing it.
+ * 'empty' — no key. 'unreadable' — the stored value can't be read, doesn't parse, or
+ * parses to a non-array; its bytes are left exactly as they are. 'ok' — an array,
+ * which may still hold malformed entries (see isListable).
+ * @returns {{status: 'empty' | 'ok' | 'unreadable', drafts: any[]}}
+ */
+function readStore() {
+  let raw;
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
+    raw = localStorage.getItem(STORAGE_KEY);
   } catch {
-    return [];
+    return { status: 'unreadable', drafts: [] };
   }
+  if (raw === null) return { status: 'empty', drafts: [] };
+  try {
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? { status: 'ok', drafts: parsed } : { status: 'unreadable', drafts: [] };
+  } catch {
+    return { status: 'unreadable', drafts: [] };
+  }
+}
+
+// The writers' view, unchanged until Stage B: an unreadable store reads as [].
+function readAll() {
+  return readStore().drafts;
 }
 
 function writeAll(drafts) {
@@ -23,8 +44,20 @@ export function isSchemaSupported(versions) {
   return SUPPORTED_SCHEMAS.includes(versions?.schema);
 }
 
+/** 'empty' | 'ok' | 'unreadable' — lets the page tell "no drafts" from "drafts it can't read". */
+export function draftStorageStatus() {
+  return readStore().status;
+}
+
+const isObject = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
+const isNonEmptyString = (v) => typeof v === 'string' && v !== '';
+
+// An entry is listed (and can be opened) only if it is an object with a usable id and
+// savedAt. Anything else is skipped, never thrown on, and left in storage.
+const isListable = (d) => isObject(d) && isNonEmptyString(d.id) && isNonEmptyString(d.savedAt);
+
 export function listDraftTrips() {
-  return readAll().slice().sort((a, b) => b.savedAt.localeCompare(a.savedAt));
+  return readStore().drafts.filter(isListable).sort((a, b) => b.savedAt.localeCompare(a.savedAt));
 }
 
 export function saveDraftTrip(trip, label) {
@@ -35,15 +68,82 @@ export function saveDraftTrip(trip, label) {
   return id;
 }
 
+// A refusal names the draft from envelope metadata only, never from inside trip.
+function draftName(entry) {
+  if (isNonEmptyString(entry.destinationLabel)) return entry.destinationLabel;
+  if (isNonEmptyString(entry.label)) return entry.label;
+  return `The draft saved ${entry.savedAt}`;
+}
+
+const refuse = (entry, why) => ({ compatible: false, reason: `"${draftName(entry)}" can't be reopened here — ${why}.` });
+
 export function loadDraftTrip(id) {
-  const entry = readAll().find((d) => d.id === id);
+  const store = readStore();
+  if (store.status === 'unreadable') {
+    return { compatible: false, reason: "Saved trips couldn't be read from this browser's storage." };
+  }
+  const entry = store.drafts.find((d) => isListable(d) && d.id === id);
   if (!entry) return { compatible: false, reason: 'Draft not found.' };
+  if (Object.hasOwn(entry, 'envelopeVersion')) return loadEnvelope(entry);
   if (!isSchemaSupported(entry.trip?.versions)) {
     const schema = entry.trip?.versions?.schema ?? 'unknown';
     return { compatible: false, reason: `Built with schema "${schema}" — can't be reopened here.` };
   }
   if (entry.trip.versions.schema === 'door2-v5') return upgradeV5toV6(entry.trip);
   return { compatible: true, trip: entry.trip };
+}
+
+// Envelope version 2 only — exactly 2, not "2 or later". The payload is inspected to
+// establish compatibility and returned as saved; it is never scheduled or repaired.
+function loadEnvelope(entry) {
+  if (entry.envelopeVersion !== ENVELOPE_VERSION) return refuse(entry, "it was saved in a format this version doesn't recognise");
+  if (entry.trip?.versions?.schema !== ENVELOPE_SCHEMA) return refuse(entry, "its saved format and trip version don't match");
+  const failed = v7ShapeFailure(entry.trip);
+  if (failed) return refuse(entry, `its saved trip is incomplete (${failed})`);
+  return { compatible: true, trip: entry.trip };
+}
+
+const isInt = Number.isInteger;
+const isPositiveInt = (n) => isInt(n) && n > 0;
+
+/**
+ * The required shape of a door2-v7 payload (build brief §3). history and contentGaps
+ * are not required. Returns the name of the first failing field, or null.
+ * @returns {string | null}
+ */
+function v7ShapeFailure(trip) {
+  if (!isObject(trip)) return 'trip';
+  const { versions: v, spec, routePlan: rp, days } = trip;
+  if (!isObject(v) || v.schema !== ENVELOPE_SCHEMA) return 'versions.schema';
+  for (const k of ['engine', 'content', 'routeData', 'bufferRuleset']) if (typeof v[k] !== 'string') return `versions.${k}`;
+
+  if (!isObject(spec)) return 'spec';
+  if (!isPositiveInt(spec.totalDays)) return 'spec.totalDays';
+  if (spec.destination == null) return 'spec.destination';
+  if (!isObject(spec.choices)) return 'spec.choices';
+  for (const k of ['pinned', 'rejected', 'placed']) if (!Array.isArray(spec.choices[k])) return `spec.choices.${k}`;
+
+  if (!isObject(rp)) return 'routePlan';
+  if (typeof rp.variantId !== 'string') return 'routePlan.variantId';
+  if (!Array.isArray(rp.stops) || rp.stops.length === 0 || !rp.stops.every(isObject)) return 'routePlan.stops';
+  if (!rp.stops.every((s) => typeof s.key === 'string')) return 'routePlan.stops.key';
+  if (!rp.stops.every((s) => typeof s.placeId === 'string')) return 'routePlan.stops.placeId';
+  if (!rp.stops.every((s) => isInt(s.nights))) return 'routePlan.stops.nights';
+  if (!Array.isArray(rp.connectionIds)) return 'routePlan.connectionIds';
+  if (!isInt(rp.minDays)) return 'routePlan.minDays';
+  if (!isInt(rp.maxDays)) return 'routePlan.maxDays';
+
+  if (!Array.isArray(days) || !days.every(isObject)) return 'days';
+  if (days.length !== spec.totalDays) return 'days.length';
+  if (!days.every((d) => isInt(d.dayNumber))) return 'days.dayNumber';
+  if (!days.every((d) => Array.isArray(d.blocks) && d.blocks.every(isObject))) return 'days.blocks';
+  const blocks = days.flatMap((d) => d.blocks);
+  if (!blocks.every((b) => typeof b.id === 'string')) return 'days.blocks.id';
+  if (!blocks.every((b) => typeof b.type === 'string')) return 'days.blocks.type';
+
+  if (typeof trip.status !== 'string') return 'status';
+  if (!Array.isArray(trip.warnings)) return 'warnings';
+  return null;
 }
 
 // ---------------------------------------------------------------------------
