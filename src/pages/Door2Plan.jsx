@@ -19,7 +19,9 @@ import {
 } from "@/lib/door2/restructure";
 import { MONTHS } from "@/lib/options";
 import {
+  DraftStorageUnreadableError,
   deleteDraftTrip,
+  draftDisplayLabel,
   draftStorageStatus,
   listDraftTrips,
   loadDraftTrip,
@@ -416,7 +418,7 @@ function SavedTripsList({ onLoad }) {
         {drafts.map((d) => (
           <li key={d.id} className="flex items-start gap-3 py-2 border-b border-slate-700 last:border-0">
             <div className="flex-1 min-w-0 space-y-0.5">
-              <p className="text-sm font-medium text-white truncate">{d.label}</p>
+              <p className="text-sm font-medium text-white truncate">{draftDisplayLabel(d)}</p>
               <p className="text-xs text-slate-500">
                 {new Date(d.savedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
               </p>
@@ -1561,8 +1563,12 @@ export default function Door2Plan() {
       saveDraftTrip({ ...t, history: [] }, autoLabel(t.spec));
       setSaveMsg("Saved");
       setTimeout(() => setSaveMsg(null), 2500);
-    } catch {
-      setSaveMsg("Couldn't save — storage may be full.");
+    } catch (err) {
+      setSaveMsg(
+        err instanceof DraftStorageUnreadableError
+          ? "Couldn't save — saved trips in this browser's storage can't be read, so nothing was changed."
+          : "Couldn't save — storage may be full."
+      );
       setTimeout(() => setSaveMsg(null), 4000);
     }
   }

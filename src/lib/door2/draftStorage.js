@@ -3,8 +3,9 @@ import { makeRoutePlan } from './routePlan.js';
 
 const STORAGE_KEY = 'door2_drafts_v1';
 const SUPPORTED_SCHEMAS = ['door2-v5', 'door2-v6'];
-// Envelope version 2 (F4 persistence, Stage A): read, never written yet. Its payload
-// is stamped door2-v7 on a serialised copy at save time; in-memory trips stay door2-v6.
+// Envelope version 2 (F4 persistence, Stage A): read, and written only to preserve a
+// door2-v7 payload the reader handed out (Stage A.2). Stage A never creates a v7 payload:
+// a newly built trip is door2-v6 and is saved in the legacy envelope.
 const ENVELOPE_VERSION = 2;
 const ENVELOPE_SCHEMA = 'door2-v7';
 
@@ -31,11 +32,6 @@ function readStore() {
   }
 }
 
-// The writers' view, unchanged until Stage B: an unreadable store reads as [].
-function readAll() {
-  return readStore().drafts;
-}
-
 function writeAll(drafts) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(drafts));
 }
@@ -60,12 +56,34 @@ export function listDraftTrips() {
   return readStore().drafts.filter(isListable).sort((a, b) => b.savedAt.localeCompare(a.savedAt));
 }
 
+/** Thrown by saveDraftTrip when the stored draft list can't be read; nothing is written. */
+export class DraftStorageUnreadableError extends Error {
+  constructor() {
+    super("Saved trips couldn't be read from this browser's storage, so nothing was saved.");
+    this.name = 'DraftStorageUnreadableError';
+  }
+}
+
+// Readability is checked from current storage on every save: writing over a store that
+// can't be read would destroy its bytes. A door2-v7 payload is kept in envelope version 2,
+// the only envelope that reopens it; the trip itself is stored as handed in, never rewritten.
 export function saveDraftTrip(trip, label) {
-  const drafts = readAll();
+  const store = readStore();
+  if (store.status === 'unreadable') throw new DraftStorageUnreadableError();
   const id = `d2draft_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
-  const entry = { id, label, savedAt: new Date().toISOString(), trip };
-  writeAll([...drafts, entry]);
+  const savedAt = new Date().toISOString();
+  const entry =
+    trip?.versions?.schema === ENVELOPE_SCHEMA
+      ? { envelopeVersion: ENVELOPE_VERSION, id, label, savedAt, trip }
+      : { id, label, savedAt, trip };
+  writeAll([...store.drafts, entry]);
   return id;
+}
+
+/** The label to show for a listed draft: its stored label when that is a usable string,
+ * otherwise a fallback. Display only — the stored entry is never touched. */
+export function draftDisplayLabel(entry) {
+  return typeof entry?.label === 'string' && entry.label.trim() !== '' ? entry.label : 'Untitled trip';
 }
 
 // A refusal names the draft from envelope metadata only, never from inside trip.

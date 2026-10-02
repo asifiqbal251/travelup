@@ -1,14 +1,27 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-// F4 persistence, Stage A: the draft READER. The writer is unchanged — it still emits
-// no envelopeVersion — so these tests pin what the reader accepts, what it refuses
-// and by what name, and that reading never changes a stored byte.
+// F4 persistence, Stage A: the draft READER. These tests pin what the reader accepts,
+// what it refuses and by what name, and that reading never changes a stored byte.
 // Build brief docs/build-brief-f4-persistence-storage-guard-2026-10-02.md, tests 1–4,
 // 6, 10, 11 and the read half of 12. Stage B (the writer) adds 5, 7, 8, 9, 13 and the
 // write half of 12.
+//
+// Stage A.2 (docs/build-brief-f4-stage-a2-compat-and-label-2026-10-02.md, tests A2.1–A2.6)
+// narrowly changes the writer: a door2-v7 payload is saved in envelope version 2 so it
+// reopens, and a save over unreadable storage is refused. A newly built v6 trip is still
+// saved in the legacy envelope, with no envelopeVersion.
 
-import { deleteDraftTrip, draftStorageStatus, listDraftTrips, loadDraftTrip, saveDraftTrip, upgradeV5toV6 } from '../../src/lib/door2/draftStorage.js';
+import {
+  DraftStorageUnreadableError,
+  deleteDraftTrip,
+  draftDisplayLabel,
+  draftStorageStatus,
+  listDraftTrips,
+  loadDraftTrip,
+  saveDraftTrip,
+  upgradeV5toV6
+} from '../../src/lib/door2/draftStorage.js';
 import { pinActivity, swapActivity } from '../../src/lib/door2/edit.js';
 import { compileFamilies } from '../../src/lib/door2/families.js';
 import { PILOT_DATA, buildFilledTrip } from '../../src/lib/door2/planner.js';
@@ -402,4 +415,178 @@ test('11c: deleting beside a malformed entry never throws and leaves the malform
   const before = raw();
   assert.doesNotThrow(() => deleteDraftTrip('d_absent'));
   assert.equal(raw(), before, 'deleting an absent id changes no stored byte');
+});
+
+// ---------------------------------------------------------------------------
+// Stage A.2. A2.1–A2.3: a draft the reader accepts can be saved again and reopened.
+
+// As Door2Plan.jsx's handleSaveDraft passes it: a shallow copy, so copy.versions === active.versions.
+const pageSave = (active, label) => saveDraftTrip({ ...active, history: [] }, label);
+const entryOf = (id) => JSON.parse(raw()).find((d) => d.id === id);
+
+test('A2.1: a v2/door2-v7 draft loads, saves and reopens, still in envelope version 2, itinerary, choices and warnings intact', () => {
+  for (const [name, t] of TRIPS) {
+    store.clear();
+    const stored = stampV7({ ...t, history: [] });
+    seed([v2(stored)]);
+    const loaded = loadDraftTrip('d_v2');
+    assert.equal(loaded.compatible, true, `${name}: ${loaded.reason}`);
+
+    const id = pageSave(loaded.trip, 'Peru, 10 days');
+    const entry = entryOf(id);
+    assert.deepEqual(Object.keys(entry), ['envelopeVersion', 'id', 'label', 'savedAt', 'trip'], name);
+    assert.equal(entry.envelopeVersion, 2, name);
+    assert.equal(entry.trip.versions.schema, 'door2-v7', `${name}: payload neither stamped nor downgraded`);
+    assert.deepStrictEqual(entry.trip, json(loaded.trip), `${name}: payload stored as handed in`);
+
+    assert.ok(listDraftTrips().some((d) => d.id === id), `${name}: listed`);
+    const reopened = loadDraftTrip(id);
+    assert.equal(reopened.compatible, true, `${name}: ${reopened.reason}`);
+    assert.deepStrictEqual(reopened.trip.days, json(stored.days), `${name}: itinerary`);
+    assert.deepStrictEqual(reopened.trip.spec.choices, json(stored.spec.choices), `${name}: choices`);
+    assert.deepStrictEqual(reopened.trip.warnings, json(stored.warnings), `${name}: warnings`);
+    assert.deepStrictEqual(reopened.trip, json(stored), `${name}: the whole trip`);
+  }
+});
+
+test('A2.1b: a reopened v7 trip edited in the session still saves to a draft that reopens', () => {
+  store.clear();
+  seed([v2(stampV7({ ...PERU, history: [] }))]);
+  const edited = must(pinActivity(must(swapActivity(loadDraftTrip('d_v2').trip, 'op:pc_cusco:d1')), 'op:pc_cusco:d2'));
+  const reopened = loadDraftTrip(pageSave(edited, 'edited'));
+  assert.equal(reopened.compatible, true, reopened.reason);
+  assert.deepStrictEqual(reopened.trip, json({ ...edited, history: [] }));
+});
+
+test('A2.2: a newly built v6 trip still saves in the legacy envelope and reopens — the default format is unchanged', () => {
+  store.clear();
+  for (const [name, t] of TRIPS) {
+    assert.equal(t.versions.schema, 'door2-v6', `${name} is built as v6`);
+    const id = pageSave(t, `${name} label`);
+    const entry = entryOf(id);
+    assert.deepEqual(Object.keys(entry), ['id', 'label', 'savedAt', 'trip'], `${name}: no envelopeVersion`);
+    assert.equal(entry.trip.versions.schema, 'door2-v6', name);
+    const r = loadDraftTrip(id);
+    assert.equal(r.compatible, true, `${name}: ${r.reason}`);
+    assert.deepStrictEqual(r.trip, json({ ...t, history: [] }), name);
+  }
+});
+
+test('A2.3: saving a v7 trip does not mutate the active trip', () => {
+  store.clear();
+  seed([v2(stampV7({ ...PERU, history: [] }))]);
+  const active = loadDraftTrip('d_v2').trip;
+  const versions = active.versions;
+  const snapshot = structuredClone(active);
+  pageSave(active, 'Peru, 10 days');
+  assert.equal(active.versions, versions, 'same versions object');
+  assert.equal(active.versions.schema, 'door2-v7');
+  assert.deepStrictEqual(active, snapshot, 'nothing on the active trip changed');
+});
+
+// ---------------------------------------------------------------------------
+// A2.4: any stored label yields a string at the display boundary; the entry is not touched
+
+test('A2.4: object, missing, empty and non-string labels display as a safe string; storage is unchanged', () => {
+  const cases = [
+    [{ name: 'Peru' }, 'Untitled trip'],
+    [['Peru'], 'Untitled trip'],
+    [undefined, 'Untitled trip'],
+    [null, 'Untitled trip'],
+    ['', 'Untitled trip'],
+    ['   ', 'Untitled trip'],
+    [42, 'Untitled trip'],
+    [true, 'Untitled trip'],
+    ['Peru, 10 days', 'Peru, 10 days']
+  ];
+  for (const [label, shown] of cases) {
+    store.clear();
+    const entry = legacy(PERU, { id: 'odd' });
+    if (label === undefined) delete entry.label;
+    else entry.label = label;
+    seed([entry, legacy(PERU, { id: 'good', label: 'Good trip', savedAt: '2026-09-30T10:00:00.000Z' })]);
+    const before = raw();
+    const listed = listDraftTrips();
+    assert.deepEqual(listed.map((d) => d.id), ['odd', 'good'], `${JSON.stringify(label)}: both listed`);
+    const displayed = listed.map(draftDisplayLabel);
+    assert.deepEqual(displayed, [shown, 'Good trip'], JSON.stringify(label));
+    assert.ok(displayed.every((s) => typeof s === 'string'));
+    assert.deepStrictEqual(listed[0].label, label, 'the listed entry still carries its stored label');
+    assert.equal(raw(), before, `${JSON.stringify(label)}: stored bytes unchanged`);
+  }
+});
+
+// ---------------------------------------------------------------------------
+// A2.5–A2.6: a save checks current storage and refuses over an unreadable store
+
+/** Wraps setItem so a test can tell whether a write was attempted at all. */
+function countingWrites() {
+  const real = globalThis.localStorage;
+  let writes = 0;
+  globalThis.localStorage = { getItem: real.getItem, setItem: (k, v) => (writes++, real.setItem(k, v)) };
+  return { writes: () => writes, restore: () => (globalThis.localStorage = real) };
+}
+
+test('A2.5: saving over unreadable storage refuses, writes nothing and leaves the bytes byte-identical', () => {
+  for (const bytes of ['{not json', '{"this is not valid json', '{"drafts":[]}', 'null', '42', '"text"', 'true', '']) {
+    for (const trip of [PERU, stampV7(PERU)]) {
+      store.clear();
+      store.set(KEY, bytes);
+      const w = countingWrites();
+      try {
+        assert.throws(() => saveDraftTrip({ ...trip, history: [] }, 'Peru, 10 days'), DraftStorageUnreadableError, JSON.stringify(bytes));
+        assert.equal(w.writes(), 0, `${JSON.stringify(bytes)}: no write attempted`);
+      } finally {
+        w.restore();
+      }
+      assert.equal(raw(), bytes, `${JSON.stringify(bytes)}: original bytes still there`);
+      assert.equal(draftStorageStatus(), 'unreadable');
+    }
+  }
+});
+
+test('A2.5b: a save checks current storage, not an earlier reading', () => {
+  store.clear();
+  pageSave(PERU, 'first');
+  assert.equal(draftStorageStatus(), 'ok');
+  store.set(KEY, '{not json'); // corrupted after the status was last read
+  assert.throws(() => pageSave(PERU, 'second'), DraftStorageUnreadableError);
+  assert.equal(raw(), '{not json');
+  store.set(KEY, '[]'); // and readable again
+  assert.equal(loadDraftTrip(pageSave(PERU, 'third')).compatible, true);
+});
+
+test('A2.5c: a storage read that throws refuses the save without writing', () => {
+  const real = globalThis.localStorage;
+  let writes = 0;
+  globalThis.localStorage = {
+    getItem: () => {
+      throw new Error('SecurityError');
+    },
+    setItem: () => writes++
+  };
+  try {
+    assert.throws(() => saveDraftTrip(PERU, 'Peru'), DraftStorageUnreadableError);
+    assert.equal(writes, 0);
+  } finally {
+    globalThis.localStorage = real;
+  }
+});
+
+test('A2.6: saving over readable storage still works, and an empty store saves normally', () => {
+  store.clear();
+  assert.equal(draftStorageStatus(), 'empty');
+  const first = pageSave(PERU, 'first');
+  assert.deepEqual(JSON.parse(raw()).map((d) => d.id), [first], 'an empty store gets a one-entry list');
+
+  const existing = [legacy(PERU, { id: 'kept_v6' }), v2(stampV7(PERU), { id: 'kept_v7' }), null];
+  seed(existing);
+  const second = pageSave(PERU, 'second');
+  const after = JSON.parse(raw());
+  assert.deepStrictEqual(after.slice(0, 3), json(existing), 'existing entries, malformed included, kept as they were');
+  assert.equal(after[3].id, second);
+  for (const id of ['kept_v6', 'kept_v7', second]) assert.equal(loadDraftTrip(id).compatible, true, id);
+
+  store.set(KEY, '[]');
+  assert.equal(loadDraftTrip(pageSave(PERU, 'third')).compatible, true, "a stored '[]' saves normally");
 });
