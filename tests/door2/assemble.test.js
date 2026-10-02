@@ -513,7 +513,10 @@ test('versions: the bufferRuleset is the declared input; content is "none"', () 
 // ---------------------------------------------------------------------------
 // F: v6 round trip
 
-test('F: v6 preservation through saveDraftTrip / loadDraftTrip (not evidence that the loader validates)', () => {
+// Was: "v6 preservation through saveDraftTrip / loadDraftTrip", asserting the loaded trip deep-equals
+// the bridge output and is door2-v6. Since the Stage B writer cutover the stored copy is stamped
+// door2-v7 (versions.schema is the only difference); the bridge output itself stays door2-v6.
+test('F: a bridge (door2-v6) trip round-trips through saveDraftTrip / loadDraftTrip, stamped door2-v7 in storage only', () => {
   const store = new Map();
   globalThis.localStorage = { getItem: (k) => store.get(k) ?? null, setItem: (k, v) => store.set(k, v) };
   try {
@@ -521,12 +524,13 @@ test('F: v6 preservation through saveDraftTrip / loadDraftTrip (not evidence tha
     const trip = assembleLike(skeletonTrip(request), request);
     const loaded = loadDraftTrip(saveDraftTrip(trip, 'assembled'));
     assert.equal(loaded.compatible, true);
-    assert.deepEqual(loaded.trip, trip);
+    assert.deepEqual(loaded.trip, { ...trip, versions: { ...trip.versions, schema: 'door2-v7' } });
     assert.deepEqual(loaded.trip.warnings, ['nights_above_package_max']);
     assert.equal(loaded.trip.routePlan.minDays, 5);
     assert.equal(loaded.trip.routePlan.maxDays, trip.routePlan.maxDays);
     assert.deepEqual(loaded.trip.spec, trip.spec);
-    assert.equal(loaded.trip.versions.schema, 'door2-v6');
+    assert.equal(loaded.trip.versions.schema, 'door2-v7');
+    assert.equal(trip.versions.schema, 'door2-v6', 'the bridge output is not changed by saving');
   } finally {
     delete globalThis.localStorage;
   }

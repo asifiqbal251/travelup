@@ -112,7 +112,8 @@ for (const variantId of ['peru_classic', 'peru_classic+huaraz@after_lima_in']) {
 
     const loaded = M.loadDraftTrip(M.listDraftTrips()[0].id);
     assert.equal(loaded.compatible, true);
-    assert.deepEqual(loaded.trip, JSON.parse(JSON.stringify(trip)), 'loaded exactly as saved');
+    // Since the Stage B writer cutover the stored copy is stamped door2-v7; nothing else differs.
+    assert.deepEqual(loaded.trip, JSON.parse(JSON.stringify({ ...trip, versions: { ...trip.versions, schema: 'door2-v7' } })), 'loaded exactly as saved, versions.schema aside');
 
     assert.ok(screen.queryByText(/can't be built yet/) === null, 'renders');
     assert.ok(screen.getByText('Your trip at a glance'));

@@ -2,12 +2,16 @@ import { PILOT_ROUTE_PACKAGES_ALL } from './pilotData.js';
 import { makeRoutePlan } from './routePlan.js';
 
 const STORAGE_KEY = 'door2_drafts_v1';
-const SUPPORTED_SCHEMAS = ['door2-v5', 'door2-v6'];
-// Envelope version 2 (F4 persistence, Stage A): read, and written only to preserve a
-// door2-v7 payload the reader handed out (Stage A.2). Stage A never creates a v7 payload:
-// a newly built trip is door2-v6 and is saved in the legacy envelope.
+// Schemas the unversioned (legacy) envelope still opens. door2-v5 left this set in Stage B:
+// a v5 draft is refused by name and kept in storage, never deleted or upgraded on read.
+const SUPPORTED_SCHEMAS = ['door2-v6'];
+// Envelope version 2 (F4 persistence, Stage B): every save writes it, with a door2-v7
+// payload. door2-v7 is a storage-layer schema — the engine and the bridge still emit
+// door2-v6, and only saveDraftTrip stamps v7, on a copy.
 const ENVELOPE_VERSION = 2;
 const ENVELOPE_SCHEMA = 'door2-v7';
+// What saveDraftTrip accepts as input; anything else is refused before any write.
+const SAVABLE_SCHEMAS = ['door2-v6', ENVELOPE_SCHEMA];
 
 /**
  * Reads the stored draft list without ever writing it.
@@ -64,18 +68,56 @@ export class DraftStorageUnreadableError extends Error {
   }
 }
 
-// Readability is checked from current storage on every save: writing over a store that
-// can't be read would destroy its bytes. A door2-v7 payload is kept in envelope version 2,
-// the only envelope that reopens it; the trip itself is stored as handed in, never rewritten.
-export function saveDraftTrip(trip, label) {
+/**
+ * Thrown by saveDraftTrip when the trip itself can't be stored as a draft that reopens;
+ * nothing is written. check 'schema': the input is neither door2-v6 nor door2-v7 (schema
+ * holds what it was). check 'shape': the door2-v7 candidate fails the reader's shape
+ * check (field names the first failing field). The field is for diagnosis, not display.
+ */
+export class DraftNotStorableError extends Error {
+  constructor(check, detail) {
+    super(
+      check === 'schema'
+        ? `A trip with schema "${detail}" can't be saved as a draft.`
+        : `A trip that fails the saved-trip check (${detail}) can't be saved as a draft.`
+    );
+    this.name = 'DraftNotStorableError';
+    this.check = check;
+    this.schema = check === 'schema' ? detail : ENVELOPE_SCHEMA;
+    this.field = check === 'shape' ? detail : 'versions.schema';
+  }
+}
+
+// The order below is required (Stage B brief §2); each step stops something that got
+// past the one before it.
+// 1. Readability, from current storage on every save: writing over a store that can't be
+//    read would destroy its bytes.
+// 2. Input schema: only door2-v6 or door2-v7. A raw door2-v5 has no routePlan.
+// 3. The candidate: a v6 input is stamped door2-v7 on a copy with a fresh versions object
+//    (the page hands in a shallow copy, so assigning into trip.versions would change the
+//    trip still being edited); a v7 input is taken as handed. history is not touched.
+// 4. The candidate passes the same shape check the reader applies, so whatever is
+//    written reopens. Nothing is repaired, rescheduled or rebuilt to make it pass.
+// 5. Only then is it written, in envelope version 2. destinationLabel is included only
+//    when it is a non-empty string; otherwise the key is left out entirely.
+export function saveDraftTrip(trip, label, destinationLabel) {
   const store = readStore();
   if (store.status === 'unreadable') throw new DraftStorageUnreadableError();
+  const schema = trip?.versions?.schema;
+  if (!SAVABLE_SCHEMAS.includes(schema)) throw new DraftNotStorableError('schema', String(schema));
+  const candidate = schema === ENVELOPE_SCHEMA ? trip : { ...trip, versions: { ...trip.versions, schema: ENVELOPE_SCHEMA } };
+  const failed = v7ShapeFailure(candidate);
+  if (failed) throw new DraftNotStorableError('shape', failed);
   const id = `d2draft_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
   const savedAt = new Date().toISOString();
-  const entry =
-    trip?.versions?.schema === ENVELOPE_SCHEMA
-      ? { envelopeVersion: ENVELOPE_VERSION, id, label, savedAt, trip }
-      : { id, label, savedAt, trip };
+  const entry = {
+    envelopeVersion: ENVELOPE_VERSION,
+    id,
+    label,
+    ...(isNonEmptyString(destinationLabel) ? { destinationLabel } : {}),
+    savedAt,
+    trip: candidate
+  };
   writeAll([...store.drafts, entry]);
   return id;
 }
@@ -103,11 +145,14 @@ export function loadDraftTrip(id) {
   const entry = store.drafts.find((d) => isListable(d) && d.id === id);
   if (!entry) return { compatible: false, reason: 'Draft not found.' };
   if (Object.hasOwn(entry, 'envelopeVersion')) return loadEnvelope(entry);
+  // A compatibility change, not a loss: the v5 draft stays stored exactly as it was.
+  if (entry.trip?.versions?.schema === 'door2-v5') {
+    return refuse(entry, 'it was saved in an older trip format that this version no longer opens. The saved trip has not been deleted');
+  }
   if (!isSchemaSupported(entry.trip?.versions)) {
     const schema = entry.trip?.versions?.schema ?? 'unknown';
     return { compatible: false, reason: `Built with schema "${schema}" — can't be reopened here.` };
   }
-  if (entry.trip.versions.schema === 'door2-v5') return upgradeV5toV6(entry.trip);
   return { compatible: true, trip: entry.trip };
 }
 
@@ -169,6 +214,8 @@ function v7ShapeFailure(trip) {
 // Huaraz package's stop keys to family keys (ph_* → pc_*, ph_lima_mid →
 // pc_lima_hub) in stop keys, block ids, anchors and gap records. It NEVER
 // regenerates the trip: days, times and activities are kept as saved.
+// Since Stage B, loadDraftTrip no longer calls it (door2-v5 is refused on read); it stays
+// until its own retirement commit (handoff action item 7).
 
 const UPGRADE_FAILED = (what) => ({ compatible: false, reason: `Built with an older route (${what}) — can't be reopened here.` });
 

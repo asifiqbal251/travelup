@@ -48,7 +48,8 @@ test('J10: a Japan trip with a Tokyo and a Kyoto day trip saves, reloads identic
 
   const loaded = loadDraftTrip(id);
   assert.equal(loaded.compatible, true);
-  assert.deepEqual(loaded.trip, saved, 'deep-equal after the JSON round trip');
+  // Since the Stage B writer cutover the stored copy is stamped door2-v7; nothing else differs.
+  assert.deepEqual(loaded.trip, { ...saved, versions: { ...saved.versions, schema: 'door2-v7' } }, 'deep-equal after the JSON round trip, versions.schema aside');
   assert.equal(tripFingerprint(loaded.trip), tripFingerprint(trip));
   assert.deepEqual(selections(loaded.trip), { tokyo_base: ['kamakura'], kyo_base: ['osaka'] });
   assert.deepEqual(exBlocks(loaded.trip), exBlocks(trip));

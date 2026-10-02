@@ -19,6 +19,7 @@ import {
 } from "@/lib/door2/restructure";
 import { MONTHS } from "@/lib/options";
 import {
+  DraftNotStorableError,
   DraftStorageUnreadableError,
   deleteDraftTrip,
   draftDisplayLabel,
@@ -180,11 +181,16 @@ function destinationLabel(destinationValue) {
   return DESTINATIONS.find((d) => d.value === destinationValue)?.label ?? "Your trip";
 }
 
+/** The destination's display name for a spec — the first part of autoLabel, and the
+ * draft's destinationLabel. */
+function destinationLabelFor(spec) {
+  return spec.destination?.kind === "place"
+    ? (PILOT_PLACES[spec.destination.id]?.name ?? spec.destination.id)
+    : (DESTINATIONS.find((d) => d.value === `country:${spec.destination?.id}`)?.label ?? spec.destination?.id ?? "Trip");
+}
+
 function autoLabel(spec) {
-  const destLabel =
-    spec.destination?.kind === "place"
-      ? (PILOT_PLACES[spec.destination.id]?.name ?? spec.destination.id)
-      : (DESTINATIONS.find((d) => d.value === `country:${spec.destination?.id}`)?.label ?? spec.destination?.id ?? "Trip");
+  const destLabel = destinationLabelFor(spec);
   const date = new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
   return `${destLabel} · ${spec.totalDays} days · ${date}`;
 }
@@ -1560,15 +1566,21 @@ export default function Door2Plan() {
     if (!t) return;
     try {
       // A draft is a saved plan, not an editing session: undo history is not persisted.
-      saveDraftTrip({ ...t, history: [] }, autoLabel(t.spec));
-      setSaveMsg("Saved");
+      saveDraftTrip({ ...t, history: [] }, autoLabel(t.spec), destinationLabelFor(t.spec));
+      setSaveMsg({ text: "Saved", ok: true });
       setTimeout(() => setSaveMsg(null), 2500);
     } catch (err) {
-      setSaveMsg(
-        err instanceof DraftStorageUnreadableError
-          ? "Couldn't save — saved trips in this browser's storage can't be read, so nothing was changed."
-          : "Couldn't save — storage may be full."
-      );
+      let text;
+      if (err instanceof DraftStorageUnreadableError) {
+        text = "Couldn't save — saved trips in this browser's storage can't be read, so nothing was changed.";
+      } else if (err instanceof DraftNotStorableError) {
+        // The failing field is for diagnosis, not for the traveller.
+        console.error(`Door2Plan: trip not storable (${err.check}: ${err.check === "shape" ? err.field : err.schema})`, err);
+        text = "Couldn't save — this trip is missing information needed to reopen it, so nothing was saved.";
+      } else {
+        text = "Couldn't save — storage may be full.";
+      }
+      setSaveMsg({ text, ok: false });
       setTimeout(() => setSaveMsg(null), 4000);
     }
   }
@@ -1889,7 +1901,7 @@ export default function Door2Plan() {
                     <p className="text-xs text-slate-500">
                       {activeTrip.days.length} days{nights ? ` · ${nights}` : ""}
                     </p>
-                    {saveMsg && <p className="text-xs text-teal mt-0.5">{saveMsg}</p>}
+                    {saveMsg && <p className={`text-xs ${saveMsg.ok ? "text-teal" : "text-rose-400"} mt-0.5`}>{saveMsg.text}</p>}
                     {editError && <p className="text-xs text-rose-400 mt-0.5">{editError}</p>}
                   </div>
                   <div className="flex items-center gap-2 shrink-0">

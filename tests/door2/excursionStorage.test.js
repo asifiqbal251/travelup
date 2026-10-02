@@ -38,15 +38,19 @@ test('A13: a trip with excursions at two bases saves, lists, reloads compatible 
   const id = saveDraftTrip(saved, 'with day trips');
   assert.equal(listDraftTrips().length, 1);
   assert.equal(listDraftTrips()[0].id, id);
-  assert.deepEqual(listDraftTrips()[0].trip, saved);
+  // Since the Stage B writer cutover the stored copy is stamped door2-v7; nothing else differs.
+  const stored = { ...saved, versions: { ...saved.versions, schema: 'door2-v7' } };
+  assert.deepEqual(listDraftTrips()[0].trip, stored);
 
   const loaded = loadDraftTrip(id);
   assert.equal(loaded.compatible, true);
-  assert.deepEqual(loaded.trip, saved, 'deep-equal after the JSON round trip');
+  assert.deepEqual(loaded.trip, stored, 'deep-equal after the JSON round trip, versions.schema aside');
   assert.equal(tripFingerprint(loaded.trip), tripFingerprint(trip), 'same fingerprint, so a preview built before saving is still current');
   assert.deepEqual(selections(loaded.trip), { lx_base: ['sintra'], pt_base: ['douro'] });
   assert.deepEqual(exBlocks(loaded.trip), exBlocks(trip));
-  assert.equal(loaded.trip.versions.schema, 'door2-v6', 'no schema bump');
+  // Was: 'door2-v6', "no schema bump". Stage B: the storage schema is door2-v7; the trip handed in is not changed.
+  assert.equal(loaded.trip.versions.schema, 'door2-v7', 'stamped door2-v7 in storage');
+  assert.equal(saved.versions.schema, 'door2-v6', 'the trip handed to saveDraftTrip is still door2-v6');
 
   // The reloaded trip is fully editable: a further preview works on it and undo works within the session.
   const removed = R.previewRemoveExcursion(loaded.trip, 'lx_base', 'sintra', B.options);
@@ -67,7 +71,7 @@ test('A13b / Q3: a draft is loaded exactly as saved, even if a selected id is no
   const id = saveDraftTrip(stale, 'stale menu');
   const loaded = loadDraftTrip(id);
   assert.equal(loaded.compatible, true);
-  assert.deepEqual(loaded.trip, stale);
+  assert.deepEqual(loaded.trip, { ...stale, versions: { ...stale.versions, schema: 'door2-v7' } }, 'as saved, versions.schema aside (Stage B)');
   assert.deepEqual(selections(loaded.trip), { lx_base: ['sintra', 'withdrawn_item'] });
 
   // The next rebuild reports the loss out loud instead of dropping it silently.

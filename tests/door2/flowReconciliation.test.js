@@ -47,7 +47,9 @@ test('B12a (UI): a content edit survives a structural change that leaves its blo
   const saved = M.listDraftTrips()[0].trip;
   assert.equal(tripFingerprint(saved), tripFingerprint(originalTrip));
   const strip = (t) => { const { history, ...rest } = t; return rest; };
-  assert.deepEqual(strip(saved), strip(originalTrip), 'byte-identical to the original after undoing both edits');
+  // The original is the engine build (door2-v6); a saved draft is stamped door2-v7 (Stage B writer cutover).
+  const asStored = (t) => ({ ...t, versions: { ...t.versions, schema: 'door2-v7' } });
+  assert.deepEqual(strip(saved), strip(asStored(originalTrip)), 'byte-identical to the original after undoing both edits, versions.schema aside');
 });
 
 test('B12b (engine): a pin that cannot survive a structural change is listed in keptItemsAffected, never silently dropped', () => {

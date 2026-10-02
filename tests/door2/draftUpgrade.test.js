@@ -145,7 +145,10 @@ test('D4: fresh builds carry a routePlan consistent with spec.stops', () => {
   );
 });
 
-test('D5: loadDraftTrip upgrades v5 on read, returns v6 as saved, refuses other schemas', () => {
+// Was: "loadDraftTrip upgrades v5 on read", asserting loadDraftTrip('a') → {compatible: true, trip: v6}.
+// Since the Stage B writer cutover, door2-v5 is refused on read by name and kept in storage;
+// upgradeV5toV6 itself is still tested directly (D1–D3) until its own retirement commit.
+test('D5: loadDraftTrip refuses v5 by name (kept in storage), returns v6 as saved, refuses other schemas', () => {
   const store = new Map();
   globalThis.localStorage = { getItem: (k) => store.get(k) ?? null, setItem: (k, v) => store.set(k, v) };
   try {
@@ -159,7 +162,10 @@ test('D5: loadDraftTrip upgrades v5 on read, returns v6 as saved, refuses other 
         { id: 'c', label: 'ancient', savedAt: '2026-09-21T00:00:00Z', trip: { ...v6, versions: { ...v6.versions, schema: 'door2-v4' } } }
       ])
     );
-    assert.deepStrictEqual(loadDraftTrip('a'), { compatible: true, trip: v6 });
+    assert.deepStrictEqual(loadDraftTrip('a'), {
+      compatible: false,
+      reason: '"old" can\'t be reopened here — it was saved in an older trip format that this version no longer opens. The saved trip has not been deleted.'
+    });
     assert.deepStrictEqual(loadDraftTrip('b'), { compatible: true, trip: v6 });
     assert.equal(loadDraftTrip('c').compatible, false);
     assert.match(loadDraftTrip('c').reason, /door2-v4/);

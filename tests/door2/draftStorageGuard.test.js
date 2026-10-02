@@ -9,18 +9,23 @@ import assert from 'node:assert/strict';
 //
 // Stage A.2 (docs/build-brief-f4-stage-a2-compat-and-label-2026-10-02.md, tests A2.1–A2.6)
 // narrowly changes the writer: a door2-v7 payload is saved in envelope version 2 so it
-// reopens, and a save over unreadable storage is refused. A newly built v6 trip is still
-// saved in the legacy envelope, with no envelopeVersion.
+// reopens, and a save over unreadable storage is refused.
+//
+// Stage B (docs/build-brief-f4-stage-b-writer-cutover-2026-10-02.md) is the writer cutover:
+// every save is envelope version 2 with a door2-v7 payload, stamped on a copy and checked
+// with the reader's own shape check before anything is written; door2-v5 is refused on
+// read, by name, and kept in storage. Tests 1, 4, 10, A2.1 and A2.2 were rewritten to that
+// contract; tests 5, 7, 8, 9, the write half of 12 and B1–B5 are new.
 
 import {
+  DraftNotStorableError,
   DraftStorageUnreadableError,
   deleteDraftTrip,
   draftDisplayLabel,
   draftStorageStatus,
   listDraftTrips,
   loadDraftTrip,
-  saveDraftTrip,
-  upgradeV5toV6
+  saveDraftTrip
 } from '../../src/lib/door2/draftStorage.js';
 import { pinActivity, swapActivity } from '../../src/lib/door2/edit.js';
 import { compileFamilies } from '../../src/lib/door2/families.js';
@@ -90,19 +95,21 @@ function load(id) {
 }
 
 const UNREADABLE = "Saved trips couldn't be read from this browser's storage.";
+const V5_REFUSED = (name) =>
+  `"${name}" can't be reopened here — it was saved in an older trip format that this version no longer opens. The saved trip has not been deleted.`;
 
 // ---------------------------------------------------------------------------
-// 1. Unversioned envelopes: today's path, unchanged
+// 1. Unversioned envelopes: v6 unchanged; v5 refused by name since Stage B
 
-test('1: an unversioned v6 draft opens as saved; an unversioned v5 draft is upgraded as today', () => {
+test('1: an unversioned v6 draft opens as saved; an unversioned v5 draft is refused by name and stays stored', () => {
   store.clear();
   seed([legacy(PERU, { id: 'six' }), legacy(toV5(PERU), { id: 'five' })]);
+  const bytes = raw();
   assert.deepStrictEqual(load('six'), { compatible: true, trip: json(PERU) });
-  const five = load('five');
-  assert.deepStrictEqual(five, upgradeV5toV6(json(toV5(PERU))), 'the existing upgrader, unchanged');
-  assert.equal(five.compatible, true);
-  assert.equal(five.trip.versions.schema, 'door2-v6');
-  assert.deepStrictEqual(five.trip.days, json(PERU.days));
+  // Was: upgraded on read to door2-v6 by upgradeV5toV6. Stage B: a compatibility change, not a loss.
+  assert.deepStrictEqual(load('five'), { compatible: false, reason: V5_REFUSED('Peru, 10 days') });
+  assert.ok(listDraftTrips().some((d) => d.id === 'five'), 'the v5 draft is still listed');
+  assert.equal(raw(), bytes, 'the v5 entry is still stored, byte for byte');
 });
 
 // ---------------------------------------------------------------------------
@@ -222,9 +229,9 @@ test('3d: the shape check refuses without repairing — a short trip is not resc
 });
 
 // ---------------------------------------------------------------------------
-// 4. Invisibility: nothing the Stage-A writer produces is refused
+// 4. Invisibility: nothing the Stage-B writer produces is refused by the Stage-B reader
 
-test('4: every draft the current writer saves opens, through the unversioned path', () => {
+test('4: every draft the current writer saves opens — always envelope version 2 with a door2-v7 payload', () => {
   store.clear();
   const ids = [];
   for (const [name, t] of TRIPS) {
@@ -232,10 +239,12 @@ test('4: every draft the current writer saves opens, through the unversioned pat
     const id = saveDraftTrip(saved, `${name} label`);
     ids.push(id);
     const entry = JSON.parse(raw()).find((d) => d.id === id);
-    assert.deepEqual(Object.keys(entry), ['id', 'label', 'savedAt', 'trip'], 'the Stage-A writer emits no envelopeVersion');
+    // Was: ['id', 'label', 'savedAt', 'trip'] — the Stage-A writer emitted no envelopeVersion.
+    assert.deepEqual(Object.keys(entry), ['envelopeVersion', 'id', 'label', 'savedAt', 'trip'], 'the Stage-B writer always emits envelope 2');
+    assert.equal(entry.envelopeVersion, 2);
     const r = loadDraftTrip(id);
     assert.equal(r.compatible, true, `${name}: ${r.reason}`);
-    assert.deepStrictEqual(r.trip, json(saved), `${name}: loaded as saved`);
+    assert.deepStrictEqual(r.trip, json(stampV7(saved)), `${name}: loaded as saved, stamped door2-v7`);
   }
   // Also with the session history left in (the writer stores whatever it's handed).
   const withHistory = TRIPS.find(([n]) => n === 'F2 cusco +1 night')[1];
@@ -311,10 +320,11 @@ test('10: refused loads leave every stored byte as it was', () => {
   // Deliberately odd but valid JSON formatting: a rewrite would normalise it.
   const bytes = JSON.stringify(entries, null, 3);
   store.set(KEY, bytes);
-  for (const id of ['v4', 'v2_v6', 'ev99', 'ev_null', 'short', 'missing']) {
+  // 'v5' was in the opening list until Stage B; it is now refused (and, as every id here, left stored).
+  for (const id of ['v4', 'v5', 'v2_v6', 'ev99', 'ev_null', 'short', 'missing']) {
     assert.equal(load(id).compatible, false, id);
   }
-  for (const id of ['ok_v6', 'v5', 'ok_v7']) assert.equal(load(id).compatible, true, id);
+  for (const id of ['ok_v6', 'ok_v7']) assert.equal(load(id).compatible, true, id);
   assert.equal(raw(), bytes);
 });
 
@@ -421,7 +431,10 @@ test('11c: deleting beside a malformed entry never throws and leaves the malform
 // Stage A.2. A2.1–A2.3: a draft the reader accepts can be saved again and reopened.
 
 // As Door2Plan.jsx's handleSaveDraft passes it: a shallow copy, so copy.versions === active.versions.
-const pageSave = (active, label) => saveDraftTrip({ ...active, history: [] }, label);
+// The page always passes a destinationLabel; the two-argument form stays valid (test B5).
+const pageSave = (active, label, destinationLabel) => saveDraftTrip({ ...active, history: [] }, label, destinationLabel);
+const KEYS_WITH_DESTINATION = ['envelopeVersion', 'id', 'label', 'destinationLabel', 'savedAt', 'trip'];
+const KEYS_WITHOUT_DESTINATION = ['envelopeVersion', 'id', 'label', 'savedAt', 'trip'];
 const entryOf = (id) => JSON.parse(raw()).find((d) => d.id === id);
 
 test('A2.1: a v2/door2-v7 draft loads, saves and reopens, still in envelope version 2, itinerary, choices and warnings intact', () => {
@@ -432,9 +445,11 @@ test('A2.1: a v2/door2-v7 draft loads, saves and reopens, still in envelope vers
     const loaded = loadDraftTrip('d_v2');
     assert.equal(loaded.compatible, true, `${name}: ${loaded.reason}`);
 
-    const id = pageSave(loaded.trip, 'Peru, 10 days');
+    const id = pageSave(loaded.trip, 'Peru, 10 days', 'Peru');
     const entry = entryOf(id);
-    assert.deepEqual(Object.keys(entry), ['envelopeVersion', 'id', 'label', 'savedAt', 'trip'], name);
+    // Was: ['envelopeVersion', 'id', 'label', 'savedAt', 'trip'] — Stage B adds destinationLabel (§3).
+    assert.deepEqual(Object.keys(entry), KEYS_WITH_DESTINATION, name);
+    assert.equal(entry.destinationLabel, 'Peru', name);
     assert.equal(entry.envelopeVersion, 2, name);
     assert.equal(entry.trip.versions.schema, 'door2-v7', `${name}: payload neither stamped nor downgraded`);
     assert.deepStrictEqual(entry.trip, json(loaded.trip), `${name}: payload stored as handed in`);
@@ -458,17 +473,21 @@ test('A2.1b: a reopened v7 trip edited in the session still saves to a draft tha
   assert.deepStrictEqual(reopened.trip, json({ ...edited, history: [] }));
 });
 
-test('A2.2: a newly built v6 trip still saves in the legacy envelope and reopens — the default format is unchanged', () => {
+// Was: "a newly built v6 trip still saves in the legacy envelope … the default format is
+// unchanged" (legacy envelope, v6 payload). Stage B inverts it: v7 is now the default.
+test('A2.2: a newly built v6 trip saves in envelope version 2 with a door2-v7 payload, reopens, and the active trip is still v6', () => {
   store.clear();
   for (const [name, t] of TRIPS) {
     assert.equal(t.versions.schema, 'door2-v6', `${name} is built as v6`);
-    const id = pageSave(t, `${name} label`);
+    const id = pageSave(t, `${name} label`, 'Peru');
     const entry = entryOf(id);
-    assert.deepEqual(Object.keys(entry), ['id', 'label', 'savedAt', 'trip'], `${name}: no envelopeVersion`);
-    assert.equal(entry.trip.versions.schema, 'door2-v6', name);
+    assert.deepEqual(Object.keys(entry), KEYS_WITH_DESTINATION, name);
+    assert.equal(entry.envelopeVersion, 2, name);
+    assert.equal(entry.trip.versions.schema, 'door2-v7', name);
     const r = loadDraftTrip(id);
     assert.equal(r.compatible, true, `${name}: ${r.reason}`);
-    assert.deepStrictEqual(r.trip, json({ ...t, history: [] }), name);
+    assert.deepStrictEqual(r.trip, json(stampV7({ ...t, history: [] })), name);
+    assert.equal(t.versions.schema, 'door2-v6', `${name}: the active trip is still v6 after saving`);
   }
 });
 
@@ -589,4 +608,246 @@ test('A2.6: saving over readable storage still works, and an empty store saves n
 
   store.set(KEY, '[]');
   assert.equal(loadDraftTrip(pageSave(PERU, 'third')).compatible, true, "a stored '[]' saves normally");
+});
+
+// ---------------------------------------------------------------------------
+// Stage B: the writer cutover (build brief docs/build-brief-f4-stage-b-writer-cutover-2026-10-02.md §7)
+
+/** Runs fn while capturing what saveDraftTrip handed to JSON.stringify (the in-memory list it wrote). */
+function capturingWrite(fn) {
+  const real = JSON.stringify;
+  let written = null;
+  JSON.stringify = (v, ...rest) => {
+    if (Array.isArray(v)) written = v;
+    return real(v, ...rest);
+  };
+  try {
+    return { result: fn(), written: () => written };
+  } finally {
+    JSON.stringify = real;
+  }
+}
+
+/** Asserts fn throws DraftNotStorableError with this check (and field, for a shape failure),
+ * attempts no write, and leaves the stored bytes exactly as they were. */
+function refusesToStore(fn, check, field, what) {
+  const before = raw();
+  const w = countingWrites();
+  try {
+    assert.throws(fn, (err) => {
+      assert.ok(err instanceof DraftNotStorableError, `${what}: ${err}`);
+      assert.equal(err.name, 'DraftNotStorableError');
+      assert.equal(err.check, check, what);
+      if (field) assert.equal(err.field, field, what);
+      return true;
+    });
+    assert.equal(w.writes(), 0, `${what}: no write attempted`);
+  } finally {
+    w.restore();
+  }
+  assert.equal(raw(), before, `${what}: stored bytes unchanged`);
+}
+
+test('5: Stage B writes envelope 2 + door2-v7; door2-v6 still opens; door2-v5 is refused by name and kept byte for byte', () => {
+  store.clear();
+  const v5 = legacy(toV5(PERU), { id: 'v5', label: 'Old Peru trip' });
+  const v6 = legacy(PERU, { id: 'v6', savedAt: '2026-09-30T10:00:00.000Z' });
+  seed([v5, v6]);
+  const v5Bytes = JSON.stringify(v5);
+
+  const id = pageSave(PERU, 'Peru, 10 days', 'Peru');
+  const entry = entryOf(id);
+  assert.equal(entry.envelopeVersion, 2);
+  assert.equal(entry.trip.versions.schema, 'door2-v7');
+  assert.equal(load(id).compatible, true);
+
+  assert.deepStrictEqual(load('v6'), { compatible: true, trip: json(PERU) }, 'door2-v6 still opens as saved');
+
+  const r = load('v5');
+  assert.deepStrictEqual(r, { compatible: false, reason: V5_REFUSED('Old Peru trip') });
+  assert.match(r.reason, /no longer opens/);
+  assert.match(r.reason, /has not been deleted/);
+  assert.ok(listDraftTrips().some((d) => d.id === 'v5'), 'the v5 draft is still listed');
+  assert.equal(JSON.stringify(JSON.parse(raw()).find((d) => d.id === 'v5')), v5Bytes, 'the v5 entry is still stored, byte for byte');
+
+  // Every other unsupported legacy schema keeps today's message.
+  store.clear();
+  seed([legacy({ ...PERU, versions: { ...PERU.versions, schema: 'door2-v4' } })]);
+  assert.deepStrictEqual(load('d_legacy'), { compatible: false, reason: 'Built with schema "door2-v4" — can\'t be reopened here.' });
+});
+
+test('7: the round trip preserves everything — versions.schema is the only difference, across every real trip', () => {
+  for (const [name, t] of TRIPS) {
+    store.clear();
+    const handed = { ...t, history: [] };
+    const loaded = loadDraftTrip(pageSave(t, `${name} label`, 'Peru'));
+    assert.equal(loaded.compatible, true, `${name}: ${loaded.reason}`);
+    const before = json(handed);
+    const after = loaded.trip;
+    assert.deepEqual(Object.keys(after).sort(), Object.keys(before).sort(), `${name}: same fields`);
+    for (const key of Object.keys(before)) {
+      if (key === 'versions') continue;
+      assert.deepStrictEqual(after[key], before[key], `${name}: ${key}`);
+    }
+    const { schema: was, ...versionsBefore } = before.versions;
+    const { schema: now, ...versionsAfter } = after.versions;
+    assert.deepStrictEqual(versionsAfter, versionsBefore, `${name}: versions other than schema`);
+    assert.deepEqual([was, now], ['door2-v6', 'door2-v7'], name);
+    // Named explicitly, as the brief asks.
+    assert.deepStrictEqual(after.spec.choices, before.spec.choices, `${name}: spec.choices`);
+    for (const k of ['pinned', 'rejected', 'placed']) assert.ok(Array.isArray(after.spec.choices[k]), `${name}: choices.${k}`);
+    assert.deepStrictEqual(after.days, before.days, `${name}: days`);
+    assert.deepStrictEqual(after.warnings, before.warnings, `${name}: warnings`);
+    assert.deepStrictEqual(after.routePlan, before.routePlan, `${name}: routePlan`);
+  }
+});
+
+test('8: saving does not mutate the active trip — the stamp is on a copy with a fresh versions object', () => {
+  for (const [name, t] of TRIPS) {
+    store.clear();
+    const active = structuredClone(t);
+    const versions = active.versions;
+    const snapshot = structuredClone(active);
+    const { written } = capturingWrite(() => pageSave(active, 'Peru, 10 days', 'Peru'));
+    const stored = written().at(-1).trip;
+    assert.equal(stored.versions.schema, 'door2-v7', name);
+    assert.equal(active.versions.schema, 'door2-v6', `${name}: the active trip is still v6`);
+    assert.notEqual(stored.versions, active.versions, `${name}: stored.versions is not the active trip's versions object`);
+    assert.equal(active.versions, versions, `${name}: the active trip keeps its own versions object`);
+    assert.deepStrictEqual(active, snapshot, `${name}: nothing on the active trip changed`);
+  }
+});
+
+// The reader as it was at ec0d8fa (before Stage A): unversioned entries only, envelopeVersion
+// ignored, door2-v5 upgraded and door2-v6 opened. Pinned here so a later change to the real
+// reader can't make this test pass by accident.
+const PRE_STAGE_A_SCHEMAS = ['door2-v5', 'door2-v6'];
+function preStageALoad(entries, id) {
+  const entry = entries.find((d) => d.id === id);
+  if (!entry) return { compatible: false, reason: 'Draft not found.' };
+  const schema = entry.trip?.versions?.schema;
+  if (!PRE_STAGE_A_SCHEMAS.includes(schema)) {
+    return { compatible: false, reason: `Built with schema "${schema ?? 'unknown'}" — can't be reopened here.` };
+  }
+  return { compatible: true, trip: entry.trip };
+}
+
+test('9: a pre-Stage-A reader refuses every Stage-B record — an old tab refuses, never misreads', () => {
+  store.clear();
+  const ids = TRIPS.map(([name, t]) => pageSave(t, `${name} label`, 'Peru'));
+  const entries = JSON.parse(raw());
+  for (const id of ids) {
+    assert.deepStrictEqual(preStageALoad(entries, id), { compatible: false, reason: 'Built with schema "door2-v7" — can\'t be reopened here.' }, id);
+    assert.equal(loadDraftTrip(id).compatible, true, `${id}: the current reader opens it`);
+  }
+  // Control: the replica still opens what it opened then.
+  assert.equal(preStageALoad([legacy(PERU)], 'd_legacy').compatible, true);
+});
+
+test('12 (write): saving over an unreadable store refuses, writes nothing and leaves the bytes byte-identical', () => {
+  for (const bytes of ['{"this is not valid json', '{"drafts":[]}']) {
+    for (const trip of [PERU, stampV7(PERU)]) {
+      store.clear();
+      store.set(KEY, bytes);
+      const w = countingWrites();
+      try {
+        assert.throws(() => pageSave(trip, 'Peru, 10 days', 'Peru'), DraftStorageUnreadableError, bytes);
+        assert.equal(w.writes(), 0, `${bytes}: no write attempted`);
+      } finally {
+        w.restore();
+      }
+      assert.equal(raw(), bytes, `${bytes}: byte-identical`);
+    }
+  }
+  // Readability is checked before the trip: an unstorable trip over unreadable storage is
+  // reported as the storage failure.
+  store.clear();
+  store.set(KEY, '{"drafts":[]}');
+  assert.throws(() => pageSave(toV5(PERU), 'x'), DraftStorageUnreadableError);
+  assert.equal(raw(), '{"drafts":[]}');
+});
+
+test('B1 (amendment 1): a malformed door2-v6 input — one the legacy reader opens today — is refused, not written', () => {
+  const { routePlan, ...noRoutePlan } = PERU;
+  const { warnings, ...noWarnings } = PERU;
+  for (const [field, trip] of [['routePlan', noRoutePlan], ['warnings', noWarnings]]) {
+    // Today's legacy reader opens it (no shape check on the unversioned path)...
+    store.clear();
+    seed([legacy(trip)]);
+    assert.equal(load('d_legacy').compatible, true, `${field}: the legacy reader opens it`);
+    // ...but stamped v7 it would not reopen, so the writer refuses it, over empty and non-empty storage.
+    for (const existing of [null, [legacy(PERU, { id: 'kept' })]]) {
+      store.clear();
+      if (existing) seed(existing);
+      refusesToStore(() => pageSave(trip, 'Peru, 10 days', 'Peru'), 'shape', field, `v6 missing ${field}`);
+    }
+  }
+});
+
+test('B2 (amendment 1): a malformed input is refused whether it arrives as door2-v6 or already door2-v7', () => {
+  for (const base of ['door2-v6', 'door2-v7']) {
+    for (const [field, mutate] of SHAPE_CASES) {
+      store.clear();
+      seed([legacy(PERU, { id: 'kept' })]);
+      const t = base === 'door2-v7' ? json(stampV7(PERU)) : json(PERU);
+      const out = mutate(t);
+      const trip = out === undefined ? t : out;
+      // 'trip' and 'versions.schema' leave no readable schema, so they fail the input-schema check.
+      const schemaLevel = field === 'trip' || field === 'versions.schema';
+      refusesToStore(() => pageSave(trip, 'Peru, 10 days', 'Peru'), schemaLevel ? 'schema' : 'shape', schemaLevel ? null : field, `${base} ${field}`);
+    }
+  }
+});
+
+test('B3 (finding 3): an ineligible schema is refused — door2-v5 included — and nothing is appended', () => {
+  store.clear();
+  seed([legacy(PERU, { id: 'kept' })]);
+  const cases = [
+    ['door2-v5', toV5(PERU)],
+    ['door2-v4', { ...PERU, versions: { ...PERU.versions, schema: 'door2-v4' } }],
+    ['door2-v8', { ...PERU, versions: { ...PERU.versions, schema: 'door2-v8' } }],
+    ['undefined', { ...PERU, versions: { ...PERU.versions, schema: undefined } }],
+    ['undefined', { ...PERU, versions: undefined }],
+    ['undefined', null]
+  ];
+  for (const [schema, trip] of cases) {
+    refusesToStore(() => saveDraftTrip(trip, 'Peru, 10 days', 'Peru'), 'schema', null, schema);
+    try {
+      saveDraftTrip(trip, 'x');
+    } catch (err) {
+      assert.equal(err.schema, schema);
+    }
+  }
+  assert.deepEqual(JSON.parse(raw()).map((d) => d.id), ['kept']);
+});
+
+test('B4: every trip in the TRIPS table passes the writer\'s candidate check (stop condition 4)', () => {
+  store.clear();
+  for (const [name, t] of TRIPS) assert.doesNotThrow(() => pageSave(t, name, 'Peru'), name);
+  assert.equal(listDraftTrips().length, TRIPS.length);
+});
+
+test('B5 (amendment 5): without a usable destinationLabel the key is left out entirely; the draft reopens and a refusal names it from label', () => {
+  const absent = [['two arguments'], ['undefined', undefined], ['null', null], ['empty', ''], ['number', 42], ['object', { name: 'Peru' }]];
+  for (const [what, ...third] of absent) {
+    store.clear();
+    const id = saveDraftTrip({ ...PERU, history: [] }, 'Peru, 10 days', ...third);
+    const bytes = raw();
+    assert.doesNotMatch(bytes, /destinationLabel/, `${what}: not written as undefined, null or ''`);
+    const entry = entryOf(id);
+    assert.equal(Object.hasOwn(entry, 'destinationLabel'), false, what);
+    assert.deepEqual(Object.keys(entry), KEYS_WITHOUT_DESTINATION, what);
+    assert.equal(loadDraftTrip(id).compatible, true, `${what}: reopens`);
+
+    // Make that writer-produced record unopenable and check the refusal names it from label.
+    seed([{ ...entry, envelopeVersion: 99 }]);
+    assert.ok(load(id).reason.startsWith('"Peru, 10 days" can\'t be reopened here'), what);
+  }
+  // With it, the key sits between label and savedAt and names a refusal.
+  store.clear();
+  const id = pageSave(PERU, 'Peru, 10 days', 'Peru');
+  const entry = entryOf(id);
+  assert.deepEqual(Object.keys(entry), KEYS_WITH_DESTINATION);
+  seed([{ ...entry, envelopeVersion: 99 }]);
+  assert.ok(load(id).reason.startsWith('"Peru" can\'t be reopened here'));
 });

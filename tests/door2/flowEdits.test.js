@@ -40,7 +40,9 @@ test('B4: two swaps through the page, then undo x2, restores the original trip (
 
   assert.equal(M.tripFingerprint(saved), M.tripFingerprint(originalTrip), 'fingerprint matches the pristine build');
   const strip = (t) => { const { history, ...rest } = t; return rest; };
-  assert.deepEqual(strip(saved), strip(originalTrip), 'trip is byte-identical to the original with history excluded');
+  // The original is the engine build (door2-v6); a saved draft is stamped door2-v7 (Stage B writer cutover).
+  const asStored = (t) => ({ ...t, versions: { ...t.versions, schema: 'door2-v7' } });
+  assert.deepEqual(strip(saved), strip(asStored(originalTrip)), 'trip is byte-identical to the original with history excluded, versions.schema aside');
 });
 
 test('B5: nights +1 on a stop -> proposal matches what is applied -> undo restores the original', async () => {
