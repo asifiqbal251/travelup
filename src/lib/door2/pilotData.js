@@ -704,7 +704,7 @@ export const PILOT_ROUTE_FAMILIES = [
 ];
 
 /**
- * Every compiled variant, held ones included (dev harness, draft upgrader and
+ * Every compiled variant, held ones included (dev harness and
  * buildTripFromRoutePlan use this; travellers never get a held variant).
  * @type {RoutePackage[]}
  */

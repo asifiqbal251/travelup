@@ -2,8 +2,7 @@
 /** @typedef {import('./types.js').RoutePackage} RoutePackage */
 
 // RoutePlan (design §2.1 + v2 fields): which places, in what order, for how
-// many nights. One builder, shared by the planner (fresh builds) and the draft
-// upgrader (v5 → v6), so the two can never disagree.
+// many nights. One builder, used by the planner.
 //
 // Pure: no randomness, no Date.now().
 
