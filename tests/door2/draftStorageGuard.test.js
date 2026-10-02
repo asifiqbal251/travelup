@@ -302,6 +302,34 @@ test("6b: the unversioned path keeps today's message, unchanged", () => {
   assert.deepStrictEqual(load('d_legacy'), { compatible: false, reason: 'Built with schema "door2-v7" — can\'t be reopened here.' });
 });
 
+// docs/build-brief-f4-v5-upgrader-retirement-2026-10-02.md §4: a whitespace-only label is
+// not a usable name. Driven through the v5 refusal, which names the draft via draftName.
+test('6c: a refusal skips a whitespace-only destinationLabel or label, returning a usable one as stored', () => {
+  const savedAt = '2026-10-01T10:00:00.000Z';
+  const names = [
+    [{ destinationLabel: '   ', label: 'Peru, 10 days' }, 'Peru, 10 days'],
+    [{ destinationLabel: ' \t ', label: '  ' }, `The draft saved ${savedAt}`],
+    [{ destinationLabel: 'Peru', label: '   ' }, 'Peru'],
+    [{ destinationLabel: 'Peru', label: 'Peru, 10 days' }, 'Peru'],
+    [{ label: 'Peru, 10 days' }, 'Peru, 10 days'],
+    [{ destinationLabel: '  Peru ', label: 'x' }, '  Peru ']
+  ];
+  for (const [meta, name] of names) {
+    store.clear();
+    const { label, ...rest } = meta;
+    seed([legacy(toV5(PERU), { label, savedAt, ...rest })]);
+    assert.deepStrictEqual(load('d_legacy'), { compatible: false, reason: V5_REFUSED(name) }, JSON.stringify(meta));
+  }
+});
+
+test('6d: isListable is unchanged — a whitespace-only savedAt still lists and opens, an empty one does not', () => {
+  store.clear();
+  seed([legacy(toV5(PERU), { id: 'ws', savedAt: '   ' }), legacy(toV5(PERU), { id: 'empty', savedAt: '' })]);
+  assert.deepStrictEqual(listDraftTrips().map((d) => d.id), ['ws']);
+  assert.deepStrictEqual(load('ws'), { compatible: false, reason: V5_REFUSED('Peru, 10 days') });
+  assert.deepStrictEqual(load('empty'), { compatible: false, reason: 'Draft not found.' });
+});
+
 // ---------------------------------------------------------------------------
 // 10. Refusing a draft leaves storage unchanged (byte-compared)
 

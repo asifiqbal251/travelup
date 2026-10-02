@@ -125,10 +125,12 @@ export function draftDisplayLabel(entry) {
   return typeof entry?.label === 'string' && entry.label.trim() !== '' ? entry.label : 'Untitled trip';
 }
 
-// A refusal names the draft from envelope metadata only, never from inside trip.
+// A refusal names the draft from envelope metadata only, never from inside trip. A label
+// is usable when it has non-blank text (as in draftDisplayLabel) and is returned as stored.
+const isUsableName = (v) => typeof v === 'string' && v.trim() !== '';
 function draftName(entry) {
-  if (isNonEmptyString(entry.destinationLabel)) return entry.destinationLabel;
-  if (isNonEmptyString(entry.label)) return entry.label;
+  if (isUsableName(entry.destinationLabel)) return entry.destinationLabel;
+  if (isUsableName(entry.label)) return entry.label;
   return `The draft saved ${entry.savedAt}`;
 }
 
