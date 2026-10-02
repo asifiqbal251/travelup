@@ -26,11 +26,12 @@ import { getPlace } from './route.js';
 // either: route -> schedule -> fill -> edit still run on RoutePlan. The stage-2
 // boundary demonstrated so far is scheduling only (materialise.js).
 //
-// Planning outputs the contract does not carry: the authored minimum duration
-// (routePlan.minDays) and the stretch warning (Trip.warnings,
-// nights_above_package_max) belong to stage 1 and must reach any assembled trip
-// (design v6.9 §Q2). Where they are held between stages and how assembly puts
-// them back is deferred to F4's design; nothing here produces or carries them.
+// Planning outputs the contract does not carry: the minimum duration
+// (routePlan.minDays, from the plan's EFFECTIVE minima) and the stretch warning
+// (Trip.warnings, nights_above_package_max) belong to stage 1 and must reach any
+// assembled trip (design v6.9 §Q2). The F4 bridge, assemble.js, holds them on
+// the RoutePlan beside the sequence and recomputes and verifies them when it
+// assembles a skeleton Trip; nothing here produces or carries them.
 //
 // Pure: no randomness, no Date.now().
 

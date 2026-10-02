@@ -478,6 +478,23 @@
  */
 
 /**
+ * ➕ F4 bridge: the one input record of assembleSkeletonTripFromSequence (assemble.js). Every field is explicit;
+ * an undeclared key is refused. The sequence, plan and skeleton must agree (or the record is refused); the
+ * output is an UNFILLED skeleton Trip.
+ * @typedef {Object} SkeletonAssemblyInput
+ * @property {TripSequence} sequence      Stage 1: authoritative nights, stop order, legs, resolved excursion requirements.
+ * @property {RoutePlan} plan             Stage 1: effective minNights, package maxNights, minDays/maxDays, ids, optionals, selections.
+ * @property {{days: Day[], stops: Array<{stopId: string, placeId: string, nights: number, arrivalDay: number, departureDay: number}>, homeArrival: {dayNumber: number, time: string}, usesDraftData: boolean}} skeleton
+ *   materialiseTripSequence's value.
+ * @property {TripSpec} spec              Traveller intent, carried. routeTemplateId and stops are derived mirrors:
+ *   accepted, never read, always rebuilt from the plan and the sequence.
+ * @property {'draft'|'valid'|'conflict'} status  Stage 1's validation result; 'incomplete' (fill-only) is refused.
+ * @property {'none'} contentVersion      versions.content; an unfilled skeleton has none.
+ * @property {{id: string, version?: number}} bufferRuleset  Declared config, for versions.bufferRuleset.
+ * @property {[]} history                 Always []: assembly never appends to history.
+ */
+
+/**
  * Result of a bounded edit operation (swap, reject, pin, unpin, lighter day, swap days, undo).
  * Distinct from FailureResult: no `state` field, no `options` field.
  * Callers can tell them apart by checking `reason` (EditResult) vs `state` (FailureResult).

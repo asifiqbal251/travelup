@@ -80,13 +80,14 @@ function routeResultFromSequence(seq, data) {
  * Returns the TIMED SKELETON only: scheduleRoute's days, stops, homeArrival and
  * usesDraftData, passed through unchanged. scheduleRoute's `minDays` and
  * `warnings` are NOT returned. Here they would describe the synthetic bounds,
- * not the authored ones, so returning them would be fabrication. The real
- * values (the authored minimum duration; nights_above_package_max, which
- * draftStorage.js:79 reads on reload) are PLANNING OUTPUTS: stage 1 owns them
- * and the assembled trip must carry them (design v6.9 §Q2). No path carries
- * them from planning into a trip assembled from this result yet; that handoff is
- * deferred to F4's design, and until it exists this result must not be
- * assembled into a Trip.
+ * not the plan's, so returning them would be fabrication. The real values
+ * (routePlan.minDays, from the plan's effective minima; nights_above_package_max,
+ * which draftStorage.js:79 reads only when upgrading a v5 draft) are PLANNING
+ * OUTPUTS: stage 1 owns them and the assembled trip must carry them (design
+ * v6.9 §Q2). This result reaches a Trip only through assemble.js, which
+ * recomputes them from the plan, the sequence and this result's day count and
+ * verifies them against the plan; it never takes them from the scheduler's
+ * output here. No live build path does that yet.
  *
  * Throws scheduleRoute's PackageAuthoringError when a valid sequence's
  * allocation cannot be timed (an excursion that does not fit, a pass-through
