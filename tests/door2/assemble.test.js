@@ -300,6 +300,158 @@ test('E8: the skeleton\'s stop summaries disagree with the sequence on stops, or
   refuses(missing, /stop summaries disagree/);
 });
 
+// ---------------------------------------------------------------------------
+// F4.1: check 12 (fixed excursions, plan against sequence) and check 7 (the calendar against the requirements)
+
+const MP = { placeId: 'machu_picchu', connectionId: 'conn_agc_mp_shuttle', hoursOnSite: 4 };
+const aguas = (input) => input.plan.stops.find((s) => s.key === 'pc_aguas');
+const aguasEntry = (input) => input.sequence.entries.find((e) => e.stopKey === 'pc_aguas');
+
+test('E12: the plan\'s fixed excursions disagree with the sequence\'s: dropped, hoursOnSite, connectionId, order', () => {
+  const clean = base();
+  assert.deepEqual(aguas(clean).excursions.map(({ placeId, connectionId, hoursOnSite }) => ({ placeId, connectionId, hoursOnSite })), [MP], 'measured: Peru 10d');
+  assert.ok(assemble(clean));
+
+  const dropped = base();
+  aguas(dropped).excursions = [];
+  refuses(dropped, /stop pc_aguas fixed excursions disagree: sequence \[\{"placeId":"machu_picchu","connectionId":"conn_agc_mp_shuttle","hoursOnSite":4\}\], plan \[\]$/);
+  const droppedFromSequence = base();
+  aguasEntry(droppedFromSequence).excursions = [];
+  refuses(droppedFromSequence, /stop pc_aguas fixed excursions disagree: sequence \[\], plan \[\{"placeId":"machu_picchu"/);
+
+  const hours = base();
+  aguas(hours).excursions[0].hoursOnSite = 9;
+  refuses(hours, /stop pc_aguas fixed excursions disagree: sequence \[.*"hoursOnSite":4\}\], plan \[.*"hoursOnSite":9\}\]$/);
+
+  const connection = base();
+  aguas(connection).excursions[0].connectionId = 'conn_cuz_olly_road';
+  refuses(connection, /stop pc_aguas fixed excursions disagree: sequence \[.*"conn_agc_mp_shuttle".*\], plan \[.*"conn_cuz_olly_road".*\]$/);
+
+  // Order: no pilot stop has two fixed excursions, so give pc_aguas a second one, in opposite orders on each side.
+  const order = base();
+  const second = { placeId: 'cusco', connectionId: 'conn_agc_mp_shuttle', hoursOnSite: 2 };
+  aguas(order).excursions = [{ ...MP }, { ...second }];
+  aguasEntry(order).excursions = [{ ...second, source: 'fixed' }, { ...MP, source: 'fixed' }];
+  refuses(order, /stop pc_aguas fixed excursions disagree: sequence \[\{"placeId":"cusco".*\},\{"placeId":"machu_picchu".*\}\], plan \[\{"placeId":"machu_picchu".*\},\{"placeId":"cusco".*\}\]$/);
+
+  // Selected requirements are not fixed ones: Tokyo with Nikko has no fixed excursion on either side and assembles.
+  const nikko = nikkoBase();
+  assert.deepEqual(nikko.plan.stops[0].excursions, []);
+  assert.ok(assemble(nikko));
+});
+
+/** The two check-7 cases: a fixed requirement (Peru, Machu Picchu) and a selected one (Tokyo, Nikko). Both 4h. */
+const CHECK7_CASES = [
+  ['fixed', base, 'pc_aguas', 'machu_picchu', 'aguas_calientes'],
+  ['selected', nikkoBase, 'tokyo_base', 'nikko', 'tokyo']
+];
+const blockOf = (input, id) => input.skeleton.days.flatMap((d) => d.blocks).find((b) => b.id === id);
+
+test('E7: a calendar generated for a different visit duration (3h, 5h) is refused against a 4h requirement, fixed and selected', () => {
+  // Nikko is the only 4h selectable excursion in the pilot and synthetic catalogues, and a 5h Nikko visit cannot be
+  // scheduled at all (5h plus both train legs exceeds the day window; the scheduler throws excursion_does_not_fit). So
+  // the selected case is generated at 3h and 4.5h, and 5h is covered by setting the site block's duration by hand.
+  const generated = { fixed: [3, 5], selected: [3, 4.5] };
+  for (const [kind, make, stopKey, placeId] of CHECK7_CASES) {
+    const input = make();
+    const required = input.sequence.entries.find((e) => e.stopKey === stopKey).excursions.find((x) => x.placeId === placeId);
+    assert.equal(required.hoursOnSite, 4, `${kind}: the requirement is 4h`);
+    if (kind === 'selected') {
+      const five = structuredClone(input.sequence);
+      five.entries.find((e) => e.stopKey === stopKey).excursions.find((x) => x.placeId === placeId).hoursOnSite = 5;
+      assert.throws(() => materialiseTripSequence(five, PILOT_DATA), (err) => err.reason === 'excursion_does_not_fit', 'measured: no 5h Nikko calendar exists');
+      const handSet = make();
+      blockOf(handSet, `ex:${stopKey}:${placeId}:site`).durationHours = 5;
+      refuses(handSet, new RegExp(`ex:${stopKey}:${placeId}:site visit minutes disagree: sequence 240, skeleton 300$`));
+    }
+    for (const hours of generated[kind]) {
+      // A genuine scheduler calendar for the other duration: the same sequence, its requirement changed, materialised.
+      const other = structuredClone(input.sequence);
+      other.entries.find((e) => e.stopKey === stopKey).excursions.find((x) => x.placeId === placeId).hoursOnSite = hours;
+      const skeleton = materialiseTripSequence(other, PILOT_DATA).value;
+      assert.equal(blockOf({ skeleton }, `ex:${stopKey}:${placeId}:site`).durationHours, hours, `${kind}: a real ${hours}h calendar`);
+      refuses({ ...input, skeleton }, new RegExp(`excursion requirement ${stopKey} -> ${placeId}: ex:${stopKey}:${placeId}:site visit minutes disagree: sequence 240, skeleton ${hours * 60}$`));
+    }
+  }
+});
+
+test('E7: the scheduler\'s rounding is the comparison: a duration that rounds to the same minute is accepted', () => {
+  const input = base();
+  // 4h + 0.4 of a minute is still minute 240 under Math.round(hours * 60).
+  aguasEntry(input).excursions[0].hoursOnSite = 4 + 0.4 / 60;
+  aguas(input).excursions[0].hoursOnSite = 4 + 0.4 / 60;
+  assert.ok(assemble(input));
+  aguasEntry(input).excursions[0].hoursOnSite = 4 + 0.6 / 60;
+  aguas(input).excursions[0].hoursOnSite = 4 + 0.6 / 60;
+  refuses(input, /ex:pc_aguas:machu_picchu:site visit minutes disagree: sequence 241, skeleton 240$/);
+});
+
+test('E7: wrong connection, place, stop anchor or block type on an excursion block is refused, fixed and selected', () => {
+  for (const [kind, make, stopKey, placeId, basePlace] of CHECK7_CASES) {
+    const id = (part) => `ex:${stopKey}:${placeId}:${part}`;
+    const broken = (part, mutate) => {
+      const input = make();
+      mutate(blockOf(input, id(part)));
+      return input;
+    };
+    const at = (part, field) => new RegExp(`excursion requirement ${stopKey} -> ${placeId}: ${id(part)} ${field.replace('.', '\\.')} disagree: sequence `);
+
+    refuses(broken('out', (b) => (b.transport.connectionId = 'conn_other')), at('out', 'connectionId'));
+    refuses(broken('back', (b) => (b.transport.connectionId = 'conn_other')), at('back', 'connectionId'));
+    refuses(broken('site', (b) => (b.placeId = 'cusco')), new RegExp(`${id('site')} placeId disagree: sequence "${placeId}", skeleton "cusco"$`));
+    refuses(broken('out', (b) => (b.transport.toPlaceId = 'cusco')), at('out', 'toPlaceId'));
+    refuses(broken('out', (b) => (b.transport.fromPlaceId = 'cusco')), at('out', 'fromPlaceId'));
+    refuses(broken('back', (b) => (b.transport.fromPlaceId = basePlace)), at('back', 'fromPlaceId'));
+    refuses(broken('back', (b) => (b.transport.toPlaceId = placeId)), at('back', 'toPlaceId'));
+    for (const part of ['out', 'site', 'back']) refuses(broken(part, (b) => (b.anchor.stopId = 'pc_elsewhere')), at(part, 'anchor.stopId'));
+    refuses(broken('out', (b) => (b.type = 'open')), at('out', 'type'));
+    refuses(broken('site', (b) => (b.type = 'travel')), at('site', 'type'));
+    refuses(broken('back', (b) => (b.type = 'open')), at('back', 'type'));
+    assert.ok(assemble(make()), `${kind}: the unbroken input assembles`);
+  }
+});
+
+test('E7: the ex: blocks must be exactly the expected set: missing, duplicate and unexpected blocks are refused, fixed and selected', () => {
+  for (const [, make, stopKey, placeId] of CHECK7_CASES) {
+    const id = (part) => `ex:${stopKey}:${placeId}:${part}`;
+    for (const part of ['out', 'site', 'back']) {
+      const missing = make();
+      for (const d of missing.skeleton.days) d.blocks = d.blocks.filter((b) => b.id !== id(part));
+      refuses(missing, new RegExp(`excursion requirement ${stopKey} -> ${placeId} disagrees with the skeleton: sequence requires it, skeleton has no block ${id(part)}$`));
+    }
+
+    const duplicate = make();
+    duplicate.skeleton.days.at(-1).blocks.push(structuredClone(blockOf(duplicate, id('site'))));
+    refuses(duplicate, new RegExp(`skeleton has duplicate block ${id('site')}$`));
+
+    const extra = make();
+    extra.skeleton.days.at(-1).blocks.push({ ...structuredClone(blockOf(extra, id('site'))), id: `ex:${stopKey}:somewhere:site` });
+    refuses(extra, new RegExp(`skeleton has ex: block\\(s\\) no requirement accounts for: ex:${stopKey}:somewhere:site$`));
+
+    // A well-formed block for a requirement this stop does not have, anchored at another stop.
+    const elsewhere = make();
+    const otherKey = elsewhere.sequence.entries.find((e) => e.stopKey !== stopKey)?.stopKey ?? 'kyo_base'; // Tokyo-only has one stop
+    elsewhere.skeleton.days[0].blocks.push({ ...structuredClone(blockOf(elsewhere, id('out'))), id: `ex:${otherKey}:${placeId}:out` });
+    refuses(elsewhere, new RegExp(`no requirement accounts for: ex:${otherKey}:${placeId}:out$`));
+  }
+});
+
+test('E7: two requirements to one place on one entry are refused as ambiguous, not counted as one, fixed and selected', () => {
+  // Fixed: Machu Picchu twice, on both plan and sequence (so check 12 agrees and check 7 is what refuses).
+  const fixed = base();
+  aguas(fixed).excursions = [{ ...MP }, { ...MP, hoursOnSite: 2 }];
+  aguasEntry(fixed).excursions = [{ ...MP, source: 'fixed' }, { ...MP, hoursOnSite: 2, source: 'fixed' }];
+  refuses(fixed, /entry pc_aguas has more than one excursion requirement to machu_picchu; their blocks cannot be told apart$/);
+
+  // Selected: a fixed requirement to Nikko beside the selected one, again agreeing between plan and sequence.
+  const selected = nikkoBase();
+  const nikko = selected.sequence.entries[0].excursions.find((x) => x.placeId === 'nikko');
+  const fixedNikko = { placeId: nikko.placeId, connectionId: nikko.connectionId, hoursOnSite: nikko.hoursOnSite };
+  selected.plan.stops[0].excursions = [fixedNikko];
+  selected.sequence.entries[0].excursions = [{ ...fixedNikko, source: 'fixed' }, ...selected.sequence.entries[0].excursions];
+  refuses(selected, /entry tokyo_base has more than one excursion requirement to nikko; their blocks cannot be told apart$/);
+});
+
 test('E9: spec.originPlaceId disagrees with the sequence origin', () => {
   const input = base();
   input.spec.originPlaceId = 'seattle';
@@ -324,10 +476,12 @@ test('E11: a recomputed minDays or maxDays disagrees with the plan', () => {
 // ---------------------------------------------------------------------------
 // Lifecycle inputs (§1.3, §1.6)
 
-test('status: one of the four, and a fill-only status cannot belong to an unfilled skeleton', () => {
-  for (const status of ['draft', 'valid', 'conflict']) assert.equal(assemble({ ...base(), status }).status, status);
-  refuses({ ...base(), status: 'incomplete' }, /status "incomplete" is set only by filling/);
-  refuses({ ...base(), status: 'ok' }, /status "ok" is not one of draft, valid, conflict, incomplete/);
+test('status: only draft and valid (what a skeleton validation writes); incomplete, conflict and anything else are refused by name', () => {
+  for (const status of ['draft', 'valid']) assert.equal(assemble({ ...base(), status }).status, status);
+  refuses({ ...base(), status: 'incomplete' }, /status "incomplete" is refused \(it is set only by filling and cannot belong to an unfilled skeleton\); accepted: draft, valid$/);
+  refuses({ ...base(), status: 'conflict' }, /status "conflict" is refused \(it has no producer in the engine\); accepted: draft, valid$/);
+  refuses({ ...base(), status: 'ok' }, /status "ok" is refused; accepted: draft, valid$/);
+  refuses({ ...base(), status: 'toString' }, /status "toString" is refused; accepted: draft, valid$/);
   // A fill-only warning never appears: warnings are seeded from the stretch predicate alone.
   for (const request of [...Object.values(REFERENCE), spec(JP, 14, 10, 'tokyo_city')]) {
     const warnings = assembleLike(skeletonTrip(request), request).warnings;

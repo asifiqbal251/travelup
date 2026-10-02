@@ -488,7 +488,8 @@
  *   materialiseTripSequence's value.
  * @property {TripSpec} spec              Traveller intent, carried. routeTemplateId and stops are derived mirrors:
  *   accepted, never read, always rebuilt from the plan and the sequence.
- * @property {'draft'|'valid'|'conflict'} status  Stage 1's validation result; 'incomplete' (fill-only) is refused.
+ * @property {'draft'|'valid'} status    Stage 1's skeleton validation result (validate.js:180). 'incomplete' (fill-only),
+ *   'conflict' (no producer) and anything else are refused. The Trip status union is unchanged.
  * @property {'none'} contentVersion      versions.content; an unfilled skeleton has none.
  * @property {{id: string, version?: number}} bufferRuleset  Declared config, for versions.bufferRuleset.
  * @property {[]} history                 Always []: assembly never appends to history.

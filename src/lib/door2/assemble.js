@@ -15,9 +15,11 @@ import { ENGINE_VERSION } from './scheduleConfig.js';
 // calls scheduleRoute, selectRoutes, validateSkeleton, resolveExcursions,
 // findRoutePackage or compileFamilies, and it never reads a package, a family
 // or a route catalogue; materialiseTripSequence, conversely, never sees the
-// plan. The stage boundary is this file's import list. (Its one import from
-// pilotData.js is the PILOT_DATA_VERSION constant for versions.routeData,
-// exactly as planner.js writes it.)
+// plan. The stage boundary is this file's direct imports: three version
+// constants. (The one from pilotData.js is PILOT_DATA_VERSION for
+// versions.routeData, exactly as planner.js writes it; pilotData.js itself
+// compiles the catalogue on load, so the boundary holds for direct imports
+// only, as it does for stage 2.)
 //
 // Every input is explicit. Nothing is recovered from a global, defaulted, or
 // copied from an old Trip. Each disagreement between the sequence, the plan and
@@ -25,17 +27,21 @@ import { ENGINE_VERSION } from './scheduleConfig.js';
 // assembly never prefers whichever object is convenient.
 //
 // What it cannot check, stated rather than over-claimed:
-// - STATUS. Assembly cannot confirm that a supplied status reflects a
-//   feasibility validation it did not run. It rejects a status that is
-//   structurally impossible on an unfilled skeleton ('incomplete', which only
-//   fill.js and edit.js set, from content gaps); it cannot certify one that is
-//   merely wrong. If that proves insufficient, stage 1 should pass a validation
-//   result assembly can attest to; assembly does not start validating.
+// - STATUS. Only 'draft' and 'valid' are accepted: the two statuses a skeleton
+//   validation writes (validate.js:180). 'incomplete' is set only by filling
+//   (fill.js:256, edit.js:48), and nothing in src/ produces 'conflict'.
+//   Assembly cannot confirm that a supplied status reflects a feasibility
+//   validation it did not run: it refuses a status no skeleton stage 1 can
+//   produce; it cannot certify one that is merely wrong. If that proves
+//   insufficient, stage 1 should pass a validation result assembly can attest
+//   to; assembly does not start validating.
 // - MENUS. The plan supplies selected excursion ids; the resolved place,
 //   connection and on-site hours live on the sequence. Assembly compares ids
-//   against the plan and resolved requirements against the skeleton. It does
+//   against the plan, the plan's fixed excursions against the sequence's in
+//   full, and every resolved requirement against its calendar blocks. It does
 //   not revalidate menu definitions: that needs the package, which it may not
-//   read.
+//   read. Nor does it compare travel-block durations, which come from the
+//   buffer ruleset it must not recompute.
 //
 // THE TRIP ID. `plan.variantId` composes the legacy Trip.id and the
 // spec.routeTemplateId mirror. That preserves today's id construction for the
@@ -58,9 +64,12 @@ import { ENGINE_VERSION } from './scheduleConfig.js';
 //
 // Pure: no randomness, no Date.now().
 
-const STATUSES = new Set(['draft', 'valid', 'conflict', 'incomplete']);
-// Set only by fill.js:256 / edit.js:48 from content gaps; impossible before filling.
-const FILL_ONLY_STATUSES = new Set(['incomplete']);
+// What validateSkeleton writes (validate.js:180). Why the other Trip statuses are refused, by name.
+const STATUSES = new Set(['draft', 'valid']);
+const REFUSED_STATUSES = {
+  incomplete: 'is set only by filling and cannot belong to an unfilled skeleton',
+  conflict: 'has no producer in the engine'
+};
 const STRETCH_WARNING = 'nights_above_package_max';
 
 const INPUT_KEYS = new Set(['sequence', 'plan', 'skeleton', 'spec', 'status', 'contentVersion', 'bufferRuleset', 'history']);
@@ -103,7 +112,65 @@ function withoutUndefined(obj) {
   return Object.fromEntries(Object.entries(obj).filter(([, v]) => v !== undefined));
 }
 
-/** §2 checks 1–8: the sequence, the plan and the skeleton describe the same journey. */
+const requirement = ({ placeId, connectionId, hoursOnSite }) => ({ placeId, connectionId, hoursOnSite });
+
+/**
+ * §2 check 7: the calendar matches the resolved requirements, fixed and selected,
+ * not just their names. Each requirement owns exactly three blocks, built by
+ * schedule.js:286–288; the skeleton's ex: blocks must be exactly those, with the
+ * requirement's stop, places, connection and visit length. Travel-block
+ * durations are not compared: they come from the buffer ruleset.
+ */
+function checkExcursionBlocks(entries, skeleton) {
+  const exBlocks = skeleton.days.flatMap((d) => d.blocks).filter((b) => typeof b.id === 'string' && b.id.startsWith('ex:'));
+  const byId = new Map();
+  for (const b of exBlocks) {
+    if (byId.has(b.id)) refuse(`skeleton has duplicate block ${b.id}`);
+    byId.set(b.id, b);
+  }
+
+  const expected = new Set();
+  for (const e of entries) {
+    // Two requirements to one place on one entry would share block ids and could not be told apart.
+    const places = e.excursions.map((x) => x.placeId);
+    const repeated = places.find((p, i) => places.indexOf(p) !== i);
+    if (repeated !== undefined) refuse(`entry ${e.stopKey} has more than one excursion requirement to ${repeated}; their blocks cannot be told apart`);
+
+    for (const x of e.excursions) {
+      const what = `excursion requirement ${e.stopKey} -> ${x.placeId}`;
+      const block = (part) => {
+        const id = `ex:${e.stopKey}:${x.placeId}:${part}`;
+        expected.add(id);
+        const b = byId.get(id);
+        if (!b) refuse(`${what} disagrees with the skeleton: sequence requires it, skeleton has no block ${id}`);
+        return b;
+      };
+      const field = (id, name, required, actual) => agree(`${what}: ${id} ${name}`, required, 'sequence', actual, 'skeleton');
+      const leg = (part, from, to) => {
+        const b = block(part);
+        field(b.id, 'type', 'travel', b.type);
+        field(b.id, 'anchor.stopId', e.stopKey, b.anchor?.stopId);
+        field(b.id, 'connectionId', x.connectionId, b.transport?.connectionId);
+        field(b.id, 'fromPlaceId', from, b.transport?.fromPlaceId);
+        field(b.id, 'toPlaceId', to, b.transport?.toPlaceId);
+      };
+
+      leg('out', e.placeId, x.placeId);
+      const site = block('site');
+      field(site.id, 'type', 'open', site.type);
+      field(site.id, 'anchor.stopId', e.stopKey, site.anchor?.stopId);
+      field(site.id, 'placeId', x.placeId, site.placeId);
+      // The scheduler's own rounding: siteMin = Math.round(hoursOnSite * 60) (schedule.js:268), durationHours = minutes / 60 (:164).
+      field(site.id, 'visit minutes', Math.round(x.hoursOnSite * 60), Math.round(site.durationHours * 60));
+      leg('back', x.placeId, e.placeId);
+    }
+  }
+
+  const unexpected = [...byId.keys()].filter((id) => !expected.has(id));
+  if (unexpected.length > 0) refuse(`skeleton has ex: block(s) no requirement accounts for: ${unexpected.join(', ')}`);
+}
+
+/** §2 checks 1–8 and 12: the sequence, the plan and the skeleton describe the same journey. */
 function checkConsistency(sequence, plan, skeleton) {
   const entries = sequence.entries;
   const stops = plan.stops;
@@ -118,22 +185,22 @@ function checkConsistency(sequence, plan, skeleton) {
     agree(`stop ${e.stopKey} nights`, e.nights, 'sequence', s.nights, 'plan');
     // 6. Selected excursion ids (absent means none, on both).
     agree(`stop ${e.stopKey} selectedExcursionIds`, e.selectedExcursionIds ?? [], 'sequence', s.selectedExcursionIds ?? [], 'plan');
+    // 12. Fixed excursions: the plan stop holds them in full, so they are compared in full, order preserved.
+    agree(
+      `stop ${e.stopKey} fixed excursions`,
+      e.excursions.filter((x) => x.source === 'fixed').map(requirement),
+      'sequence',
+      (s.excursions ?? []).map(requirement),
+      'plan'
+    );
   });
 
   // 5. The ordered journey connections, the return leg included.
   const legs = [...entries.map((e) => e.inboundConnectionId), sequence.returnConnectionId];
   agree('journey connections', legs, 'sequence', plan.connectionIds, 'plan.connectionIds');
 
-  // 7. Every resolved excursion requirement is on the skeleton's calendar (out, site, back).
-  const blockIds = new Set(skeleton.days.flatMap((d) => d.blocks.map((b) => b.id)));
-  for (const e of entries) {
-    for (const x of e.excursions) {
-      for (const part of ['out', 'site', 'back']) {
-        const id = `ex:${e.stopKey}:${x.placeId}:${part}`;
-        if (!blockIds.has(id)) refuse(`excursion requirement ${e.stopKey} -> ${x.placeId} disagrees with the skeleton: sequence requires it, skeleton has no block ${id}`);
-      }
-    }
-  }
+  // 7. The calendar matches every resolved excursion requirement, and carries no other ex: block.
+  checkExcursionBlocks(entries, skeleton);
 
   // 8. The skeleton's stop summaries: same stops, order and nights as the sequence.
   const summary = (xs) => xs.map(({ stopKey, placeId, nights }) => ({ stopKey, placeId, nights }));
@@ -163,8 +230,10 @@ export function assembleSkeletonTripFromSequence(input) {
   const { sequence, plan, skeleton, spec, status, contentVersion, bufferRuleset, history } = input;
 
   // Lifecycle inputs.
-  if (!STATUSES.has(status)) refuse(`status ${show(status)} is not one of ${[...STATUSES].join(', ')}`);
-  if (FILL_ONLY_STATUSES.has(status)) refuse(`status ${show(status)} is set only by filling and cannot belong to an unfilled skeleton`);
+  if (!STATUSES.has(status)) {
+    const why = Object.hasOwn(REFUSED_STATUSES, status) ? ` (it ${REFUSED_STATUSES[status]})` : '';
+    refuse(`status ${show(status)} is refused${why}; accepted: ${[...STATUSES].join(', ')}`);
+  }
   if (contentVersion !== 'none') refuse(`contentVersion ${show(contentVersion)}: an unfilled skeleton's content version is "none"`);
   if (!Array.isArray(history) || history.length > 0) refuse(`history ${show(history)}: assembly writes [] and never appends`);
   if (typeof bufferRuleset?.id !== 'string') refuse('bufferRuleset has no id');
