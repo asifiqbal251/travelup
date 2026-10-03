@@ -503,6 +503,52 @@ test('inputs are explicit: undeclared or missing fields, a filled content versio
   refuses(extraSpec, /undeclared spec field\(s\) routePlan/);
 });
 
+test('input refusals: absent or non-object assembly input is refused by name', () => {
+  for (const input of [undefined, null, false, 0, '', 'invalid', []]) {
+    assert.throws(() => assembleSkeletonTripFromSequence(input), {
+      name: 'Error', message: 'assemble: input must be an object'
+    });
+  }
+});
+
+test('input refusals: a null or non-object spec is refused by name without mutation', () => {
+  for (const spec of [null, false, 0, '', 'invalid', []]) {
+    const input = { ...base(), spec };
+    const before = structuredClone(input);
+    assert.throws(() => assembleSkeletonTripFromSequence(input), {
+      name: 'Error', message: 'assemble: spec must be an object'
+    });
+    assert.deepEqual(input, before);
+  }
+});
+
+test('input refusals: missing destination or unusable destination id is refused by name without mutation', () => {
+  const cases = [
+    undefined, null, {}, { kind: 'country' },
+    ...[undefined, null, '', '  \t', 0, false, [], {}].map((id) => ({ kind: 'country', id }))
+  ];
+  for (const destination of cases) {
+    const input = base();
+    if (destination === undefined) delete input.spec.destination;
+    else input.spec.destination = destination;
+    const before = structuredClone(input);
+    assert.throws(() => assembleSkeletonTripFromSequence(input), {
+      name: 'Error', message: 'assemble: spec.destination.id must be a non-empty string'
+    });
+    assert.deepEqual(input, before);
+  }
+});
+
+test('input refusals: accepted destination ids pass through verbatim without catalogue validation', () => {
+  const input = base();
+  input.spec.destination = { kind: 'place', id: ' custom-place ' };
+  const before = structuredClone(input);
+  const trip = assemble(input);
+  assert.equal(trip.id, `door2:vancouver: custom-place :10:${input.plan.variantId}`);
+  assert.deepEqual(trip.spec.destination, before.spec.destination);
+  assert.deepEqual(input, before);
+});
+
 test('versions: the bufferRuleset is the declared input; content is "none"', () => {
   const trip = assemble({ ...base(), bufferRuleset: { ...DEFAULT_BUFFER_RULESET, id: 'buffer_ruleset_test', version: 7 } });
   assert.equal(trip.versions.bufferRuleset, 'buffer_ruleset_test@7');

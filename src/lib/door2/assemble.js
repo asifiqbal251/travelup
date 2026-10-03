@@ -224,7 +224,8 @@ function checkConsistency(sequence, plan, skeleton) {
  * @returns {{ok: true, value: Trip}}
  */
 export function assembleSkeletonTripFromSequence(input) {
-  const undeclared = Object.keys(input ?? {}).filter((k) => !INPUT_KEYS.has(k));
+  if (input === null || typeof input !== 'object' || Array.isArray(input)) refuse('input must be an object');
+  const undeclared = Object.keys(input).filter((k) => !INPUT_KEYS.has(k));
   if (undeclared.length > 0) refuse(`undeclared input(s) ${undeclared.join(', ')}`);
   for (const key of INPUT_KEYS) if (input[key] === undefined) refuse(`missing input ${key}`);
   const { sequence, plan, skeleton, spec, status, contentVersion, bufferRuleset, history } = input;
@@ -239,8 +240,12 @@ export function assembleSkeletonTripFromSequence(input) {
   if (typeof bufferRuleset?.id !== 'string') refuse('bufferRuleset has no id');
 
   // Traveller intent: only the declared fields; the mirrors are accepted and ignored.
+  if (spec === null || typeof spec !== 'object' || Array.isArray(spec)) refuse('spec must be an object');
   const unknownSpec = Object.keys(spec).filter((k) => !CARRIED_SPEC_KEYS.has(k) && !MIRROR_SPEC_KEYS.has(k));
   if (unknownSpec.length > 0) refuse(`undeclared spec field(s) ${unknownSpec.join(', ')}`);
+  if (typeof spec.destination?.id !== 'string' || spec.destination.id.trim() === '') {
+    refuse('spec.destination.id must be a non-empty string');
+  }
 
   checkConsistency(sequence, plan, skeleton);
 
