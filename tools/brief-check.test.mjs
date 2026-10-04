@@ -3,7 +3,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { readFileSync, writeFileSync, mkdtempSync, mkdirSync } from 'node:fs';
+import { copyFileSync, symlinkSync, realpathSync, writeFileSync, mkdtempSync, mkdirSync } from 'node:fs';
+import { createHash } from 'node:crypto';
 import { tmpdir } from 'node:os';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -11,12 +12,12 @@ import { fileURLToPath } from 'node:url';
 const TOOL = fileURLToPath(new URL('./brief-check.mjs', import.meta.url));
 const REPO = dirname(dirname(TOOL));
 
-function run(markdown, { repo = REPO } = {}) {
+function run(markdown, { repo = REPO, tool = TOOL } = {}) {
   const dir = mkdtempSync(join(tmpdir(), 'bc-'));
   const f = join(dir, 'b.md');
   writeFileSync(f, markdown);
   try {
-    return { out: execFileSync(process.execPath, [TOOL, f, '--repo', repo], { encoding: 'utf8' }), code: 0 };
+    return { out: execFileSync(process.execPath, [tool, f, ...(repo === null ? [] : ['--repo', repo])], { encoding: 'utf8' }), code: 0 };
   } catch (e) {
     return { out: (e.stdout ?? '') + (e.stderr ?? ''), code: e.status };
   }
@@ -154,11 +155,15 @@ test('T15: ambiguous shorthand is unsupported, not silently verified', () => {
   assert.match(out, /more than one module has this shorthand name/);
 });
 
-test('T16: the real assembly brief no longer produces the eleven false failures', () => {
-  const brief = join(REPO, 'docs/build-brief-f4-assembly-bridge-2026-10-01.md');
-  const { out, code } = run(readFileSync(brief, 'utf8'));
+test('T16: the eleven historical assembly-brief claims need no untracked document', () => {
+  // Preserve the eleven formerly false claims in the test itself. Their source
+  // and test modules are all tracked; the historical brief is not required.
+  const names = ['assembleSkeletonTrip', 'dayTripCopy', 'flowCanadaA', 'flowCanadaB',
+    'flowDayTripCopyGuard', 'flowDayTrips', 'flowDayTripsPersist',
+    'flowDiscardConfirm', 'flowEdits', 'flowIntake', 'flowPersistence'];
+  const { out, code } = run(names.map((name) => `Uses \`${name}\`.`).join('\n'));
   assert.equal(code, 0, out);
-  assert.match(out, /FAILED 0/);
+  assert.match(out, /VERIFIED 11   FAILED 0   UNSUPPORTED 0/);
 });
 
 test('T17: a JSDoc-shaped string is not a type declaration, but real JSDoc is', () => {
@@ -193,4 +198,74 @@ test('T19: unparseable source fails with the documented exit code', () => {
   const { out, code } = run('Nothing else to check.', { repo });
   assert.equal(code, 2, out);
   assert.match(out, /cannot parse source/);
+});
+
+test('T20: module, literal and JSDoc matches do not prove an invented owner', () => {
+  const repo = fixtureRepo({
+    'tests/flowIntake.test.js': 'export const reason = "stored_reason";\n/** @typedef {Object} DeclaredType */\nexport const value = 1;\n'
+  });
+  for (const name of ['flowIntake', 'stored_reason', 'DeclaredType']) {
+    const { out, code } = run(`Uses \`nonexistentObject.${name}\`.`, { repo });
+    assert.equal(code, 0, out);
+    assert.match(out, /VERIFIED 0   FAILED 0   UNSUPPORTED 1/);
+  }
+});
+
+test('T21: JSDoc declaration names and types count, descriptions never do', () => {
+  const repo = fixtureRepo({
+    'src/a.js': '/** @typedef {Object} DeclaredType typedefProseOnly\n * @property {ImportedType} declaredField propertyProseOnly\n */\nexport const value = 1;\n/** @param {Array<ReferencedType>} argumentName parameterProseOnly\n * @returns {ReturnType} returnProseOnly\n */\nexport function accept(argumentName) {}\n'
+  });
+  for (const name of ['DeclaredType', 'declaredField', 'ImportedType', 'ReferencedType', 'ReturnType']) {
+    const good = run(`Uses \`${name}\`.`, { repo });
+    assert.equal(good.code, 0, good.out);
+    assert.match(good.out, /VERIFIED 1   FAILED 0   UNSUPPORTED 0/);
+  }
+  for (const name of ['typedefProseOnly', 'propertyProseOnly', 'parameterProseOnly', 'returnProseOnly']) {
+    const bad = run(`Uses \`${name}\`.`, { repo });
+    assert.equal(bad.code, 2, bad.out);
+    assert.match(bad.out, /VERIFIED 0   FAILED 1   UNSUPPORTED 0/);
+  }
+});
+
+test('T22: repo-relative hashes are checked and disambiguate duplicate basenames', () => {
+  const source = 'export const existing = 1;\n';
+  const repo = fixtureRepo({
+    'src/shared.js': source,
+    'tests/shared.js': 'export const other = 2;\n',
+    'nested/src/shared.js': 'export const nested = 3;\n'
+  });
+  const hash = createHash('sha256').update(source).digest('hex');
+  const wrong = run('`src/shared.js` has SHA-256 `' + 'a'.repeat(64) + '`.', { repo });
+  assert.equal(wrong.code, 2, wrong.out);
+  assert.match(wrong.out, /sha256 src\/shared\.js — actual/);
+  for (const digest of [hash, hash.slice(0, 8) + '…' + hash.slice(-8)]) {
+    const right = run('`src/shared.js` has SHA-256 `' + digest + '`.', { repo });
+    assert.equal(right.code, 0, right.out);
+    assert.match(right.out, /VERIFIED 2   FAILED 0   UNSUPPORTED 0/);
+  }
+});
+
+test('T23: default repo discovery works when the tool itself is in a path with spaces', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'bc tool with spaces-'));
+  for (const folder of ['src', 'tests', 'tools']) mkdirSync(join(dir, folder));
+  writeFileSync(join(dir, 'src/a.js'), 'export const real = 1;\n');
+  const tool = join(dir, 'tools/brief-check.mjs');
+  copyFileSync(TOOL, tool);
+  symlinkSync(join(REPO, 'node_modules'), join(dir, 'node_modules'), 'dir');
+  const { out, code } = run('Uses `real`.', { repo: null, tool });
+  assert.equal(code, 0, out);
+  assert.ok(out.includes(`repo=${realpathSync(dir)}`), out);
+  assert.match(out, /VERIFIED 1   FAILED 0   UNSUPPORTED 0/);
+});
+
+test('T24: a qualified claim requires its full access path, not just the last owner', () => {
+  const repo = fixtureRepo({ 'src/a.js': 'export function read(spec) { return spec.totalDays + actual.spec.totalDays; }\n' });
+  for (const name of ['spec.totalDays', 'actual.spec.totalDays']) {
+    const good = run(`Uses \`${name}\`.`, { repo });
+    assert.equal(good.code, 0, good.out);
+    assert.match(good.out, /VERIFIED 1   FAILED 0   UNSUPPORTED 0/);
+  }
+  const bad = run('Uses `invented.spec.totalDays`.', { repo });
+  assert.equal(bad.code, 0, bad.out);
+  assert.match(bad.out, /VERIFIED 0   FAILED 0   UNSUPPORTED 1/);
 });

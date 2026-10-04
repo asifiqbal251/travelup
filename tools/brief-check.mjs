@@ -53,14 +53,31 @@ const files = [];
   }
 })(REPO);
 const codeFiles = files.filter((f) => /\.(js|jsx)$/.test(f));
-const resolveFile = (name) => files.filter((f) => f === join(REPO, name) || f.endsWith('/' + name));
+const resolveFile = (name) => files.filter((f) => name.includes('/')
+  ? f === join(REPO, name)
+  : f.endsWith('/' + name));
 
 // Parse syntax rather than removing strings and comments with successive regexes.
 // A quote inside another string used to consume real code later in the file.
 const namesInCode = new Set();
 const qualifiedAccesses = new Set();
 const literalValues = [];
-const jsdocLines = new Set();
+const jsdocNames = new Set();
+// Traverse only declaration names and parsed types; never the tag's prose.
+function collectJSDocNames(node) {
+  if (!node) return;
+  if (ts.isJSDocPropertyTag(node) || ts.isJSDocParameterTag(node) ||
+      ts.isJSDocTypedefTag(node) || ts.isJSDocReturnTag(node)) {
+    collectJSDocNames(node.name);
+    collectJSDocNames(node.typeExpression);
+    return;
+  }
+  if (ts.isIdentifier(node)) jsdocNames.add(node.text);
+  ts.forEachChild(node, collectJSDocNames);
+}
+const accessPath = (node) => ts.isIdentifier(node) ? node.text
+  : ts.isPropertyAccessExpression(node) && accessPath(node.expression)
+    ? `${accessPath(node.expression)}.${node.name.text}` : null;
 const moduleNames = new Map();
 for (const file of codeFiles) {
   const shortName = file.split('/').pop().replace(/(?:\.test)?\.jsx?$/, '');
@@ -82,7 +99,7 @@ for (const file of codeFiles) {
   };
   function visit(node) {
     for (const tag of ts.getJSDocTags(node)) {
-      if (['typedef', 'property', 'param', 'returns'].includes(tag.tagName.text)) jsdocLines.add(tag.getText(source));
+      if (['typedef', 'property', 'param', 'returns'].includes(tag.tagName.text)) collectJSDocNames(tag);
     }
     if (ts.isVariableDeclaration(node) || ts.isParameter(node)) addBinding(node.name);
     if (ts.isFunctionDeclaration(node) || ts.isFunctionExpression(node) ||
@@ -94,7 +111,8 @@ for (const file of codeFiles) {
     if (ts.isBinaryExpression(node) && node.operatorToken.kind === ts.SyntaxKind.EqualsToken) addName(node.left);
     if (ts.isPropertyAccessExpression(node)) {
       addName(node.name);
-      if (ts.isIdentifier(node.expression)) qualifiedAccesses.add(`${node.expression.text}.${node.name.text}`);
+      const path = accessPath(node);
+      if (path) qualifiedAccesses.add(path);
     }
     if (ts.isStringLiteral(node) || ts.isNoSubstitutionTemplateLiteral(node) ||
         ts.isTemplateHead(node) || ts.isTemplateMiddle(node) || ts.isTemplateTail(node)) {
@@ -104,9 +122,6 @@ for (const file of codeFiles) {
   }
   visit(source);
 }
-const jsdocText = [...jsdocLines].join('\n');
-const hasWord = (text, word) => new RegExp(`\\b${word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`).test(text);
-
 // ---------- 1. file and file:line ----------
 for (const m of brief.matchAll(/`([\w./-]+\.(?:js|jsx|json|md))(?::(-?\d+)(?:\s*[–\-—]\s*(-?\d+))?)?`/g)) {
   const [, name, l1, l2] = m;
@@ -130,7 +145,7 @@ for (const m of brief.matchAll(/`([\w./-]+\.(?:js|jsx|json|md))(?::(-?\d+)(?:\s*
 
 // ---------- 2. sha256 ----------
 const sha = (p) => createHash('sha256').update(readFileSync(p)).digest('hex');
-for (const m of brief.matchAll(/`([\w.-]+\.(?:json|js))`[^\n]{0,160}?`?\b([0-9a-f]{8,64})(?:\s*[….]{1,3}\s*([0-9a-f]{6,24}))?\b/g)) {
+for (const m of brief.matchAll(/`([\w./-]+\.(?:json|jsx|js|md))`[^\n]{0,160}?`?\b([0-9a-f]{8,64})(?:\s*[….]{1,3}\s*([0-9a-f]{6,24}))?\b/g)) {
   const [, name, a, b] = m;
   const hits = resolveFile(name);
   if (!hits.length) continue;
@@ -156,22 +171,24 @@ for (const m of brief.matchAll(/`([A-Za-z_$][\w$]{2,}(?:\.[A-Za-z_$][\w$]*)*)(?:
   if (BUILTIN.has(leaf) || leaf.length < 3) continue;
   if (!/[a-z]/.test(leaf)) continue;                       // SCREAMING_CASE constants: skip
   const modules = moduleNames.get(leaf) ?? [];
-  if (modules.length === 1) { add('VERIFIED', id, 'a module in this repo'); continue; }
-  if (modules.length > 1) { add('UNSUPPORTED', id, 'more than one module has this shorthand name'); continue; }
-  if (!namesInCode.has(leaf)) {
-    const asLiteral = literalValues.includes(leaf);
-    const asType = hasWord(jsdocText, leaf);
-    if (asLiteral) { add('VERIFIED', id, 'a string literal in code (e.g. a reason code)'); continue; }
-    if (asType) { add('VERIFIED', id, 'a JSDoc type or property'); continue; }
-    add('FAILED', id, 'no occurrence in code, string literals or JSDoc');
+  const asLiteral = literalValues.includes(leaf);
+  const asType = jsdocNames.has(leaf);
+  // An unqualified module/type/literal match says nothing about a claimed owner.
+  // For qualified claims, require the complete access path in actual code.
+  if (parts.length > 1) {
+    if (qualifiedAccesses.has(id)) add('VERIFIED', id, `${id} appears in code`);
+    else if (namesInCode.has(leaf) || modules.length || asLiteral || asType) {
+      const owner = parts.slice(0, -1).join('.');
+      add('UNSUPPORTED', id, `"${leaf}" exists but is never seen on "${owner}" — may be misattributed`);
+    } else add('FAILED', id, 'no occurrence in code, string literals or JSDoc');
     continue;
   }
-  if (parts.length === 1) { add('VERIFIED', id, 'defined in code'); continue; }
-  // A real property access ties the leaf to this owner; a leaf alone does not.
-  const owner = parts[parts.length - 2];
-  qualifiedAccesses.has(`${owner}.${leaf}`)
-    ? add('VERIFIED', id, `${owner}.${leaf} appears in code`)
-    : add('UNSUPPORTED', id, `"${leaf}" exists but is never seen on "${owner}" — may be misattributed`);
+  if (modules.length === 1) { add('VERIFIED', id, 'a module in this repo'); continue; }
+  if (modules.length > 1) { add('UNSUPPORTED', id, 'more than one module has this shorthand name'); continue; }
+  if (namesInCode.has(leaf)) { add('VERIFIED', id, 'defined in code'); continue; }
+  if (asLiteral) { add('VERIFIED', id, 'a string literal in code (e.g. a reason code)'); continue; }
+  if (asType) { add('VERIFIED', id, 'a JSDoc type or property'); continue; }
+  add('FAILED', id, 'no occurrence in code, string literals or JSDoc');
 }
 
 // ---------- report ----------
