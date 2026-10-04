@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
 import { parseClock } from '../../src/lib/door2/calendarConvention.js';
-import { classifySlot, eligibleItemsForBlock, normalisePace } from '../../src/lib/door2/fill.js';
+import { classifySlot, eligibleItemsForBlock, fillTrip, normalisePace } from '../../src/lib/door2/fill.js';
 import { PILOT_CONTENT, PILOT_CONTENT_VERSION } from '../../src/lib/door2/pilotContent.js';
 import { PILOT_PLACES, PILOT_ROUTE_PACKAGES } from '../../src/lib/door2/pilotData.js';
 import { PILOT_DATA, buildFilledTrip, buildSkeletonTrip } from '../../src/lib/door2/planner.js';
@@ -308,6 +308,26 @@ test('G15: slot classification and pace normalisation', () => {
   assert.equal(normalisePace('Fast-paced'), 'fast');
   assert.equal(normalisePace('balanced'), 'neutral');
   assert.equal(normalisePace(undefined), 'neutral');
+});
+
+test('G15b: filler and independent validator agree at slot thresholds and on real scheduled blocks', () => {
+  const request = spec({ kind: 'country', id: 'PE' }, 10);
+  const base = buildSkeletonTrip(request, PILOT_DATA, DRAFTS);
+  const starts = ['00:00', '11:59', '12:00', '12:01', '16:59', '17:00', '23:59'];
+  const durations = [0.01, 2.99, 3, 3.01, 7.99, 8, 8.01, 12];
+  for (const startTime of starts) for (const durationHours of durations) {
+    const skeleton = clone(base);
+    const target = skeleton.days.flatMap((day) => day.blocks).find((block) => block.type === 'open');
+    Object.assign(target, { startTime, durationHours });
+    const filled = fillTrip(skeleton, request, []);
+    const gap = filled.days.flatMap((day) => day.blocks).find((block) => block.id === target.id);
+    assert.equal(gap.gap.slot, classifySlot(target));
+    assert.doesNotThrow(() => validateFilled(filled, skeleton, request, []), `${startTime}, ${durationHours}h`);
+    gap.gap.slot = gap.gap.slot === 'full' ? 'short' : 'full';
+    assert.throws(() => validateFilled(filled, skeleton, request, []), /gap slot .* expected/);
+  }
+  // Empty-shelf filling also cross-checks every untouched real scheduled slot.
+  assert.doesNotThrow(() => validateFilled(fillTrip(base, request, []), base, request, []));
 });
 
 test('U1: a block with 8+ open hours but an afternoon start never receives a full-day item', () => {

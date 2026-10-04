@@ -400,6 +400,51 @@ test('R4.12 reconcile never reinstates a rejected item; identical skeleton keeps
   assert.deepEqual([rec.activitiesLost, rec.activitiesAdded, rec.keptItemsAffected], [[], [], []]);
 });
 
+// Deliberately constructed boundary case, not a traveller-reachable failure:
+// a pin cannot retain its slot, while another same-place slot is left vacant.
+function failedPinWithVacancy() {
+  const oldTrip = must(pinActivity(filled(spec(PERU, 10)), 'op:pc_cusco:d1'));
+  const victim = blockById(oldTrip, 'op:pc_cusco:d1').anchor.contentId;
+  const vacancy = blockById(oldTrip, 'op:pc_cusco:d2');
+  vacancy.type = 'open';
+  vacancy.anchor.contentId = null;
+  delete vacancy.activity;
+  delete vacancy.locked;
+  const skeleton = buildTripFromRoutePlan(oldTrip.spec, oldTrip.routePlan, PILOT_DATA, DRAFTS);
+  const target = blockById(skeleton, 'op:pc_cusco:d1');
+  target.startTime = '17:00';
+  target.durationHours = 3;
+  return { oldTrip, skeleton, victim };
+}
+
+test('R4.13: failed pinned content is excluded from this refill, without mutating choices or inputs', () => {
+  const { oldTrip, skeleton, victim } = failedPinWithVacancy();
+  const before = structuredClone({ oldTrip, skeleton, content: PILOT_CONTENT });
+  const result = reconcile(oldTrip, skeleton);
+  assert.deepEqual(result.keptItemsAffected.map((item) => item.contentId), [victim]);
+  assert.equal(contentIds(result.trip).includes(victim), false, 'a failed pin must not silently move into the vacancy');
+  assert.ok(result.activitiesLost.some((item) => item.contentId === victim));
+  assert.equal(result.activitiesAdded.some((item) => item.contentId === victim), false);
+  assert.deepEqual(result.trip.spec.choices, oldTrip.spec.choices, 'refill exclusion is not a permanent rejection');
+  assert.deepEqual({ oldTrip, skeleton, content: PILOT_CONTENT }, before);
+
+  // The exclusion is local: an independent rebuild with the original slot can keep it.
+  const validSkeleton = buildTripFromRoutePlan(oldTrip.spec, oldTrip.routePlan, PILOT_DATA, DRAFTS);
+  const later = reconcile(oldTrip, validSkeleton);
+  assert.equal(blockById(later.trip, 'op:pc_cusco:d1').anchor.contentId, victim);
+  assert.equal(blockById(later.trip, 'op:pc_cusco:d1').locked, true);
+  assert.deepEqual(later.keptItemsAffected, []);
+});
+
+test('R4.14: unpinned content remains eligible for refill after its old slot is lost', () => {
+  const { oldTrip, skeleton, victim } = failedPinWithVacancy();
+  blockById(oldTrip, 'op:pc_cusco:d1').locked = false;
+  oldTrip.spec.choices.pinned = [];
+  const result = reconcile(oldTrip, skeleton);
+  assert.deepEqual(result.keptItemsAffected, []);
+  assert.equal(blockById(result.trip, 'op:pc_cusco:d2').anchor.contentId, victim);
+});
+
 // ---------------------------------------------------------------------------
 // Phase 2.5: previewAddOptional / previewRemoveOptional / previewMoveOptional
 

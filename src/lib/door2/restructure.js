@@ -214,10 +214,12 @@ export function reconcile(oldTrip, newSkeleton, content = PILOT_CONTENT) {
     if (!block.locked) tryKeep(block);
   }
   // 3. Fill the rest with today's fillTrip scoring. Items already placed are
-  // excluded by fill's own used-item scan; rejected items are excluded by
-  // filtering the shelf it may choose from.
+  // excluded by fill's own used-item scan. A failed pin must not silently move
+  // to a different block during refill; exclude it for this rebuild only.
   const rejected = new Set(choices.rejected ?? []);
-  const shelf = rejected.size > 0 ? content.filter((i) => !rejected.has(i.id)) : content;
+  const blocked = new Set(keptItemsAffected.map((item) => item.contentId));
+  const shelf = rejected.size > 0 || blocked.size > 0
+    ? content.filter((item) => !rejected.has(item.id) && !blocked.has(item.id)) : content;
   const filled = fillTrip(working, spec, shelf);
   validateFilled(filled, skeleton, spec, content);
 

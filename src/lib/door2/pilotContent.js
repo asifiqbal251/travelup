@@ -339,8 +339,10 @@ const ITEMS = [
     source: AUTHORED_JP },
 
   // ---------------- Eastern Canada (C2, Phase C Route Family #2) ----------------
-  // All authored: WhereNova has no Base44 Destination bundle for these five
-  // places. Enough for minimum-to-typical trip lengths plus evenings.
+  // These items were authored for Door 2, rather than extracted from a bundle.
+  // The 30 Sep M0 audit records a Montréal and Québec City bundle
+  // (6a7e984900175cfc5fe20059); review item-level overlap before migration.
+  // Enough for minimum-to-typical trip lengths plus evenings.
   //   Toronto 9 · Montréal 8 · Québec City 6 · Ottawa 5 · Niagara Falls 5 = 33
   // The Toronto hub stop on the Niagara spur draws from the Toronto items:
   // content is keyed by placeId, and fill.js won't repeat an item in a trip.
@@ -477,8 +479,9 @@ const ITEMS = [
     arrivalFriendly: true, source: AUTHORED_CA },
 
   // ---------------- Japan (E2, Phase E Route Family #3) ----------------
-  // Copied verbatim from e2-japan-content-2026-09-29.js. All authored: WhereNova's only
-  // Japan bundle has Tokyo-based days and nothing standalone for these five places.
+  // Copied verbatim from e2-japan-content-2026-09-29.js; these items are authored.
+  // The 30 Sep M0 audit records Kyoto days t5–t7 in the Tokyo & Kyoto bundle.
+  // These items were not extracted from it; review item-level overlap before migration.
   //   Kyoto 10 (a base, the optional spur) · Nikko 2 · Kamakura 2 · Nara 2 · Osaka 2 = 18
   // Kyoto items are ordinary base items. Nikko, Kamakura, Nara and Osaka are excursion
   // sites: the scheduler gives each ONE site block of its hoursOnSite (Nikko 4, Kamakura 6,
