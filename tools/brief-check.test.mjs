@@ -48,7 +48,16 @@ test('T4: a missing file fails', () => {
 });
 
 test('T5: an invented field fails — the v1 checker passed this one', () => {
-  const { out, code } = run('The field is `spec.requestedDays`.');
+  // F5 legitimately adds requestedDays to a failure detail. Keep this negative
+  // fixture independent of future application names, with a real owner/control.
+  const repo = mkdtempSync(join(tmpdir(), 'bcrepo-'));
+  mkdirSync(join(repo, 'src'));
+  mkdirSync(join(repo, 'tests'));
+  writeFileSync(join(repo, 'src/spec.js'), 'export const spec = { totalDays: 10 }; export const days = spec.totalDays;');
+  const good = run('The field is `spec.totalDays`.', { repo });
+  assert.equal(good.code, 0);
+  assert.match(good.out, /VERIFIED 1/);
+  const { out, code } = run('The field is `spec.requestedDays`.', { repo });
   assert.equal(code, 2);
   assert.match(out, /x spec\.requestedDays/);   // assert the finding, not its wording
 });

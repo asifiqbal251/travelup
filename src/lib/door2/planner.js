@@ -423,3 +423,126 @@ export function buildFilledTrip(spec, data = PILOT_DATA, options = {}) {
   validateFilled(filled, skeleton, spec, content);
   return filled;
 }
+
+// F5 is deliberately a separate entry: historical builders (including automatic
+// calls) keep their frozen routing/scheduling contract. Only new page builds use
+// bounded selection. Input routeTemplateId is a constraint, never inferred from
+// the route stamped onto a built Trip.
+function assessF5(spec, data, options) {
+  const reviewPolicy = options.reviewPolicy ?? 'strict';
+  const served = { ...data, routePackages: data.routePackages.filter((p) => !p.held) };
+  const global = selectRoutes({ ...spec, routeTemplateId: null }, served, { reviewPolicy });
+  const candidates = [];
+  const failures = new Map();
+  // Keep full-catalogue coverage diagnostics. A transport refusal, however,
+  // describes only the old selector's first candidate, not all possibilities.
+  if (!global.ok && global.state !== FAILURE_STATES.CONNECTION_UNREVIEWED) {
+    return { candidates, failure: global };
+  }
+  for (const pkg of served.routePackages) {
+    const destinationMatches = spec.destination.kind === 'country'
+      ? pkg.countryId === spec.destination.id : pkg.placeIds.includes(spec.destination.id);
+    if (!destinationMatches || !(spec.requiredPlaceIds ?? []).every((id) => pkg.placeIds.includes(id))) continue;
+    const built = buildRouteResult(pkg, spec, served);
+    if (built.missing || (reviewPolicy === 'strict' && built.unreviewedIds.length > 0)) {
+      failures.set(pkg.id, makeFailure(FAILURE_STATES.CONNECTION_UNREVIEWED,
+        [{ action: 'check_back_later', detail: "We're still verifying transport on this route" }],
+        { detail: { routePackageId: pkg.id, ...(built.missing
+          ? { reason: 'missing', ...built.missing }
+          : { reason: 'unreviewed', connectionIds: built.unreviewedIds }) } }));
+      continue;
+    }
+    try {
+      // The scheduler computes the actual minimum, including travel timing and
+      // fixed excursions. Do not approximate it from authored night counts.
+      const probe = scheduleRoute(built.routeResult, { ...spec, totalDays: 1 }, served, options);
+      const minDays = probe.ok ? probe.value.minDays : probe.detail.minDays;
+      const maxDays = minDays + built.routeResult.stops.reduce((n, s) => n + s.maxNights - s.minNights, 0);
+      candidates.push({ route: built.routeResult, minDays, maxDays });
+    } catch (err) {
+      if (!(err instanceof PackageAuthoringError)) throw err;
+      failures.set(pkg.id, makeFailure(FAILURE_STATES.ROUTE_NOT_SUPPORTED,
+        [{ action: 'check_back_later', detail: "We're still working on this route" }],
+        { detail: { ...err.detail, routePackageId: pkg.id } }));
+    }
+  }
+  const selected = spec.routeTemplateId ? findRoutePackage(served, spec.routeTemplateId) : null;
+  if (spec.routeTemplateId && (!selected || !served.routePackages.includes(selected) ||
+      (!candidates.some((c) => c.route.routePackageId === selected.id) && !failures.has(selected.id)))) {
+    return { candidates, failure: makeFailure(FAILURE_STATES.ROUTE_NOT_SUPPORTED,
+      [{ action: 'check_back_later', detail: 'Choose another route or revise the places you require' }],
+      { message: "Your chosen route doesn't support this combination of places.",
+        detail: { reason: 'route_constraint_incompatible', routePackageId: spec.routeTemplateId } }) };
+  }
+  const failure = selected ? failures.get(selected.id) : candidates.length === 0 ? failures.values().next().value : null;
+  return { candidates, selected, failure, alternativeOrder: global.ok ? global.value.map((r) => r.routePackageId) : candidates.map((c) => c.route.routePackageId) };
+}
+
+function chooseF5(spec, data, options) {
+  const assessed = assessF5(spec, data, options);
+  const fits = (c) => c.minDays <= spec.totalDays && spec.totalDays <= c.maxDays;
+  // Stable sort retains served catalogue order for equal effective minima.
+  const fitting = assessed.candidates.filter(fits).sort((a, b) => b.minDays - a.minDays);
+  const alternateOptions = fitting.map((c) => ({ action: 'alternate_route', routePackageId: c.route.routePackageId,
+    detail: `Try the ${packageName(data, c.route.routePackageId)} route instead` }));
+  if (assessed.failure) {
+    // Legacy coverage suggestions can name routes that do not cover the input.
+    // Only assessed, fitting alternatives are actionable in the F5 page.
+    const retained = assessed.failure.options.filter((o) => o.action !== 'alternate_route');
+    return { failure: { ...assessed.failure, options: [...retained, ...alternateOptions].length
+      ? [...retained, ...alternateOptions] : [{ action: 'check_back_later', detail: 'Try another destination or revise your required places' }] } };
+  }
+  const eligible = assessed.selected
+    ? assessed.candidates.filter((c) => c.route.routePackageId === assessed.selected.id) : assessed.candidates;
+  const winner = assessed.selected ? eligible.find(fits) : fitting[0];
+  if (winner) return { winner, alternatives: fitting.filter((c) => c !== winner)
+    // Keep the familiar simpler-route alternatives; F5 ranking chooses the
+    // default, while this existing presentation order still exposes core routes.
+    .sort((a, b) => assessed.alternativeOrder.indexOf(a.route.routePackageId) - assessed.alternativeOrder.indexOf(b.route.routePackageId))
+    .map((c) => c.route) };
+
+  const supportedRanges = eligible.map((c) => ({ routePackageId: c.route.routePackageId, minDays: c.minDays, maxDays: c.maxDays }));
+  const minimum = Math.min(...eligible.map((c) => c.minDays));
+  const maximum = Math.max(...eligible.map((c) => c.maxDays));
+  const tooShort = spec.totalDays < minimum;
+  const reason = tooShort ? 'too_short' : spec.totalDays > maximum ? 'too_long' : 'duration_gap';
+  const targets = [...new Set(eligible.map((c) => spec.totalDays < c.minDays ? c.minDays : c.maxDays))]
+    .sort((a, b) => Math.abs(a - spec.totalDays) - Math.abs(b - spec.totalDays) || a - b);
+  const adjustments = tooShort
+    ? [{ action: 'extend', days: minimum - spec.totalDays, detail: `+${minimum - spec.totalDays} days` }]
+    : targets.map((totalDays) => ({ action: 'set_duration', totalDays, detail: `Build a supported ${totalDays}-day trip` }));
+  const ranges = [...new Set(eligible.map((c) => `${c.minDays}–${c.maxDays}`))].join(' or ');
+  const state = tooShort ? (spec.requiredPlaceIds?.length >= 2 ? FAILURE_STATES.REQUIRED_PLACE_CONFLICT : FAILURE_STATES.DURATION_TOO_SHORT)
+    : FAILURE_STATES.ROUTE_NOT_SUPPORTED;
+  return { failure: makeFailure(state, [...adjustments, ...alternateOptions], {
+    message: `These routes support ${ranges} days. You asked for ${spec.totalDays}.`,
+    detail: { reason, requestedDays: spec.totalDays, supportedRanges,
+      ...(tooShort ? { minDays: minimum, extraDaysNeeded: minimum - spec.totalDays } : {}) }
+  }) };
+}
+
+/**
+ * Bounded new-intake entry. Returns a transient {trip, alternatives} wrapper or
+ * an existing FailureResult. All legacy builders above remain unchanged.
+ * @param {TripSpec} spec
+ * @param {typeof PILOT_DATA} [data]
+ * @param {Object} [options] Existing builder/scheduler options; no selection is inferred from saved stops.
+ */
+export function buildF5Trip(spec, data = PILOT_DATA, options = {}) {
+  const decision = chooseF5(spec, data, options);
+  if (decision.failure) {
+    const removals = [];
+    for (const placeId of spec.requiredPlaceIds ?? []) {
+      const reduced = { ...spec, requiredPlaceIds: spec.requiredPlaceIds.filter((id) => id !== placeId) };
+      // Reassess with the SAME route constraint. Do not promise a fix that would
+      // secretly choose a different route, or merely lead to another refusal.
+      if (chooseF5(reduced, data, options).winner) removals.push({ action: 'remove_place', placeId,
+        detail: `Drop ${getPlace(data.places, placeId)?.name ?? placeId} to fit ${spec.totalDays} days` });
+    }
+    return { ...decision.failure, options: [...decision.failure.options, ...removals] };
+  }
+  const served = { ...data, routePackages: data.routePackages.filter((p) => !p.held) };
+  const trip = buildFilledTrip({ ...spec, routeTemplateId: decision.winner.route.routePackageId }, served, options);
+  if (trip.ok === false) return trip;
+  return { ok: true, value: { trip, alternatives: decision.alternatives } };
+}

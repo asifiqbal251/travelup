@@ -4,6 +4,7 @@
 //
 // Absence is asserted with assert.ok(x === null, msg), never
 // assert.equal(node, null): see flowRouteSwitchA.test.js.
+import { mountAndChooseCore } from './helpers/f5Flows.js';
 import { test, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { loadDoor2PlanModule, mountAndBuildViaIntake, teardown } from './helpers/domHarness.js';
@@ -25,7 +26,7 @@ const altStops = (button) => button.querySelectorAll('span')[1].textContent.spli
 test('F1: intake → Canada → 10 days → Build my trip renders a real trip', async () => {
   await mountAndBuildViaIntake(M, { destination: 'Canada', totalDays: 10 });
   assert.ok(screen.queryByText(/can't be built yet/) === null, 'no failure banner');
-  assert.deepEqual(glanceStops(), ['Toronto', 'Montréal', 'Québec City'], 'the canonical corridor is the default');
+  assert.deepEqual(glanceStops(), ['Toronto', 'Niagara Falls', 'Toronto', 'Ottawa', 'Montréal', 'Québec City'], 'F5 defaults to both optionals in the canonical direction');
   assert.ok(screen.getByText(/10 days ·/), 'a 10-day itinerary');
 });
 
@@ -56,7 +57,7 @@ test('F2: the route alternatives are distinguishable, and each builds when click
 });
 
 test('F3: switching to the reverse direction with no edits applies at once and reverses the stops', async () => {
-  const { user } = await mountAndBuildViaIntake(M, { destination: 'Canada', totalDays: 10 });
+  const { user } = await mountAndChooseCore(M, { destination: 'Canada', totalDays: 10 });
   const before = glanceStops();
   const reverse = altButtons().find((b) => altName(b) === 'Québec City to Toronto');
   assert.ok(reverse, 'the reverse direction is offered');

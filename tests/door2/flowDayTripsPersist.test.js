@@ -8,8 +8,9 @@
 // every classified case is covered in dayTripCopy.test.js on constructed refusals.
 import { test, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { loadDoor2PlanModule, mountAndBuildViaIntake, teardown } from './helpers/domHarness.js';
+import { loadDoor2PlanModule, mountAndBuildViaIntake, mountWithBuiltTrip, teardown } from './helpers/domHarness.js';
 import {
+  japanSpec,
   addDayTrip,
   exBlockIds,
   glanceDayTripRow,
@@ -34,7 +35,7 @@ function assertNoEngineVocabulary(state) {
 const itineraryText = () => [...document.querySelectorAll('h3')].map((h) => h.parentElement.textContent).join('|');
 
 test('C2 (DOM): at 13 days (Tokyo stretched past its maximum) Nikko previews, adds and saves; nothing is logged', async () => {
-  const { user } = await mountAndBuildViaIntake(M, { destination: 'Japan', totalDays: 13 });
+  const { user } = await mountWithBuiltTrip(M, japanSpec(13));
   const t0 = await savedTrip(M, user);
   assert.equal(t0.routePlan.stops.find((s) => s.key === 'tokyo_base').nights, 11, 'Tokyo is stretched to 11 nights (max 10)');
 

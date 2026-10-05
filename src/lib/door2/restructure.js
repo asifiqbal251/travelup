@@ -332,7 +332,9 @@ export function previewAdjustNights(trip, stopKey, delta, options = {}) {
     const message =
       target.maxNights === 0
         ? `${name} is a stop on the way; the route doesn't stay overnight there.`
-        : `${plural(target.maxNights, 'night')} is the most that works in ${name}.`;
+        : target.nights > target.maxNights
+          ? `You're already staying ${target.nights} nights in ${name}, beyond this route's usual limit of ${target.maxNights}. We can't add another night here.`
+          : `${plural(target.maxNights, 'night')} is the most that works in ${name}.`;
     return refusal('allocation_maximum', message, alternatives);
   }
   if (delta < 0 && target.nights <= target.minNights && target.minNights > (authoredMinNights(ctx.data, rp, target.key) ?? target.minNights)) {

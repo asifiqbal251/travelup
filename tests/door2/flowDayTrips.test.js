@@ -1,8 +1,9 @@
 // E3c C1: the traveller-facing day-trip picker on the real page (real clicks,
 // queried by visible text). Japan is the only family with day-trip menus today.
+import { mountAndChooseCore } from './helpers/f5Flows.js';
 import { test, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { loadDoor2PlanModule, mountAndBuildViaIntake, teardown } from './helpers/domHarness.js';
+import { loadDoor2PlanModule, teardown } from './helpers/domHarness.js';
 import {
   addDayTrip,
   contentIds,
@@ -19,7 +20,7 @@ after(teardown);
 const { screen, within } = await import('@testing-library/react');
 
 test('C1a: Japan 10 days offers Nikko and Kamakura from the Tokyo base, nothing chosen; adding Nikko goes through the preview card and lands in the itinerary and the glance', async () => {
-  const { user } = await mountAndBuildViaIntake(M, { destination: 'Japan', totalDays: 10 });
+  const { user } = await mountAndChooseCore(M, { destination: 'Japan', totalDays: 10 });
 
   assert.deepEqual(dayTripHeadings(), ['+ Add a day trip from Tokyo'], 'one section, for the one base with a menu');
   const section = dayTripSection('Tokyo');
@@ -51,7 +52,7 @@ test('C1a: Japan 10 days offers Nikko and Kamakura from the Tokyo base, nothing 
 });
 
 test('C1a (hub): with the Kyoto spur, Tokyo base and Kyoto each get a section and the 1-night Tokyo hub gets none', async () => {
-  const { user } = await mountAndBuildViaIntake(M, { destination: 'Japan', totalDays: 10 });
+  const { user } = await mountAndChooseCore(M, { destination: 'Japan', totalDays: 10 });
   await user.click(screen.getAllByRole('button').find((b) => b.textContent === 'KyotoAdd'));
   await user.click(await screen.findByRole('button', { name: 'Add Kyoto' }));
   await user.click((await screen.findAllByRole('button', { name: 'Use this plan' }))[0]);
@@ -75,7 +76,7 @@ test('C1a (hub): with the Kyoto spur, Tokyo base and Kyoto each get a section an
 });
 
 test('C1b: Remove previews and waits; "Keep my trip" leaves the trip identical; "Use this plan" removes it and the displaced activity comes back', async () => {
-  const { user } = await mountAndBuildViaIntake(M, { destination: 'Japan', totalDays: 10 });
+  const { user } = await mountAndChooseCore(M, { destination: 'Japan', totalDays: 10 });
   const t0 = await savedTrip(M, user);
   await addDayTrip(user, 'Tokyo', 'Nikko');
   const t1 = await savedTrip(M, user);

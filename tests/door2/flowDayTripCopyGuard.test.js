@@ -1,10 +1,11 @@
 // E3c C6: across every day-trip state on the real page (menu, both previews, the
 // refusal, after adding, both confirms, and another preview with a day trip selected)
 // no engine vocabulary reaches the screen.
+import { mountAndChooseCore } from './helpers/f5Flows.js';
 import { test, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { loadDoor2PlanModule, mountAndBuildViaIntake, teardown } from './helpers/domHarness.js';
-import { glanceDayTripRow, menuRow, routeAlternativeButtons } from './helpers/dayTrips.js';
+import { loadDoor2PlanModule, mountWithBuiltTrip, teardown } from './helpers/domHarness.js';
+import { japanSpec, glanceDayTripRow, menuRow, routeAlternativeButtons } from './helpers/dayTrips.js';
 
 const M = await loadDoor2PlanModule();
 after(teardown);
@@ -21,7 +22,7 @@ function assertNoEngineVocabulary(state) {
 }
 
 test('C6: at 13 days (Tokyo stretched past its maximum) the Nikko preview shows no engine vocabulary', async () => {
-  const { user } = await mountAndBuildViaIntake(M, { destination: 'Japan', totalDays: 13 });
+  const { user } = await mountWithBuiltTrip(M, japanSpec(13));
   assertNoEngineVocabulary('menu (13 days)');
   await user.click(menuRow('Tokyo', 'Nikko'));
   await screen.findByText('Add a day trip to Nikko');
@@ -30,7 +31,7 @@ test('C6: at 13 days (Tokyo stretched past its maximum) the Nikko preview shows 
 });
 
 test('C6: no engine vocabulary on screen in any day-trip state', async () => {
-  const { user } = await mountAndBuildViaIntake(M, { destination: 'Japan', totalDays: 10 });
+  const { user } = await mountAndChooseCore(M, { destination: 'Japan', totalDays: 10 });
   assertNoEngineVocabulary('menu');
 
   await user.click(menuRow('Tokyo', 'Nikko'));

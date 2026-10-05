@@ -2,9 +2,8 @@ import { useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
 import PageNotFound from "@/lib/PageNotFound";
 import { makeDayLighter, swapActivity, swapDays, swappableDays, undo } from "@/lib/door2/edit";
-import { PILOT_DATA, buildFilledTrip } from "@/lib/door2/planner";
+import { PILOT_DATA, buildF5Trip } from "@/lib/door2/planner";
 import { PILOT_PLACES, PILOT_ROUTE_FAMILIES, PILOT_ROUTE_PACKAGES } from "@/lib/door2/pilotData";
-import { selectRoutes } from "@/lib/door2/route";
 import { backToMove, dayTripChangeLines, pickMove, positionLabel, proposalColumns } from "@/lib/door2/proposalView";
 import {
   applyProposal,
@@ -1196,7 +1195,7 @@ function SwapDayPicker({ picker, onConfirm, onClose }) {
 
 // ── Results: refine sheet ───────────────────────────────────────────────────
 
-function RefineSheet({ open, onClose, form, toggleInterest, setPace, requiredPlaces, toggleRequired, onApply }) {
+function RefineSheet({ open, onClose, form, toggleInterest, setPace, setDuration, requiredPlaces, toggleRequired, onApply }) {
   if (!open) return null;
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60" onClick={onClose}>
@@ -1213,6 +1212,18 @@ function RefineSheet({ open, onClose, form, toggleInterest, setPace, requiredPla
           >
             ×
           </button>
+        </div>
+
+        <div>
+          <p className="text-xs font-medium text-slate-400 mb-2">Trip length</p>
+          <div className="flex items-center gap-4">
+            <button type="button" onClick={() => setDuration(Math.max(1, Number(form.totalDays) - 1))}
+              className="px-3 py-1.5 rounded-lg bg-slate-700 text-white hover:bg-slate-600">−</button>
+            <span className="text-sm text-white">{form.totalDays} days</span>
+            <button type="button" onClick={() => setDuration(Math.min(60, Number(form.totalDays) + 1))}
+              className="px-3 py-1.5 rounded-lg bg-slate-700 text-white hover:bg-slate-600">+</button>
+          </div>
+          <p className="text-xs text-slate-500 mt-2">Door to door — travel days included.</p>
         </div>
 
         <div>
@@ -1279,7 +1290,7 @@ function RefineSheet({ open, onClose, form, toggleInterest, setPace, requiredPla
 
 // ── Results: failure panel ──────────────────────────────────────────────────
 
-function FailurePanel({ result, thrown, onExtend, onRemovePlace }) {
+function FailurePanel({ result, thrown, onExtend, onRemovePlace, onSetDuration, onChangeRoute }) {
   if (thrown) {
     return (
       <div className="rounded-xl bg-red-950/60 border border-red-700/50 p-5 space-y-2">
@@ -1320,6 +1331,17 @@ function FailurePanel({ result, thrown, onExtend, onRemovePlace }) {
                     Add {opt.days} day{opt.days !== 1 ? "s" : ""}
                   </button>
                   <span className="text-sm text-slate-400 pt-1">{opt.detail}</span>
+                </div>
+              );
+            }
+            if (opt.action === "set_duration" || opt.action === "alternate_route") {
+              return (
+                <div key={i} className="flex items-start gap-3">
+                  <button type="button"
+                    onClick={() => opt.action === "set_duration" ? onSetDuration(opt.totalDays) : onChangeRoute(opt.routePackageId)}
+                    className="shrink-0 text-sm px-3 py-1.5 rounded-lg bg-slate-700 text-white hover:bg-slate-600 font-medium transition-colors">
+                    {opt.action === "set_duration" ? `Use ${opt.totalDays} days` : opt.detail}
+                  </button>
                 </div>
               );
             }
@@ -1435,8 +1457,11 @@ export default function Door2Plan() {
     setCurrentSpec(spec);
     let result = null;
     let thrown = null;
+    let alternatives = [];
     try {
-      result = buildFilledTrip(spec, PILOT_DATA, { reviewPolicy: "allow_drafts" });
+      const planned = buildF5Trip(spec, PILOT_DATA, { reviewPolicy: "allow_drafts" });
+      result = planned.ok ? planned.value.trip : planned;
+      alternatives = planned.ok ? planned.value.alternatives : [];
     } catch (err) {
       thrown = String(err?.message ?? err);
     }
@@ -1446,28 +1471,7 @@ export default function Door2Plan() {
     setBlockErrors({});
     setDayErrors({});
     setDayNotices({});
-    if (!thrown && result && result.ok !== false) {
-      const routes = selectRoutes(spec, PILOT_DATA, { reviewPolicy: "allow_drafts" });
-      // selectRoutes ignores spec.totalDays, so keep only alternatives that
-      // actually build at the chosen length.
-      const buildable = routes.ok
-        ? routes.value.slice(1).filter((alt) => {
-            try {
-              const r = buildFilledTrip(
-                { ...spec, routeTemplateId: alt.routePackageId },
-                PILOT_DATA,
-                { reviewPolicy: "allow_drafts" },
-              );
-              return r && r.ok !== false;
-            } catch {
-              return false;
-            }
-          })
-        : [];
-      setRouteAlternatives(buildable.slice(0, 2));
-    } else {
-      setRouteAlternatives([]);
-    }
+    setRouteAlternatives(alternatives.slice(0, 2));
   }
 
   function runBuild(values) {
@@ -1481,7 +1485,7 @@ export default function Door2Plan() {
       interests: values.interests,
       pace: values.pace,
       budget: "mid",
-      routeTemplateId: null,
+      routeTemplateId: currentSpec?.routeTemplateId ?? null,
       stops: [],
       requiredPlaceIds: values.required,
       choices: { pinned: [], rejected: [], placed: [] },
@@ -1509,7 +1513,11 @@ export default function Door2Plan() {
   }
 
   function handleExtend(days) {
-    const newForm = { ...form, totalDays: Number(form.totalDays) + days };
+    handleSetDuration(Number(form.totalDays) + days);
+  }
+
+  function handleSetDuration(totalDays) {
+    const newForm = { ...form, totalDays };
     setForm(newForm);
     runBuild(newForm);
   }
@@ -1879,6 +1887,8 @@ export default function Door2Plan() {
                   thrown={tripResult.thrown}
                   onExtend={handleExtend}
                   onRemovePlace={handleRemovePlace}
+                  onSetDuration={handleSetDuration}
+                  onChangeRoute={handleChangeRoute}
                 />
                 <button
                   type="button"
@@ -2000,6 +2010,7 @@ export default function Door2Plan() {
         form={form}
         toggleInterest={toggleInterest}
         setPace={(pace) => updateForm({ pace })}
+        setDuration={(totalDays) => updateForm({ totalDays })}
         requiredPlaces={requiredPlaces}
         toggleRequired={toggleRequired}
         onApply={handleApplyRefine}

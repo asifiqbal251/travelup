@@ -243,18 +243,18 @@ test('EF1-T4: no proposal raises a stop above max(authored maximum, its nights b
   assert.ok(checked > 200, `only ${checked} stops checked`);
   assert.deepEqual(violations, [], violations.slice(0, 10).join('\n'));
 
-  // Today's wording, unchanged, at and above the maximum.
+  // F5: above-maximum wording reports the allocated nights; ordinary maximum stays unchanged.
   const tokyo = build(JP, 14, 'tokyo_city');
   assert.deepEqual(R.previewAdjustNights(tokyo, 'tokyo_base', +1), {
     ok: false,
     reason: 'change_not_feasible',
     why: 'allocation_maximum',
-    message: '10 nights is the most that works in Tokyo.',
+    message: "You're already staying 12 nights in Tokyo, beyond this route's usual limit of 10. We can't add another night here.",
     alternatives: []
   });
   const ny = R.previewAdjustNights(build(NY, 14, 'nyc_city'), 'nyc_base', +1);
   assert.equal(ny.why, 'allocation_maximum');
-  assert.equal(ny.message, '10 nights is the most that works in New York.');
+  assert.equal(ny.message, "You're already staying 13 nights in New York, beyond this route's usual limit of 10. We can't add another night here.");
   const peru = build(PE, 15, 'peru_classic');
   assert.deepEqual(nightsOf(peru).pc_cusco, 4, 'Cusco sits exactly at its maximum');
   const cusco = R.previewAdjustNights(peru, 'pc_cusco', +1);

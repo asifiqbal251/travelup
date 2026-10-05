@@ -4,6 +4,7 @@
 //
 // Absence is asserted with assert.ok(x === null, msg), never
 // assert.equal(node, null): see flowRouteSwitchA.test.js.
+import { mountAndChooseCore } from './helpers/f5Flows.js';
 import { test, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { loadDoor2PlanModule, mountAndBuildViaIntake, teardown } from './helpers/domHarness.js';
@@ -27,7 +28,7 @@ function nightsButtonFor(placeName) {
 }
 
 test('F4: after an edit, switching direction asks first; "Keep my trip" changes nothing, "Switch route" rebuilds', async () => {
-  const { user } = await mountAndBuildViaIntake(M, { destination: 'Canada', totalDays: 10 });
+  const { user } = await mountAndChooseCore(M, { destination: 'Canada', totalDays: 10 });
   await user.click(screen.getAllByText('Swap')[0]);
   await screen.findByText('Swapped');
   const before = pageText();
@@ -50,7 +51,7 @@ test('F4: after an edit, switching direction asks first; "Keep my trip" changes 
 });
 
 test('F5: on a reversed trip, adding Ottawa puts it between Montréal and Toronto and keeps the direction', async () => {
-  const { user } = await mountAndBuildViaIntake(M, { destination: 'Canada', totalDays: 10 });
+  const { user } = await mountAndChooseCore(M, { destination: 'Canada', totalDays: 10 });
   await user.click(reverseButton());
   await screen.findByText('Route changed');
   assert.deepEqual(glanceStops(), ['Québec City', 'Montréal', 'Toronto']);
@@ -102,7 +103,7 @@ const titlesAt = (placeName) =>
     .map((b) => b.parentElement.querySelector('p.font-medium').textContent);
 
 test('F7: an activity swapped at Québec City survives adding Ottawa mid-route; undoing both restores the original byte-identical', async () => {
-  const { user } = await mountAndBuildViaIntake(M, { destination: 'Canada', totalDays: 10 });
+  const { user } = await mountAndChooseCore(M, { destination: 'Canada', totalDays: 10 });
   assert.deepEqual(glanceStops(), ['Toronto', 'Montréal', 'Québec City']);
   const strip = (t) => { const { history, ...rest } = t; return rest; };
 
@@ -140,7 +141,7 @@ test('F7: an activity swapped at Québec City survives adding Ottawa mid-route; 
 
 // H7: the route-switch warning is not just for swaps; a structural edit puts history in the same state.
 test('F4b: after a structural edit (adding Ottawa), switching direction also asks first', async () => {
-  const { user } = await mountAndBuildViaIntake(M, { destination: 'Canada', totalDays: 10 });
+  const { user } = await mountAndChooseCore(M, { destination: 'Canada', totalDays: 10 });
   await user.click(await screen.findByText('Ottawa'));
   await user.click(await screen.findByText('Add Ottawa'));
   await user.click((await screen.findAllByText('Use this plan'))[0]);

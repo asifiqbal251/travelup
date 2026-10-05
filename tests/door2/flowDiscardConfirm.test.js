@@ -1,5 +1,6 @@
 // E3c C4: a rebuild that would throw away the traveller's work (edits or day
 // trips) asks first. Covers route switch (C4a) and Refine (C4b) on the real page.
+import { mountAndChooseCore } from './helpers/f5Flows.js';
 import { test, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { loadDoor2PlanModule, mountAndBuildViaIntake, teardown } from './helpers/domHarness.js';
@@ -79,7 +80,7 @@ test('C4b: Refine with no edits and no day trips rebuilds straight away, with no
 });
 
 test('C4b: Refine after only an edit (no day trips) confirms with the edits-only wording', async () => {
-  const { user } = await mountAndBuildViaIntake(M, { destination: 'Japan', totalDays: 10 });
+  const { user } = await mountAndChooseCore(M, { destination: 'Japan', totalDays: 10 });
   await user.click(screen.getByRole('button', { name: '8 nights' }));
   await user.click(await screen.findByText('More time here (+1 night)'));
   await user.click((await screen.findAllByRole('button', { name: 'Use this plan' }))[0]);

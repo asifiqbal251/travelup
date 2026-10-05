@@ -1,9 +1,10 @@
 // B1 (intake -> build), B2 (duration_too_short recovery), B3 (required-place
 // conflict recovery) and B11 (NYC/Tokyo smoke) — driven through the real
 // Door2Plan page.
+import { japanSpec } from './helpers/dayTrips.js';
 import { test, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { loadDoor2PlanModule, mountDoor2Plan, teardown } from './helpers/domHarness.js';
+import { loadDoor2PlanModule, mountDoor2Plan, mountWithBuiltTrip, teardown } from './helpers/domHarness.js';
 
 const M = await loadDoor2PlanModule();
 after(teardown);
@@ -146,12 +147,10 @@ test('B11b: Tokyo 10 days builds with no content gaps (E5-4)', async () => {
   assert.equal(gaps.length, 0, 'no content gaps after the E5-4 content pass');
 });
 
-test('B11c: Tokyo 18 days builds and honestly shows its 2 known content gaps', async () => {
-  await mountDoor2Plan(M);
-  const user = userEvent.setup();
-  await user.click(await screen.findByText('Japan'));
-  await setDays(user, 18);
-  await user.click(screen.getByRole('button', { name: 'Build my trip' }));
+// F5 no longer creates stretched Tokyo-only defaults; preserve the historical
+// two-gap presentation check by opening that exact older trip through Continue.
+test('B11c: saved Tokyo-only 18 days honestly shows its 2 known content gaps', async () => {
+  await mountWithBuiltTrip(M, japanSpec(18));
   await screen.findByText('Your trip at a glance');
   assert.ok(screen.queryByText(/can't be built yet/) === null, 'Tokyo builds (no thrown/failure)');
   const gaps = screen.queryAllByText(/Nothing curated for this slot yet/);
