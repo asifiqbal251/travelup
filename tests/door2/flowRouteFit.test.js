@@ -49,6 +49,8 @@ test('F5 explicit reverse Canada → five days → extend to six retains exact d
   const reverse=screen.getAllByRole('button').find(b=>b.textContent.startsWith('Québec City to Toronto ·'));
   assert.ok(reverse); await user.click(reverse); await refine(user,5);
   assert.ok(await screen.findByText(/can't be built yet/));
+  assert.ok(screen.getByText('+1 day',{exact:true}));
+  assert.equal(screen.queryByText('+1 days',{exact:true}),null);
   await user.click(screen.getByRole('button',{name:'Add 1 day'}));
   await assertRoute(user,rev,6); assert.deepEqual(glanceStops(),['Québec City','Montréal','Toronto']);
   // A later fitting request still holds the constraint (automatic12 picks both optionals).

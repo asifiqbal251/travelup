@@ -509,7 +509,7 @@ function chooseF5(spec, data, options) {
   const targets = [...new Set(eligible.map((c) => spec.totalDays < c.minDays ? c.minDays : c.maxDays))]
     .sort((a, b) => Math.abs(a - spec.totalDays) - Math.abs(b - spec.totalDays) || a - b);
   const adjustments = tooShort
-    ? [{ action: 'extend', days: minimum - spec.totalDays, detail: `+${minimum - spec.totalDays} days` }]
+    ? [{ action: 'extend', days: minimum - spec.totalDays, detail: `+${minimum - spec.totalDays} ${minimum - spec.totalDays === 1 ? 'day' : 'days'}` }]
     : targets.map((totalDays) => ({ action: 'set_duration', totalDays, detail: `Build a supported ${totalDays}-day trip` }));
   const ranges = [...new Set(eligible.map((c) => `${c.minDays}–${c.maxDays}`))].join(' or ');
   const state = tooShort ? (spec.requiredPlaceIds?.length >= 2 ? FAILURE_STATES.REQUIRED_PLACE_CONFLICT : FAILURE_STATES.DURATION_TOO_SHORT)

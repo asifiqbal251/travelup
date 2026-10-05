@@ -48,6 +48,7 @@ test('F5 all served route boundaries are inclusive, with usable lower/upper adju
     const short = buildF5Trip(spec(country, min - 1, id));
     assert.equal(short.state, 'duration_too_short', id);
     assert.equal(short.options.find((o) => o.action === 'extend').days, 1);
+    assert.equal(short.options.find((o) => o.action === 'extend').detail, '+1 day', id);
     const long = buildF5Trip(spec(country, max + 1, id));
     assert.equal(long.state, 'route_not_supported', id);
     assert.deepEqual(long.options.filter((o) => o.action === 'set_duration').map((o) => o.totalDays), [max]);
@@ -159,6 +160,7 @@ test('F5 equal-minimum ties follow catalogue order and required-place removals s
   const r=buildF5Trip(constrained);
   assert.equal(r.state,'required_place_conflict');
   assert.equal(r.options.find(o=>o.action==='extend').days,2);
+  assert.equal(r.options.find(o=>o.action==='extend').detail,'+2 days');
   assert.deepEqual(r.options.filter(o=>o.action==='remove_place').map(o=>o.placeId),['huaraz']);
   const blocked=buildF5Trip({...constrained,routeTemplateId:'peru_classic+huaraz@after_lima_in'});
   assert.equal(blocked.options.some(o=>o.action==='remove_place'),false,'dropping a requirement cannot shorten the explicit Huaraz route');
