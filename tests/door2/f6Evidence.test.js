@@ -42,3 +42,36 @@ for(const [name,mutate] of [['missing evidence',t=>delete t.evidence],['marker m
 test('S5 unknown evidence displays recorded reasons read-only; malformed unknown refuses load',()=>{const bytes=store();const t=estimated().value.trip;t.evidence.rulesetVersion=t.versions.connectionEvidence='future@2';t.evidence.entries[0].code='future';assert.equal(inspectEvidence(t).readOnly,true);localStorage.setItem('door2_drafts_v1',JSON.stringify([{id:'x',savedAt:time,trip:t}]));let before=bytes();const r=loadDraftTrip('x');assert.equal(r.evidenceReadOnly,true);assert.equal(bytes(),before);assert.throws(()=>saveDraftTrip(t,'new'),/evidence_version_unsupported/);t.evidence.generatedAt='invalid';localStorage.setItem('door2_drafts_v1',JSON.stringify([{id:'x',savedAt:time,trip:t}]));before=bytes();assert.equal(loadDraftTrip('x').compatible,false);assert.equal(bytes(),before);});
 test('S6 optional validation also protects legacy v6 envelopes and preserves v5 refusal',()=>{store();const t=estimated().value.trip;localStorage.setItem('',JSON.stringify([{id:'x',savedAt:time,trip:t}]));assert.equal(loadDraftTrip('x').compatible,true);delete t.evidence;localStorage.setItem('',JSON.stringify([{id:'x',savedAt:time,trip:t}]));assert.equal(loadDraftTrip('x').compatible,false);t.versions.schema='door2-v5';localStorage.setItem('',JSON.stringify([{id:'x',savedAt:time,trip:t}]));assert.match(loadDraftTrip('x').reason,/older trip format/);});
 test('S8 evidence changes stale fingerprint; ordinary legacy fingerprints stay same',()=>{const t=estimated().value.trip;const fp=tripFingerprint(t);t.evidence.entries[0].values.recordedText='Changed';assert.notEqual(tripFingerprint(t),fp);const legacy=buildFilledTrip(spec,fixture());assert.equal(tripFingerprint(legacy),tripFingerprint(clone(legacy)));});
+
+
+test('review regression: numeric legacy connection ID remains inspectable, savable and loadable', () => {
+  const bytes = store();
+  const t = buildFilledTrip(spec, fixture());
+  blocks(t)[0].transport.connectionId = 42;
+  assert.deepEqual(inspectEvidence(t), { ok: true, legacy: true });
+  const id = saveDraftTrip(t, 'legacy numeric ID');
+  const before = bytes();
+  const loaded = loadDraftTrip(id);
+  assert.equal(loaded.compatible, true);
+  assert.equal(blocks(loaded.trip)[0].transport.connectionId, 42);
+  assert.equal(bytes(), before);
+  localStorage.setItem('', JSON.stringify([{ id: 'legacy-v6', savedAt: time, trip: t }]));
+  const v6 = bytes();
+  assert.equal(loadDraftTrip('legacy-v6').compatible, true);
+  assert.equal(bytes(), v6);
+});
+
+test('review regression: numeric estimated connection ID gives structured rejection without writes', () => {
+  const bytes = store();
+  const t = estimated().value.trip;
+  blocks(t)[0].transport.connectionId = 42;
+  const status = inspectEvidence(t);
+  assert.equal(status.ok, false);
+  assert.equal(status.reason, 'evidence_invalid');
+  assert.throws(() => saveDraftTrip(t, 'bad'), e => e.check === 'shape');
+  assert.equal(bytes(), null);
+  localStorage.setItem('', JSON.stringify([{ id: 'bad', savedAt: time, trip: t }]));
+  const before = bytes();
+  assert.equal(loadDraftTrip('bad').compatible, false);
+  assert.equal(bytes(), before);
+});

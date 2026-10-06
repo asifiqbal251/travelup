@@ -26,6 +26,8 @@ export function orientAdmitted(c, from, to) {
   return result;
 }
 export function distanceKm(a, b) {
+  // Longitude has no geographic meaning at either pole. Avoid cosine residue.
+  if (a.lat === b.lat && Math.abs(a.lat) === 90) return 0;
   const rad = Math.PI / 180;
   const dLat = (b.lat - a.lat) * rad;
   const dLon = (((b.lng - a.lng + 540) % 360) - 180) * rad;

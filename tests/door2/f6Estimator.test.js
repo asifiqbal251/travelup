@@ -82,3 +82,11 @@ test('E3/P5 arbitrary source-backed origin is request-local and retained only as
   const without = buildF6Trip(spec, d, { connectionContext: context() });
   assert.equal(without.detail.reason, 'origin_unknown');
 });
+
+
+for (const lat of [90, -90]) test('review hardening: equivalent pole positions cannot create a flight '+lat, () => {
+  assert.equal(distanceKm({lat,lng:0}, {lat,lng:90}), 0);
+  assert.throws(() => estimateConnection(input('o','a',[[lat,0],[lat,90]]), context()), e => e.reason === 'estimation_domain_unsupported');
+  assert.ok(distanceKm({lat:lat*.99999,lng:0}, {lat:lat*.99999,lng:90}) > 0);
+  assert.ok(Math.abs(distanceKm({lat,lng:0}, {lat:-lat,lng:90}) - Math.PI*6371) < 1e-8);
+});

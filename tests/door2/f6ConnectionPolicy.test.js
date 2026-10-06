@@ -83,3 +83,53 @@ test('P1/P2 independent validation refuses copied estimates under both policies'
     assert.equal(validateSkeleton(result, route, spec, { ...d, connections: clone(d.connections) }, { reviewPolicy }).detail.reason, 'estimator_not_admitted');
   }
 });
+
+
+test('review regression: explicit curated route retains estimated alternatives assessed by F5', () => {
+  const d = fixture();
+  d.places.b = { ...d.places.a, id: 'b', name: 'b', coordinates: { lat: 0, lng: 18 } };
+  d.routePackages.push({ ...clone(d.routePackages[0]), id: 'B', name: 'B', placeIds: ['b'], stops: [{ id: 'sb', placeId: 'b', minNights: 2, maxNights: 5, excursions: [] }] });
+  const c = context([input('o', 'b', [[0,0],[0,18]]), input('b', 'o', [[0,18],[0,0]])]);
+  const before = clone({ d, c });
+  const prepared = { ...d, connections: [...d.connections, ...c.estimates.map(i => estimateConnection(i, c))] };
+  for (const routeTemplateId of [null, 'r']) {
+    const request = { ...spec, totalDays: 5, routeTemplateId };
+    const actual = buildF6Trip(request, d, { connectionContext: c, content: [] });
+    const expected = buildF5Trip(request, prepared, { content: [] });
+    assert.equal(actual.ok, true);
+    assert.deepEqual(actual.value.alternatives, expected.value.alternatives);
+    assert.ok(actual.value.alternatives.some(r => r.routePackageId === 'B'));
+    if (routeTemplateId) { assert.equal(actual.value.trip.spec.routeTemplateId, 'r'); assert.deepEqual(actual.value.trip.routePlan, expected.value.trip.routePlan); }
+  }
+  // A duration refusal must retain A as the constraint while offering fitting B.
+  d.routePackages[0].stops[0].minNights = 6;
+  d.routePackages[0].stops[0].maxNights = 8;
+  const refused = buildF6Trip({ ...spec, totalDays: 5, routeTemplateId: 'r' }, d, { connectionContext: c, content: [] });
+  assert.equal(refused.ok, false);
+  assert.ok(refused.options.some(o => o.action === 'alternate_route' && o.routePackageId === 'B'));
+  assert.equal(refused.evidence.entries.length, 2);
+  assert.ok(refused.evidence.entries.every(e => e.values.assessedRoutePackageId === 'B' && e.values.blockId === null));
+  d.routePackages[0].stops[0].minNights = 2;
+  d.routePackages[0].stops[0].maxNights = 5;
+  assert.deepEqual({ d, c }, before);
+});
+
+test('review regression: unavailable estimator preserves every supplied directed pair without timing', () => {
+  const c = { ...context([input(), input('a', 'o', [[0,9],[0,0]])]), estimatorRulesetVersion: 'flight-gc-v2' };
+  const r = buildF6Trip(spec, fixture(), { connectionContext: c, content: [] });
+  assert.equal(r.ok, false);
+  assert.equal(r.detail.reason, 'estimation_domain_unsupported');
+  assert.equal(r.evidence.generatedAt, time);
+  assert.equal(r.evidence.entries.length, 2);
+  for (const [i, e] of r.evidence.entries.entries()) {
+    const supplied = c.estimates[i];
+    assert.equal(e.code, 'connection_estimation_refused');
+    assert.equal(e.refId, `est:flight-gc-v2:${supplied.fromPlaceId}:${supplied.toPlaceId}`);
+    assert.deepEqual(e.values.suppliedPair, { fromPlaceId: supplied.fromPlaceId, toPlaceId: supplied.toPlaceId });
+    assert.equal(e.values.estimatorRulesetVersion, 'flight-gc-v2');
+    assert.equal(e.values.blockId, null);
+    assert.equal(e.values.field, 'estimatorRulesetVersion');
+    assert.equal(e.values.reason, 'estimation_domain_unsupported');
+    assert.equal(e.values.timing, undefined);
+  }
+});

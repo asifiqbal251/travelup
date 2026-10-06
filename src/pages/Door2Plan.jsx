@@ -1314,6 +1314,12 @@ function FailurePanel({ result, thrown, onExtend, onRemovePlace, onSetDuration, 
 
   if (!result || result.ok !== false) return null;
 
+  const transportEvidence = result.detail?.phase === "pre_validation" ? [] :
+    (result.evidence?.entries ?? []).filter(entry =>
+      ["connection_estimated", "connection_estimation_refused"].includes(entry.code) &&
+      typeof entry.values?.recordedText === "string");
+  const usesEstimates = transportEvidence.some(entry => entry.code === "connection_estimated");
+
   return (
     <div className="rounded-xl bg-slate-800 border border-orange-700/50 p-5 space-y-4">
       <div>
@@ -1322,6 +1328,19 @@ function FailurePanel({ result, thrown, onExtend, onRemovePlace, onSetDuration, 
         </h3>
         <p className="text-sm text-slate-300">{result.message}</p>
       </div>
+
+      {transportEvidence.length > 0 && (
+        <div className="rounded-lg border border-amber-700/50 p-3 space-y-2">
+          <p className="text-sm font-medium text-amber-300">
+            {usesEstimates ? "Estimated transport · approximate flight time" : "Transport estimate unavailable"}
+          </p>
+          {transportEvidence.map((entry, i) => (
+            <p key={`${entry.refId}:${i}`} className="text-sm text-slate-300">
+              {entry.values.recordedText}
+            </p>
+          ))}
+        </div>
+      )}
 
       {result.options?.length > 0 && (
         <div className="space-y-3">

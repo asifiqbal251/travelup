@@ -23,7 +23,7 @@ async function save(user){await user.click(screen.getByRole('button',{name:'Save
 async function reopen(){cleanup();resetLocation();render(M.React.createElement(M.MemoryRouter,{initialEntries:['/plan?key=door2']},M.React.createElement(M.Door2Plan)));const user=userEvent.setup();await user.click(await screen.findByText('Continue'));return user;}
 
 test('DOM1/ID3 estimated refusal recovery retains ID, explicit route and facts',async()=>{
- setup();const user=await start(2);assert.ok(await screen.findByRole('button',{name:/Add .* day/}));const first=control.calls.at(-1);await user.click(screen.getByRole('button',{name:/Add .* day/}));await screen.findByText('Your trip at a glance');assert.equal(control.calls.at(-1).context.sequenceId,first.context.sequenceId);assert.deepEqual(control.calls.at(-1).context.estimates,first.context.estimates);assert.equal(screen.getAllByText(/Estimated transport ·/).length,2);const t=await save(user);assert.equal(t.evidence.entries.length,2);assert.equal(t.evidence.entries[0].values.timing.roundedMinutes,375);
+ setup();const user=await start(2);assert.ok(await screen.findByRole('button',{name:/Add .* day/}));assert.ok(screen.getByText('Estimated transport · approximate flight time'));assert.ok(screen.getAllByText(/Approximate flight time from supplied service facts/).length);const first=control.calls.at(-1);await user.click(screen.getByRole('button',{name:/Add .* day/}));await screen.findByText('Your trip at a glance');assert.equal(control.calls.at(-1).context.sequenceId,first.context.sequenceId);assert.deepEqual(control.calls.at(-1).context.estimates,first.context.estimates);assert.equal(screen.getAllByText(/Estimated transport ·/).length,2);const t=await save(user);assert.equal(t.evidence.entries.length,2);assert.equal(t.evidence.entries[0].values.timing.roundedMinutes,375);
 });
 test('DOM1 curated experience is travel-only, forward-only and does not fill an empty shelf',async()=>{setup(false,true);const user=await start();await screen.findByText('Your trip at a glance');const view=screen.getByText('Fictional train view');assert.match(view.closest('li').textContent,/train/i);assert.equal(within(view.closest('li')).queryByRole('button'),null);assert.equal(screen.getAllByText('Fictional train view').length,1);assert.ok(screen.getAllByText(/Nothing curated for this slot/).length);const t=await save(user);assert.equal(t.evidence.entries[1].values.experiences.length,0);});
 test('CTX page keeps a successful trip and input when context metadata is invalid',async()=>{setup(false);const user=await start();const before=await save(user);control.context.generatedAt='not-a-date';await user.click(screen.getByRole('button',{name:'Refine'}));await user.click(screen.getByRole('button',{name:'Apply and rebuild'}));assert.ok(await screen.findByText(/required planning information is missing or invalid/));assert.ok(screen.getByText('Your trip at a glance'));assert.deepEqual(await save(user),before);});
@@ -57,4 +57,24 @@ test('ID4 cancelling a fresh start keeps edits and ID; confirmation allocates on
   await user.click(await screen.findByText('Japan')); await setDays(user, 5);
   await user.click(screen.getByRole('button', { name: 'Build my trip' }));
   assert.notEqual(control.calls.at(-1).context.sequenceId, id);
+});
+
+
+test('review regression: pre-validation failure shows no estimated refusal evidence', async () => {
+  setup(); control.context.generatedAt = 'not-a-date';
+  await start(2);
+  await screen.findByText(/required planning information is missing or invalid/);
+  assert.equal(screen.queryByText('Estimated transport · approximate flight time'), null);
+  assert.equal(screen.queryByText(/Approximate flight time from supplied service facts/), null);
+  assert.equal(screen.queryByRole('button', { name: /Add .* day/ }), null);
+});
+
+
+test('review regression: unavailable estimator refusal shows its recorded explanation', async () => {
+  setup(); control.context.estimatorRulesetVersion = 'flight-gc-v2';
+  await start();
+  await screen.findByText('Transport estimate unavailable');
+  assert.equal(screen.getAllByText('Supplied transport facts could not be used.').length, 2);
+  assert.equal(screen.queryByText('Estimated transport · approximate flight time'), null);
+  assert.equal(screen.queryByText('Your trip at a glance'), null);
 });

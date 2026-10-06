@@ -7,7 +7,7 @@ export const ESTIMATED_REBUILD_MESSAGE = 'This trip uses estimated transport. Ch
 export const READ_ONLY_NOTICE = 'This trip has a newer version of recorded reasons. You can view it, but editing and saving a new copy are unavailable.';
 const clone = v => JSON.parse(JSON.stringify(v));
 const travel = trip => (trip?.days ?? []).flatMap(d => d.blocks ?? []).filter(b => b.type === 'travel');
-const marked = b => b.transport?.derivation === 'estimated' || b.provenance?.source === 'estimated' || b.transport?.connectionId?.startsWith('est:');
+const marked = b => b.transport?.derivation === 'estimated' || b.provenance?.source === 'estimated' || (typeof b.transport?.connectionId === 'string' && b.transport.connectionId.startsWith('est:'));
 export const hasEvidence = trip => trip?.evidence !== undefined || trip?.versions?.connectionEvidence !== undefined || travel(trip).some(marked);
 export const hasEstimates = trip => travel(trip).some(marked) || trip?.evidence?.entries?.some(e => e.code === 'connection_estimated');
 const finiteJson = (v, seen = new Set()) => {
@@ -61,10 +61,10 @@ export function decorateConnections(trip, data, { generatedAt, content = [], buf
 }
 // Stored evidence is checked without current graph lookups or runtime admission.
 export function inspectEvidence(trip) {
-  if (!hasEvidence(trip)) return { ok: true, legacy: true };
   let field = 'evidence';
   const check = (ok, path) => { field = path; if (!ok) throw new Error(path); };
   try {
+    if (!hasEvidence(trip)) return { ok: true, legacy: true };
     const e = trip.evidence;
     check(exact(e, ['rulesetVersion', 'generatedAt', 'entries']) && text(e.rulesetVersion) && iso(e.generatedAt) && Array.isArray(e.entries) && finiteJson(e), 'evidence');
     check(trip.versions?.connectionEvidence === e.rulesetVersion, 'versions.connectionEvidence');

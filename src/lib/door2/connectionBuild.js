@@ -36,6 +36,7 @@ export function buildF6Trip(spec, data = PILOT_DATA, options = {}) {
   if (c === undefined) return buildF5Trip(spec, data, options);
   const early = preflightConnectionContext(c); if (early) return early;
   let input = null;
+  let refusedInputs = [];
   const graph = { ...data, connections: [...data.connections], places: data.places instanceof Map ? new Map(data.places) : { ...data.places } };
   try {
     if (c.origin !== undefined) {
@@ -55,9 +56,11 @@ export function buildF6Trip(spec, data = PILOT_DATA, options = {}) {
       supplied.set(key, entry);
     }
     input = null;
+    // Valid supplied pairs remain attributable when their requested ruleset is unavailable.
+    if (c.estimatorRulesetVersion !== ESTIMATOR_VERSION) refusedInputs = [...supplied.values()];
     demand(c.estimatorRulesetVersion === ESTIMATOR_VERSION, 'estimatorRulesetVersion', 'estimation_domain_unsupported');
     // Existing coverage/constraint diagnostics remain authoritative. Only candidate gateway edges can be prepared.
-    const candidates = packages.filter(p => (spec.requiredPlaceIds ?? []).every(id => p.placeIds.includes(id)) && (!spec.routeTemplateId || p.id === spec.routeTemplateId || p.aliases?.includes(spec.routeTemplateId)));
+    const candidates = packages.filter(p => (spec.requiredPlaceIds ?? []).every(id => p.placeIds.includes(id)));
     const computed = new Set();
     for (const pkg of candidates) for (const [from, to] of edges(pkg)) {
       const key = pairKey(from, to);
@@ -68,10 +71,11 @@ export function buildF6Trip(spec, data = PILOT_DATA, options = {}) {
     input = null;
     const result = buildF5Trip(spec, graph, options);
     if (!result.ok) {
-      const ranges = result.detail?.supportedRanges ?? [];
+      const assessedIds = new Set([...(result.detail?.supportedRanges ?? []).map(r => r.routePackageId),
+        ...(result.options ?? []).filter(o => o.action === 'alternate_route').map(o => o.routePackageId)]);
       const entries = [];
-      for (const range of ranges) {
-        const pkg = candidates.find(p => p.id === range.routePackageId);
+      for (const routePackageId of assessedIds) {
+        const pkg = candidates.find(p => p.id === routePackageId);
         for (const [from, to] of pkg ? edges(pkg) : []) {
           const row = graph.connections.find(r => r.derivation === 'estimated' && serves(r, from, to));
           if (row) entries.push(estimatedEntry(row, null, options.bufferRuleset, pkg.id));
@@ -86,8 +90,8 @@ export function buildF6Trip(spec, data = PILOT_DATA, options = {}) {
     return { ok: true, value: { ...result.value, trip, sequence } };
   } catch (err) {
     if (!err.reason) throw err;
-    const entries = input ? [{ code: 'connection_estimation_refused', scope: 'connection', refId: `est:${c.estimatorRulesetVersion}:${encodeURIComponent(input.fromPlaceId)}:${encodeURIComponent(input.toPlaceId)}`,
-      values: { blockId: null, fromPlaceId: input.fromPlaceId, toPlaceId: input.toPlaceId, recordedText: 'Supplied transport facts could not be used.', estimatorRulesetVersion: c.estimatorRulesetVersion, field: err.field ?? null, reason: err.reason, suppliedPair: { fromPlaceId: input.fromPlaceId, toPlaceId: input.toPlaceId } } }] : [];
+    const entries = (input ? [input] : refusedInputs).map(input => ({ code: 'connection_estimation_refused', scope: 'connection', refId: `est:${c.estimatorRulesetVersion}:${encodeURIComponent(input.fromPlaceId)}:${encodeURIComponent(input.toPlaceId)}`,
+      values: { blockId: null, fromPlaceId: input.fromPlaceId, toPlaceId: input.toPlaceId, recordedText: 'Supplied transport facts could not be used.', estimatorRulesetVersion: c.estimatorRulesetVersion, field: err.field ?? null, reason: err.reason, suppliedPair: { fromPlaceId: input.fromPlaceId, toPlaceId: input.toPlaceId } } }));
     return { ok: false, state: 'route_not_supported', message: 'This plan needs valid, supported transport information.', options: [{ action: 'check_back_later', detail: 'Check the supplied transport information.' }], detail: { reason: err.reason, field: err.field ?? null }, evidence: { rulesetVersion: EVIDENCE_VERSION, generatedAt: c.generatedAt, entries } };
   }
 }
