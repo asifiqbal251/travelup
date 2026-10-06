@@ -78,3 +78,60 @@ test('review regression: unavailable estimator refusal shows its recorded explan
   assert.equal(screen.queryByText('Estimated transport · approximate flight time'), null);
   assert.equal(screen.queryByText('Your trip at a glance'), null);
 });
+
+
+function setupEstimatedAlternative() {
+  const d = setup(false);
+  d.places.kyoto = { ...d.places.kyoto, utcOffsetHours: 0 };
+  d.routePackages.push({ ...clone(d.routePackages[0]), id: 'f6_estimated_alternative', variantId: 'f6_estimated_alternative', name: 'Fictional estimated Kyoto', placeIds: ['kyoto'],
+    stops: [{ id: 'fixture_kyoto', placeId: 'kyoto', minNights: 2, maxNights: 10, excursions: [] }] });
+  const airport = (key,lng) => ({ key, lat: 0, lng, countryId: 'JP', ...source });
+  const facts = (from,to,a,b) => ({ fromPlaceId: from, toPlaceId: to, mode: 'flight_international', segments: [{ fromAirport: airport(a,a==='o'?0:9), toAirport: airport(b,b==='o'?0:9), serviceSourceUrl: source.sourceUrl, observedAt: time }], layoverHours: 0,
+    localTransferHours: { origin: .5, destination: .5 }, localTransferSources: { origin: {...source}, destination: {...source} }, ...source });
+  control.context.estimates = [facts('vancouver','kyoto','o','k'), facts('kyoto','vancouver','k','o')];
+  return d;
+}
+
+test('second review DOM: estimated alternative is disclosed before selection and excluded from winning save', async () => {
+  setupEstimatedAlternative();
+  const user = await start();
+  await screen.findByText('Your trip at a glance');
+  const alternative = screen.getByRole('button', { name: /f6_estimated_alternative/ });
+  assert.ok(within(alternative).getByText('Estimated transport · approximate flight time'));
+  assert.ok(within(alternative).getByText(/Approximate flight time from supplied service facts/));
+  const curated = await save(user);
+  assert.equal(curated.evidence, undefined);
+  assert.equal(curated.spec.routeTemplateId, 'tokyo_city');
+  assert.equal(curated.alternativeEvidence, undefined);
+  const first = control.calls.at(-1).context.sequenceId;
+  await user.click(alternative);
+  assert.equal(control.calls.at(-1).spec.routeTemplateId, 'f6_estimated_alternative');
+  assert.equal(control.calls.at(-1).context.sequenceId, first);
+  const estimated = await save(user);
+  assert.equal(estimated.evidence.entries.length, 2);
+  const curatedAlternative = screen.getByRole('button', { name: /Tokyo · 1 stops/ });
+  assert.equal(within(curatedAlternative).queryByText('Estimated transport · approximate flight time'), null);
+  assert.ok(estimated.evidence.entries.every(e => e.values.fromPlaceId === 'kyoto' || e.values.toPlaceId === 'kyoto'));
+});
+
+test('second review DOM: dropping a required place offers and builds the disclosed estimated recovery', async () => {
+  const d = setupEstimatedAlternative();
+  d.routePackages[0].stops[0].minNights = 6;
+  const user = await start(7);
+  await screen.findByText('Your trip at a glance');
+  const first = control.calls.at(-1).context.sequenceId;
+  await user.click(screen.getByRole('button', { name: 'Refine' }));
+  const heading = await screen.findByText('Must include');
+  await user.click(within(heading.parentElement).getByRole('button', { name: 'Tokyo' }));
+  await setDays(user, 5);
+  await user.click(screen.getByRole('button', { name: 'Apply and rebuild' }));
+  const drop = await screen.findByRole('button', { name: 'Drop Tokyo' });
+  assert.ok(screen.getByText('Estimated transport · approximate flight time'));
+  assert.ok(screen.getAllByText(/Approximate flight time from supplied service facts/).length);
+  await user.click(drop);
+  await screen.findByText('Your trip at a glance');
+  assert.deepEqual(control.calls.at(-1).spec.requiredPlaceIds, []);
+  assert.equal(control.calls.at(-1).spec.routeTemplateId, null);
+  assert.equal(control.calls.at(-1).context.sequenceId, first);
+  assert.equal((await save(user)).spec.routeTemplateId, 'f6_estimated_alternative');
+});

@@ -59,8 +59,10 @@ export function buildF6Trip(spec, data = PILOT_DATA, options = {}) {
     // Valid supplied pairs remain attributable when their requested ruleset is unavailable.
     if (c.estimatorRulesetVersion !== ESTIMATOR_VERSION) refusedInputs = [...supplied.values()];
     demand(c.estimatorRulesetVersion === ESTIMATOR_VERSION, 'estimatorRulesetVersion', 'estimation_domain_unsupported');
-    // Existing coverage/constraint diagnostics remain authoritative. Only candidate gateway edges can be prepared.
-    const candidates = packages.filter(p => (spec.requiredPlaceIds ?? []).every(id => p.placeIds.includes(id)));
+    // F5 also assesses each single required-place removal using the same explicit route constraint.
+    const required = spec.requiredPlaceIds ?? [];
+    const requiredSets = [required, ...required.map(placeId => required.filter(id => id !== placeId))];
+    const candidates = packages.filter(p => requiredSets.some(ids => ids.every(id => p.placeIds.includes(id))));
     const computed = new Set();
     for (const pkg of candidates) for (const [from, to] of edges(pkg)) {
       const key = pairKey(from, to);
@@ -73,6 +75,10 @@ export function buildF6Trip(spec, data = PILOT_DATA, options = {}) {
     if (!result.ok) {
       const assessedIds = new Set([...(result.detail?.supportedRanges ?? []).map(r => r.routePackageId),
         ...(result.options ?? []).filter(o => o.action === 'alternate_route').map(o => o.routePackageId)]);
+      for (const option of result.options ?? []) if (option.action === 'remove_place') {
+        const recovery = buildF5Trip({ ...spec, requiredPlaceIds: required.filter(id => id !== option.placeId) }, graph, options);
+        if (recovery.ok) assessedIds.add(recovery.value.trip.spec.routeTemplateId);
+      }
       const entries = [];
       for (const routePackageId of assessedIds) {
         const pkg = candidates.find(p => p.id === routePackageId);
@@ -84,10 +90,17 @@ export function buildF6Trip(spec, data = PILOT_DATA, options = {}) {
       return entries.length ? { ...result, evidence: { rulesetVersion: EVIDENCE_VERSION, generatedAt: c.generatedAt, entries } } : result;
     }
     const trip = decorateConnections(result.value.trip, graph, { ...options, generatedAt: c.generatedAt, content: options.content ?? PILOT_CONTENT });
-    if (!trip.evidence) return result;
+    // Alternative feasibility is transient; only connections actually used belong to the Trip's evidence.
+    const alternativeEvidence = result.value.alternatives.map(route => ({ routePackageId: route.routePackageId,
+      evidence: { rulesetVersion: EVIDENCE_VERSION, generatedAt: c.generatedAt, entries: route.connectionIds
+        .map(id => graph.connections.find(row => row.id === id)).filter(row => row?.derivation === 'estimated')
+        .map(row => estimatedEntry(row, null, options.bufferRuleset, route.routePackageId)) }
+    })).filter(item => item.evidence.entries.length > 0);
+    const value = { ...result.value, trip, ...(alternativeEvidence.length ? { alternativeEvidence } : {}) };
+    if (!trip.evidence) return alternativeEvidence.length ? { ...result, value } : result;
     const sequence = tripSequenceFromTrip(trip, { id: c.sequenceId, data: graph });
     demand(checkTripSequence(sequence, { data: graph }).length === 0, 'sequence');
-    return { ok: true, value: { ...result.value, trip, sequence } };
+    return { ok: true, value: { ...value, sequence } };
   } catch (err) {
     if (!err.reason) throw err;
     const entries = (input ? [input] : refusedInputs).map(input => ({ code: 'connection_estimation_refused', scope: 'connection', refId: `est:${c.estimatorRulesetVersion}:${encodeURIComponent(input.fromPlaceId)}:${encodeURIComponent(input.toPlaceId)}`,

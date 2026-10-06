@@ -710,6 +710,7 @@ function TripAtAGlance({ trip, routeAlternatives, onChangeRoute, onOpenNightsShe
           <p className="text-xs font-medium text-slate-400">Another way to do this trip</p>
           {routeAlternatives.map((alt) => {
             const { name, stops, stopCount } = routeLabel(alt);
+            const estimate = alt.connectionEvidence?.entries.find(entry => entry.code === 'connection_estimated');
             return (
               <button
                 key={alt.routePackageId}
@@ -721,6 +722,12 @@ function TripAtAGlance({ trip, routeAlternatives, onChangeRoute, onOpenNightsShe
                   {name} · {stopCount} stops
                 </span>
                 <span className="block text-xs text-slate-400">{stops}</span>
+                {estimate && (
+                  <>
+                    <span className="block text-xs text-amber-300">Estimated transport · approximate flight time</span>
+                    <span className="block text-xs text-slate-400">{estimate.values.recordedText}</span>
+                  </>
+                )}
               </button>
             );
           })}
@@ -1500,7 +1507,10 @@ export default function Door2Plan() {
       if (planned.detail?.phase === 'pre_validation' && activeTrip) { setEditError(planned.message); return; }
       setCurrentSpec(spec);
       result = planned.ok ? planned.value.trip : planned;
-      alternatives = planned.ok ? planned.value.alternatives : [];
+      alternatives = planned.ok ? planned.value.alternatives.map(alt => {
+        const evidence = planned.value.alternativeEvidence?.find(item => item.routePackageId === alt.routePackageId)?.evidence;
+        return evidence ? { ...alt, connectionEvidence: evidence } : alt;
+      }) : [];
     } catch (err) {
       thrown = String(err?.message ?? err);
     }

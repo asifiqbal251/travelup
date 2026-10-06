@@ -133,3 +133,62 @@ test('review regression: unavailable estimator preserves every supplied directed
     assert.equal(e.values.timing, undefined);
   }
 });
+
+
+function recoveryFixture() {
+  const d = fixture();
+  d.routePackages[0].stops[0].minNights = 6;
+  d.routePackages[0].stops[0].maxNights = 8;
+  d.places.b = { ...d.places.a, id: 'b', name: 'b', coordinates: { lat: 0, lng: 18 } };
+  d.routePackages.push({ id: 'B', name: 'B', countryId: 'JP', placeIds: ['b'], stops: [{ id: 'sb', placeId: 'b', minNights: 2, maxNights: 8, excursions: [] }] });
+  const c = context([input('o','b',[[0,0],[0,18]]), input('b','o',[[0,18],[0,0]])]);
+  return { d, c, prepared: { ...d, connections: [...d.connections, ...c.estimates.map(i => estimateConnection(i, c))] } };
+}
+
+test('second review: required-place removal retains estimated recovery and its evidence', () => {
+  const { d, c, prepared } = recoveryFixture();
+  const request = { ...spec, totalDays: 5, requiredPlaceIds: ['a'] };
+  const before = clone({ d, c, request });
+  const expected = buildF5Trip(request, prepared, { content: [] });
+  assert.ok(expected.options.some(o => o.action === 'remove_place' && o.placeId === 'a'));
+  const result = buildF6Trip(freeze(request), freeze(d), { connectionContext: freeze(c), content: [] });
+  assert.equal(result.ok, false);
+  assert.deepEqual(result.options, expected.options);
+  assert.equal(result.evidence.entries.length, 2);
+  assert.ok(result.evidence.entries.every(e => e.values.assessedRoutePackageId === 'B' && e.values.blockId === null));
+  assert.deepEqual(result.evidence.entries.map(e => e.values.inputs), c.estimates);
+  const recovered = buildF6Trip({ ...request, requiredPlaceIds: [] }, d, { connectionContext: c, content: [] });
+  assert.equal(recovered.ok, true);
+  assert.equal(recovered.value.trip.spec.routeTemplateId, 'B');
+  assert.equal(recovered.value.sequence.id, c.sequenceId);
+  assert.deepEqual({ d, c, request }, before);
+});
+
+test('second review: required-place recovery cannot silently replace an explicit route', () => {
+  const { d, c, prepared } = recoveryFixture();
+  const request = { ...spec, totalDays: 5, requiredPlaceIds: ['a'], routeTemplateId: 'r' };
+  const result = buildF6Trip(request, d, { connectionContext: c, content: [] });
+  assert.deepEqual(result, buildF5Trip(request, prepared, { content: [] }));
+  assert.equal(result.options.some(o => o.action === 'remove_place'), false);
+});
+
+test('second review: estimated alternative evidence is transient and absent from a curated winner', () => {
+  const { d, c, prepared } = recoveryFixture();
+  const request = { ...spec, totalDays: 7, routeTemplateId: 'r' };
+  const result = buildF6Trip(request, d, { connectionContext: c, content: [] });
+  assert.equal(result.ok, true);
+  assert.deepEqual(result.value.trip, buildF5Trip(request, prepared, { content: [] }).value.trip);
+  assert.equal(result.value.trip.evidence, undefined);
+  assert.ok(result.value.alternatives.some(a => a.routePackageId === 'B'));
+  const alt = result.value.alternativeEvidence.find(a => a.routePackageId === 'B');
+  assert.equal(alt.evidence.generatedAt, time);
+  assert.equal(alt.evidence.entries.length, 2);
+  assert.deepEqual(alt.evidence.entries.map(e => e.values.inputs), c.estimates);
+  assert.ok(alt.evidence.entries.every(e => e.values.blockId === null && e.values.assessedRoutePackageId === 'B'));
+  assert.equal(result.value.trip.alternativeEvidence, undefined);
+  const switched = buildF6Trip({ ...request, routeTemplateId: 'B' }, d, { connectionContext: c, content: [] });
+  assert.equal(switched.ok, true);
+  assert.equal(switched.value.trip.evidence.entries.length, 2);
+  assert.ok(switched.value.trip.evidence.entries.every(e => e.values.fromPlaceId === 'b' || e.values.toPlaceId === 'b'));
+  assert.equal(switched.value.alternativeEvidence, undefined);
+});
