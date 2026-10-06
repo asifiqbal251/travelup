@@ -1,3 +1,5 @@
+import { decorateConnections, hasEvidence, structuralEvidenceGuard } from './connectionEvidence.js';
+import { iso, validateCatalogue } from './connectionModel.js';
 /** @typedef {import('./types.js').Trip} Trip */
 /** @typedef {import('./types.js').TripSpec} TripSpec */
 /** @typedef {import('./types.js').RoutePlan} RoutePlan */
@@ -306,7 +308,7 @@ const nightsMap = (rp) => Object.fromEntries(rp.stops.map((s) => [s.key, s.night
  * @param {1|-1} delta
  * @param {{data?: Object, content?: ContentItem[], reviewPolicy?: 'strict'|'allow_drafts'}} [options]
  */
-export function previewAdjustNights(trip, stopKey, delta, options = {}) {
+function previewAdjustNightsUnchecked(trip, stopKey, delta, options = {}) {
   if (delta !== 1 && delta !== -1) throw new Error(`previewAdjustNights: delta must be +1 or -1, got ${delta}`);
   const ctx = context(trip, options);
   const rp = trip.routePlan;
@@ -483,7 +485,7 @@ function redistribute(stops, current, delta) {
  * @param {number} newTotalDays
  * @param {{data?: Object, content?: ContentItem[], reviewPolicy?: 'strict'|'allow_drafts'}} [options]
  */
-export function previewChangeLength(trip, newTotalDays, options = {}) {
+function previewChangeLengthUnchecked(trip, newTotalDays, options = {}) {
   const ctx = context(trip, options);
   const rp = trip.routePlan;
   const N = trip.spec.totalDays;
@@ -740,7 +742,7 @@ function buildVariantProposal(trip, { id, kind, label, pkg, nights, totalDays },
  * @param {string} [positionId]
  * @param {{data?: Object, content?: ContentItem[], reviewPolicy?: 'strict'|'allow_drafts', families?: Object[]}} [options]
  */
-export function previewAddOptional(trip, optionalId, positionId, options = {}) {
+function previewAddOptionalUnchecked(trip, optionalId, positionId, options = {}) {
   const ctx = context(trip, options);
   const family = familyFor(trip, ctx.families);
   const optional = findOptional(family, optionalId);
@@ -801,7 +803,7 @@ export function previewAddOptional(trip, optionalId, positionId, options = {}) {
  * @param {string} optionalId
  * @param {{data?: Object, content?: ContentItem[], reviewPolicy?: 'strict'|'allow_drafts', families?: Object[]}} [options]
  */
-export function previewRemoveOptional(trip, optionalId, options = {}) {
+function previewRemoveOptionalUnchecked(trip, optionalId, options = {}) {
   const ctx = context(trip, options);
   const family = familyFor(trip, ctx.families);
   const optional = findOptional(family, optionalId);
@@ -866,7 +868,7 @@ export function previewRemoveOptional(trip, optionalId, options = {}) {
  * @param {string} positionId
  * @param {{data?: Object, content?: ContentItem[], reviewPolicy?: 'strict'|'allow_drafts', families?: Object[]}} [options]
  */
-export function previewMoveOptional(trip, optionalId, positionId, options = {}) {
+function previewMoveOptionalUnchecked(trip, optionalId, positionId, options = {}) {
   const ctx = context(trip, options);
   const family = familyFor(trip, ctx.families);
   const optional = findOptional(family, optionalId);
@@ -918,6 +920,7 @@ export function previewMoveOptional(trip, optionalId, positionId, options = {}) 
  * @returns {{current: {positionId: string, after: string|null}|null, options: {positionId: string, after: string|null, proposal: Object}[]}}
  */
 export function listMoveOptions(trip, optionalId, options = {}) {
+  if (structuralEvidenceGuard(trip)) return { current: null, options: [] };
   const ctx = context(trip, options);
   const family = familyFor(trip, ctx.families);
   const optional = findOptional(family, optionalId);
@@ -1007,7 +1010,7 @@ function stopFor(trip, stopKey, who) {
  * @param {string} excursionId
  * @param {{data?: Object, content?: ContentItem[], reviewPolicy?: 'strict'|'allow_drafts', families?: Object[]}} [options]
  */
-export function previewAddExcursion(trip, stopKey, excursionId, options = {}) {
+function previewAddExcursionUnchecked(trip, stopKey, excursionId, options = {}) {
   const ctx = context(trip, options);
   const rp = trip.routePlan;
   const stop = stopFor(trip, stopKey, 'previewAddExcursion');
@@ -1071,7 +1074,7 @@ export function previewAddExcursion(trip, stopKey, excursionId, options = {}) {
  * @param {string} excursionId
  * @param {{data?: Object, content?: ContentItem[], reviewPolicy?: 'strict'|'allow_drafts', families?: Object[]}} [options]
  */
-export function previewRemoveExcursion(trip, stopKey, excursionId, options = {}) {
+function previewRemoveExcursionUnchecked(trip, stopKey, excursionId, options = {}) {
   const ctx = context(trip, options);
   const rp = trip.routePlan;
   const stop = stopFor(trip, stopKey, 'previewRemoveExcursion');
@@ -1109,6 +1112,7 @@ export function previewRemoveExcursion(trip, stopKey, excursionId, options = {})
  * @returns {Array<{excursionId: string, placeId: string, hoursOnSite: number, selected: boolean}>}
  */
 export function listExcursionMenu(trip, stopKey, options = {}) {
+  if (structuralEvidenceGuard(trip)) return [];
   if (!trip.routePlan) throw new Error('restructure: trip has no routePlan (door2-v6 required)');
   const data = options.data ?? PILOT_DATA;
   const stop = stopFor(trip, stopKey, 'listExcursionMenu');
@@ -1130,6 +1134,8 @@ export function listExcursionMenu(trip, stopKey, options = {}) {
  * @returns {{ok: true, trip: Trip} | {ok: false, reason: 'stale_preview', message: string}}
  */
 export function applyProposal(trip, proposal) {
+  const evidenceFailure = structuralEvidenceGuard(trip) ?? structuralEvidenceGuard(proposal?.trip);
+  if (evidenceFailure) return evidenceFailure;
   if (tripFingerprint(trip) !== proposal.baseFingerprint) {
     return { ok: false, reason: 'stale_preview', message: 'Your trip changed since this preview. Take another look before applying it.' };
   }
@@ -1141,4 +1147,48 @@ export function applyProposal(trip, proposal) {
   const capped = history.length > HISTORY_CAP ? history.slice(history.length - HISTORY_CAP) : history;
   const routePlan = nightsChanged ? { ...proposal.trip.routePlan, nightsSource: 'user' } : proposal.trip.routePlan;
   return { ok: true, trip: { ...proposal.trip, routePlan, history: capped } };
+}
+
+export function previewAdjustNights(trip, stopKey, delta, options = {}) {
+  return previewWithEvidence(trip, options, () => previewAdjustNightsUnchecked(trip, stopKey, delta, options));
+}
+
+export function previewChangeLength(trip, newTotalDays, options = {}) {
+  return previewWithEvidence(trip, options, () => previewChangeLengthUnchecked(trip, newTotalDays, options));
+}
+
+export function previewAddOptional(trip, optionalId, positionId, options = {}) {
+  return previewWithEvidence(trip, options, () => previewAddOptionalUnchecked(trip, optionalId, positionId, options));
+}
+
+export function previewRemoveOptional(trip, optionalId, options = {}) {
+  return previewWithEvidence(trip, options, () => previewRemoveOptionalUnchecked(trip, optionalId, options));
+}
+
+export function previewMoveOptional(trip, optionalId, positionId, options = {}) {
+  return previewWithEvidence(trip, options, () => previewMoveOptionalUnchecked(trip, optionalId, positionId, options));
+}
+
+export function previewAddExcursion(trip, stopKey, excursionId, options = {}) {
+  return previewWithEvidence(trip, options, () => previewAddExcursionUnchecked(trip, stopKey, excursionId, options));
+}
+
+export function previewRemoveExcursion(trip, stopKey, excursionId, options = {}) {
+  return previewWithEvidence(trip, options, () => previewRemoveExcursionUnchecked(trip, stopKey, excursionId, options));
+}
+
+function previewWithEvidence(trip, options, build) {
+  const blocked = structuralEvidenceGuard(trip); if (blocked) return blocked;
+  const data = options.data ?? PILOT_DATA;
+  const feature = hasEvidence(trip) || data.connections.some(c => c.reverse !== undefined || c.experiences?.length);
+  if (!feature) return build();
+  if (hasEvidence(trip) && !iso(options.generatedAt)) return { ok: false, reason: 'connection_context_required', message: 'A generation time is required to preview this trip.', proposals: [] };
+  try {
+    if (iso(options.generatedAt)) validateCatalogue(data.connections, options.content ?? PILOT_CONTENT, options.generatedAt);
+    const result = build();
+    if (!result.ok) return result;
+    return { ...result, proposals: result.proposals.map(p => ({ ...p, trip: decorateConnections(p.trip, data, { ...options, content: options.content ?? PILOT_CONTENT }) })) };
+  } catch (err) {
+    return { ok: false, reason: err.reason ?? 'connection_content_invalid', message: 'The current connection information cannot support this preview. Your trip is unchanged.', proposals: [] };
+  }
 }

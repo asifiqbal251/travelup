@@ -1,3 +1,4 @@
+import { editEvidenceGuard } from './connectionEvidence.js';
 /** @typedef {import('./types.js').Trip} Trip */
 /** @typedef {import('./types.js').Block} Block */
 /** @typedef {import('./types.js').ContentItem} ContentItem */
@@ -114,6 +115,7 @@ function pickBest(eligible, trip, block, paceOverride) {
  * @returns {EditResult}
  */
 export function swapActivity(trip, blockId, contentId = null, content = PILOT_CONTENT) {
+  const evidenceFailure = editEvidenceGuard(trip); if (evidenceFailure) return evidenceFailure;
   const found = findBlock(trip, blockId);
   if (!found) return { ok: false, reason: 'block_not_found', message: `Block "${blockId}" not found.` };
   const { block } = found;
@@ -158,6 +160,7 @@ export function swapActivity(trip, blockId, contentId = null, content = PILOT_CO
  * @returns {EditResult}
  */
 export function rejectActivity(trip, blockId, content = PILOT_CONTENT) {
+  const evidenceFailure = editEvidenceGuard(trip); if (evidenceFailure) return evidenceFailure;
   const found = findBlock(trip, blockId);
   if (!found) return { ok: false, reason: 'block_not_found', message: `Block "${blockId}" not found.` };
   const { block } = found;
@@ -204,6 +207,7 @@ export function rejectActivity(trip, blockId, content = PILOT_CONTENT) {
  * @returns {EditResult}
  */
 export function pinActivity(trip, blockId) {
+  const evidenceFailure = editEvidenceGuard(trip); if (evidenceFailure) return evidenceFailure;
   const found = findBlock(trip, blockId);
   if (!found) return { ok: false, reason: 'block_not_found', message: `Block "${blockId}" not found.` };
   const { block } = found;
@@ -228,6 +232,7 @@ export function pinActivity(trip, blockId) {
  * @returns {EditResult}
  */
 export function unpinActivity(trip, blockId) {
+  const evidenceFailure = editEvidenceGuard(trip); if (evidenceFailure) return evidenceFailure;
   const found = findBlock(trip, blockId);
   if (!found) return { ok: false, reason: 'block_not_found', message: `Block "${blockId}" not found.` };
   const { block } = found;
@@ -257,6 +262,7 @@ export function unpinActivity(trip, blockId) {
  * @returns {EditResult}
  */
 export function makeDayLighter(trip, dayNumber, content = PILOT_CONTENT) {
+  const evidenceFailure = editEvidenceGuard(trip); if (evidenceFailure) return evidenceFailure;
   const day = trip.days.find((d) => d.dayNumber === dayNumber);
   if (!day) return { ok: false, reason: 'block_not_found', message: `Day ${dayNumber} not found.` };
 
@@ -412,6 +418,7 @@ function checkSwapDays(trip, dayNumberA, dayNumberB, content) {
  * @returns {EditResult}
  */
 export function swapDays(trip, dayNumberA, dayNumberB, content = PILOT_CONTENT) {
+  const evidenceFailure = editEvidenceGuard(trip); if (evidenceFailure) return evidenceFailure;
   const checked = checkSwapDays(trip, dayNumberA, dayNumberB, content);
   if (!checked.ok) return checked;
   const { dayA, dayB } = checked;
@@ -441,6 +448,7 @@ export function swapDays(trip, dayNumberA, dayNumberB, content = PILOT_CONTENT) 
  * @returns {number[]}
  */
 export function swappableDays(trip, dayNumber, content = PILOT_CONTENT) {
+  if (editEvidenceGuard(trip)) return [];
   return trip.days
     .map((d) => d.dayNumber)
     .filter((n) => n !== dayNumber && checkSwapDays(trip, dayNumber, n, content).ok);
@@ -455,8 +463,10 @@ export function swappableDays(trip, dayNumber, content = PILOT_CONTENT) {
  * @returns {EditResult}
  */
 export function undo(trip) {
+  const evidenceFailure = editEvidenceGuard(trip); if (evidenceFailure) return evidenceFailure;
   if (!trip.history?.length) return { ok: false, reason: 'nothing_to_undo', message: 'Nothing to undo.' };
   // Entries are stored without history, so the remaining stack is rebuilt from the outer array.
   const prior = trip.history[trip.history.length - 1];
+  const priorFailure = editEvidenceGuard(prior); if (priorFailure) return priorFailure;
   return { ok: true, trip: { ...prior, history: trip.history.slice(0, -1) } };
 }

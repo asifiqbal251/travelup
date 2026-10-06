@@ -1,3 +1,4 @@
+import { inspectEvidence } from './connectionEvidence.js';
 const STORAGE_KEY = 'door2_drafts_v1';
 // Schemas the unversioned (legacy) envelope still opens. door2-v5 left this set in Stage B:
 // a v5 draft is refused by name and kept in storage, never deleted or upgraded on read.
@@ -105,6 +106,8 @@ export function saveDraftTrip(trip, label, destinationLabel) {
   const candidate = schema === ENVELOPE_SCHEMA ? trip : { ...trip, versions: { ...trip.versions, schema: ENVELOPE_SCHEMA } };
   const failed = v7ShapeFailure(candidate);
   if (failed) throw new DraftNotStorableError('shape', failed);
+  const evidence = inspectEvidence(candidate);
+  if (!evidence.ok || evidence.readOnly) throw new DraftNotStorableError('shape', evidence.readOnly ? 'evidence_version_unsupported' : evidence.field);
   const id = `d2draft_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
   const savedAt = new Date().toISOString();
   const entry = {
@@ -152,7 +155,7 @@ export function loadDraftTrip(id) {
     const schema = entry.trip?.versions?.schema ?? 'unknown';
     return { compatible: false, reason: `Built with schema "${schema}" — can't be reopened here.` };
   }
-  return { compatible: true, trip: entry.trip };
+  return loadEvidence(entry);
 }
 
 // Envelope version 2 only — exactly 2, not "2 or later". The payload is inspected to
@@ -162,7 +165,7 @@ function loadEnvelope(entry) {
   if (entry.trip?.versions?.schema !== ENVELOPE_SCHEMA) return refuse(entry, "its saved format and trip version don't match");
   const failed = v7ShapeFailure(entry.trip);
   if (failed) return refuse(entry, `its saved trip is incomplete (${failed})`);
-  return { compatible: true, trip: entry.trip };
+  return loadEvidence(entry);
 }
 
 const isInt = Number.isInteger;
@@ -214,4 +217,10 @@ export function deleteDraftTrip(id) {
   const { drafts } = readStore();
   const kept = drafts.filter((d) => !(isListable(d) && d.id === id));
   if (kept.length !== drafts.length) writeAll(kept);
+}
+
+function loadEvidence(entry) {
+  const status = inspectEvidence(entry.trip);
+  if (!status.ok) return refuse(entry, `its saved evidence is incomplete (${status.field})`);
+  return { compatible: true, trip: entry.trip, ...(status.readOnly ? { evidenceReadOnly: true, evidenceNotice: status.notice } : {}) };
 }

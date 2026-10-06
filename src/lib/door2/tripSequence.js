@@ -247,7 +247,7 @@ export function tripSequenceFromPlan(spec, routePlan, { id, data = PILOT_DATA } 
 export function tripSequenceFromTrip(trip, { id, data = PILOT_DATA } = {}) {
   if (!trip.routePlan) throw new Error('tripSequence: trip has no routePlan (door2-v6 required)');
   const { entries, returnConnectionId, ...head } = tripSequenceFromPlan(trip.spec, trip.routePlan, { id, data });
-  const seq = { ...head, totalDays: trip.days.length, entries, returnConnectionId };
+  const seq = { ...head, totalDays: trip.days.length, entries, returnConnectionId, ...(trip.evidence ? { evidence: trip.evidence } : {}) };
   const problems = checkTripSequence(seq);
   if (problems.length > 0) throw new Error(`tripSequence: ${problems.join('; ')}`);
   return seq;

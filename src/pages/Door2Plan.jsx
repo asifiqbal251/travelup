@@ -1,8 +1,11 @@
-import { useRef, useState } from "react";
+import { buildF6Trip } from '@/lib/door2/connectionBuild';
+import { connectionDisplay, editEvidenceGuard, hasEvidence, inspectEvidence, structuralEvidenceGuard } from '@/lib/door2/connectionEvidence';
+const EvidenceTripContext = createContext(null);
+import { createContext, useContext, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
 import PageNotFound from "@/lib/PageNotFound";
 import { makeDayLighter, swapActivity, swapDays, swappableDays, undo } from "@/lib/door2/edit";
-import { PILOT_DATA, buildF5Trip } from "@/lib/door2/planner";
+import { PILOT_DATA } from "@/lib/door2/planner";
 import { PILOT_PLACES, PILOT_ROUTE_FAMILIES, PILOT_ROUTE_PACKAGES } from "@/lib/door2/pilotData";
 import { backToMove, dayTripChangeLines, pickMove, positionLabel, proposalColumns } from "@/lib/door2/proposalView";
 import {
@@ -748,6 +751,9 @@ function ActivityLine({ block, onSwap }) {
 }
 
 function BlockRow({ block, dayNumber, onSwap, blockError }) {
+  const evidenceTrip = useContext(EvidenceTripContext);
+  const display = block.type === 'travel' ? connectionDisplay(evidenceTrip, block) : { experiences: [] };
+  const displayPlace = id => (!display.readOnly && evidenceTrip?.evidence?.entries?.find(e => e.values.originSnapshot?.id === id)?.values.originSnapshot.name) || placeName(id);
   const isGap = !!block.gap;
   const isActivity = block.type === "activity" && !isGap;
   const isTravel = block.type === "travel";
@@ -763,7 +769,7 @@ function BlockRow({ block, dayNumber, onSwap, blockError }) {
             <p className="text-sm text-slate-300">
               <span className="capitalize">{modeLabel(block.transport.mode)}</span>
               {" · "}
-              {placeName(block.transport.fromPlaceId)} → {placeName(block.transport.toPlaceId)}
+              {displayPlace(block.transport.fromPlaceId)} → {displayPlace(block.transport.toPlaceId)}
               {" · arrive "}
               {block.transport.arriveTime}
               {block.transport.arriveDayNumber && block.transport.arriveDayNumber !== dayNumber && (
@@ -775,6 +781,9 @@ function BlockRow({ block, dayNumber, onSwap, blockError }) {
             </p>
           )}
 
+          {isTravel && display.estimated && <p className="text-xs text-amber-400">Estimated transport · approximate flight time; no timetable</p>}
+          {isTravel && display.experiences.map(x => <div key={x.id} className="text-sm text-slate-300"><p>{x.title}</p><p>{x.description}</p></div>)}
+          {display.error && <p role="alert">{display.error}</p>}
           {isActivity && <ActivityLine block={block} onSwap={onSwap} />}
 
           {isGap && (
@@ -1398,8 +1407,10 @@ export default function Door2Plan() {
   const [swapPicker, setSwapPicker] = useState(null);
   const [pendingRouteSwitch, setPendingRouteSwitch] = useState(null);
   const [pendingRefine, setPendingRefine] = useState(false);
+  const [pendingFreshStart, setPendingFreshStart] = useState(false);
   const [toast, setToast] = useState(null);
   const toastTimer = useRef(null);
+  const connectionSession = useRef(null);
 
   if (!allowed) return <PageNotFound />;
 
@@ -1453,13 +1464,22 @@ export default function Door2Plan() {
 
   // ── Build ──────────────────────────────────────────────────────────────────
 
+  function blockedStructure() {
+    const blocked = activeTrip && structuralEvidenceGuard(activeTrip);
+    if (blocked) { setEditError(blocked.message); return true; }
+    return false;
+  }
+
   function runBuildFromSpec(spec) {
-    setCurrentSpec(spec);
+    if (blockedStructure()) return;
+    if (!connectionSession.current) connectionSession.current = { schemaVersion: 1, sequenceId: globalThis.crypto?.randomUUID?.(), estimatorRulesetVersion: 'flight-gc-v1', estimates: [] };
     let result = null;
     let thrown = null;
     let alternatives = [];
     try {
-      const planned = buildF5Trip(spec, PILOT_DATA, { reviewPolicy: "allow_drafts" });
+      const planned = buildF6Trip(spec, PILOT_DATA, { reviewPolicy: "allow_drafts", connectionContext: { ...connectionSession.current, generatedAt: new Date().toISOString() } });
+      if (planned.detail?.phase === 'pre_validation' && activeTrip) { setEditError(planned.message); return; }
+      setCurrentSpec(spec);
       result = planned.ok ? planned.value.trip : planned;
       alternatives = planned.ok ? planned.value.alternatives : [];
     } catch (err) {
@@ -1498,6 +1518,13 @@ export default function Door2Plan() {
   }
 
   function handleStartOver() {
+    if (hasEvidence(activeTrip) && hasTravellerWork(activeTrip)) { setPendingFreshStart(true); return; }
+    confirmFreshStart();
+  }
+
+  function confirmFreshStart() {
+    setPendingFreshStart(false);
+    connectionSession.current = null;
     setTripResult(null);
     setEditTrip(null);
     setEditError(null);
@@ -1517,12 +1544,14 @@ export default function Door2Plan() {
   }
 
   function handleSetDuration(totalDays) {
+    if (blockedStructure()) return;
     const newForm = { ...form, totalDays };
     setForm(newForm);
     runBuild(newForm);
   }
 
   function handleRemovePlace(placeId) {
+    if (blockedStructure()) return;
     const newForm = {
       ...form,
       required: form.required.filter((x) => x !== placeId),
@@ -1538,6 +1567,7 @@ export default function Door2Plan() {
   }
 
   function handleChangeRoute(routePackageId) {
+    if (blockedStructure()) return;
     if (hasTravellerWork(activeTrip)) {
       setPendingRouteSwitch(routePackageId);
       return;
@@ -1556,6 +1586,7 @@ export default function Door2Plan() {
   }
 
   function handleApplyRefine() {
+    if (blockedStructure()) return;
     setShowRefine(false);
     if (hasTravellerWork(activeTrip)) {
       setPendingRefine(true);
@@ -1565,11 +1596,14 @@ export default function Door2Plan() {
   }
 
   function handleConfirmRefine() {
+    if (blockedStructure()) return;
     setPendingRefine(false);
     runBuild(form);
   }
 
   function handleSaveDraft() {
+    const blocked = activeTrip && editEvidenceGuard(activeTrip);
+    if (blocked) { setSaveMsg({ ok: false, text: blocked.message }); return; }
     const t = activeTrip;
     if (!t) return;
     try {
@@ -1594,6 +1628,7 @@ export default function Door2Plan() {
   }
 
   function handleLoadDraft(trip) {
+    connectionSession.current = null;
     setTripResult({ result: trip, thrown: null });
     setEditTrip(null);
     setEditError(null);
@@ -1674,6 +1709,7 @@ export default function Door2Plan() {
   // ── Structural edit handlers (nights chips → preview → apply) ─────────────
 
   function handleOpenNightsSheet(node) {
+    if (blockedStructure()) return;
     if (!node.routeStop) return;
     const optionalId = node.routeStop.optionalId ?? null;
     setStructureSheet({
@@ -1687,13 +1723,14 @@ export default function Door2Plan() {
   }
 
   function handleOpenOptionalSheet(opt) {
+    if (blockedStructure()) return;
     setStructureSheet({ stage: "optional", optionalId: opt.optionalId, label: opt.label, pitch: opt.pitch });
   }
 
   function handleAddOptional(optionalId) {
     const t = activeTrip;
     if (!t) return;
-    const result = previewAddOptional(t, optionalId);
+    const result = previewAddOptional(t, optionalId, undefined, { generatedAt: new Date().toISOString() });
     if (result.ok) {
       setStructureSheet({ stage: "proposals", proposals: result.proposals });
     } else {
@@ -1704,7 +1741,7 @@ export default function Door2Plan() {
   function handleRemoveOptional(optionalId) {
     const t = activeTrip;
     if (!t) return;
-    const result = previewRemoveOptional(t, optionalId);
+    const result = previewRemoveOptional(t, optionalId, { generatedAt: new Date().toISOString() });
     if (result.ok) {
       setStructureSheet({ stage: "proposals", proposals: result.proposals });
     } else {
@@ -1713,9 +1750,10 @@ export default function Door2Plan() {
   }
 
   function handleMoveOptional(optionalId) {
+    if (blockedStructure()) return;
     const t = activeTrip;
     if (!t) return;
-    const { current, options } = listMoveOptions(t, optionalId);
+    const { current, options } = listMoveOptions(t, optionalId, { generatedAt: new Date().toISOString() });
     setStructureSheet({ stage: "move", optionalId, optionalLabel: optionalLabelFor(t, optionalId), current, options });
   }
 
@@ -1730,7 +1768,7 @@ export default function Door2Plan() {
   function handleAdjustNights(stopKey, delta) {
     const t = activeTrip;
     if (!t) return;
-    const result = previewAdjustNights(t, stopKey, delta);
+    const result = previewAdjustNights(t, stopKey, delta, { generatedAt: new Date().toISOString() });
     if (result.ok) {
       setStructureSheet({ stage: "proposals", proposals: result.proposals, stopKey });
     } else {
@@ -1751,12 +1789,13 @@ export default function Door2Plan() {
   }
 
   function handleOpenDayTrip(stopKey, item) {
+    if (blockedStructure()) return;
     const t = activeTrip;
     if (!t) return;
     const ctx = dayTripContext(t, stopKey, item);
     let result = null;
     try {
-      result = previewAddExcursion(t, stopKey, item.excursionId);
+      result = previewAddExcursion(t, stopKey, item.excursionId, { generatedAt: new Date().toISOString() });
     } catch (err) {
       // An engine throw is a defect, not a refusal: say it plainly in the console, show the fallback.
       console.error("Door2Plan: day-trip preview failed", err);
@@ -1774,7 +1813,7 @@ export default function Door2Plan() {
     const place = placeName(item.placeId);
     let result = null;
     try {
-      result = previewRemoveExcursion(t, stopKey, item.excursionId);
+      result = previewRemoveExcursion(t, stopKey, item.excursionId, { generatedAt: new Date().toISOString() });
     } catch (err) {
       console.error("Door2Plan: day-trip removal preview failed", err);
     }
@@ -1846,7 +1885,9 @@ export default function Door2Plan() {
         .join(" · ")
     : "";
 
-  const placeGroups = activeTrip ? groupDaysByPlace(activeTrip) : [];
+  const evidenceStatus = activeTrip ? inspectEvidence(activeTrip) : { ok: true };
+  const placeGroups = activeTrip && evidenceStatus.ok ? groupDaysByPlace(activeTrip) : [];
+  if (!evidenceStatus.ok) return <div role="alert">{evidenceStatus.message}</div>;
 
   return (
     <div className="min-h-screen bg-slate-900">
@@ -1936,6 +1977,8 @@ export default function Door2Plan() {
                   <p className="text-xs text-amber-400">Some days still need attention below.</p>
                 )}
 
+                {evidenceStatus.readOnly && <p role="status">{evidenceStatus.notice}</p>}
+                {activeTrip.evidence && <section aria-label="Recorded reasons"><h2>Recorded reasons</h2>{activeTrip.evidence.entries.map((e, i) => <p key={i}>{e.values.recordedText}</p>)}</section>}
                 <TripAtAGlance
                   trip={activeTrip}
                   routeAlternatives={routeAlternatives}
@@ -1949,6 +1992,7 @@ export default function Door2Plan() {
                 />
 
                 <div className="space-y-5">
+                  <EvidenceTripContext.Provider value={activeTrip}>
                   {placeGroups.map((group, i) => (
                     <PlaceSection
                       key={`${group.placeId}-${i}`}
@@ -1965,6 +2009,7 @@ export default function Door2Plan() {
                       onSwapWithAnotherDay={handleSwapWithAnotherDay}
                     />
                   ))}
+                  </EvidenceTripContext.Provider>
                 </div>
 
                 {activeTrip.history?.length > 0 && (
@@ -2047,6 +2092,12 @@ export default function Door2Plan() {
         onKeep={() => setPendingRefine(false)}
       />
 
+      <DiscardConfirm
+        copy={pendingFreshStart ? { confirm: 'Start over', edits: { title: 'Start a new trip?', body: 'Your unsaved edits will be discarded.' } } : null}
+        withDayTrips={false}
+        onConfirm={confirmFreshStart}
+        onKeep={() => setPendingFreshStart(false)}
+      />
       {toast && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-slate-700 border border-slate-600 text-white text-sm px-4 py-2 rounded-full shadow-lg">
           {toast}

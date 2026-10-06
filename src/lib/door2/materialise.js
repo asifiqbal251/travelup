@@ -1,3 +1,4 @@
+import { connectionPolicy } from './connectionEstimator.js';
 /** @typedef {import('./types.js').TripSequence} TripSequence */
 /** @typedef {import('./types.js').RouteResult} RouteResult */
 
@@ -59,7 +60,10 @@ function routeResultFromSequence(seq, data) {
   const connectionIds = [...seq.entries.map((e) => e.inboundConnectionId), seq.returnConnectionId];
   // As route.js derives it: any connection the trip uses, legs and excursions alike, that nobody has reviewed.
   const used = [...connectionIds, ...stops.flatMap((s) => s.excursions.map((x) => x.connectionId))];
-  const usesDraftData = used.some((id) => data.connections.find((c) => c.id === id)?.reviewedAt == null);
+  const rows = used.map(id => data.connections.find(c => c.id === id));
+  const blocked = rows.find(c => !connectionPolicy(c).eligible);
+  if (blocked) throw new Error(`materialise: ${connectionPolicy(blocked).reason}`);
+  const usesDraftData = rows.some(c => connectionPolicy(c).draft);
   return { source: 'authored', routePackageId: `sequence:${seq.id}`, stops, connectionIds, usesDraftData };
 }
 

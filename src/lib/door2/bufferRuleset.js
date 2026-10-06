@@ -1,3 +1,5 @@
+import { featureRow, validateConnection } from './connectionModel.js';
+import { isAdmitted, orientAdmitted } from './connectionEstimator.js';
 /** @typedef {import('./types.js').BufferRuleset} BufferRuleset */
 /** @typedef {import('./types.js').Connection} Connection */
 
@@ -49,23 +51,38 @@ export function computeUsableTimeLost(connection, ruleset = DEFAULT_BUFFER_RULES
  * mutates the catalogue row. Returns null if the row doesn't serve this
  * direction.
  */
+const originalRows = new WeakMap();
 export function orientConnection(connection, fromPlaceId, toPlaceId) {
+  connection = originalRows.get(connection) ?? connection;
+  const remember = result => {
+    if (featureRow(connection)) originalRows.set(result, connection);
+    return result;
+  };
+  validateConnection(connection);
+  if (isAdmitted(connection)) return orientAdmitted(connection, fromPlaceId, toPlaceId);
   if (connection.fromPlaceId === fromPlaceId && connection.toPlaceId === toPlaceId) {
-    return {
+    return remember({
       ...connection,
       ...(connection.localTransferHours ? { localTransferHours: { ...connection.localTransferHours } } : {})
-    };
+    });
   }
   if (
     connection.direction === "bidirectional" &&
     connection.fromPlaceId === toPlaceId &&
     connection.toPlaceId === fromPlaceId
   ) {
-    return {
+    return remember({
       ...connection,
       fromPlaceId,
       toPlaceId,
       ...(connection.segments ? { segments: [...connection.segments].reverse() } : {}),
+      ...(connection.reverse ? {
+        inVehicleHours: connection.reverse.durationHours,
+        segments: Object.hasOwn(connection.reverse, 'segments') ? connection.reverse.segments : connection.segments ? [...connection.segments].reverse() : null,
+        layoverHours: connection.reverse.layoverHours ?? connection.layoverHours ?? 0,
+        transfers: connection.reverse.transfers ?? ((Object.hasOwn(connection.reverse, 'segments') ? connection.reverse.segments : connection.segments)?.length ?? 1) - 1,
+        reverse: undefined
+      } : {}),
       ...(connection.localTransferHours
         ? {
             localTransferHours: {
@@ -74,7 +91,7 @@ export function orientConnection(connection, fromPlaceId, toPlaceId) {
             }
           }
         : {})
-    };
+    });
   }
   return null;
 }

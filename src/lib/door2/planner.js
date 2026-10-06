@@ -130,7 +130,7 @@ export function buildSkeletonTrip(spec, data = PILOT_DATA, options = {}) {
   }
 
   // 5. Validate.
-  const validation = validateSkeleton(scheduled.value, best, spec, data, { reviewPolicy, config: scheduleOptions.config });
+  const validation = validateSkeleton(scheduled.value, best, spec, data, { reviewPolicy, config: scheduleOptions.config, bufferRuleset: scheduleOptions.bufferRuleset });
   if (!validation.ok) return validation;
 
   // 6. Assemble the Trip.
@@ -369,11 +369,11 @@ export function buildTripFromRoutePlan(spec, routePlan, data = PILOT_DATA, optio
       { detail: { reason: 'missing', from: built.missing.from, to: built.missing.to, routePackageId: pkg.id } }
     );
   }
-  if (reviewPolicy === 'strict' && built.unreviewedIds.length > 0) {
+  if (built.blocked || (reviewPolicy === 'strict' && built.unreviewedIds.length > 0)) {
     return makeFailure(
       FAILURE_STATES.CONNECTION_UNREVIEWED,
       [{ action: 'check_back_later', detail: "We're still verifying the transport on this route" }],
-      { detail: { reason: 'unreviewed', connectionIds: [...built.unreviewedIds], routePackageId: pkg.id } }
+      { detail: { reason: built.blocked ?? 'unreviewed', connectionIds: [...built.unreviewedIds], routePackageId: pkg.id } }
     );
   }
   const best = withFixedRequirement(built.routeResult, pkg, resolved, spec);
@@ -398,7 +398,7 @@ export function buildTripFromRoutePlan(spec, routePlan, data = PILOT_DATA, optio
   }
   if (!scheduled.ok) return scheduled;
 
-  const validation = validateSkeleton(scheduled.value, best, spec, data, { reviewPolicy, config: scheduleOptions.config });
+  const validation = validateSkeleton(scheduled.value, best, spec, data, { reviewPolicy, config: scheduleOptions.config, bufferRuleset: scheduleOptions.bufferRuleset });
   if (!validation.ok) return validation;
   return assembleSkeletonTrip(spec, pkg, best, scheduled, validation, scheduleOptions.bufferRuleset, {
     prior: routePlan,
@@ -444,12 +444,12 @@ function assessF5(spec, data, options) {
       ? pkg.countryId === spec.destination.id : pkg.placeIds.includes(spec.destination.id);
     if (!destinationMatches || !(spec.requiredPlaceIds ?? []).every((id) => pkg.placeIds.includes(id))) continue;
     const built = buildRouteResult(pkg, spec, served);
-    if (built.missing || (reviewPolicy === 'strict' && built.unreviewedIds.length > 0)) {
+    if (built.blocked || built.missing || (reviewPolicy === 'strict' && built.unreviewedIds.length > 0)) {
       failures.set(pkg.id, makeFailure(FAILURE_STATES.CONNECTION_UNREVIEWED,
         [{ action: 'check_back_later', detail: "We're still verifying transport on this route" }],
         { detail: { routePackageId: pkg.id, ...(built.missing
           ? { reason: 'missing', ...built.missing }
-          : { reason: 'unreviewed', connectionIds: built.unreviewedIds }) } }));
+          : { reason: built.blocked ?? 'unreviewed', connectionIds: built.unreviewedIds }) } }));
       continue;
     }
     try {

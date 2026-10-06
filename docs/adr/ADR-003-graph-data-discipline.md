@@ -170,3 +170,13 @@ It therefore adds **zero identity surface** to the Phase F block-identity work. 
 - It does **not** make a Connection a Place, or give it a shelf.
 - It does **not** relax §2: an experience is reviewed **content**, never a stored reward, score or appeal value.
 - It does **not** authorize a build or a record migration.
+
+## Addendum — 5 October 2026: bounded F6 connection facts
+
+Approved F6 revision 3 keeps movement hours separate from layovers and endpoint/mode allowances. `reverse.durationHours` denotes movement; segmented overrides must supply a consistent complete reverse path. Legacy rows and buffer constants retain their behavior.
+
+Flight estimates are admitted by the registered, reviewed ruleset and freshly computed immutable in-process rows, never by fabricated human review metadata or a stored version label. Stored evidence explains estimates but does not re-admit or rebuild them. Estimated trips retain activity edits; structural rebuilding is explicitly unavailable in F6.
+
+Connection evidence owns the full resolved experience list per directed travel occurrence, including return and repeated traversals. New experiences require the sourceBundleId/sourceTemplateTitle/sourceFragmentId provenance triple. They remain separate from fillable Place content. Additional-time experiences are deferred and never rendered as included activities.
+
+This additive clarification does not approve content migration, seasonal behavior, durable edit identity, record authoring or pilot widening. TripSequence remains provisional; Q8–Q10 and P1 requirements remain open.

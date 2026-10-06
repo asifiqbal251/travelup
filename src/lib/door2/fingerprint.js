@@ -41,5 +41,5 @@ export function fnv1a53(text) {
  * @returns {string}
  */
 export function tripFingerprint(trip) {
-  return fnv1a53(canonicalJson({ spec: trip.spec, routePlan: trip.routePlan ?? null, days: trip.days }));
+  return fnv1a53(canonicalJson({ spec: trip.spec, routePlan: trip.routePlan ?? null, days: trip.days, ...(trip.evidence !== undefined ? { evidence: trip.evidence } : {}), ...(trip.versions?.connectionEvidence !== undefined ? { connectionEvidence: trip.versions.connectionEvidence } : {}) }));
 }

@@ -33,6 +33,11 @@
  * A catalogue transport row. Buffers are never stored here; they are combined
  * with transport time only at request time (see bufferRuleset.js).
  * @typedef {Object} Connection
+ * @property {'curated'|'estimated'} [derivation]
+ * @property {ConnectionReverse} [reverse]
+ * @property {number} [transfers]
+ * @property {ConnectionExperience[]} [experiences]
+ * @property {{months:number[]}} [availability] Reserved only; F6 never reads seasonal metadata.
  * @property {string} id                 Stable id, e.g. "conn_lim_cuz_air".
  * @property {string} fromPlaceId        Authored origin place.
  * @property {string} toPlaceId          Authored destination place.
@@ -245,6 +250,8 @@
 
 /**
  * @typedef {Object} BlockTransport
+ * @property {'estimated'} [derivation] F6 only; legacy estimated:true is not a derivation marker.
+ * @property {'flight-gc-v1'} [estimatorRulesetVersion]
  * @property {string} connectionId       Catalogue row used.
  * @property {ConnectionMode} mode       Mode of the row.
  * @property {number} inVehicleHours     In-vehicle time (segments sum).
@@ -424,13 +431,14 @@
 
 /**
  * @typedef {Object} Trip
+ * @property {ConnectionEvidence} [evidence] Validated occurrence evidence; owns resolved experiences.
  * @property {string} id
  * @property {'draft'|'valid'|'conflict'|'incomplete'} status
  * @property {TripSpec} spec             v6: spec.stops / spec.routeTemplateId are derived mirrors of routePlan for one version.
  * @property {RoutePlan} [routePlan]     ➕ v6.
  * @property {Day[]} days
  * @property {string[]} warnings        ➕ Scheduler warnings, e.g. 'nights_above_package_max'.
- * @property {{engine: string, schema: string, content: string, routeData: string, bufferRuleset: string}} versions
+ * @property {{engine: string, schema: string, content: string, routeData: string, bufferRuleset: string, connectionEvidence?: string}} versions
  * @property {Object[]} history
  * @property {Array<{blockId: string, dayNumber: number, placeId: string, slot: string}>} [contentGaps]  ➕ Open blocks fill.js left unfilled (filled Trips only).
  */
@@ -511,3 +519,40 @@
  */
 
 export {};
+
+/** F6: opted-in transport fields; historical rows retain their output shape.
+ * @typedef {Object} ConnectionReverse
+ * @property {number} durationHours Movement hours, excluding layover and allowances.
+ * @property {ConnectionSegment[]|null} [segments] Complete reverse-order replacement; null means direct.
+ * @property {number} [layoverHours] Aggregate time between segments.
+ * @property {number} [transfers] Segment count minus one; no implied layover.
+ */
+/**
+ * @typedef {Object} ConnectionExperience
+ * @property {string} id Authored cx_ identity.
+ * @property {string} title
+ * @property {string} description
+ * @property {'forward'|'reverse'|'both'} appliesTo
+ * @property {'within_connection'|'requires_additional'} timeCost
+ * @property {{status:'approved'|'pending_review'|'rejected',reviewedBy:string|null,reviewedAt:string|null,sourceUrl:string}} review
+ * @property {{sourceBundleId:string,sourceTemplateTitle:string,sourceFragmentId:string}} provenance
+ */
+/**
+ * @typedef {Object} ConnectionContext
+ * @property {1} schemaVersion
+ * @property {string} sequenceId Caller-owned transient projection identity; never trip.id.
+ * @property {string} generatedAt Explicit UTC ISO instant with milliseconds.
+ * @property {'flight-gc-v1'} estimatorRulesetVersion
+ * @property {Object} [origin] Source-backed Place and fixed-pilot offset basis.
+ * @property {Object[]} estimates Explicit sourced one/two-segment directional flight paths.
+ */
+
+/**
+ * @typedef {Object} ConnectionEvidence
+ * @property {string} rulesetVersion Currently f6-evidence@1; unknown versions are read-only.
+ * @property {string} generatedAt Explicit generation instant, never inferred on load.
+ * @property {Array<{code:string,scope:'connection',refId:string,values:Object}>} entries
+ * Known payloads are exact-schema checked by connectionEvidence.js. Resolved
+ * experiences live only in a curated entry's values.experiences. Refusal-only
+ * entries may have null blockId; a successful stored trip may not.
+ */

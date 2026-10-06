@@ -46,9 +46,9 @@ define('localStorage', window.localStorage);
 define('sessionStorage', window.sessionStorage);
 copyProps(window, globalThis);
 
-const { buildSync } = await import('esbuild');
+const { build } = await import('esbuild');
 const { fileURLToPath } = await import('node:url');
-const { rmSync } = await import('node:fs');
+const { rmSync, readFileSync } = await import('node:fs');
 
 const root = fileURLToPath(new URL('../../../', import.meta.url));
 
@@ -57,13 +57,24 @@ let cachedModule = null;
 /** Bundle the real Door2Plan page (and a few lib exports flow tests need for
  * setup/assertions) with esbuild, exactly as tests/door2/moveUi.test.js does,
  * so flow tests exercise the shipped component, not a reimplementation. */
-export async function loadDoor2PlanModule() {
+export async function loadDoor2PlanModule({ f6Control } = {}) {
   if (cachedModule) return cachedModule;
   const outfile = fileURLToPath(new URL(`./.flow.bundle.${process.pid}.mjs`, import.meta.url));
-  buildSync({
+  if (f6Control) globalThis.__f6Harness = f6Control;
+  await build({
+    plugins: f6Control ? [{ name: 'f6-controlled-inputs', setup(build) {
+      build.onLoad({ filter: /connectionBuild\.js$/ }, args => ({ contents: readFileSync(args.path, 'utf8').replace('const c = options.connectionContext;', `const c = globalThis.__f6Harness.context ? { ...options.connectionContext, ...globalThis.__f6Harness.context } : options.connectionContext;
+        if (globalThis.__f6Harness.data) data = globalThis.__f6Harness.data;
+        if (globalThis.__f6Harness.content) options = { ...options, content: globalThis.__f6Harness.content };
+        globalThis.__f6Harness.calls.push(JSON.parse(JSON.stringify({ spec, context: c })));`).replace('const sequence = tripSequenceFromTrip', 'globalThis.__f6Harness.lastTrip = trip; const sequence = tripSequenceFromTrip'), loader: 'js' }));
+    } }] : [],
     stdin: {
       contents: `
         export { default as Door2Plan } from './src/pages/Door2Plan.jsx';
+        export { buildF6Trip, preflightConnectionContext } from './src/lib/door2/connectionBuild.js';
+        export { decorateConnections, inspectEvidence, connectionDisplay } from './src/lib/door2/connectionEvidence.js';
+        export { estimateConnection } from './src/lib/door2/connectionEstimator.js';
+        export { PILOT_CONTENT } from './src/lib/door2/pilotContent.js';
         export { PILOT_DATA, buildFilledTrip } from './src/lib/door2/planner.js';
         export { PILOT_PLACES, PILOT_ROUTE_FAMILIES, PILOT_ROUTE_PACKAGES } from './src/lib/door2/pilotData.js';
         export { listDraftTrips, loadDraftTrip, saveDraftTrip, deleteDraftTrip } from './src/lib/door2/draftStorage.js';

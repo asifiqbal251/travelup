@@ -130,6 +130,7 @@ export function scheduleRoute(routeResult, spec, data, { config = SCHEDULE_CONFI
       bufferRulesetVersion: rulesetVersion,
       computedUsableTimeLost: usableHours,
       estimated: true,
+      ...(conn.derivation === 'estimated' ? { derivation: 'estimated', estimatorRulesetVersion: conn.estimatorRulesetVersion } : {}),
       fromPlaceId: from.id,
       toPlaceId: to.id,
       ...(conn.gatewayId ? { gatewayId: conn.gatewayId } : {}),
@@ -147,7 +148,7 @@ export function scheduleRoute(routeResult, spec, data, { config = SCHEDULE_CONFI
         startTime: formatClock(minuteOfDay(localMin(depAbs, from)) / 60),
         durationHours,
         transport,
-        provenance: provenance(isReviewed(conn))
+        provenance: conn.derivation === 'estimated' ? { source: 'estimated', reviewed: false, confidence: 'low' } : provenance(isReviewed(conn))
       })
     };
   }

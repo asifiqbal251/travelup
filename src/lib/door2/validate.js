@@ -1,3 +1,6 @@
+import { DEFAULT_BUFFER_RULESET } from './bufferRuleset.js';
+import { featureRow } from './connectionModel.js';
+import { connectionPolicy } from './connectionEstimator.js';
 /** @typedef {import('./types.js').RouteResult} RouteResult */
 /** @typedef {import('./types.js').TripSpec} TripSpec */
 
@@ -31,7 +34,7 @@ function invariant(condition, message) {
  * @param {{places: Object|Map, connections: Object[]}} data
  * @param {{reviewPolicy?: 'strict'|'allow_drafts', config?: typeof SCHEDULE_CONFIG}} [options]
  */
-export function validateSkeleton(result, routeResult, spec, data, { reviewPolicy = 'strict', config = SCHEDULE_CONFIG } = {}) {
+export function validateSkeleton(result, routeResult, spec, data, { reviewPolicy = 'strict', config = SCHEDULE_CONFIG, bufferRuleset = DEFAULT_BUFFER_RULESET } = {}) {
   const skeleton = result && result.ok === true ? result.value : result;
   const N = spec.totalDays;
   const origin = getPlace(data.places, spec.originPlaceId);
@@ -62,6 +65,34 @@ export function validateSkeleton(result, routeResult, spec, data, { reviewPolicy
       const start = (day.dayNumber - 1) * 1440 + Math.round(parseClock(block.startTime) * 60) - offsetMin(place);
       entries.push({ day: day.dayNumber, block, place, start, end: start + Math.round(block.durationHours * 60) });
     }
+  }
+
+  // Independent F6 directional arithmetic from ORIGINAL rows, never orientation/time helpers.
+  for (const { block, start } of entries.filter(e => e.block.type === 'travel')) {
+    const t = block.transport;
+    const row = data.connections.find(c => c.id === t.connectionId);
+    if (!row) continue;
+    if (!connectionPolicy(row).eligible) return makeFailure(FAILURE_STATES.CONNECTION_UNREVIEWED,
+      [{ action: 'check_back_later', detail: 'Transport is not admitted.' }], { detail: { reason: connectionPolicy(row).reason } });
+    if (!featureRow(row)) continue;
+    const backwards = row.fromPlaceId !== t.fromPlaceId;
+    invariant(backwards ? row.direction === 'bidirectional' && row.toPlaceId === t.fromPlaceId && row.fromPlaceId === t.toPlaceId
+      : row.toPlaceId === t.toPlaceId, `F6 direction mismatch for ${block.id}`);
+    const rev = backwards ? row.reverse : null;
+    const segments = rev && Object.hasOwn(rev, 'segments') ? rev.segments : row.segments;
+    const movement = segments?.length ? segments.reduce((n, s) => n + s.inVehicleHours, 0) : rev?.durationHours ?? row.inVehicleHours;
+    const layover = rev?.layoverHours ?? row.layoverHours ?? 0;
+    const rule = bufferRuleset.modes[row.mode];
+    const usable = movement + layover + rule.preHours + rule.postHours +
+      (row.localTransferHours?.origin ?? bufferRuleset.localTransferDefault.eachEndHours) +
+      (row.localTransferHours?.destination ?? bufferRuleset.localTransferDefault.eachEndHours);
+    invariant(Math.abs(t.inVehicleHours - movement) < 1e-9 && Math.abs((t.layoverHours ?? 0) - layover) < 1e-9 &&
+      Math.abs(t.computedUsableTimeLost - usable) < 1e-9 && block.durationHours === Math.round(usable * 60) / 60,
+      `F6 directional timing mismatch for ${block.id}`);
+    const arrivalLocal = start + Math.round(usable * 60) + offsetMin(placeOf(t.toPlaceId));
+    const arrivalDay = Math.floor(arrivalLocal / 1440) + 1;
+    invariant(t.arriveDayNumber === arrivalDay && Math.round(parseClock(t.arriveTime) * 60) === arrivalLocal - (arrivalDay - 1) * 1440,
+      `F6 arrival clock mismatch for ${block.id}`);
   }
 
   // Blocks within a day don't overlap.
@@ -166,7 +197,7 @@ export function validateSkeleton(result, routeResult, spec, data, { reviewPolicy
   const draftIds = usedIds.filter((id) => {
     const row = data.connections.find((c) => c.id === id);
     invariant(row, `travel block uses unknown connection "${id}"`);
-    return row.reviewedAt == null;
+    return connectionPolicy(row).draft;
   });
   const usesDraftData = draftIds.length > 0;
   if (reviewPolicy === 'strict' && usesDraftData) {

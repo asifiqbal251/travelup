@@ -1,3 +1,4 @@
+import { connectionPolicy } from './connectionEstimator.js';
 /** @typedef {import('./types.js').TripSpec} TripSpec */
 /** @typedef {import('./types.js').RoutePackage} RoutePackage */
 /** @typedef {import('./types.js').RouteResult} RouteResult */
@@ -31,7 +32,7 @@ function alternateRouteOption(pkg) {
 }
 
 function isConnectionReviewed(connection) {
-  return connection.reviewedAt != null;
+  return !connectionPolicy(connection).draft;
 }
 
 /**
@@ -103,6 +104,7 @@ export function buildRouteResult(pkg, spec, data) {
     }
   }
 
+  const blocked = usedConnections.find(c => !connectionPolicy(c).eligible);
   const unreviewedIds = [];
   for (const c of usedConnections) {
     if (!isConnectionReviewed(c) && !unreviewedIds.includes(c.id)) unreviewedIds.push(c.id);
@@ -124,7 +126,7 @@ export function buildRouteResult(pkg, spec, data) {
     connectionIds,
     usesDraftData: unreviewedIds.length > 0
   };
-  return { routeResult, unreviewedIds };
+  return { routeResult, unreviewedIds, ...(blocked ? { blocked: connectionPolicy(blocked).reason } : {}) };
 }
 
 function unplannedPlaceCount(pkg, askedFor) {
@@ -244,7 +246,10 @@ export function selectRoutes(spec, data, options = {}) {
   // 5. Build a RouteResult per candidate. Only the best candidate's missing leg
   // is a traveller failure; a lesser candidate with a gap is simply dropped.
   const built = ranked.map((pkg) => ({ pkg, ...buildRouteResult(pkg, spec, data) }));
-  const complete = built.filter((b) => !b.missing);
+  const complete = built.filter((b) => !b.missing && !b.blocked);
+  if (built[0].blocked) return makeFailure(FAILURE_STATES.CONNECTION_UNREVIEWED,
+    [{ action: 'check_back_later', detail: "We're still verifying transport on this route" }],
+    { detail: { reason: built[0].blocked, routePackageId: built[0].pkg.id } });
   const best = built[0];
   if (best.missing) {
     const alternates = complete.map((b) => alternateRouteOption(b.pkg));
