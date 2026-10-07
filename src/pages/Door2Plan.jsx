@@ -2215,7 +2215,7 @@ export default function Door2Plan() {
       <div className="max-w-2xl mx-auto px-4 py-10 space-y-4">
         {!showResults && (
           <header className="space-y-0.5">
-            <p className="text-xs font-medium text-slate-600 uppercase tracking-wide">WhereNova · Pilot preview</p>
+            <p className="text-xs font-medium text-slate-600 uppercase tracking-wide">WhereNova · Early access</p>
           </header>
         )}
 

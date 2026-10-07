@@ -177,6 +177,12 @@ test('#1: /plan with no key loads the planner, not "page not found"', async () =
   assert.equal(window.location.search, '', 'no key in the address');
 });
 
+test('header: the page header reads "WhereNova · Early access", and the old "Pilot preview" header is gone', async () => {
+  open({ path: '/plan' });
+  assert.ok(await screen.findByText('WhereNova · Early access'));
+  assert.doesNotMatch(document.body.textContent, /WhereNova · Pilot preview/);
+});
+
 test('#1/§3.1: the limits text is shown verbatim on the destination step, with a classic link that needs no refusal first', async () => {
   open();
   const limits = await screen.findByText(LIMITS);
