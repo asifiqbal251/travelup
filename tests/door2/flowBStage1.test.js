@@ -78,7 +78,9 @@ const LIMITS = 'Plan selected routes from Vancouver: New York City, Tokyo with K
 const QUESTION = 'Are you departing from Vancouver?';
 const YES = 'Yes, from Vancouver';
 const NO = 'No, another city';
-const DECLINED = 'This planner currently plans from Vancouver. You can continue in the classic planner.';
+// Replaced in Stage 2 (owner decision D3, 7 Oct 2026): it no longer says the classic planner can be
+// "continued in", because the classic planner does not plan from the traveller's own departure city.
+const DECLINED = "This planner currently plans from Vancouver. The classic planner doesn't ask for your departure city. Check travel to and from your destination separately.";
 const BEFORE_SAVE = 'When you save, your trip stays in this browser on this device. These trips do not sync to your account.';
 const AFTER_SAVE = 'Saved in this browser on this device. These trips do not sync to your account.';
 const FEEDBACK_TEXT = 'Send feedback';
@@ -158,11 +160,25 @@ async function refineAndApply(user, days) {
   await user.click(screen.getByRole('button', { name: 'Apply and rebuild' }));
 }
 
+/** A link that carries nothing (the fault, thrown-error, failed-rebuild and restored-trip exits): plain /find and the re-entry sentence. */
 function assertClassicLink(scope, label = CLASSIC_LINK) {
   const link = within(scope).getByRole('link', { name: label });
   assert.equal(link.getAttribute('href'), '/find', 'a plain /find link, with no parameters');
   assert.ok(within(scope).getAllByText(REENTRY).length > 0, 'says the details must be entered again');
   assert.doesNotMatch(scope.textContent, /pre-?fill|carried over|transferred/i, 'promises no prefill');
+}
+
+const DISCLOSURE = "Your itinerary, activities and edits won't be transferred.";
+
+/** A Stage 2 handoff link: the href carries exactly `href`, the sentence says exactly `note` (or nothing), and the re-entry sentence is gone. */
+function assertHandoffLink(scope, { href, note = null, disclosure = false, label = CLASSIC_LINK }) {
+  const link = within(scope).getByRole('link', { name: label });
+  assert.equal(link.getAttribute('href'), href, 'carries exactly these parameters');
+  assert.equal(within(scope).queryByText(REENTRY), null, 're-entry is not claimed where details are carried');
+  if (note === null) assert.equal(scope.textContent.replace(label, '').includes("We'll"), false, 'a plain link says nothing more');
+  else assert.ok(within(scope).getByText(note), `says: ${note}`);
+  if (disclosure) assert.ok(within(scope).getByText(DISCLOSURE), 'says the itinerary is not transferred');
+  else assert.equal(within(scope).queryByText(DISCLOSURE), null, 'no itinerary disclosure where no trip was involved');
 }
 
 const assertFeedbackLink = () =>
@@ -192,7 +208,17 @@ test('catalogue line: /plan reads "Early-access catalogue", and the old "Pilot c
 test('#1/§3.1: the limits text is shown verbatim on the destination step, with a classic link that needs no refusal first', async () => {
   open();
   const limits = await screen.findByText(LIMITS);
-  assertClassicLink(limits.parentElement);
+  // Stage 2, D4: with nothing typed there is nothing to carry, so the plain link stands alone.
+  assertHandoffLink(limits.parentElement, { href: '/find' });
+  assert.equal(planner.calls.length, 0);
+});
+
+// Codex review of 198766e: E1 must be covered with text typed, not only E2's search-miss link.
+test('#1/§3.1: with text typed in the search box, the limits-block link carries that text', async () => {
+  const user = open();
+  await screen.findByText(LIMITS);
+  await user.type(await screen.findByPlaceholderText('Search a country or place'), 'Reykjavik');
+  assertHandoffLink(screen.getByText(LIMITS).parentElement, { href: '/find?dest_q=Reykjavik', note: "We'll take what you typed with you." });
   assert.equal(planner.calls.length, 0);
 });
 
@@ -247,7 +273,7 @@ test('wording: the departure question and both answers, unanswered at first; the
   assert.equal(pressed(NO), 'true');
   assert.equal(pressed(YES), 'false');
   const declined = screen.getByText(DECLINED);
-  assertClassicLink(declined.parentElement);
+  assertHandoffLink(declined.parentElement, { href: '/find?dest_q=Peru&route=peru&month=10&days=10&party=two', note: "We'll bring your month, trip length and who's coming." });
 
   await user.click(screen.getByRole('button', { name: YES }));
   assert.equal(pressed(YES), 'true');
@@ -294,7 +320,7 @@ test('#3: confirmation declined → Build makes zero planner calls, explains the
   await user.click(screen.getByRole('button', { name: 'Build my trip' }));
   assert.equal(planner.calls.length, 0, 'zero planner calls');
   assert.equal(screen.queryByText(GLANCE), null, 'no trip');
-  assertClassicLink(screen.getByText(DECLINED).parentElement);
+  assertHandoffLink(screen.getByText(DECLINED).parentElement, { href: '/find?dest_q=Peru&route=peru&month=10&days=10&party=two', note: "We'll bring your month, trip length and who's coming." });
 });
 
 /** A reopened Japan trip with one day trip, so every structural control is on screen. */
@@ -334,7 +360,7 @@ test('#3: declined → Refine and every structural control make zero planner cal
       assert.equal(within(prompt).queryByText(DECLINED), null, 'not declined until the traveller says so');
       await user.click(within(prompt).getByRole('button', { name: NO }));
     }
-    assertClassicLink(within(prompt).getByText(DECLINED).parentElement);
+    assertHandoffLink(within(prompt).getByText(DECLINED).parentElement, { href: '/find?dest_q=Tokyo&month=10&days=10&party=two', note: "We'll bring your month, trip length and who's coming.", disclosure: true });
     assertNothingRebuilt(before, label);
     await user.click(within(prompt).getByRole('button', { name: 'Close' }));
     assert.equal(dialog(), null);
@@ -621,7 +647,7 @@ test('§3.2: a restored trip recorded from another origin is not rewritten to Va
   const user = await reopenSaved(foreign);
   const before = { glance: glanceText(), itinerary: itineraryText(), bytes: bytes() };
   assert.equal(P.listDraftTrips()[0].trip.spec.originPlaceId, 'another_city', 'the seeded trip really records another origin');
-  assertClassicLink(screen.getByText(DECLINED).parentElement);
+  assertClassicLink(screen.getByText(DECLINED).parentElement); // E8: a restored trip is excluded from the handoff
 
   for (const [label, act] of [
     ['Refine', (u) => refineAndApply(u)],
@@ -631,6 +657,8 @@ test('§3.2: a restored trip recorded from another origin is not rewritten to Va
     const prompt = dialog();
     assert.ok(prompt, `${label}: explains`);
     assert.ok(within(prompt).getByText(DECLINED));
+    // E4a: the dialog carries the basics of the current form, and says the trip itself does not travel.
+    assertHandoffLink(within(prompt).getByText(DECLINED).parentElement, { href: '/find?dest_q=Peru&route=peru&month=10&days=10&party=two', note: "We'll bring your month, trip length and who's coming.", disclosure: true });
     assert.equal(within(prompt).queryByRole('button', { name: YES }), null, `${label}: "Yes" cannot make it a Vancouver trip`);
     assertNothingRebuilt(before, label);
     await user.click(within(prompt).getByRole('button', { name: 'Close' }));
@@ -646,7 +674,8 @@ test('#10: a destination search with no match keeps its message and adds a plain
   const user = open();
   await user.type(await screen.findByPlaceholderText('Search a country or place'), 'Bali');
   const miss = screen.getByText('No matches in the early-access catalogue yet.');
-  assertClassicLink(miss.parentElement);
+  // Stage 2: the text the traveller typed goes with them; nothing else was entered.
+  assertHandoffLink(miss.parentElement, { href: '/find?dest_q=Bali', note: "We'll take what you typed with you." });
   assert.equal(planner.calls.length, 0);
 });
 
@@ -660,7 +689,9 @@ for (const days of [18, 12]) {
     assert.ok(within(panel).getByText('These routes support 5–12 or 8–18 days. You asked for 19.'));
     assert.ok(within(panel).getByRole('button', { name: 'Use 18 days' }));
     assert.ok(within(panel).getByRole('button', { name: 'Use 12 days' }));
-    assertClassicLink(panel);
+    // Stage 2, E6a: an ordinary refusal carries the basics. 19 days is a length the classic planner cannot
+    // offer, so it is carried as a request to explain, never as a selected length.
+    assertHandoffLink(panel, { href: '/find?dest_q=Tokyo&month=10&days_req=19&party=two', note: "We'll bring your month and who's coming. You'll need to choose a trip length there." });
     const offer = within(panel).getByRole('link', { name: CLASSIC_LINK });
     for (const button of within(panel).getAllByRole('button')) {
       assert.ok(button.compareDocumentPosition(offer) & window.Node.DOCUMENT_POSITION_FOLLOWING, 'the classic offer sits below every recovery action');
@@ -894,4 +925,43 @@ test('amendment A2: the results footer and the draft note render the owner-appro
   assert.equal(screen.queryByText(FOOTER), null, 'the draft note replaces the footer, as before');
   assert.doesNotMatch(document.body.textContent, /Not for real travellers/);
   assert.equal(P.listDraftTrips().find((d) => d.label === 'Seeded trip').trip.status, 'draft', 'the stored flag is untouched');
+});
+
+
+// ── Codex review of 198766e: two lifecycle probes kept as regressions ────────
+// Both passed under review; they are retained because the tests above use
+// unchanged values and so cannot tell a current-form transfer from a stale one.
+
+test('probe: a built Japan trip refined to an unsupported length carries the request and the disclosure', async () => {
+  const user = await buildConfirmed('Japan', 10);
+  await screen.findByText(GLANCE);
+  await refineAndApply(user, 19);
+  const heading = await screen.findByText(/can't be built yet/);
+  const panel = heading.closest('div').parentElement;
+  assert.equal(screen.queryByText('Something went wrong'), null, 'an ordinary refusal, not a fault');
+  // A trip really was built first, so the limited-transfer disclosure belongs here —
+  // unlike #11, where the first build is refused and there is no trip to leave behind.
+  assertHandoffLink(panel, {
+    href: '/find?dest_q=Tokyo&month=10&days_req=19&party=two',
+    note: "We'll bring your month and who's coming. You'll need to choose a trip length there.",
+    disclosure: true,
+  });
+});
+
+test('probe: a reopened Vancouver trip carries the changed Refine value, not the saved one', async () => {
+  const user = await reopenSaved(builtTrip('JP', 10));
+  await user.click(screen.getByRole('button', { name: 'Refine' }));
+  await screen.findByText('Make it yours');
+  await setDays(user, 14);
+  await user.click(screen.getByRole('button', { name: 'Apply and rebuild' }));
+  const prompt = dialog();
+  assert.ok(prompt, 'the departure question is asked');
+  await user.click(within(prompt).getByRole('button', { name: NO }));
+  assertHandoffLink(within(prompt).getByText(DECLINED).parentElement, {
+    href: '/find?dest_q=Tokyo&month=10&days=14&party=two',
+    note: "We'll bring your month, trip length and who's coming.",
+    disclosure: true,
+  });
+  assert.ok(!within(prompt).getByRole('link', { name: CLASSIC_LINK }).getAttribute('href').includes('days=10'),
+    "the saved trip's 10 days is not what travels");
 });

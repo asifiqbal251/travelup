@@ -23,7 +23,11 @@ function useReducedMotion() {
 // Horizontal snap-scroller of day counts 3–14. Selecting a number scrolls it
 // to the horizontal centre; a 420ms pause before advancing is scheduled by the
 // parent. Arrow keys move the selection and keep focus on the scroller.
-export default function DayScroller({ value, onSelect }) {
+//
+// `carried` (Stage 2 handoff only): the value arrived from /plan as the traveller's own
+// answer, not as our suggestion, so the readout never labels it "suggested". Absent or
+// false, behaviour is exactly as before.
+export default function DayScroller({ value, onSelect, carried = false }) {
   const scrollRef = useRef(null);
   const itemRefs = useRef({});
   const reduced = useReducedMotion();
@@ -32,7 +36,7 @@ export default function DayScroller({ value, onSelect }) {
   // "7 days — suggested"; the moment the user interacts (even landing back
   // on 7) the suffix drops. Resets on remount (e.g. navigating back to Q2),
   // which is acceptable per the spec — no schema change.
-  const [touched, setTouched] = useState(false);
+  const [touched, setTouched] = useState(Boolean(carried));
 
   const center = (n) => {
     const el = itemRefs.current[n];

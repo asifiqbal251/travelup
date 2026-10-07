@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import { AlertTriangle, ArrowLeft, ArrowRight, Check, Info, MapPin, SlidersHorizontal } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import {
@@ -17,6 +17,7 @@ import RefineSheet from "@/components/doorb/RefineSheet";
 import Logo from "@/components/Logo";
 import { MONTHS } from "@/lib/options";
 import { cn } from "@/lib/utils";
+import { parseClassicHandoff, CLASSIC_DAYS_MIN, CLASSIC_DAYS_MAX } from "@/lib/door2/classicHandoff";
 
 // ---- Step machine ----
 
@@ -46,10 +47,65 @@ const SELECTED_FILL = {
 
 const TRAVELLER_Q = QUESTIONS.find((q) => q.id === "traveller");
 
+// ---- Handoff from /plan (build brief B Stage 2) ----
+// Read once, from the address the page was opened with. Never through app-params
+// (it persists to localStorage) and never written back, so a reload re-reads the
+// incoming values and later edits are not remembered.
+
+function seededAnswers(handoff) {
+  const base = { ...BLANK_ANSWERS };
+  if (!handoff) return base;
+  if (handoff.month) base.travelMonth = handoff.month;
+  if (handoff.days !== null) base.travelDays = handoff.days;
+  if (handoff.party) base.travellerType = handoff.party;
+  return base;
+}
+
+function DurationNotice({ requested }) {
+  return (
+    <div
+      role="status"
+      className="mb-5 rounded-xl bg-wn-surface border border-wn-line px-4 py-3 text-[13px] text-wn-text-2 text-center"
+    >
+      You asked for {requested} days. The classic planner supports {CLASSIC_DAYS_MIN}–{CLASSIC_DAYS_MAX} days. Choose a length to continue.
+    </div>
+  );
+}
+
 // ---- Main page ----
 
 export default function DoorB() {
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Handoff values, read once. `null` means a plain visit to /find.
+  const [handoff, setHandoff] = useState(() => {
+    const parsed = parseClassicHandoff(location.search);
+    return parsed.active ? parsed : null;
+  });
+  const [searchSeed, setSearchSeed] = useState(() => handoff?.destQ ?? "");
+  // Explanation only (owner amendment, 7 Oct 2026): a recognised `route` says the
+  // traveller picked a route rather than typing its name, so the arrival notice can
+  // say so. It selects nothing and reaches no answer, engine input or storage.
+  const [routeSeed, setRouteSeed] = useState(() => handoff?.route ?? null);
+  const [searchKey, setSearchKey] = useState(0);
+  // Per-surface duration gates: an out-of-range request must be answered explicitly
+  // on whichever surface asks for the length. The two flags are independent on
+  // purpose — answering one control must never authorise an untouched length on
+  // the other path (Codex review of 198766e, R1).
+  const [essentialsLengthChosen, setEssentialsLengthChosen] = useState(() => !handoff?.daysReq);
+  const [combineLengthChosen, setCombineLengthChosen] = useState(() => !handoff?.daysReq);
+  // The Combine path's current duration lives here, not inside DaysStep, so the
+  // page's Back button returns to the traveller's own edit instead of remounting
+  // the step and replaying the incoming value (R1).
+  const [combineDays, setCombineDays] = useState(() => handoff?.days ?? BLANK_ANSWERS.travelDays);
+  // Whether each control's *own* current value is the traveller's answer rather than
+  // a suggestion. Per path, not shared: choosing a length on one control says nothing
+  // about the other control's untouched default (Codex re-review of 107d68e, finding 2).
+  const [essentialsLengthExplicit, setEssentialsLengthExplicit] = useState(() => handoff?.days != null);
+  const [combineLengthExplicit, setCombineLengthExplicit] = useState(() => handoff?.days != null);
+  const touchedRef = useRef(false);
+  const resolvedRef = useRef(false);
 
   const [destinations, setDestinations] = useState([]);
   const [loadingDests, setLoadingDests] = useState(true);
@@ -61,7 +117,7 @@ export default function DoorB() {
   const [pendingMultiDests, setPendingMultiDests] = useState(null); // ordered route before day budget is known
   const [proposalDroppedCount, setProposalDroppedCount] = useState(0);
   const [proposalFreeDays, setProposalFreeDays] = useState(0);
-  const [answers, setAnswers] = useState({ ...BLANK_ANSWERS });
+  const [answers, setAnswers] = useState(() => seededAnswers(handoff));
   const [refineOpen, setRefineOpen] = useState(false);
 
   useEffect(() => {
@@ -80,16 +136,61 @@ export default function DoorB() {
     return () => { cancelled = true; };
   }, []);
 
+  // Resolve a carried record id at most once, after the first successful catalogue
+  // load, and only if the traveller has not typed, chosen or cleared anything. A
+  // single exact record match opens the essentials; it never builds anything.
+  useEffect(() => {
+    if (loadingDests || errorDests || resolvedRef.current) return;
+    resolvedRef.current = true;
+    if (!handoff?.destId || touchedRef.current) return;
+    const matches = destinations.filter((d) => d && d.id === handoff.destId);
+    if (matches.length !== 1) return;
+    setSearchSeed("");
+    setRouteSeed(null);
+    handleDestinationSelect(matches[0]);
+  }, [loadingDests, errorDests, destinations]);
+
+  const markTouched = () => {
+    touchedRef.current = true;
+    setSearchSeed("");
+    setRouteSeed(null);
+  };
+
+  const resetCarried = () => {
+    touchedRef.current = true;
+    resolvedRef.current = true;
+    setHandoff(null);
+    setAnswers({ ...BLANK_ANSWERS });
+    setSearchSeed("");
+    setRouteSeed(null);
+    setCombineDays(BLANK_ANSWERS.travelDays);
+    setCombineLengthChosen(true);
+    setCombineLengthExplicit(false);
+    setEssentialsLengthExplicit(false);
+    setSearchKey((k) => k + 1);
+    setEssentialsLengthChosen(true);
+    setSelectedDest(null);
+    setMultiLegs(null);
+    setPendingMultiDests(null);
+    setStep(STEP.SEARCH);
+  };
+
   const setField = (field, value) => setAnswers((a) => ({ ...a, [field]: value }));
 
-  const handleDestinationSelect = (dest) => {
+  function handleDestinationSelect(dest) {
     setSelectedDest(dest);
     setMultiLegs(null);
     setStep(STEP.ESSENTIALS);
+  }
+
+  const handleSearchSelect = (dest) => {
+    markTouched();
+    handleDestinationSelect(dest);
   };
 
   // Only orders the destinations; day budget is collected next in DAYS step.
   const handleCombine = (dests) => {
+    markTouched();
     const storedPrefs = getPrefs();
     const depCity = answers.departureCity || storedPrefs?.departureCity || "";
     const residenceCountry = inferCountry(depCity);
@@ -100,9 +201,39 @@ export default function DoorB() {
   };
 
   const essentialsComplete = !!answers.travelMonth && !!answers.travellerType;
+  // Single-destination only: a multi-stop route sets its length in DaysStep.
+  const essentialsLengthPending = !multiLegs && !essentialsLengthChosen;
+
+  /**
+   * The Combine path's duration, recorded where the traveller chose it. It stays on
+   * this path: it is not copied into `answers`, because the other control holds its
+   * own current value and neither should overwrite the other.
+   */
+  const recordCombineDays = (n) => {
+    setCombineDays(n);
+    setCombineLengthChosen(true);
+    setCombineLengthExplicit(true);
+  };
+
+  /**
+   * The duration of the path the traveller is actually building from.
+   *
+   * Codex re-review of 107d68e, finding 1: the two paths hold their own current
+   * lengths, so the build has to read the one it is building. Writing a choice into
+   * the shared answer when a day is tapped is not enough — returning to the other
+   * path and pressing Continue taps nothing, and the build would then take the
+   * length the traveller last set somewhere else. The route and the stored
+   * preferences must agree, so both come from here. Never inferred by summing
+   * fitted legs, which can leave days unallocated.
+   */
+  const activeTravelDays = () => (multiLegs ? combineDays : answers.travelDays);
 
   const buildAndGo = () => {
-    const prefs = buildPrefs(answers);
+    // Scope held: only a handoff arrival takes the active path's duration. The
+    // pre-existing split between the Combine path's duration and `answers.travelDays`
+    // on a direct, parameter-free arrival is older than Stage 2 and is parked for its
+    // own scoped correction (brief sections 15 and 18.2) — parked, not correct.
+    const prefs = buildPrefs(handoff ? { ...answers, travelDays: activeTravelDays() } : answers);
     setPrefsWithHistory(prefs);
     if (multiLegs) {
       // Multi-stop: store the ordered leg IDs + days; TripDetail fetches full objects.
@@ -204,13 +335,22 @@ export default function DoorB() {
               destinations={destinations}
               loading={loadingDests}
               error={errorDests}
-              onSelect={handleDestinationSelect}
+              onSelect={handleSearchSelect}
               onCombine={handleCombine}
+              searchKey={searchKey}
+              initialQuery={searchSeed}
+              onTouch={markTouched}
+              carriedNotice={routeSeed ? "route" : searchSeed ? "search" : null}
             />
           )}
           {step === STEP.DAYS && pendingMultiDests && (
             <DaysStep
               pendingMultiDests={pendingMultiDests}
+              days={combineDays}
+              onDays={recordCombineDays}
+              chosen={combineLengthChosen}
+              lengthExplicit={combineLengthExplicit}
+              requestedDays={combineLengthChosen ? null : handoff?.daysReq ?? null}
               onContinue={(result) => {
                 setMultiLegs(result.legs);
                 setProposalDroppedCount(result.droppedCount);
@@ -237,11 +377,25 @@ export default function DoorB() {
               answers={answers}
               minDaysWarning={minDaysWarning}
               setField={setField}
+              carriedDays={essentialsLengthExplicit}
+              requestedDays={essentialsLengthPending ? handoff?.daysReq ?? null : null}
+              onLengthChosen={() => { setEssentialsLengthChosen(true); setEssentialsLengthExplicit(true); }}
               onRefine={() => setRefineOpen(true)}
             />
           )}
           {step === STEP.REGION && (
             <RegionStep dest={selectedDest} />
+          )}
+          {handoff && (step === STEP.SEARCH || step === STEP.DAYS || step === STEP.ESSENTIALS) && (
+            <div className="text-center mt-2 mb-4">
+              <button
+                type="button"
+                onClick={resetCarried}
+                className="min-h-11 inline-flex items-center px-1 text-[13px] text-wn-text-3 hover:text-wn-text-2 underline underline-offset-4 focus:outline-none focus-visible:ring-2 focus-visible:ring-wn-cyan rounded motion-safe:transition"
+              >
+                Clear carried details
+              </button>
+            </div>
           )}
         </div>
       </main>
@@ -271,7 +425,7 @@ export default function DoorB() {
           {step === STEP.ESSENTIALS && (
             <button
               type="button"
-              disabled={!essentialsComplete}
+              disabled={!essentialsComplete || essentialsLengthPending}
               onClick={handleEssentialsContinue}
               className="wn-cta-dark inline-flex items-center gap-2 h-12 px-7 rounded-xl font-semibold focus:outline-none focus-visible:ring-2 focus-visible:ring-wn-cyan focus-visible:ring-offset-2 focus-visible:ring-offset-wn-page motion-safe:transition disabled:opacity-40 disabled:cursor-not-allowed"
             >
@@ -305,7 +459,7 @@ export default function DoorB() {
 
 // ---- Step: Search ----
 
-function SearchStep({ destinations, loading, error, onSelect, onCombine }) {
+function SearchStep({ destinations, loading, error, onSelect, onCombine, searchKey, initialQuery, onTouch, carriedNotice }) {
   return (
     <section className="step-enter text-center pt-4">
       <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-wn-cyan mb-3">
@@ -317,7 +471,17 @@ function SearchStep({ destinations, loading, error, onSelect, onCombine }) {
       >
         Where are you going?
       </h2>
+      {carriedNotice && (
+        <p role="status" className="mb-4 text-[13px] text-wn-text-2">
+          {carriedNotice === "route"
+            ? "Your full route hasn't been transferred. Choose from the destinations available below."
+            : "We've brought your destination search. Choose a destination below."}
+        </p>
+      )}
       <DestinationSearch
+        key={searchKey}
+        initialQuery={initialQuery}
+        onTouch={onTouch}
         destinations={destinations}
         loading={loading}
         error={error}
@@ -330,8 +494,12 @@ function SearchStep({ destinations, loading, error, onSelect, onCombine }) {
 
 // ---- Step: Days (new — ask day budget before building the route) ----
 
-function DaysStep({ pendingMultiDests, onContinue }) {
-  const [days, setDays] = useState(BLANK_ANSWERS.travelDays);
+/**
+ * The duration and its explicit-choice state are owned by the page (R1), so leaving
+ * this step and coming back with the page's Back button returns to the traveller's
+ * own answer. `chosen` is this path's own gate and is never shared with Essentials.
+ */
+function DaysStep({ pendingMultiDests, onContinue, days, onDays, chosen = true, lengthExplicit = false, requestedDays = null }) {
   const [tooShort, setTooShort] = useState(false);
 
   const country = pendingMultiDests[0]?.country || "";
@@ -365,9 +533,11 @@ function DaysStep({ pendingMultiDests, onContinue }) {
         </p>
       )}
 
+      {!chosen && requestedDays ? <DurationNotice requested={requestedDays} /> : null}
       <DayScroller
         value={days}
-        onSelect={(n) => { setDays(n); setTooShort(false); }}
+        carried={lengthExplicit}
+        onSelect={(n) => { onDays(n); setTooShort(false); }}
       />
 
       {tooShort && (
@@ -381,7 +551,8 @@ function DaysStep({ pendingMultiDests, onContinue }) {
       <button
         type="button"
         onClick={handleContinue}
-        className="mt-8 w-full wn-cta-dark inline-flex items-center justify-center gap-2 h-12 px-7 rounded-xl font-semibold focus:outline-none focus-visible:ring-2 focus-visible:ring-wn-cyan focus-visible:ring-offset-2 focus-visible:ring-offset-wn-page motion-safe:transition"
+        disabled={!chosen}
+        className="disabled:opacity-40 disabled:cursor-not-allowed mt-8 w-full wn-cta-dark inline-flex items-center justify-center gap-2 h-12 px-7 rounded-xl font-semibold focus:outline-none focus-visible:ring-2 focus-visible:ring-wn-cyan focus-visible:ring-offset-2 focus-visible:ring-offset-wn-page motion-safe:transition"
       >
         Continue <ArrowRight className="w-4 h-4" />
       </button>
@@ -468,7 +639,7 @@ function ClimateAlert({ dest, monthValue }) {
 
 // ---- Step: Essentials ----
 
-function EssentialsStep({ dest, multiLegs, answers, minDaysWarning, setField, onRefine }) {
+function EssentialsStep({ dest, multiLegs, answers, minDaysWarning, setField, onRefine, carriedDays = false, requestedDays = null, onLengthChosen }) {
   return (
     <section className="step-enter pt-2 pb-4">
       {/* Destination pill — single or multi-stop */}
@@ -509,7 +680,12 @@ function EssentialsStep({ dest, multiLegs, answers, minDaysWarning, setField, on
       {/* Duration — single-destination only; multi-stop days are fixed in DaysStep */}
       {!multiLegs && (
         <EssentialSection eyebrow="Duration" title="How long do you have?">
-          <DayScroller value={answers.travelDays} onSelect={(n) => setField("travelDays", n)} />
+          {requestedDays ? <DurationNotice requested={requestedDays} /> : null}
+          <DayScroller
+            value={answers.travelDays}
+            carried={carriedDays}
+            onSelect={(n) => { setField("travelDays", n); onLengthChosen?.(); }}
+          />
         </EssentialSection>
       )}
 

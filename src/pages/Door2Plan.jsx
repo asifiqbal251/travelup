@@ -29,6 +29,7 @@ import {
   loadDraftTrip,
   saveDraftTrip,
 } from "@/lib/door2/draftStorage";
+import { buildClassicHandoff, handoffNote } from "@/lib/door2/classicHandoff";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -98,18 +99,23 @@ export const APPROVED_COPY = {
   departureQuestion: "Are you departing from Vancouver?",
   departureYes: "Yes, from Vancouver",
   departureNo: "No, another city",
-  departureDeclined: "This planner currently plans from Vancouver. You can continue in the classic planner.",
+  departureDeclined:
+    "This planner currently plans from Vancouver. The classic planner doesn't ask for your departure city. Check travel to and from your destination separately.",
   beforeSave: "When you save, your trip stays in this browser on this device. These trips do not sync to your account.",
   afterSave: "Saved in this browser on this device. These trips do not sync to your account.",
   feedback: "Send feedback",
 };
 
-// The classic planner cannot read anything from this page yet, so every link to it
-// says the details must be entered again and none promises a prefill.
+// Two modes for a link to the classic planner (build brief B Stage 2, revision 3):
+//   "reentry" (the default) carries nothing and says so, with `reentry`;
+//   "handoff" carries the basic answers in the href and says only what it carries.
+// A link that is not deliberately opted into "handoff" stays honest by default.
 export const CLASSIC_COPY = {
   link: "Go to the classic planner",
   reentry: "You'll need to enter your trip details again there.",
   escape: "Use the classic planner instead",
+  // Added wherever a handoff follows work on a trip: the basics travel, the trip does not.
+  disclosure: "Your itinerary, activities and edits won't be transferred.",
 };
 
 // Refusals this page recognises as an ordinary support or fit limit, as
@@ -445,28 +451,59 @@ function groupDaysByPlace(trip) {
 
 // ── Stage 1: classic planner link, departure confirmation ───────────────────
 
-function ClassicPlannerLink({ label = CLASSIC_COPY.link }) {
+/**
+ * `mode` is "reentry" unless a caller opts in. In "handoff" the href carries `payload`
+ * (see classicHandoff.js) and the sentence names only what the href carries; with
+ * `followsTrip` it also says the itinerary and its edits are not part of that.
+ */
+function ClassicPlannerLink({ label = CLASSIC_COPY.link, mode = "reentry", payload = null, followsTrip = false }) {
+  const handoff = mode === "handoff" ? buildClassicHandoff(payload ?? {}) : null;
+  const note = handoff ? handoffNote(handoff.carried) : "";
   return (
     <p className="text-sm text-slate-400">
-      <a href={CLASSIC_PLANNER_PATH} className="text-teal font-medium underline underline-offset-2 hover:opacity-80">
+      <a href={handoff ? handoff.href : CLASSIC_PLANNER_PATH} className="text-teal font-medium underline underline-offset-2 hover:opacity-80">
         {label}
-      </a>{" "}
-      <span>{CLASSIC_COPY.reentry}</span>
+      </a>
+      {handoff ? (
+        <>
+          {note && <>{" "}<span>{note}</span></>}
+          {followsTrip && <>{" "}<span>{CLASSIC_COPY.disclosure}</span></>}
+        </>
+      ) : (
+        <>{" "}<span>{CLASSIC_COPY.reentry}</span></>
+      )}
     </p>
   );
 }
 
-function DepartureLimit() {
+/** The basic answers of a request, in the shape the handoff reads. */
+function handoffBasics(source) {
+  return {
+    destination: source.destination,
+    totalDays: source.totalDays,
+    travelMonth: source.travelMonth,
+    travellerType: source.travellerType,
+  };
+}
+
+/** The basics of a spec that was actually attempted (a build or a rebuild). */
+function specBasics(spec) {
+  if (!spec?.destination?.kind || !spec.destination.id) return null;
+  return handoffBasics({ ...spec, destination: `${spec.destination.kind}:${spec.destination.id}` });
+}
+
+/** `payload` null keeps the link in "reentry" mode: this limit then carries nothing. */
+function DepartureLimit({ payload = null, followsTrip = false }) {
   return (
     <div role="status" className="space-y-1">
       <p className="text-sm text-amber-300">{APPROVED_COPY.departureDeclined}</p>
-      <ClassicPlannerLink />
+      <ClassicPlannerLink mode={payload ? "handoff" : "reentry"} payload={payload} followsTrip={followsTrip} />
     </div>
   );
 }
 
 /** The question and its two answers. `answer` is null until the traveller picks one. */
-function DepartureQuestion({ answer, onAnswer, nudge = false }) {
+function DepartureQuestion({ answer, onAnswer, nudge = false, payload = null, followsTrip = false }) {
   return (
     <div className="space-y-2">
       <p
@@ -493,14 +530,14 @@ function DepartureQuestion({ answer, onAnswer, nudge = false }) {
           {APPROVED_COPY.departureNo}
         </button>
       </div>
-      {answer === "declined" && <DepartureLimit />}
+      {answer === "declined" && <DepartureLimit payload={payload} followsTrip={followsTrip} />}
     </div>
   );
 }
 
 /** Asked when a rebuild is attempted outside the Basics step. A trip recorded from
  * another origin gets the limit only: answering could not make it a Vancouver trip. */
-function DeparturePrompt({ prompt, answer, originUnsupported, onAnswer, onClose, fallbackFocusRef }) {
+function DeparturePrompt({ prompt, answer, originUnsupported, onAnswer, onClose, fallbackFocusRef, payload }) {
   if (!prompt) return null;
   return (
     <DeparturePromptDialog
@@ -509,6 +546,7 @@ function DeparturePrompt({ prompt, answer, originUnsupported, onAnswer, onClose,
       onAnswer={onAnswer}
       onClose={onClose}
       fallbackFocusRef={fallbackFocusRef}
+      payload={payload}
     />
   );
 }
@@ -520,7 +558,7 @@ const FOCUSABLE = 'button:not([disabled]), a[href], input:not([disabled]), selec
  * cycle inside, Escape closes, and on close focus goes back to where the traveller
  * was. After "Yes" the question is gone and the tapped action has resumed, so focus
  * goes into whatever it opened instead (the topmost sheet, else the page itself). */
-function DeparturePromptDialog({ answer, originUnsupported, onAnswer, onClose, fallbackFocusRef }) {
+function DeparturePromptDialog({ answer, originUnsupported, onAnswer, onClose, fallbackFocusRef, payload = null }) {
   const dialogRef = useRef(null);
   const closeRef = useRef(onClose);
   closeRef.current = onClose;
@@ -584,7 +622,10 @@ function DeparturePromptDialog({ answer, originUnsupported, onAnswer, onClose, f
             ×
           </button>
         </div>
-        {originUnsupported ? <DepartureLimit /> : <DepartureQuestion answer={answer} onAnswer={answerAndRemember} />}
+        {/* E4a and E4b: this dialog only opens over a trip, so the basics may travel and the trip may not. */}
+        {originUnsupported
+          ? <DepartureLimit payload={payload} followsTrip />
+          : <DepartureQuestion answer={answer} onAnswer={answerAndRemember} payload={payload} followsTrip />}
       </div>
     </div>
   );
@@ -676,7 +717,8 @@ function DestinationStep({ query, onQueryChange, onPick, onLoad }) {
         </div>
         <div className="rounded-lg bg-slate-900/60 border border-slate-700 p-4 space-y-2">
           <p className="text-sm text-slate-300 leading-relaxed">{APPROVED_COPY.limits}</p>
-          <ClassicPlannerLink />
+          {/* E1: carries whatever is in the search box, and nothing at all when it is empty. */}
+          <ClassicPlannerLink mode="handoff" payload={{ queryText: query }} />
         </div>
         <input
           type="text"
@@ -691,7 +733,8 @@ function DestinationStep({ query, onQueryChange, onPick, onLoad }) {
             {results.length === 0 && (
               <>
                 <p className="text-sm text-slate-500">No matches in the early-access catalogue yet.</p>
-                <ClassicPlannerLink />
+                {/* E2: carries the text the traveller typed. */}
+                <ClassicPlannerLink mode="handoff" payload={{ queryText: query }} />
               </>
             )}
             {results.map((d) => (
@@ -807,7 +850,7 @@ function BasicsStep({ form, updateForm, onBack, onSubmit, departure, onDeparture
           </div>
         </div>
 
-        <DepartureQuestion answer={departure} onAnswer={onDeparture} nudge={departureNudge} />
+        <DepartureQuestion answer={departure} onAnswer={onDeparture} nudge={departureNudge} payload={handoffBasics(form)} />
 
         <button
           type="button"
@@ -1520,7 +1563,12 @@ function RefineSheet({ open, onClose, form, toggleInterest, setPace, setDuration
 
 // ── Results: failure panel ──────────────────────────────────────────────────
 
-function FailurePanel({ result, thrown, onExtend, onRemovePlace, onSetDuration, onChangeRoute }) {
+// `handoffEligible` is true only where an ordinary refusal can be shown without a trip
+// on screen (E6a). A thrown error (E5), a fault (E6b) and a failed rebuild above a
+// retained trip (E7) never carry anything: they keep the escape label and the re-entry
+// sentence. `handoffPayload` is the request that was refused; `followsTrip` is whether
+// it replaced a trip that was on screen.
+function FailurePanel({ result, thrown, onExtend, onRemovePlace, onSetDuration, onChangeRoute, handoffEligible = false, handoffPayload = null, followsTrip = false }) {
   if (thrown) {
     return (
       <div role="alert" className="rounded-xl bg-red-950/60 border border-red-700/50 p-5 space-y-2">
@@ -1632,7 +1680,12 @@ function FailurePanel({ result, thrown, onExtend, onRemovePlace, onSetDuration, 
         </div>
       )}
 
-      <ClassicPlannerLink label={fault ? CLASSIC_COPY.escape : CLASSIC_COPY.link} />
+      <ClassicPlannerLink
+        label={fault ? CLASSIC_COPY.escape : CLASSIC_COPY.link}
+        mode={handoffEligible && !fault && handoffPayload ? "handoff" : "reentry"}
+        payload={handoffPayload}
+        followsTrip={followsTrip}
+      />
     </div>
   );
 }
@@ -1672,6 +1725,10 @@ export default function Door2Plan() {
   const pageRef = useRef(null);
   // A fault from a rebuild attempted while a trip is on screen; the trip stays.
   const [rebuildFault, setRebuildFault] = useState(null);
+  // Whether the result now on screen replaced a trip that was on screen when it was asked
+  // for. The render site cannot tell: an ordinary refusal after Refine clears the trip and
+  // renders exactly like a refusal of a first build.
+  const [resultFollowedTrip, setResultFollowedTrip] = useState(false);
   const [savedTrip, setSavedTrip] = useState(null);
 
   const requiredPlaces = requiredPlacesForDestination(form.destination);
@@ -1780,6 +1837,7 @@ export default function Door2Plan() {
       if (activeTrip) { setRebuildFault({ result: null, thrown }); return false; }
     }
     setRebuildFault(null);
+    setResultFollowedTrip(Boolean(activeTrip));
     setTripResult({ result, thrown });
     setEditTrip(null);
     setEditError(null);
@@ -2254,6 +2312,9 @@ export default function Door2Plan() {
                   onRemovePlace={handleRemovePlace}
                   onSetDuration={handleSetDuration}
                   onChangeRoute={handleChangeRoute}
+                  handoffEligible
+                  handoffPayload={specBasics(currentSpec) ?? handoffBasics(form)}
+                  followsTrip={resultFollowedTrip}
                 />
                 <button
                   type="button"
@@ -2452,6 +2513,7 @@ export default function Door2Plan() {
         onAnswer={handlePromptAnswer}
         onClose={() => setDeparturePrompt(null)}
         fallbackFocusRef={pageRef}
+        payload={handoffBasics(form)}
       />
       {toast && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-slate-700 border border-slate-600 text-white text-sm px-4 py-2 rounded-full shadow-lg">

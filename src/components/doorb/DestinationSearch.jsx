@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AlertCircle, ChevronDown, ChevronUp, Globe, MapPin, Send, Route } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { norm } from "@/lib/regionalRoutes";
@@ -428,8 +428,14 @@ function CountryGroup({ country, dests, onSelect, onCombine }) {
 
 // ---- Main component ----
 
-export default function DestinationSearch({ destinations, loading, error, onSelect, onCombine }) {
-  const [query, setQuery] = useState("");
+// Stage 2 handoff props, both optional; without them nothing here changes:
+//   initialQuery  search text carried from /plan. It seeds the box once, stays editable while
+//                 the catalogue loads, and opens the normal choices as soon as it has loaded.
+//   onTouch       called when the traveller edits the text, so the page can tell a carried
+//                 search from one the traveller has since changed.
+export default function DestinationSearch({ destinations, loading, error, onSelect, onCombine, initialQuery = "", onTouch }) {
+  const [query, setQuery] = useState(initialQuery);
+  const seeded = useRef(Boolean(initialQuery));
   const [focused, setFocused] = useState(false);
   const [selected, setSelected] = useState(null);
   const [browseOpen, setBrowseOpen] = useState(false);
@@ -439,8 +445,17 @@ export default function DestinationSearch({ destinations, loading, error, onSele
     : [];
 
   const countryGroup = query.length >= 2 ? isCountryQuery(destinations, query) : null;
-  const showDropdown = focused && query.length >= 1;
+  // While the catalogue loads there is nothing to match against, so no choices (and no
+  // "nothing matches") are offered yet.
+  const showDropdown = focused && query.length >= 1 && !loading;
   const noMatch = showDropdown && filtered.length === 0;
+  // A carried search stays editable while it loads; everything else waits, as before.
+  const inputDisabled = Boolean(error) || (loading && !seeded.current);
+
+  useEffect(() => {
+    // A carried search opens its choices once the catalogue is there to offer them.
+    if (seeded.current && !loading && !error) setFocused(true);
+  }, [loading, error]);
 
   const pick = (dest) => {
     setSelected(dest);
@@ -483,15 +498,15 @@ export default function DestinationSearch({ destinations, loading, error, onSele
         type="text"
         value={query}
         placeholder={loading ? "Loading…" : "Type a destination or country"}
-        disabled={loading || error}
+        disabled={inputDisabled}
         autoComplete="off"
         autoFocus
-        onChange={(e) => { setQuery(e.target.value); setBrowseOpen(false); }}
+        onChange={(e) => { setQuery(e.target.value); setBrowseOpen(false); onTouch?.(); }}
         onFocus={() => setFocused(true)}
         onBlur={() => setTimeout(() => setFocused(false), 150)}
         className={cn(
           "w-full min-h-14 px-5 py-4 rounded-xl bg-wn-surface border border-wn-line text-wn-text text-[17px] text-center placeholder:text-wn-text-3 focus:outline-none focus:ring-2 focus:ring-wn-cyan",
-          (loading || error) && "opacity-50 cursor-not-allowed"
+          inputDisabled && "opacity-50 cursor-not-allowed"
         )}
       />
 
