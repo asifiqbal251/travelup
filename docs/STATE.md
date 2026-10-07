@@ -10,19 +10,21 @@
 - This file records state and decisions made elsewhere. It changes no gate, contract or approval. Gates and product choices keep their normal approval path.
 - Routine evidenced updates do not need cross-model review. A changed gate, product decision or architecture decision does.
 
-## Current state — 6 October 2026, about 19:30 America/Vancouver
+## Current state — 6 October 2026, about 20:45 America/Vancouver
 
-**Source revision recorded here:** `cbad952f0715cb158866effc511e7ced5751c1b9` — "Update base44 packages" (Base44 bot; `package.json` and `package-lock.json` only), direct child of `61690bc775d450ee78382f506281dcf89c731630`. Read current HEAD from Git; it will be one commit later than this once this file is committed.
+**Known application code revision:** `0e0c2d8` — the independently approved R1 session-ID fallback. Commits above it are documentation only. **Read current HEAD from Git**; do not rely on a SHA written here. At the last measurement (20:18, Claude and Codex independently) GitHub `main` and the Mac checkout were both `b6583bda492fa8a80050dd0cc13e38850f167fe1`, with nothing pending to push.
+
+**Active work:** direction B, the public Door 2 replacement. The brief is at revision 2 with Codex's amendments applied; it awaits the owner's product text, future-saves policy, rollout choice and feedback destination before implementation. Earlier install and check rows below are retained as dated history.
 
 | Item | State | Evidence |
 |---|---|---|
 | Final combined F6 | `61690bc`, 28 files, independently code-approved, pushed | Approval record 6 Oct (GPT-6 Astra · Extra High); Claude's independent review concurs, with finding R1 |
 | Dependency update `cbad952` | Independently approved | Dependency review record 6 Oct |
 | Publication | **R1 published and hosted-checked 6 Oct.** Owner republished; Claude ran the scoped hosted check in the owner's Chrome. Served bundle changed to `index-D8UGBwCA.js` (was `index-K9nINNo6.js`). **Hosted Git SHA still not established**; no authenticated deployment log. | `r1-hosted-check-2026-10-06.md` |
-| Checks at `cbad952`, fresh locked install | 598/598 Door 2 tests (132 are F6), 24/24 checker tests, lint, build | Run independently by the GPT reviewer and by Claude (cloud copy) on 6 Oct. **Mac dependencies:** Codex ran the full Door 2 suite on the Mac's newly installed dependencies in an isolated export of the checkout at `e86156c`: 598/598 (6 Oct). Lint, build and hosted checks not repeated there. |
+| Checks at `cbad952`, fresh locked install (history) | 598/598 Door 2 tests (132 are F6), 24/24 checker tests, lint, build | Run independently by the GPT reviewer and by Claude (cloud copy) on 6 Oct. **Mac dependencies:** Codex ran the full Door 2 suite on the Mac's newly installed dependencies in an isolated export of the checkout at `e86156c`: 598/598 (6 Oct). Lint, build and hosted checks not repeated there. |
 | Mac checkout | Fast-forwarded to `cbad952` 6 Oct; `npm ci` completed (owner ran it). Nine untracked historical documents preserved. Both frozen fixtures byte-exact. | Claude (device shell) and owner (Terminal) |
 | `npm ci` notes | Reported 22 audit findings, and three packages with install scripts not yet covered by the new `allowScripts` setting (core-js, esbuild, fsevents). Neither is reviewed or acted on. | Owner's Terminal output |
-| Stage | S4 / Phase F, after the reviewed F6 release | |
+| Stage | S4 / Phase F, after the F6 release and the R1 fix; direction B scope preparation is the active work | |
 | Contract | `TripSequence` provisional. The live planner does not run through the forward materialisation and assembly chain. | |
 
 ## Held — nothing here is authorized
@@ -39,6 +41,11 @@ Production estimate and experience activation · any record migration · Q8 dura
 ## Open findings (Claude's independent F6 review, 6 Oct)
 
 R1 **fixed and released** 6 Oct. R2–R4 dormant: preconditions for activating estimates and experiences. Details in the project note `f6-independent-review-61690bc-2026-10-06.md`.
+
+## Events since the R1 release
+
+- **6 Oct, hosted check sequence clarified.** For each crypto-removal check, the page was fully reloaded first, the override applied before any build in that page instance, and the first build of that instance then allocated a fresh session identifier under the override. Native `randomUUID` was confirmed restored afterwards. It remains a feature-removal simulation, not a physical old-browser test.
+- **6 Oct, Codex consolidated review.** Direction B and its two-stage design accepted; a finite amendment list applied to the brief (revision 2). R1's code approval remains closed. Roadmap corrected to v1.5.
 
 ## Next
 
