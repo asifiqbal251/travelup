@@ -690,7 +690,7 @@ function DestinationStep({ query, onQueryChange, onPick, onLoad }) {
           <div className="space-y-2">
             {results.length === 0 && (
               <>
-                <p className="text-sm text-slate-500">No matches in the pilot catalogue yet.</p>
+                <p className="text-sm text-slate-500">No matches in the early-access catalogue yet.</p>
                 <ClassicPlannerLink />
               </>
             )}

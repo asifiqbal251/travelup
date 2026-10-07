@@ -645,7 +645,7 @@ test('§3.2: a restored trip recorded from another origin is not rewritten to Va
 test('#10: a destination search with no match keeps its message and adds a plain classic link with the re-entry disclosure', async () => {
   const user = open();
   await user.type(await screen.findByPlaceholderText('Search a country or place'), 'Bali');
-  const miss = screen.getByText('No matches in the pilot catalogue yet.');
+  const miss = screen.getByText('No matches in the early-access catalogue yet.');
   assertClassicLink(miss.parentElement);
   assert.equal(planner.calls.length, 0);
 });
