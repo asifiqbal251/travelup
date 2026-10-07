@@ -19,7 +19,7 @@
 | Final combined F6 | `61690bc`, 28 files, independently code-approved, pushed | Approval record 6 Oct (GPT-6 Astra · Extra High); Claude's independent review concurs, with finding R1 |
 | Dependency update `cbad952` | Independently approved | Dependency review record 6 Oct |
 | Publication | **Owner reported republication.** Builder recorded passing scoped hosted checks. **Hosted Git SHA not established.** | Release record 6 Oct |
-| Checks at `cbad952`, fresh locked install | 598/598 Door 2 tests (132 are F6), 24/24 checker tests, lint, build | Run independently by the GPT reviewer and by Claude (cloud copy) on 6 Oct. Not yet run on the Mac after the dependency update. |
+| Checks at `cbad952`, fresh locked install | 598/598 Door 2 tests (132 are F6), 24/24 checker tests, lint, build | Run independently by the GPT reviewer and by Claude (cloud copy) on 6 Oct. **Mac dependencies:** Codex ran the full Door 2 suite on the Mac's newly installed dependencies in an isolated export of the checkout at `e86156c`: 598/598 (6 Oct). Lint, build and hosted checks not repeated there. |
 | Mac checkout | Fast-forwarded to `cbad952` 6 Oct; `npm ci` completed (owner ran it). Nine untracked historical documents preserved. Both frozen fixtures byte-exact. | Claude (device shell) and owner (Terminal) |
 | `npm ci` notes | Reported 22 audit findings, and three packages with install scripts not yet covered by the new `allowScripts` setting (core-js, esbuild, fsevents). Neither is reviewed or acted on. | Owner's Terminal output |
 | Stage | S4 / Phase F, after the reviewed F6 release | |
@@ -32,8 +32,8 @@ Production estimate and experience activation · any record migration · Q8 dura
 ## Decisions recorded 6 October 2026 (owner)
 
 - **Q9: ruled.** Old Door 2 saved trips need not be preserved, because the owner was the only person who saved any. Nothing is deleted; v5 stays refused and retained, v6 still opens. Does not cover trips saved from now on, or Door 1 account-saved trips.
-- **Fix R1 approved in scope.** Session-ID fallback in the planner page. Brief is drafted and awaits independent review. No code written.
-- **Door 2 replaces the public "I know where I'm going" entry.** The owner wants the current Door 2 (`/plan`) to replace the Door 2 published publicly today (the older flow at `/find`). **Scope and coverage consequences are not yet decided**; see the decision note in the Claude project, `decision-door2-replaces-find-2026-10-06.md`. No code has changed.
+- **Fix R1 approved in scope.** Session-ID fallback in the planner page. Codex reviewed the brief (6 Oct), approved the approach and set exact amendments, now applied in brief revision 2. **Codex reproduced the failure through the actual page** (Japan refuses with `randomUUID` absent, builds when restored; simulated absence, not a physical old browser). No code written yet.
+- **Door 2 replaces the public "I know where I'm going" entry.** The owner wants the current Door 2 (`/plan`) to replace the Door 2 published publicly today (the older flow at `/find`). **Direction chosen: B**, the new planner as the main entry with the classic planner (`/find`) as fallback, with broader eligibility rules covering departure city, route and trip length, not just destination. Coverage is selected routes in four countries, not the countries comprehensively. A bounded replacement brief is still to be written after R1 is released; B is a direction, not a release specification. A policy for newly saved trips is required before broader release. See `decision-door2-replaces-find-2026-10-06.md` (revision 2). No code has changed.
 - **This file created.**
 
 ## Open findings (Claude's independent F6 review, 6 Oct)
@@ -42,10 +42,9 @@ R1 live, small: planner refuses every request on browsers without `crypto.random
 
 ## Next
 
-1. Run the Door 2 test suite on the Mac against the updated dependencies (expect 598/598).
-2. Independent review of the R1 brief, then build, review, push, publish, scoped hosted check.
-3. Owner to settle the coverage question for the Door 2 replacement (what a visitor sees for a destination Door 2 does not cover).
-4. Then the next bounded convergence scope, including Q8 preparation if F7 is chosen.
+1. Implement R1 per brief revision 2 (fresh base fetch first), then checks, independent diff review, owner push, owner publish, scoped hosted check.
+2. Write B's bounded replacement brief; independent review; build; representative-journey checks; owner-controlled rollout.
+3. Then the next bounded convergence scope, including Q8 preparation if F7 is chosen.
 
 ## Where things live
 
