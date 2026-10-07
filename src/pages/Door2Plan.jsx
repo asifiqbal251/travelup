@@ -1,8 +1,8 @@
 import { buildF6Trip } from '@/lib/door2/connectionBuild';
 import { newSessionId } from '@/lib/door2/sessionId';
 import { connectionDisplay, editEvidenceGuard, hasEvidence, inspectEvidence, structuralEvidenceGuard } from '@/lib/door2/connectionEvidence';
-const EvidenceTripContext = createContext(null);
 import { createContext, useContext, useEffect, useRef, useState } from "react";
+const EvidenceTripContext = createContext(null);
 import { makeDayLighter, swapActivity, swapDays, swappableDays, undo } from "@/lib/door2/edit";
 import { PILOT_DATA } from "@/lib/door2/planner";
 import { PILOT_PLACES, PILOT_ROUTE_FAMILIES, PILOT_ROUTE_PACKAGES } from "@/lib/door2/pilotData";
