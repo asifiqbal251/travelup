@@ -10,11 +10,15 @@
 - This file records state and decisions made elsewhere. It changes no gate, contract or approval. Gates and product choices keep their normal approval path.
 - Routine evidenced updates do not need cross-model review. A changed gate, product decision or architecture decision does.
 
-## Current state — 6 October 2026, about 20:45 America/Vancouver
+## Current state — 6 October 2026, after the Stage 1 amendments (local)
 
-**Known application code revision:** `0e0c2d8` — the independently approved R1 session-ID fallback. Commits above it are documentation only. **Read current HEAD from Git**; do not rely on a SHA written here. At the last measurement (20:18, Claude and Codex independently) GitHub `main` and the Mac checkout were both `b6583bda492fa8a80050dd0cc13e38850f167fe1`, with nothing pending to push.
+**Known application code revision (local checkout only):** `71373b9` — direction B Stage 1 (`cb4982e`) plus the product amendments A1 and A2. The last application code that is **pushed** is `0e0c2d8` (the independently approved R1 session-ID fallback); the last revision known to be **published** is R1. **Read current HEAD from Git**; do not rely on a SHA written here. Three separate states, none of them implying another:
 
-**Active work:** direction B, the public Door 2 replacement. The brief is at revision 2 with Codex's amendments applied; it awaits the owner's product text, future-saves policy, rollout choice and feedback destination before implementation. Earlier install and check rows below are retained as dated history.
+- **Local:** the Mac checkout has three commits that are not pushed — `cb4982e` (Stage 1), `6f7ce54` (documentation) and `71373b9` (A1 and A2) — plus the documentation commit that records them and the one-line A4 fix that follows it.
+- **Pushed:** GitHub `main` is `3812789` (a documentation commit; verified read-only 6 Oct after the amendments were committed). Nothing from Stage 1 is on GitHub.
+- **Hosted:** the published site serves R1. **Stage 1 is neither published nor hosted-checked.** The public entry buttons still go to `/find`.
+
+**Active work:** direction B, Stage 1 of the public Door 2 replacement. Build brief B revision 3 was approved by the owner and Stage 1 implemented locally (`cb4982e`). Codex independently reviewed it and returned **approve with required amendments**. Four amendments were specified in `build-brief-b-stage1-amendments-2026-10-06.md`: A1 departure-dialog keyboard focus and A2 the two replaced public strings (committed locally, awaiting focused review of the follow-up diffs), A3 this refresh, and A4 the development-server import-order fix. Nothing is pushed, published or hosted-checked. Earlier install and check rows below are retained as dated history.
 
 | Item | State | Evidence |
 |---|---|---|
@@ -24,7 +28,7 @@
 | Checks at `cbad952`, fresh locked install (history) | 598/598 Door 2 tests (132 are F6), 24/24 checker tests, lint, build | Run independently by the GPT reviewer and by Claude (cloud copy) on 6 Oct. **Mac dependencies:** Codex ran the full Door 2 suite on the Mac's newly installed dependencies in an isolated export of the checkout at `e86156c`: 598/598 (6 Oct). Lint, build and hosted checks not repeated there. |
 | Mac checkout | Fast-forwarded to `cbad952` 6 Oct; `npm ci` completed (owner ran it). Nine untracked historical documents preserved. Both frozen fixtures byte-exact. | Claude (device shell) and owner (Terminal) |
 | `npm ci` notes | Reported 22 audit findings, and three packages with install scripts not yet covered by the new `allowScripts` setting (core-js, esbuild, fsevents). Neither is reviewed or acted on. | Owner's Terminal output |
-| Stage | S4 / Phase F, after the F6 release and the R1 fix; direction B scope preparation is the active work | |
+| Stage | S4 / Phase F, after the F6 release and the R1 fix; direction B Stage 1 (implemented locally, amendments under review) is the active work | |
 | Contract | `TripSequence` provisional. The live planner does not run through the forward materialisation and assembly chain. | |
 
 ## Held — nothing here is authorized
@@ -53,11 +57,16 @@ R1 **fixed and released** 6 Oct. R2–R4 dormant: preconditions for activating e
   - (d) Feedback: a "Send feedback" email link to backstage.innovators@gmail.com, monitored by the owner initially.
   - Build brief B is now revision 3. Nothing implemented, pushed, published or activated by this event.
   - Source: `decision-b-stage1-owner-approvals-2026-10-06.md` §6. No decision numbers are assigned here: this file carries no numbered ledger, and the writer did not invent any.
+- **6 Oct 2026 — Direction B Stage 1 implemented locally (`cb4982e`) and independently reviewed by Codex.** Result: approve with required amendments. Codex's core review of `cb4982e` remains applicable. Corrections to the Stage 1 packet: seven existing test files changed, not six (plus the shared harness and the new file); and "evidence guard before consent in every handler" was too broad — every pre-existing page-level `blockedStructure()` check still runs ahead of consent, while some nested handlers relied on their guarded entry sheet or the structural engine's own guard, which are unchanged. Codex found no newly permitted evidence operation and no activation of a held feature. Source: `codex-review-b-stage1-cb4982e-2026-10-06.md`.
+- **6 Oct 2026, 21:58 PT — Owner approved the replacement copy** for the results footer and draft note, and the four implementation phrases (`decision-b-stage1-owner-approvals-2026-10-06.md` §7).
+- **6 Oct 2026 — Stage 1 amendments A1 and A2 committed locally (`71373b9`); not pushed.** A1: the departure dialog now takes focus on open, contains Tab and Shift+Tab, closes on Escape, returns focus to the control used, and after "Yes" lands focus in the resulting sheet or page (local implementation; no new dependency or engine change). A2: the footer and draft note carry the owner-approved text; the draft flag, transport review status and planning behaviour are unchanged. Run by the writer on the Mac: Door 2 suite 652/652, checker tests 24/24, lint clean, build passes. Not yet reviewed independently.
 
 ## Next
 
-1. B's bounded replacement brief (written 6 Oct, awaiting independent review), then build, representative-journey checks, owner-controlled rollout.
-2. Then the next bounded convergence scope, including Q8 preparation if F7 is chosen.
+1. Focused independent review of the amendment diffs only (A1 and A2, this documentation commit, and the A4 one-liner).
+2. Then the owner pushes, then publishes for the unlisted Stage 1 trial, then the hosted checks (phone, save-and-reopen, fallback). Each is the owner's or the release loop's; none has happened.
+3. Public buttons stay on `/find` until Stage 2 and its own gates are complete.
+4. Then the next bounded convergence scope, including Q8 preparation if F7 is chosen.
 
 ## Where things live
 
