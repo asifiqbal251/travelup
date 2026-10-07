@@ -12,13 +12,13 @@
 
 ## Current state — 6 October 2026, after the Stage 1 amendments (local)
 
-**Known application code revision (local checkout only):** `71373b9` — direction B Stage 1 (`cb4982e`) plus the product amendments A1 and A2. The last application code that is **pushed** is `0e0c2d8` (the independently approved R1 session-ID fallback); the last revision known to be **published** is R1. **Read current HEAD from Git**; do not rely on a SHA written here. Three separate states, none of them implying another:
+**Known application code revision (local checkout only):** `bf2715d` — direction B Stage 1 (`cb4982e`) plus the product amendments A1, A2, A4 and A5, independently approved by Codex on 6 October 2026. The last application code that is **pushed** is `0e0c2d8` (the independently approved R1 session-ID fallback); the last revision known to be **published** is R1. **Read current HEAD from Git**; do not rely on a SHA written here. Three separate states, none of them implying another:
 
-- **Local:** the Mac checkout has three commits that are not pushed — `cb4982e` (Stage 1), `6f7ce54` (documentation) and `71373b9` (A1 and A2) — plus the documentation commit that records them and the one-line A4 fix that follows it.
+- **Local:** local HEAD is six commits above `3812789`, none pushed: `6f7ce54`, `cb4982e`, `71373b9`, `b7e4beb`, `ecac7e2`, `bf2715d`. A4 (`ecac7e2`) and A5 (`bf2715d`) are committed.
 - **Pushed:** GitHub `main` is `3812789` (a documentation commit; verified read-only 6 Oct after the amendments were committed). Nothing from Stage 1 is on GitHub.
 - **Hosted:** the published site serves R1. **Stage 1 is neither published nor hosted-checked.** The public entry buttons still go to `/find`.
 
-**Active work:** direction B, Stage 1 of the public Door 2 replacement. Build brief B revision 3 was approved by the owner and Stage 1 implemented locally (`cb4982e`). Codex independently reviewed it and returned **approve with required amendments**. Four amendments were specified in `build-brief-b-stage1-amendments-2026-10-06.md`: A1 departure-dialog keyboard focus and A2 the two replaced public strings (committed locally, awaiting focused review of the follow-up diffs), A3 this refresh, and A4 the development-server import-order fix. Nothing is pushed, published or hosted-checked. Earlier install and check rows below are retained as dated history.
+**Active work:** direction B, Stage 1 of the public Door 2 replacement. Build brief B revision 3 was approved by the owner and Stage 1 implemented locally (`cb4982e`). Codex independently reviewed it and returned **approve with required amendments**; the amendments were then committed locally, and Codex reviewed `cb4982e..bf2715d` and returned **approve** (6 October). Nothing is pushed, published or hosted-checked. Earlier install and check rows below are retained as dated history.
 
 | Item | State | Evidence |
 |---|---|---|
@@ -28,7 +28,7 @@
 | Checks at `cbad952`, fresh locked install (history) | 598/598 Door 2 tests (132 are F6), 24/24 checker tests, lint, build | Run independently by the GPT reviewer and by Claude (cloud copy) on 6 Oct. **Mac dependencies:** Codex ran the full Door 2 suite on the Mac's newly installed dependencies in an isolated export of the checkout at `e86156c`: 598/598 (6 Oct). Lint, build and hosted checks not repeated there. |
 | Mac checkout | Fast-forwarded to `cbad952` 6 Oct; `npm ci` completed (owner ran it). Nine untracked historical documents preserved. Both frozen fixtures byte-exact. | Claude (device shell) and owner (Terminal) |
 | `npm ci` notes | Reported 22 audit findings, and three packages with install scripts not yet covered by the new `allowScripts` setting (core-js, esbuild, fsevents). Neither is reviewed or acted on. | Owner's Terminal output |
-| Stage | S4 / Phase F, after the F6 release and the R1 fix; direction B Stage 1 (implemented locally, amendments under review) is the active work | |
+| Stage | S4 / Phase F, after the F6 release and the R1 fix; direction B Stage 1 (implemented locally, Codex-approved at `bf2715d`, not pushed) is the active work | |
 | Contract | `TripSequence` provisional. The live planner does not run through the forward materialisation and assembly chain. | |
 
 ## Held — nothing here is authorized
@@ -60,11 +60,14 @@ R1 **fixed and released** 6 Oct. R2–R4 dormant: preconditions for activating e
 - **6 Oct 2026 — Direction B Stage 1 implemented locally (`cb4982e`) and independently reviewed by Codex.** Result: approve with required amendments. Codex's core review of `cb4982e` remains applicable. Corrections to the Stage 1 packet: seven existing test files changed, not six (plus the shared harness and the new file); and "evidence guard before consent in every handler" was too broad — every pre-existing page-level `blockedStructure()` check still runs ahead of consent, while some nested handlers relied on their guarded entry sheet or the structural engine's own guard, which are unchanged. Codex found no newly permitted evidence operation and no activation of a held feature. Source: `codex-review-b-stage1-cb4982e-2026-10-06.md`.
 - **6 Oct 2026, 21:58 PT — Owner approved the replacement copy** for the results footer and draft note, and the four implementation phrases (`decision-b-stage1-owner-approvals-2026-10-06.md` §7).
 - **6 Oct 2026 — Stage 1 amendments A1 and A2 committed locally (`71373b9`); not pushed.** A1: the departure dialog now takes focus on open, contains Tab and Shift+Tab, closes on Escape, returns focus to the control used, and after "Yes" lands focus in the resulting sheet or page (local implementation; no new dependency or engine change). A2: the footer and draft note carry the owner-approved text; the draft flag, transport review status and planning behaviour are unchanged. Run by the writer on the Mac: Door 2 suite 652/652, checker tests 24/24, lint clean, build passes. Not yet reviewed independently.
+- **6 Oct 2026 — Codex approved `bf2715d`.** Codex independently reviewed `cb4982e..bf2715d` and returned **approve** (`codex-review-b-stage1-amendments-bf2715d-2026-10-06.md`). It reproduced 653 planner tests, 24 checker tests, lint, build and both fixture hashes; confirmed the explicit boundary list diffs empty against `3812789`; and checked A1 with real keyboard events in a headless desktop Chrome production build. Limits: localhost only, stubbed settings, no hosted backend, no physical phone, no old browser, **no screen reader, and the background was not made inert**. Corrections recorded as facts:
+  - The A1/A2/A5 additions are five A1 tests, one A2 test and one A5 test (646 → 652 → 653).
+  - A repository dialog component exists at `src/components/ui/dialog.jsx`. A1 used a local implementation, which the brief allowed; suitability of the existing component was the writer's judgement, not a finding.
+  - `/dev/door2?key=door2` loads the developer harness in a production build without sign-in. It is unlisted and query-key gated, **not access-protected**. Pre-existing at `3812789`; no product link to it; no change requested or authorized.
 
 ## Next
 
-1. Focused independent review of the amendment diffs only (A1 and A2, this documentation commit, and the A4 one-liner).
-2. Then the owner pushes, then publishes for the unlisted Stage 1 trial, then the hosted checks (phone, save-and-reopen, fallback). Each is the owner's or the release loop's; none has happened.
+1. The owner pushes, then the owner publishes for the unlisted Stage 1 trial, then the hosted checks (phone, save-and-reopen, fallback). Each is the owner's or the release loop's; none has happened. Stage 1 is not live, published or hosted-checked.
 3. Public buttons stay on `/find` until Stage 2 and its own gates are complete.
 4. Then the next bounded convergence scope, including Q8 preparation if F7 is chosen.
 
