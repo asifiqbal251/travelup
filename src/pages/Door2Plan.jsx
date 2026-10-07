@@ -1,4 +1,5 @@
 import { buildF6Trip } from '@/lib/door2/connectionBuild';
+import { newSessionId } from '@/lib/door2/sessionId';
 import { connectionDisplay, editEvidenceGuard, hasEvidence, inspectEvidence, structuralEvidenceGuard } from '@/lib/door2/connectionEvidence';
 const EvidenceTripContext = createContext(null);
 import { createContext, useContext, useRef, useState } from "react";
@@ -1498,7 +1499,7 @@ export default function Door2Plan() {
 
   function runBuildFromSpec(spec) {
     if (blockedStructure()) return;
-    if (!connectionSession.current) connectionSession.current = { schemaVersion: 1, sequenceId: globalThis.crypto?.randomUUID?.(), estimatorRulesetVersion: 'flight-gc-v1', estimates: [] };
+    if (!connectionSession.current) connectionSession.current = { schemaVersion: 1, sequenceId: newSessionId(), estimatorRulesetVersion: 'flight-gc-v1', estimates: [] };
     let result = null;
     let thrown = null;
     let alternatives = [];
