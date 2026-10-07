@@ -10,15 +10,17 @@
 - This file records state and decisions made elsewhere. It changes no gate, contract or approval. Gates and product choices keep their normal approval path.
 - Routine evidenced updates do not need cross-model review. A changed gate, product decision or architecture decision does.
 
-## Current state — 6 October 2026, after the Stage 1 amendments (local)
+## Current state — 7 October 2026, after A6/A7, the push and the hosted checks
 
-**Known application code revision (local checkout only):** `bf2715d` — direction B Stage 1 (`cb4982e`) plus the product amendments A1, A2, A4 and A5, independently approved by Codex on 6 October 2026. The last application code that is **pushed** is `0e0c2d8` (the independently approved R1 session-ID fallback); the last revision known to be **published** is R1. **Read current HEAD from Git**; do not rely on a SHA written here. Three separate states, none of them implying another:
+**Known application code revision:** `d8a809b` — direction B Stage 1 (`cb4982e`) plus the product amendments A1–A5 (independently approved by Codex at `bf2715d`) and the copy amendments A6 (`e1caecc`) and A7 (`d8a809b`) (checked by Claude chat, not by Codex). **Read current HEAD from Git**; do not rely on a SHA written here. Separate states, none of them implying another:
 
-- **Local:** local HEAD is six commits above `3812789`, none pushed: `6f7ce54`, `cb4982e`, `71373b9`, `b7e4beb`, `ecac7e2`, `bf2715d`. A4 (`ecac7e2`) and A5 (`bf2715d`) are committed.
-- **Pushed:** GitHub `main` is `3812789` (a documentation commit; verified read-only 6 Oct after the amendments were committed). Nothing from Stage 1 is on GitHub.
-- **Hosted:** the published site serves R1. **Stage 1 is neither published nor hosted-checked.** The public entry buttons still go to `/find`.
+- **Implemented:** Stage 1 with A1–A7 (`6f7ce54`, `cb4982e`, `71373b9`, `b7e4beb`, `ecac7e2`, `bf2715d`, `e1caecc`, `d8a809b`).
+- **Reviewed:** A1–A5 by Codex (approve at `bf2715d`). A6–A7 checked by Claude chat only; no Codex round, by design.
+- **Pushed (owner-reported):** `e1caecc` and `d8a809b` are on GitHub `main`. Not verified from the sandbox; the owner's next push output will confirm it.
+- **Published (owner-reported):** the owner published in Base44. Hosted Git SHA still not established.
+- **Hosted-checked:** by Claude chat (read-only, desktop Chrome) and by the owner on a physical phone; see the 6–7 October events below. **The unlisted Stage 1 trial is in progress.** "Unlisted" is not private. The public entry buttons still go to `/find`.
 
-**Active work:** direction B, Stage 1 of the public Door 2 replacement. Build brief B revision 3 was approved by the owner and Stage 1 implemented locally (`cb4982e`). Codex independently reviewed it and returned **approve with required amendments**; the amendments were then committed locally, and Codex reviewed `cb4982e..bf2715d` and returned **approve** (6 October). Nothing is pushed, published or hosted-checked. Earlier install and check rows below are retained as dated history.
+**Active work:** direction B, Stage 1 of the public Door 2 replacement. Build brief B revision 3 was approved by the owner and Stage 1 implemented locally (`cb4982e`). Codex independently reviewed it and returned **approve with required amendments**; the amendments were then committed locally, and Codex reviewed `cb4982e..bf2715d` and returned **approve** (6 October). Since then the amendments were approved, A6–A7 added, and Stage 1 pushed, published and hosted-checked (events below). Earlier install and check rows below are retained as dated history.
 
 | Item | State | Evidence |
 |---|---|---|
@@ -64,12 +66,26 @@ R1 **fixed and released** 6 Oct. R2–R4 dormant: preconditions for activating e
   - The A1/A2/A5 additions are five A1 tests, one A2 test and one A5 test (646 → 652 → 653).
   - A repository dialog component exists at `src/components/ui/dialog.jsx`. A1 used a local implementation, which the brief allowed; suitability of the existing component was the writer's judgement, not a finding.
   - `/dev/door2?key=door2` loads the developer harness in a production build without sign-in. It is unlisted and query-key gated, **not access-protected**. Pre-existing at `3812789`; no product link to it; no change requested or authorized.
+- **6–7 Oct 2026 — A6 and A7.**
+  - **A6** `e1caecc` — `/plan` catalogue line "Pilot catalogue · …" replaced with "Early-access catalogue · a handful of places, built properly." One test added (654).
+  - **A7** `d8a809b` — empty-search message replaced with "No matches in the early-access catalogue yet." One existing assertion updated (still 654).
+  - Both found by Claude chat on the published app and by A6's search step; owner-approved. Checked by Claude chat against their briefs: 654 tests, 24 checker tests, lint, build, frozen fixtures byte-identical, boundary paths empty against `9fd1de5`.
+  - **No Codex round**, by design: Codex stated a broad review was unnecessary unless application changes expanded scope. These are two public strings with no engine, storage, consent or dependency surface. They are not Codex-reviewed.
+  - The remaining "pilot" mentions are internal only: comments in `src/lib/door2/pilotData.js`, test titles and comments in `contentSchema.test.js`, and the A2/A5 negative assertions in `flowBStage1.test.js`. `Door2Dev.jsx` keeps its developer-harness wording by owner decision.
+- **7 Oct 2026 — Push.** Two pushes of `e1caecc` and `d8a809b` were rejected by GitHub with **Internal Server Error** at 16:57:53Z and 16:59:51Z (request IDs `F419:1CCF:66D58:7D852:6AC67A09`, `F44A:1E3FA7:200F85:2B3DC9:6AC67A80`). Before each retry, a fresh fetch showed `origin/main` unmoved at `9fd1de5`, two commits behind local. No force push was used. A later push succeeded (owner-reported), and the owner published in Base44.
+- **6–7 Oct 2026 — Hosted checks (Stage 1 + A1–A7).** Two sources, kept separate.
+  - **Claude chat, desktop Chrome, read-only, published app.** After the `9fd1de5` publish: header "WhereNova · Early access"; the approved limits text verbatim with route names; the "Go to the classic planner" link with "You'll need to enter your trip details again there."; `/dev/door2` with no key returns not-found; the landing page's "I know where I'm going" goes to `/find`. After the `d8a809b` publish: the A6 line is live and no "pilot" wording appears in the `/plan` page text. No clicks, saves or searches were made; this was the owner's own browser.
+  - **Owner, physical phone, checklist `hosted-check-b-stage1-2026-10-06-rev2.md`.** **All rows pass** (owner-reported): page fit and scrolling, departure question unanswered by default, decline builds nothing and offers the classic planner, all four routes build, footer and draft-itinerary wording, before-save and after-save wording, save and reopen, refine with Yes and with No after a fresh load, the three landing buttons going to `/find`, the feedback link, and the signed-in checks.
+  - **Observation, not a defect:** saved trips do not appear in a private/incognito window. Expected: saves live in the browser's own storage, a private window starts with none, and the approved wording says trips are saved only in this browser. A traveller using private browsing will lose a trip when the window closes.
+  - **A7 on the hosted app: not separately confirmed**, because that message only appears after a search with no results.
+  - **Not proven by anyone:** screen-reader behaviour (the departure dialog's background is not made inert), old browsers.
 
 ## Next
 
-1. The owner pushes, then the owner publishes for the unlisted Stage 1 trial, then the hosted checks (phone, save-and-reopen, fallback). Each is the owner's or the release loop's; none has happened. Stage 1 is not live, published or hosted-checked.
-3. Public buttons stay on `/find` until Stage 2 and its own gates are complete.
-4. Then the next bounded convergence scope, including Q8 preparation if F7 is chosen.
+1. **Stage 2 brief:** handing trip details to the classic planner.
+2. The unlisted Stage 1 trial continues. **Public entry buttons remain on `/find`.** The switch to `/plan` needs: Stage 2, the phone / save-and-reopen / fallback checks on Stage 2, **and resolution of the developer-harness item in `docs/PARKED.md`** (protect or remove `/dev/door2?key=door2`).
+3. Then the next bounded convergence scope, including Q8 preparation if F7 is chosen.
+4. Everything on the held list stays held.
 
 ## Where things live
 

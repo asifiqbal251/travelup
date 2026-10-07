@@ -141,3 +141,18 @@ text (confirmed — NYC profile gave New York City and Istanbul & Cappadocia
 the same three strings). withDedupedPills() mitigates this within a single
 results page but not across sessions. Needs destination-specific content,
 not a code fix. Revisit with the "why this month" data work.
+
+## Developer harness reachable on the published app (parked 7 October 2026)
+
+`/dev/door2?key=door2` loads the Door 2 developer harness without sign-in,
+including its "Not for real travellers" draft-data wording. It is unlisted
+and query-key gated (`Door2Dev.jsx:161` checks only the literal query value;
+the route is registered at `src/App.jsx:59`), **not access-protected.** No
+product page links to it. Pre-existing at `3812789`; found by Codex's review
+of `bf2715d`.
+
+Owner decision, 7 October 2026: leave it in place for the unlisted trial.
+**It must be resolved — protected or removed — before the public entry
+buttons switch to `/plan`.** That switch is blocked until it is.
+
+No change is authorized now.
