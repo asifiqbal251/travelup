@@ -3,7 +3,7 @@
 import { mountAndChooseCore } from './helpers/f5Flows.js';
 import { test, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { loadDoor2PlanModule, mountAndBuildViaIntake, teardown } from './helpers/domHarness.js';
+import { confirmDepartureOnReopenedTrip, loadDoor2PlanModule, mountAndBuildViaIntake, teardown } from './helpers/domHarness.js';
 import { addDayTrip, japanSpec, mountWithSavedTrip, routeAlternativeButtons, savedTrip } from './helpers/dayTrips.js';
 
 const M = await loadDoor2PlanModule();
@@ -102,6 +102,7 @@ test('C4b: a reloaded draft with a day trip (empty history) still confirms befor
   const t1 = await savedTrip(M, user);
   assert.deepEqual(t1.routePlan.stops.find((s) => s.key === 'tokyo_base').selectedExcursionIds, ['nikko'], 'the reloaded trip carries its day trip');
 
+  await confirmDepartureOnReopenedTrip(user); // a reopened trip is not rebuilt until the departure is confirmed
   await openRefineAndApply(user);
   assert.ok(await screen.findByText('Refine your trip'), 'confirm appears even with no history');
   await user.click(screen.getByRole('button', { name: 'Keep my trip' }));

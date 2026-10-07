@@ -32,6 +32,7 @@ test('B1: Intake -> build (Peru, October, 10 days, couple)', async () => {
   await user.click(await screen.findByText('October'));
   await setDays(user, 10);
   await user.click(screen.getByText('Couple'));
+  await user.click(screen.getByRole('button', { name: 'Yes, from Vancouver' }));
   await user.click(screen.getByRole('button', { name: 'Build my trip' }));
 
   assert.ok(await screen.findByText('Peru'), 'heading shows Peru');
@@ -61,6 +62,7 @@ test('B2: duration_too_short at 5 days offers "Add 3 days", which yields a valid
 
   await user.click(await screen.findByText('Peru'));
   await setDays(user, 5);
+  await user.click(screen.getByRole('button', { name: 'Yes, from Vancouver' }));
   await user.click(screen.getByRole('button', { name: 'Build my trip' }));
 
   assert.ok(await screen.findByText(/can't be built yet/), 'failure panel shown');
@@ -78,6 +80,7 @@ test('B3: required_place_conflict (Huaraz + Machu Picchu, 9 days) offers both re
 
   await user.click(await screen.findByText('Peru'));
   await setDays(user, 9);
+  await user.click(screen.getByRole('button', { name: 'Yes, from Vancouver' }));
   await user.click(screen.getByRole('button', { name: 'Build my trip' }));
   await screen.findByText('Your trip at a glance');
 
@@ -106,6 +109,7 @@ test('B3b: "Add 2 days" yields a valid trip 2 days longer, with both places kept
 
   await user.click(await screen.findByText('Peru'));
   await setDays(user, 9);
+  await user.click(screen.getByRole('button', { name: 'Yes, from Vancouver' }));
   await user.click(screen.getByRole('button', { name: 'Build my trip' }));
   await screen.findByText('Your trip at a glance');
 
@@ -128,6 +132,7 @@ test('B11a: NYC (US) builds a valid trip', async () => {
   await mountDoor2Plan(M);
   const user = userEvent.setup();
   await user.click(await screen.findByText('United States'));
+  await user.click(screen.getByRole('button', { name: 'Yes, from Vancouver' }));
   await user.click(screen.getByRole('button', { name: 'Build my trip' }));
   await screen.findByText('Your trip at a glance');
   assert.ok(screen.queryByText(/can't be built yet/) === null, 'NYC builds');
@@ -140,6 +145,7 @@ test('B11b: Tokyo 10 days builds with no content gaps (E5-4)', async () => {
   const user = userEvent.setup();
   await user.click(await screen.findByText('Japan'));
   await setDays(user, 10);
+  await user.click(screen.getByRole('button', { name: 'Yes, from Vancouver' }));
   await user.click(screen.getByRole('button', { name: 'Build my trip' }));
   await screen.findByText('Your trip at a glance');
   assert.ok(screen.queryByText(/can't be built yet/) === null, 'Tokyo builds (no thrown/failure)');

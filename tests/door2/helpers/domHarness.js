@@ -128,8 +128,28 @@ export async function teardown() {
   window.close();
 }
 
+/** The traveller's own confirmation on the Basics step: the real "Yes, from
+ * Vancouver" answer to the departure question (direction B, Stage 1). The page
+ * makes no planner call without it. */
+export async function confirmDeparture(user) {
+  const { screen } = await import('@testing-library/react');
+  await user.click(screen.getByRole('button', { name: 'Yes, from Vancouver' }));
+}
+
+/** The same confirmation for a reopened saved trip, which never carries one over.
+ * A structural control asks the question; this taps the first stop's nights chip,
+ * answers "Yes, from Vancouver", and closes the nights sheet that then opens, so
+ * the trip itself is left exactly as loaded. */
+export async function confirmDepartureOnReopenedTrip(user) {
+  const { screen, within } = await import('@testing-library/react');
+  await user.click(screen.getAllByRole('button', { name: /^\d+ nights?$/ })[0]);
+  const prompt = await screen.findByRole('dialog', { name: 'Are you departing from Vancouver?' });
+  await user.click(within(prompt).getByRole('button', { name: 'Yes, from Vancouver' }));
+  await user.click(screen.getByRole('button', { name: '×' }));
+}
+
 /** Mount the real page and drive the actual intake wizard (destination ->
- * basics -> Build my trip). Unlike mountWithBuiltTrip (which loads a saved
+ * basics -> confirm the departure -> Build my trip). Unlike mountWithBuiltTrip (which loads a saved
  * draft and therefore has no currentSpec/routeAlternatives, per
  * handleLoadDraft), this path is required for any flow that needs route
  * alternatives or handleChangeRoute (B7, B8), since those only exist when
@@ -162,6 +182,7 @@ export async function mountAndBuildViaIntake(M, { destination, totalDays = 10 })
     await user.click(screen.getByRole('button', { name: '−' }));
     current -= 1;
   }
+  await confirmDeparture(user);
   await user.click(screen.getByRole('button', { name: 'Build my trip' }));
   await screen.findByText('Your trip at a glance');
   return { user };
@@ -198,8 +219,11 @@ export async function mountDoor2Plan(M) {
 /** Build a trip with the engine, save it as a draft, mount the page, and load
  * it via the real "My saved trips -> Continue" UI. Used by flows B4-B13 so
  * every test doesn't have to re-drive the multi-step intake wizard, while
- * still entering "results" state through a real user action on the page. */
-export async function mountWithBuiltTrip(M, spec) {
+ * still entering "results" state through a real user action on the page.
+ * These flows go on to change the trip's structure, so the helper also gives
+ * the departure confirmation a reopened trip needs first; pass
+ * `confirmDeparture: false` to stop at the trip exactly as reopened. */
+export async function mountWithBuiltTrip(M, spec, { confirmDeparture: confirm = true } = {}) {
   const { render, screen, cleanup } = await import('@testing-library/react');
   const userEvent = (await import('@testing-library/user-event')).default;
   cleanup();
@@ -210,6 +234,7 @@ export async function mountWithBuiltTrip(M, spec) {
   const view = render(M.React.createElement(M.MemoryRouter, { initialEntries: ['/plan?key=door2'] }, M.React.createElement(M.Door2Plan)));
   const user = userEvent.setup();
   await user.click(await screen.findByText('Continue'));
+  if (confirm) await confirmDepartureOnReopenedTrip(user);
   return { ...view, user, trip };
 }
 

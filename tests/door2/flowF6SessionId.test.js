@@ -36,6 +36,7 @@ async function start() {
   const user = userEvent.setup();
   await user.click(await screen.findByText('Japan'));
   await setDays(user, 5);
+  await user.click(screen.getByRole('button', { name: 'Yes, from Vancouver' }));
   await user.click(screen.getByRole('button', { name: 'Build my trip' }));
   return user;
 }
@@ -64,6 +65,7 @@ for (const [label, crypto] of Object.entries(tiers)) {
       // (the cancel path exists only for evidence trips; see flowF6Connections ID4).
       await user.click(screen.getByRole('button', { name: 'Start a new trip' }));
       await user.click(await screen.findByText('Japan')); await setDays(user, 5);
+      await user.click(screen.getByRole('button', { name: 'Yes, from Vancouver' }));
       await user.click(screen.getByRole('button', { name: 'Build my trip' }));
       assert.ok(await screen.findByText('Your trip at a glance'));
       assert.match(lastId(), PATTERN);

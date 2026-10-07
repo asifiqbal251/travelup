@@ -1,6 +1,6 @@
 import { test, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { loadDoor2PlanModule, mountDoor2Plan, mountAndBuildViaIntake, mountWithBuiltTrip, resetLocation, teardown } from './helpers/domHarness.js';
+import { confirmDepartureOnReopenedTrip, loadDoor2PlanModule, mountDoor2Plan, mountAndBuildViaIntake, mountWithBuiltTrip, resetLocation, teardown } from './helpers/domHarness.js';
 import { chooseCoreRoute, setDays, withGapCatalogue } from './helpers/f5Flows.js';
 import { japanSpec, savedTrip } from './helpers/dayTrips.js';
 const M = await loadDoor2PlanModule();
@@ -17,7 +17,7 @@ async function refine(user, days) {
 async function start(destination,days) {
   await mountDoor2Plan(M); const user=userEvent.setup();
   await user.click(await screen.findByText(destination)); await setDays(user,days);
-  await user.click(screen.getByRole('button',{name:'Build my trip'})); return user;
+  await user.click(screen.getByRole('button',{name:'Yes, from Vancouver'}));await user.click(screen.getByRole('button',{name:'Build my trip'})); return user;
 }
 async function assertRoute(user,id,days) {
   await screen.findByText('Your trip at a glance');
@@ -72,7 +72,7 @@ test('F5 explicit duration adjustment keeps Tokyo; fresh start clears the constr
   await user.click(screen.getByRole('button',{name:'Use 12 days'})); await assertRoute(user,jp,12);
   await user.click(screen.getByRole('button',{name:'Start a new trip'}));
   await user.click(await screen.findByText('Japan')); await setDays(user,10);
-  await user.click(screen.getByRole('button',{name:'Build my trip'})); await assertRoute(user,kyoto,10);
+  await user.click(screen.getByRole('button',{name:'Yes, from Vancouver'}));await user.click(screen.getByRole('button',{name:'Build my trip'})); await assertRoute(user,kyoto,10);
 });
 test('F5 automatic refinement can rerank; saving/reloading establishes a conservative route constraint',async()=>{
   const {user}=await mountAndBuildViaIntake(M,{destination:'Japan',totalDays:7});
@@ -87,6 +87,7 @@ test('F5 automatic refinement can rerank; saving/reloading establishes a conserv
   const next=userEvent.setup(); await next.click(await screen.findByText('Continue'));
   assert.equal(screen.getByText('Your trip at a glance').closest('div').textContent,text);
   assert.equal(localStorage.getItem('door2_drafts_v1'),before);
+  await confirmDepartureOnReopenedTrip(next); // without it the Refine below would not rebuild at all
   await refine(next,10); await assertRoute(next,jp,10);
 });
 test('F5 explicit constraint survives cancelled and confirmed destructive Refine',async()=>{

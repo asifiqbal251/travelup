@@ -9,7 +9,7 @@ import assert from 'node:assert/strict';
 import { fileURLToPath } from 'node:url';
 import { rmSync } from 'node:fs';
 import { buildSync } from 'esbuild';
-import { loadDoor2PlanModule, mountAndBuildViaIntake, resetLocation, teardown } from './helpers/domHarness.js';
+import { confirmDepartureOnReopenedTrip, loadDoor2PlanModule, mountAndBuildViaIntake, resetLocation, teardown } from './helpers/domHarness.js';
 import { addDayTrip, savedTrip } from './helpers/dayTrips.js';
 
 const M = await loadDoor2PlanModule();
@@ -67,6 +67,7 @@ test('R1-T1: Japan 10 days -> day trip -> Save -> reload -> Continue -> Refine -
   const original = await savedTrip(M, first.user);
 
   const { user } = await reloadAndContinue();
+  await confirmDepartureOnReopenedTrip(user); // a reopened trip is not rebuilt until the departure is confirmed
   await openRefine(user);
   await user.click(screen.getByRole('button', { name: 'Apply and rebuild' }));
   assert.ok(await screen.findByText('Refine your trip'), 'the day trip is about to be thrown away, so it confirms');
@@ -95,6 +96,7 @@ test('R1-T1b: interests and pace chosen before saving are what Refine shows and 
   assert.equal(original.spec.pace, 'relaxed');
 
   const { user } = await reloadAndContinue();
+  await confirmDepartureOnReopenedTrip(user); // without it the rebuild below would not run at all
   await openRefine(user);
   await user.click(screen.getByRole('button', { name: 'Apply and rebuild' })); // no day trips, no history: no confirm
   noErrorPanel();

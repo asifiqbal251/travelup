@@ -3,8 +3,6 @@ import { newSessionId } from '@/lib/door2/sessionId';
 import { connectionDisplay, editEvidenceGuard, hasEvidence, inspectEvidence, structuralEvidenceGuard } from '@/lib/door2/connectionEvidence';
 const EvidenceTripContext = createContext(null);
 import { createContext, useContext, useRef, useState } from "react";
-import { useLocation } from "react-router-dom";
-import PageNotFound from "@/lib/PageNotFound";
 import { makeDayLighter, swapActivity, swapDays, swappableDays, undo } from "@/lib/door2/edit";
 import { PILOT_DATA } from "@/lib/door2/planner";
 import { PILOT_PLACES, PILOT_ROUTE_FAMILIES, PILOT_ROUTE_PACKAGES } from "@/lib/door2/pilotData";
@@ -34,11 +32,13 @@ import {
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
+// A country here stands for the selected routes named beside it, never the whole
+// country; `coverage` is shown with the label wherever a country can be picked.
 const DESTINATIONS = [
-  { value: "country:PE", label: "Peru" },
-  { value: "country:US", label: "United States" },
-  { value: "country:JP", label: "Japan" },
-  { value: "country:CA", label: "Canada" },
+  { value: "country:PE", label: "Peru", coverage: "Peru classic with Huaraz options" },
+  { value: "country:US", label: "United States", coverage: "New York City" },
+  { value: "country:JP", label: "Japan", coverage: "Tokyo with Kyoto options" },
+  { value: "country:CA", label: "Canada", coverage: "Eastern Canada corridor" },
   ...Object.values(PILOT_PLACES)
     .filter((p) => p.id !== "vancouver")
     .map((p) => ({ value: `place:${p.id}`, label: p.name })),
@@ -83,6 +83,61 @@ const MODE_LABELS = {
   local_shuttle: "shuttle",
   ferry: "ferry",
 };
+
+// The only origin this planner plans from. Stage 1 of direction B adds consent
+// around it, not an origin engine.
+const SUPPORTED_ORIGIN_ID = "vancouver";
+const CLASSIC_PLANNER_PATH = "/find";
+const FEEDBACK_HREF = "mailto:backstage.innovators@gmail.com";
+
+// Owner-approved wording (build brief B §8, 6 Oct 2026), used verbatim. Changing
+// any of it is an owner decision; tests/door2/flowBStage1.test.js asserts it as rendered.
+export const APPROVED_COPY = {
+  limits:
+    "Plan selected routes from Vancouver: New York City, Tokyo with Kyoto options, Peru classic with Huaraz options, and the Eastern Canada corridor. Other destinations or departure cities? Use the classic planner. Trips made here are saved only in this browser; the classic planner supports account saving when you sign in.",
+  departureQuestion: "Are you departing from Vancouver?",
+  departureYes: "Yes, from Vancouver",
+  departureNo: "No, another city",
+  departureDeclined: "This planner currently plans from Vancouver. You can continue in the classic planner.",
+  beforeSave: "When you save, your trip stays in this browser on this device. These trips do not sync to your account.",
+  afterSave: "Saved in this browser on this device. These trips do not sync to your account.",
+  feedback: "Send feedback",
+};
+
+// The classic planner cannot read anything from this page yet, so every link to it
+// says the details must be entered again and none promises a prefill.
+export const CLASSIC_COPY = {
+  link: "Go to the classic planner",
+  reentry: "You'll need to enter your trip details again there.",
+  escape: "Use the classic planner instead",
+};
+
+// Refusals this page recognises as an ordinary support or fit limit, as
+// "state:reason". Anything else — invalid context, any declared phase, an authoring
+// or estimation fault, a reason added later — is a fault. The broad state alone and
+// the human-readable message are never used to decide.
+const ORDINARY_REFUSALS = new Set([
+  "destination_not_covered:not_covered",
+  "destination_not_covered:country_unknown",
+  "destination_not_covered:place_unknown",
+  "destination_not_covered:required_place_uncovered",
+  "route_not_supported:origin_unknown",
+  "route_not_supported:no_package_covers_all_required",
+  "route_not_supported:route_constraint_incompatible",
+  "route_not_supported:too_long",
+  "route_not_supported:duration_gap",
+  "duration_too_short:too_short",
+  "required_place_conflict:too_short",
+  "connection_unreviewed:missing",
+  "connection_unreviewed:unreviewed",
+]);
+
+/** "ordinary" for a recognised support or fit refusal, otherwise "fault". */
+export function refusalKind(result) {
+  const detail = result?.detail;
+  if (!detail || detail.phase !== undefined) return "fault";
+  return ORDINARY_REFUSALS.has(`${result.state}:${detail.reason}`) ? "ordinary" : "fault";
+}
 
 export const DEFAULT_FORM = {
   destination: "",
@@ -388,6 +443,85 @@ function groupDaysByPlace(trip) {
   return groups;
 }
 
+// ── Stage 1: classic planner link, departure confirmation ───────────────────
+
+function ClassicPlannerLink({ label = CLASSIC_COPY.link }) {
+  return (
+    <p className="text-sm text-slate-400">
+      <a href={CLASSIC_PLANNER_PATH} className="text-teal font-medium underline underline-offset-2 hover:opacity-80">
+        {label}
+      </a>{" "}
+      <span>{CLASSIC_COPY.reentry}</span>
+    </p>
+  );
+}
+
+function DepartureLimit() {
+  return (
+    <div role="status" className="space-y-1">
+      <p className="text-sm text-amber-300">{APPROVED_COPY.departureDeclined}</p>
+      <ClassicPlannerLink />
+    </div>
+  );
+}
+
+/** The question and its two answers. `answer` is null until the traveller picks one. */
+function DepartureQuestion({ answer, onAnswer, nudge = false }) {
+  return (
+    <div className="space-y-2">
+      <p
+        role={nudge ? "alert" : undefined}
+        className={`text-xs font-medium ${nudge ? "text-amber-300" : "text-slate-400"}`}
+      >
+        {APPROVED_COPY.departureQuestion}
+      </p>
+      <div className="flex flex-wrap gap-2">
+        <button
+          type="button"
+          aria-pressed={answer === "confirmed"}
+          onClick={() => onAnswer("confirmed")}
+          className={chipClass(answer === "confirmed")}
+        >
+          {APPROVED_COPY.departureYes}
+        </button>
+        <button
+          type="button"
+          aria-pressed={answer === "declined"}
+          onClick={() => onAnswer("declined")}
+          className={chipClass(answer === "declined")}
+        >
+          {APPROVED_COPY.departureNo}
+        </button>
+      </div>
+      {answer === "declined" && <DepartureLimit />}
+    </div>
+  );
+}
+
+/** Asked when a rebuild is attempted outside the Basics step. A trip recorded from
+ * another origin gets the limit only: answering could not make it a Vancouver trip. */
+function DeparturePrompt({ prompt, answer, originUnsupported, onAnswer, onClose }) {
+  if (!prompt) return null;
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60" onClick={onClose}>
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label={APPROVED_COPY.departureQuestion}
+        className="w-full max-w-2xl rounded-t-2xl bg-slate-900 border-t border-slate-700 p-6 space-y-4"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex justify-end">
+          <button type="button" aria-label="Close" onClick={onClose} className="text-slate-500 hover:text-white text-xl leading-none">
+            ×
+          </button>
+        </div>
+        {originUnsupported ? <DepartureLimit /> : <DepartureQuestion answer={answer} onAnswer={onAnswer} />}
+      </div>
+    </div>
+  );
+}
+
 // ── Saved trips ──────────────────────────────────────────────────────────────
 
 function SavedTripsList({ onLoad }) {
@@ -472,6 +606,10 @@ function DestinationStep({ query, onQueryChange, onPick, onLoad }) {
           <h1 className="text-xl font-bold text-white mb-1">Where are you going?</h1>
           <p className="text-sm text-slate-500">Pilot catalogue · a handful of places, built properly.</p>
         </div>
+        <div className="rounded-lg bg-slate-900/60 border border-slate-700 p-4 space-y-2">
+          <p className="text-sm text-slate-300 leading-relaxed">{APPROVED_COPY.limits}</p>
+          <ClassicPlannerLink />
+        </div>
         <input
           type="text"
           value={query}
@@ -483,7 +621,10 @@ function DestinationStep({ query, onQueryChange, onPick, onLoad }) {
         {q ? (
           <div className="space-y-2">
             {results.length === 0 && (
-              <p className="text-sm text-slate-500">No matches in the pilot catalogue yet.</p>
+              <>
+                <p className="text-sm text-slate-500">No matches in the pilot catalogue yet.</p>
+                <ClassicPlannerLink />
+              </>
             )}
             {results.map((d) => (
               <button
@@ -492,7 +633,8 @@ function DestinationStep({ query, onQueryChange, onPick, onLoad }) {
                 onClick={() => onPick(d.value)}
                 className="w-full text-left px-4 py-3 rounded-lg bg-slate-700 hover:bg-slate-600 border border-slate-600 text-white text-sm font-medium transition-colors"
               >
-                {d.label}
+                <span>{d.label}</span>
+                {d.coverage && <span className="font-normal text-slate-400"> · {d.coverage}</span>}
               </button>
             ))}
           </div>
@@ -507,7 +649,8 @@ function DestinationStep({ query, onQueryChange, onPick, onLoad }) {
                   onClick={() => onPick(d.value)}
                   className="px-4 py-2 rounded-full bg-slate-700 hover:bg-slate-600 border border-slate-600 text-white text-sm font-medium transition-colors"
                 >
-                  {d.label}
+                  <span>{d.label}</span>
+                  <span className="font-normal text-slate-400"> · {d.coverage}</span>
                 </button>
               ))}
             </div>
@@ -520,7 +663,7 @@ function DestinationStep({ query, onQueryChange, onPick, onLoad }) {
 
 // ── Intake: basics step ─────────────────────────────────────────────────────
 
-function BasicsStep({ form, updateForm, onBack, onSubmit }) {
+function BasicsStep({ form, updateForm, onBack, onSubmit, departure, onDeparture, departureNudge }) {
   return (
     <div className="space-y-4">
       <button
@@ -595,6 +738,8 @@ function BasicsStep({ form, updateForm, onBack, onSubmit }) {
             ))}
           </div>
         </div>
+
+        <DepartureQuestion answer={departure} onAnswer={onDeparture} nudge={departureNudge} />
 
         <button
           type="button"
@@ -1310,17 +1455,22 @@ function RefineSheet({ open, onClose, form, toggleInterest, setPace, setDuration
 function FailurePanel({ result, thrown, onExtend, onRemovePlace, onSetDuration, onChangeRoute }) {
   if (thrown) {
     return (
-      <div className="rounded-xl bg-red-950/60 border border-red-700/50 p-5 space-y-2">
+      <div role="alert" className="rounded-xl bg-red-950/60 border border-red-700/50 p-5 space-y-2">
         <h3 className="font-semibold text-red-300">Something went wrong</h3>
         <p className="text-sm font-mono text-red-400 break-words">{thrown}</p>
         <p className="text-xs text-red-500">
           This is a data-integrity signal, not a normal failure state.
         </p>
+        <ClassicPlannerLink label={CLASSIC_COPY.escape} />
       </div>
     );
   }
 
   if (!result || result.ok !== false) return null;
+
+  // A fault keeps its own message and everything recorded with it, in the error
+  // view: it is never presented as an unsupported destination.
+  const fault = refusalKind(result) === "fault";
 
   const transportEvidence = result.detail?.phase === "pre_validation" ? [] :
     (result.evidence?.entries ?? []).filter(entry =>
@@ -1329,11 +1479,18 @@ function FailurePanel({ result, thrown, onExtend, onRemovePlace, onSetDuration, 
   const usesEstimates = transportEvidence.some(entry => entry.code === "connection_estimated");
 
   return (
-    <div className="rounded-xl bg-slate-800 border border-orange-700/50 p-5 space-y-4">
+    <div
+      role={fault ? "alert" : undefined}
+      className={`rounded-xl p-5 space-y-4 border ${fault ? "bg-red-950/60 border-red-700/50" : "bg-slate-800 border-orange-700/50"}`}
+    >
       <div>
-        <h3 className="font-semibold text-orange-300 mb-1">
-          This trip can&apos;t be built yet
-        </h3>
+        {fault ? (
+          <h3 className="font-semibold text-red-300 mb-1">Something went wrong</h3>
+        ) : (
+          <h3 className="font-semibold text-orange-300 mb-1">
+            This trip can&apos;t be built yet
+          </h3>
+        )}
         <p className="text-sm text-slate-300">{result.message}</p>
       </div>
 
@@ -1406,6 +1563,8 @@ function FailurePanel({ result, thrown, onExtend, onRemovePlace, onSetDuration, 
           })}
         </div>
       )}
+
+      <ClassicPlannerLink label={fault ? CLASSIC_COPY.escape : CLASSIC_COPY.link} />
     </div>
   );
 }
@@ -1413,9 +1572,6 @@ function FailurePanel({ result, thrown, onExtend, onRemovePlace, onSetDuration, 
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function Door2Plan() {
-  const location = useLocation();
-  const allowed = new URLSearchParams(location.search).get("key") === "door2";
-
   const [step, setStep] = useState("destination"); // 'destination' | 'basics'
   const [destQuery, setDestQuery] = useState("");
   const [form, setForm] = useState(DEFAULT_FORM);
@@ -1438,8 +1594,16 @@ export default function Door2Plan() {
   const [toast, setToast] = useState(null);
   const toastTimer = useRef(null);
   const connectionSession = useRef(null);
-
-  if (!allowed) return <PageNotFound />;
+  // Departure confirmation: null (unanswered) | "confirmed" | "declined". Held in
+  // memory only, so a reload never infers it. The ref lets a handler resumed from
+  // the prompt read the answer given in the same event.
+  const [departure, setDepartureState] = useState(null);
+  const departureRef = useRef(null);
+  const [departureNudge, setDepartureNudge] = useState(false);
+  const [departurePrompt, setDeparturePrompt] = useState(null);
+  // A fault from a rebuild attempted while a trip is on screen; the trip stays.
+  const [rebuildFault, setRebuildFault] = useState(null);
+  const [savedTrip, setSavedTrip] = useState(null);
 
   const requiredPlaces = requiredPlacesForDestination(form.destination);
 
@@ -1448,6 +1612,10 @@ export default function Door2Plan() {
     if (tripResult?.result && tripResult.result.ok !== false) return tripResult.result;
     return null;
   })();
+
+  // A restored trip recorded from another origin is never rebuilt here: a rebuild
+  // would silently make it a Vancouver trip.
+  const originUnsupported = !!activeTrip && activeTrip.spec?.originPlaceId !== SUPPORTED_ORIGIN_ID;
 
   const showResults = tripResult !== null;
   const isFailure =
@@ -1497,15 +1665,41 @@ export default function Door2Plan() {
     return false;
   }
 
+  function setDeparture(answer) {
+    departureRef.current = answer;
+    setDepartureState(answer);
+    setDepartureNudge(false);
+  }
+
+  // The consent check for every entry point that constructs or reconstructs a route.
+  // Without a confirmed Vancouver departure it asks instead of proceeding, and
+  // `resume` re-enters the same handler once the traveller confirms.
+  function departureBlocked(resume) {
+    if (originUnsupported) { setDeparturePrompt({ resume: null }); return true; }
+    if (departureRef.current === "confirmed") return false;
+    setDeparturePrompt({ resume });
+    return true;
+  }
+
+  function handlePromptAnswer(answer) {
+    const resume = departurePrompt?.resume;
+    setDeparture(answer);
+    if (answer !== "confirmed") return;
+    setDeparturePrompt(null);
+    resume?.();
+  }
+
+  /** @returns {boolean} true when the planner ran and its result is now on screen. */
   function runBuildFromSpec(spec) {
-    if (blockedStructure()) return;
+    if (blockedStructure()) return false;
+    if (departureBlocked(() => runBuildFromSpec(spec))) return false;
     if (!connectionSession.current) connectionSession.current = { schemaVersion: 1, sequenceId: newSessionId(), estimatorRulesetVersion: 'flight-gc-v1', estimates: [] };
     let result = null;
     let thrown = null;
     let alternatives = [];
     try {
       const planned = buildF6Trip(spec, PILOT_DATA, { reviewPolicy: "allow_drafts", connectionContext: { ...connectionSession.current, generatedAt: new Date().toISOString() } });
-      if (planned.detail?.phase === 'pre_validation' && activeTrip) { setEditError(planned.message); return; }
+      if (activeTrip && !planned.ok && refusalKind(planned) === "fault") { setRebuildFault({ result: planned, thrown: null }); return false; }
       setCurrentSpec(spec);
       result = planned.ok ? planned.value.trip : planned;
       alternatives = planned.ok ? planned.value.alternatives.map(alt => {
@@ -1514,7 +1708,9 @@ export default function Door2Plan() {
       }) : [];
     } catch (err) {
       thrown = String(err?.message ?? err);
+      if (activeTrip) { setRebuildFault({ result: null, thrown }); return false; }
     }
+    setRebuildFault(null);
     setTripResult({ result, thrown });
     setEditTrip(null);
     setEditError(null);
@@ -1522,12 +1718,13 @@ export default function Door2Plan() {
     setDayErrors({});
     setDayNotices({});
     setRouteAlternatives(alternatives.slice(0, 2));
+    return true;
   }
 
   function runBuild(values) {
     const [kind, id] = values.destination.split(":");
     const spec = {
-      originPlaceId: "vancouver",
+      originPlaceId: SUPPORTED_ORIGIN_ID,
       destination: { kind, id },
       totalDays: Number(values.totalDays),
       travelMonth: Number(values.travelMonth),
@@ -1544,6 +1741,8 @@ export default function Door2Plan() {
   }
 
   function handleBuildFromBasics() {
+    // The question is on this step: point at it rather than asking it twice.
+    if (departureRef.current !== "confirmed") { setDepartureNudge(true); return; }
     runBuild(form);
   }
 
@@ -1555,6 +1754,10 @@ export default function Door2Plan() {
   function confirmFreshStart() {
     setPendingFreshStart(false);
     connectionSession.current = null;
+    setDeparture(null);
+    setDeparturePrompt(null);
+    setRebuildFault(null);
+    setSavedTrip(null);
     setTripResult(null);
     setEditTrip(null);
     setEditError(null);
@@ -1575,6 +1778,7 @@ export default function Door2Plan() {
 
   function handleSetDuration(totalDays) {
     if (blockedStructure()) return;
+    if (departureBlocked(() => handleSetDuration(totalDays))) return;
     const newForm = { ...form, totalDays };
     setForm(newForm);
     runBuild(newForm);
@@ -1582,6 +1786,7 @@ export default function Door2Plan() {
 
   function handleRemovePlace(placeId) {
     if (blockedStructure()) return;
+    if (departureBlocked(() => handleRemovePlace(placeId))) return;
     const newForm = {
       ...form,
       required: form.required.filter((x) => x !== placeId),
@@ -1592,12 +1797,12 @@ export default function Door2Plan() {
 
   function doChangeRoute(routePackageId) {
     const newSpec = { ...currentSpec, routeTemplateId: routePackageId };
-    runBuildFromSpec(newSpec);
-    showToast("Route changed");
+    if (runBuildFromSpec(newSpec)) showToast("Route changed");
   }
 
   function handleChangeRoute(routePackageId) {
     if (blockedStructure()) return;
+    if (departureBlocked(() => handleChangeRoute(routePackageId))) return;
     if (hasTravellerWork(activeTrip)) {
       setPendingRouteSwitch(routePackageId);
       return;
@@ -1617,6 +1822,7 @@ export default function Door2Plan() {
 
   function handleApplyRefine() {
     if (blockedStructure()) return;
+    if (departureBlocked(() => handleApplyRefine())) return;
     setShowRefine(false);
     if (hasTravellerWork(activeTrip)) {
       setPendingRefine(true);
@@ -1627,6 +1833,7 @@ export default function Door2Plan() {
 
   function handleConfirmRefine() {
     if (blockedStructure()) return;
+    if (departureBlocked(() => handleConfirmRefine())) return;
     setPendingRefine(false);
     runBuild(form);
   }
@@ -1639,6 +1846,7 @@ export default function Door2Plan() {
     try {
       // A draft is a saved plan, not an editing session: undo history is not persisted.
       saveDraftTrip({ ...t, history: [] }, autoLabel(t.spec), destinationLabelFor(t.spec));
+      setSavedTrip(t);
       setSaveMsg({ text: "Saved", ok: true });
       setTimeout(() => setSaveMsg(null), 2500);
     } catch (err) {
@@ -1659,6 +1867,11 @@ export default function Door2Plan() {
 
   function handleLoadDraft(trip) {
     connectionSession.current = null;
+    // Reopening never carries a confirmation over: the first rebuild asks.
+    setDeparture(null);
+    setDeparturePrompt(null);
+    setRebuildFault(null);
+    setSavedTrip(null);
     setTripResult({ result: trip, thrown: null });
     setEditTrip(null);
     setEditError(null);
@@ -1741,6 +1954,7 @@ export default function Door2Plan() {
   function handleOpenNightsSheet(node) {
     if (blockedStructure()) return;
     if (!node.routeStop) return;
+    if (departureBlocked(() => handleOpenNightsSheet(node))) return;
     const optionalId = node.routeStop.optionalId ?? null;
     setStructureSheet({
       stage: "nights",
@@ -1754,12 +1968,14 @@ export default function Door2Plan() {
 
   function handleOpenOptionalSheet(opt) {
     if (blockedStructure()) return;
+    if (departureBlocked(() => handleOpenOptionalSheet(opt))) return;
     setStructureSheet({ stage: "optional", optionalId: opt.optionalId, label: opt.label, pitch: opt.pitch });
   }
 
   function handleAddOptional(optionalId) {
     const t = activeTrip;
     if (!t) return;
+    if (departureBlocked(() => handleAddOptional(optionalId))) return;
     const result = previewAddOptional(t, optionalId, undefined, { generatedAt: new Date().toISOString() });
     if (result.ok) {
       setStructureSheet({ stage: "proposals", proposals: result.proposals });
@@ -1771,6 +1987,7 @@ export default function Door2Plan() {
   function handleRemoveOptional(optionalId) {
     const t = activeTrip;
     if (!t) return;
+    if (departureBlocked(() => handleRemoveOptional(optionalId))) return;
     const result = previewRemoveOptional(t, optionalId, { generatedAt: new Date().toISOString() });
     if (result.ok) {
       setStructureSheet({ stage: "proposals", proposals: result.proposals });
@@ -1783,6 +2000,7 @@ export default function Door2Plan() {
     if (blockedStructure()) return;
     const t = activeTrip;
     if (!t) return;
+    if (departureBlocked(() => handleMoveOptional(optionalId))) return;
     const { current, options } = listMoveOptions(t, optionalId, { generatedAt: new Date().toISOString() });
     setStructureSheet({ stage: "move", optionalId, optionalLabel: optionalLabelFor(t, optionalId), current, options });
   }
@@ -1798,6 +2016,7 @@ export default function Door2Plan() {
   function handleAdjustNights(stopKey, delta) {
     const t = activeTrip;
     if (!t) return;
+    if (departureBlocked(() => handleAdjustNights(stopKey, delta))) return;
     const result = previewAdjustNights(t, stopKey, delta, { generatedAt: new Date().toISOString() });
     if (result.ok) {
       setStructureSheet({ stage: "proposals", proposals: result.proposals, stopKey });
@@ -1822,6 +2041,7 @@ export default function Door2Plan() {
     if (blockedStructure()) return;
     const t = activeTrip;
     if (!t) return;
+    if (departureBlocked(() => handleOpenDayTrip(stopKey, item))) return;
     const ctx = dayTripContext(t, stopKey, item);
     let result = null;
     try {
@@ -1840,6 +2060,7 @@ export default function Door2Plan() {
   function handleRemoveDayTrip(stopKey, item) {
     const t = activeTrip;
     if (!t) return;
+    if (departureBlocked(() => handleRemoveDayTrip(stopKey, item))) return;
     const place = placeName(item.placeId);
     let result = null;
     try {
@@ -1861,6 +2082,7 @@ export default function Door2Plan() {
   function handleUseProposal(proposal) {
     const t = activeTrip;
     if (!t) return;
+    if (departureBlocked(() => handleUseProposal(proposal))) return;
     const result = applyProposal(t, proposal);
     if (result.ok) {
       setEditTrip(result.trip);
@@ -1944,6 +2166,9 @@ export default function Door2Plan() {
             updateForm={updateForm}
             onBack={() => setStep("destination")}
             onSubmit={handleBuildFromBasics}
+            departure={departure}
+            onDeparture={setDeparture}
+            departureNudge={departureNudge}
           />
         )}
 
@@ -1974,6 +2199,16 @@ export default function Door2Plan() {
             {/* Trip header + itinerary */}
             {activeTrip && (
               <>
+                {rebuildFault && (
+                  <FailurePanel
+                    result={rebuildFault.result}
+                    thrown={rebuildFault.thrown}
+                    onExtend={handleExtend}
+                    onRemovePlace={handleRemovePlace}
+                    onSetDuration={handleSetDuration}
+                    onChangeRoute={handleChangeRoute}
+                  />
+                )}
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <h1 className="text-lg font-bold text-white truncate">
@@ -2002,6 +2237,12 @@ export default function Door2Plan() {
                     </button>
                   </div>
                 </div>
+
+                <p className="text-xs text-slate-500">
+                  {savedTrip === activeTrip ? APPROVED_COPY.afterSave : APPROVED_COPY.beforeSave}
+                </p>
+
+                {originUnsupported && <DepartureLimit />}
 
                 {activeTrip.status === "incomplete" && (
                   <p className="text-xs text-amber-400">Some days still need attention below.</p>
@@ -2077,6 +2318,12 @@ export default function Door2Plan() {
             )}
           </div>
         )}
+
+        <footer className="pt-4 text-center">
+          <a href={FEEDBACK_HREF} className="text-xs text-slate-500 hover:text-slate-300 underline underline-offset-2">
+            {APPROVED_COPY.feedback}
+          </a>
+        </footer>
       </div>
 
       <RefineSheet
@@ -2127,6 +2374,14 @@ export default function Door2Plan() {
         withDayTrips={false}
         onConfirm={confirmFreshStart}
         onKeep={() => setPendingFreshStart(false)}
+      />
+
+      <DeparturePrompt
+        prompt={departurePrompt}
+        answer={departure}
+        originUnsupported={originUnsupported}
+        onAnswer={handlePromptAnswer}
+        onClose={() => setDeparturePrompt(null)}
       />
       {toast && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-slate-700 border border-slate-600 text-white text-sm px-4 py-2 rounded-full shadow-lg">

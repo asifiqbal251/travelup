@@ -18,7 +18,7 @@ function setup(estimated=true,experiences=false) {
  control.data=data;control.content=experiences?[]:undefined;control.calls=[];return data;
 }
 async function setDays(user,n){let current=Number(screen.getByText(/^\d+ days$/).textContent.match(/\d+/)[0]);while(current<n){await user.click(screen.getByRole('button',{name:'+'}));current++;}while(current>n){await user.click(screen.getByRole('button',{name:'−'}));current--;}}
-async function start(n=5){await mountDoor2Plan(M);const user=userEvent.setup();await user.click(await screen.findByText('Japan'));await setDays(user,n);await user.click(screen.getByRole('button',{name:'Build my trip'}));return user;}
+async function start(n=5){await mountDoor2Plan(M);const user=userEvent.setup();await user.click(await screen.findByText('Japan'));await setDays(user,n);await user.click(screen.getByRole('button',{name:'Yes, from Vancouver'}));await user.click(screen.getByRole('button',{name:'Build my trip'}));return user;}
 async function save(user){await user.click(screen.getByRole('button',{name:'Save'}));assert.ok(await screen.findByText('Saved'));return M.listDraftTrips().at(0).trip;}
 async function reopen(){cleanup();resetLocation();render(M.React.createElement(M.MemoryRouter,{initialEntries:['/plan?key=door2']},M.React.createElement(M.Door2Plan)));const user=userEvent.setup();await user.click(await screen.findByText('Continue'));return user;}
 
@@ -27,7 +27,7 @@ test('DOM1/ID3 estimated refusal recovery retains ID, explicit route and facts',
 });
 test('DOM1 curated experience is travel-only, forward-only and does not fill an empty shelf',async()=>{setup(false,true);const user=await start();await screen.findByText('Your trip at a glance');const view=screen.getByText('Fictional train view');assert.match(view.closest('li').textContent,/train/i);assert.equal(within(view.closest('li')).queryByRole('button'),null);assert.equal(screen.getAllByText('Fictional train view').length,1);assert.ok(screen.getAllByText(/Nothing curated for this slot/).length);const t=await save(user);assert.equal(t.evidence.entries[1].values.experiences.length,0);});
 test('CTX page keeps a successful trip and input when context metadata is invalid',async()=>{setup(false);const user=await start();const before=await save(user);control.context.generatedAt='not-a-date';await user.click(screen.getByRole('button',{name:'Refine'}));await user.click(screen.getByRole('button',{name:'Apply and rebuild'}));assert.ok(await screen.findByText(/required planning information is missing or invalid/));assert.ok(screen.getByText('Your trip at a glance'));assert.deepEqual(await save(user),before);});
-test('ID4 fresh start allocates a new ID; curated Refine retains it',async()=>{setup(false,true);const user=await start();const first=control.calls[0].context.sequenceId;await user.click(screen.getByRole('button',{name:'Refine'}));await user.click(screen.getByRole('button',{name:'Apply and rebuild'}));assert.equal(control.calls.at(-1).context.sequenceId,first);await user.click(screen.getByRole('button',{name:'Start a new trip'}));await user.click(await screen.findByText('Japan'));await setDays(user,5);await user.click(screen.getByRole('button',{name:'Build my trip'}));assert.notEqual(control.calls.at(-1).context.sequenceId,first);});
+test('ID4 fresh start allocates a new ID; curated Refine retains it',async()=>{setup(false,true);const user=await start();const first=control.calls[0].context.sequenceId;await user.click(screen.getByRole('button',{name:'Refine'}));await user.click(screen.getByRole('button',{name:'Apply and rebuild'}));assert.equal(control.calls.at(-1).context.sequenceId,first);await user.click(screen.getByRole('button',{name:'Start a new trip'}));await user.click(await screen.findByText('Japan'));await setDays(user,5);await user.click(screen.getByRole('button',{name:'Yes, from Vancouver'}));await user.click(screen.getByRole('button',{name:'Build my trip'}));assert.notEqual(control.calls.at(-1).context.sequenceId,first);});
 
 test('ID3 explicit curated route survives F6 refusal/extension with the same session ID', async () => {
   const data = setup(false, true);
@@ -55,6 +55,7 @@ test('ID4 cancelling a fresh start keeps edits and ID; confirmation allocates on
   await user.click(screen.getByRole('button', { name: 'Start a new trip' }));
   await user.click(await screen.findByRole('button', { name: 'Start over' }));
   await user.click(await screen.findByText('Japan')); await setDays(user, 5);
+  await user.click(screen.getByRole('button', { name: 'Yes, from Vancouver' }));
   await user.click(screen.getByRole('button', { name: 'Build my trip' }));
   assert.notEqual(control.calls.at(-1).context.sequenceId, id);
 });

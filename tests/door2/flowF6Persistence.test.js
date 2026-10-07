@@ -18,7 +18,7 @@ function setup(estimated=true,experiences=false) {
  control.data=data;control.content=experiences?[]:undefined;control.calls=[];return data;
 }
 async function setDays(user,n){let current=Number(screen.getByText(/^\d+ days$/).textContent.match(/\d+/)[0]);while(current<n){await user.click(screen.getByRole('button',{name:'+'}));current++;}while(current>n){await user.click(screen.getByRole('button',{name:'−'}));current--;}}
-async function start(n=5){await mountDoor2Plan(M);const user=userEvent.setup();await user.click(await screen.findByText('Japan'));await setDays(user,n);await user.click(screen.getByRole('button',{name:'Build my trip'}));return user;}
+async function start(n=5){await mountDoor2Plan(M);const user=userEvent.setup();await user.click(await screen.findByText('Japan'));await setDays(user,n);await user.click(screen.getByRole('button',{name:'Yes, from Vancouver'}));await user.click(screen.getByRole('button',{name:'Build my trip'}));return user;}
 async function save(user){await user.click(screen.getByRole('button',{name:'Save'}));assert.ok(await screen.findByText('Saved'));return M.listDraftTrips().at(0).trip;}
 async function reopen(){cleanup();resetLocation();render(M.React.createElement(M.MemoryRouter,{initialEntries:['/plan?key=door2']},M.React.createElement(M.Door2Plan)));const user=userEvent.setup();await user.click(await screen.findByText('Continue'));return user;}
 
