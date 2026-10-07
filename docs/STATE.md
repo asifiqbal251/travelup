@@ -18,7 +18,7 @@
 |---|---|---|
 | Final combined F6 | `61690bc`, 28 files, independently code-approved, pushed | Approval record 6 Oct (GPT-6 Astra · Extra High); Claude's independent review concurs, with finding R1 |
 | Dependency update `cbad952` | Independently approved | Dependency review record 6 Oct |
-| Publication | **Owner reported republication.** Builder recorded passing scoped hosted checks. **Hosted Git SHA not established.** | Release record 6 Oct |
+| Publication | **R1 published and hosted-checked 6 Oct.** Owner republished; Claude ran the scoped hosted check in the owner's Chrome. Served bundle changed to `index-D8UGBwCA.js` (was `index-K9nINNo6.js`). **Hosted Git SHA still not established**; no authenticated deployment log. | `r1-hosted-check-2026-10-06.md` |
 | Checks at `cbad952`, fresh locked install | 598/598 Door 2 tests (132 are F6), 24/24 checker tests, lint, build | Run independently by the GPT reviewer and by Claude (cloud copy) on 6 Oct. **Mac dependencies:** Codex ran the full Door 2 suite on the Mac's newly installed dependencies in an isolated export of the checkout at `e86156c`: 598/598 (6 Oct). Lint, build and hosted checks not repeated there. |
 | Mac checkout | Fast-forwarded to `cbad952` 6 Oct; `npm ci` completed (owner ran it). Nine untracked historical documents preserved. Both frozen fixtures byte-exact. | Claude (device shell) and owner (Terminal) |
 | `npm ci` notes | Reported 22 audit findings, and three packages with install scripts not yet covered by the new `allowScripts` setting (core-js, esbuild, fsevents). Neither is reviewed or acted on. | Owner's Terminal output |
@@ -32,19 +32,18 @@ Production estimate and experience activation · any record migration · Q8 dura
 ## Decisions recorded 6 October 2026 (owner)
 
 - **Q9: ruled.** Old Door 2 saved trips need not be preserved, because the owner was the only person who saved any. Nothing is deleted; v5 stays refused and retained, v6 still opens. Does not cover trips saved from now on, or Door 1 account-saved trips.
-- **R1 fix built, independently approved, not yet pushed or published.** Commit `0e0c2d8` (four files, +244/−1): `newSessionId()` helper with randomUUID, getRandomValues and clock/counter fallbacks; page uses it. Claude's checks (cloud, Node 22): 613/613, 24/24, lint, build, fixtures unchanged; the new page tests fail on the unchanged page (4 of 5) and pass with the fix. **Codex diff review: approved, no required changes (6 Oct)**, independently reproducing those checks on the Mac (Node 26) plus eight forced-fallback runs of the existing cancel and fresh-start lifecycle tests. Not done: physical old-browser test, push, Base44 publication, hosted check. Each will be recorded as its own event.
+- **R1 released.** Commit `0e0c2d8` (four files, +244/−1): `newSessionId()` with randomUUID, getRandomValues and clock/counter fallbacks. Checks: Claude 613/613, 24/24, lint, build, fixtures unchanged, new page tests fail before the fix and pass after. **Codex diff review approved, no required changes**, independently reproduced on the Mac plus eight forced-fallback runs. **Pushed** (`origin/main` `2944b0e`), **published** by the owner, **hosted-checked** by Claude: Peru 10 built as core route, save and reopen identical, Japan 10 built as Tokyo+Kyoto, and **R1 itself verified live** — Japan built with `randomUUID` removed and again with `crypto` removed entirely, where before the fix both refused. No console errors. Not done: physical old-browser test, hosted Git SHA. The check created one new saved draft ("Peru · 10 days · Oct 6, 2026") in the owner's browser; nothing was deleted.
 - **Door 2 replaces the public "I know where I'm going" entry.** The owner wants the current Door 2 (`/plan`) to replace the Door 2 published publicly today (the older flow at `/find`). **Direction chosen: B**, the new planner as the main entry with the classic planner (`/find`) as fallback, with broader eligibility rules covering departure city, route and trip length, not just destination. Coverage is selected routes in four countries, not the countries comprehensively. A bounded replacement brief is still to be written after R1 is released; B is a direction, not a release specification. A policy for newly saved trips is required before broader release. See `decision-door2-replaces-find-2026-10-06.md` (revision 2). No code has changed.
 - **This file created.**
 
 ## Open findings (Claude's independent F6 review, 6 Oct)
 
-R1 live, small: planner refuses every request on browsers without `crypto.randomUUID`. R2–R4 dormant: preconditions for activating estimates and experiences. Details in the project note `f6-independent-review-61690bc-2026-10-06.md`.
+R1 **fixed and released** 6 Oct. R2–R4 dormant: preconditions for activating estimates and experiences. Details in the project note `f6-independent-review-61690bc-2026-10-06.md`.
 
 ## Next
 
-1. R1: owner push, owner Base44 publish, then scoped hosted check (Peru build, Japan build, save and reopen).
-2. Write B's bounded replacement brief; independent review; build; representative-journey checks; owner-controlled rollout.
-3. Then the next bounded convergence scope, including Q8 preparation if F7 is chosen.
+1. B's bounded replacement brief (written 6 Oct, awaiting independent review), then build, representative-journey checks, owner-controlled rollout.
+2. Then the next bounded convergence scope, including Q8 preparation if F7 is chosen.
 
 ## Where things live
 
