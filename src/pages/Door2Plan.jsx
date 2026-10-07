@@ -672,7 +672,7 @@ function DestinationStep({ query, onQueryChange, onPick, onLoad }) {
       <div className="rounded-xl bg-slate-800 border border-slate-700 p-6 space-y-5">
         <div>
           <h1 className="text-xl font-bold text-white mb-1">Where are you going?</h1>
-          <p className="text-sm text-slate-500">Pilot catalogue · a handful of places, built properly.</p>
+          <p className="text-sm text-slate-500">Early-access catalogue · a handful of places, built properly.</p>
         </div>
         <div className="rounded-lg bg-slate-900/60 border border-slate-700 p-4 space-y-2">
           <p className="text-sm text-slate-300 leading-relaxed">{APPROVED_COPY.limits}</p>

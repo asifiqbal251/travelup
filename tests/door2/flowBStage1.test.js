@@ -183,6 +183,12 @@ test('header: the page header reads "WhereNova · Early access", and the old "Pi
   assert.doesNotMatch(document.body.textContent, /WhereNova · Pilot preview/);
 });
 
+test('catalogue line: /plan reads "Early-access catalogue", and the old "Pilot catalogue" wording is gone', async () => {
+  open({ path: '/plan' });
+  assert.ok(await screen.findByText('Early-access catalogue · a handful of places, built properly.'));
+  assert.doesNotMatch(document.body.textContent, /Pilot catalogue/);
+});
+
 test('#1/§3.1: the limits text is shown verbatim on the destination step, with a classic link that needs no refusal first', async () => {
   open();
   const limits = await screen.findByText(LIMITS);
