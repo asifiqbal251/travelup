@@ -32,7 +32,7 @@ Production estimate and experience activation · any record migration · Q8 dura
 ## Decisions recorded 6 October 2026 (owner)
 
 - **Q9: ruled.** Old Door 2 saved trips need not be preserved, because the owner was the only person who saved any. Nothing is deleted; v5 stays refused and retained, v6 still opens. Does not cover trips saved from now on, or Door 1 account-saved trips.
-- **Fix R1 approved in scope.** Session-ID fallback in the planner page. Codex reviewed the brief (6 Oct), approved the approach and set exact amendments, now applied in brief revision 2. **Codex reproduced the failure through the actual page** (Japan refuses with `randomUUID` absent, builds when restored; simulated absence, not a physical old browser). No code written yet.
+- **R1 fix built, independently approved, not yet pushed or published.** Commit `0e0c2d8` (four files, +244/−1): `newSessionId()` helper with randomUUID, getRandomValues and clock/counter fallbacks; page uses it. Claude's checks (cloud, Node 22): 613/613, 24/24, lint, build, fixtures unchanged; the new page tests fail on the unchanged page (4 of 5) and pass with the fix. **Codex diff review: approved, no required changes (6 Oct)**, independently reproducing those checks on the Mac (Node 26) plus eight forced-fallback runs of the existing cancel and fresh-start lifecycle tests. Not done: physical old-browser test, push, Base44 publication, hosted check. Each will be recorded as its own event.
 - **Door 2 replaces the public "I know where I'm going" entry.** The owner wants the current Door 2 (`/plan`) to replace the Door 2 published publicly today (the older flow at `/find`). **Direction chosen: B**, the new planner as the main entry with the classic planner (`/find`) as fallback, with broader eligibility rules covering departure city, route and trip length, not just destination. Coverage is selected routes in four countries, not the countries comprehensively. A bounded replacement brief is still to be written after R1 is released; B is a direction, not a release specification. A policy for newly saved trips is required before broader release. See `decision-door2-replaces-find-2026-10-06.md` (revision 2). No code has changed.
 - **This file created.**
 
@@ -42,7 +42,7 @@ R1 live, small: planner refuses every request on browsers without `crypto.random
 
 ## Next
 
-1. Implement R1 per brief revision 2 (fresh base fetch first), then checks, independent diff review, owner push, owner publish, scoped hosted check.
+1. R1: owner push, owner Base44 publish, then scoped hosted check (Peru build, Japan build, save and reopen).
 2. Write B's bounded replacement brief; independent review; build; representative-journey checks; owner-controlled rollout.
 3. Then the next bounded convergence scope, including Q8 preparation if F7 is chosen.
 
