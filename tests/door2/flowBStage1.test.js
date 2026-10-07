@@ -740,3 +740,146 @@ test('#14: the classification reads the explicit state, reason and phase — nev
     ['the ordinary message with an unknown reason', refusal('route_not_supported', { reason: 'other' }, 'These routes support 5–12 or 8–18 days. You asked for 19.')],
   ]) assert.equal(P.refusalKind(result), 'fault', label);
 });
+
+// ── Amendments (6 October 2026): the departure dialog's keyboard focus, and the two replaced strings ──
+
+const active = () => document.activeElement;
+const inside = (scope) => scope.contains(active());
+const activeName = () => active().getAttribute('aria-label') ?? active().textContent;
+
+test('amendment A1: the dialog takes focus when it opens, keeps Tab and Shift+Tab inside, and the background control is unreachable', async () => {
+  const user = await reopenSaved(builtTrip('PE', 10));
+  const apply = () => screen.getByRole('button', { name: 'Apply and rebuild' });
+  await user.click(screen.getByRole('button', { name: 'Refine' }));
+  await screen.findByText('Make it yours');
+  await user.click(apply());
+  const prompt = dialog();
+  assert.ok(prompt, 'asked');
+  assert.ok(inside(prompt), 'focus moved into the dialog');
+  assert.notEqual(active(), apply(), 'and not left on the background control');
+  assert.equal(activeName(), YES, 'on the question, not the dismissal');
+
+  const seen = new Set();
+  for (let i = 0; i < 8; i++) {
+    await user.tab();
+    assert.ok(inside(prompt), `Tab ${i + 1} stays inside`);
+    seen.add(activeName());
+  }
+  for (let i = 0; i < 8; i++) {
+    await user.tab({ shift: true });
+    assert.ok(inside(prompt), `Shift+Tab ${i + 1} stays inside`);
+    seen.add(activeName());
+  }
+  assert.deepEqual([...seen].sort(), ['Close', NO, YES].sort(), 'the cycle covers exactly the dialog\'s controls');
+
+  // The boundaries themselves: Shift+Tab from the first control wraps to the last, Tab from the last to the first.
+  const first = within(prompt).getByRole('button', { name: 'Close' });
+  first.focus();
+  await user.tab({ shift: true });
+  assert.equal(activeName(), NO, 'Shift+Tab from the first control wraps to the last');
+  await user.tab();
+  assert.equal(activeName(), 'Close', 'Tab from the last control wraps to the first');
+  assert.equal(planner.calls.length, 0, 'no planner call while it is open');
+});
+
+test('amendment A1: Escape cancels, builds nothing, and focus returns to the control the traveller used', async () => {
+  const user = await reopenSaved(builtTrip('PE', 10));
+  const before = { glance: glanceText(), itinerary: itineraryText(), bytes: bytes() };
+  await user.click(screen.getByRole('button', { name: 'Refine' }));
+  await screen.findByText('Make it yours');
+  await user.click(screen.getByRole('button', { name: 'Apply and rebuild' }));
+  assert.ok(dialog());
+  await user.keyboard('{Escape}');
+  assert.equal(dialog(), null, 'Escape closes');
+  assert.equal(active(), screen.getByRole('button', { name: 'Apply and rebuild' }), 'focus is back on Apply and rebuild');
+  assertNothingRebuilt(before, 'Escape');
+
+  // Close, by keyboard, returns it too.
+  await user.keyboard('{Enter}');
+  assert.ok(dialog());
+  within(dialog()).getByRole('button', { name: 'Close' }).focus();
+  await user.keyboard('{Enter}');
+  assert.equal(dialog(), null);
+  assert.equal(active(), screen.getByRole('button', { name: 'Apply and rebuild' }));
+  assert.equal(planner.calls.length, 0);
+});
+
+test('amendment A1: the nights path — focus is contained, Escape returns to the nights chip, and "Yes" lands in the nights sheet', async () => {
+  const user = await reopenSaved(builtTrip('PE', 10));
+  const chip = screen.getAllByRole('button', { name: /^\d+ nights?$/ })[0];
+  await user.click(chip);
+  let prompt = dialog();
+  assert.ok(prompt);
+  assert.ok(inside(prompt), 'focus moved into the dialog');
+  for (let i = 0; i < 5; i++) {
+    await user.tab();
+    assert.ok(inside(prompt), `Tab ${i + 1} stays inside`);
+    assert.ok(!chip.contains(active()), 'the background nights chip is unreachable');
+  }
+  await user.keyboard('{Escape}');
+  assert.equal(dialog(), null);
+  assert.equal(active(), chip, 'focus returns to the chip');
+  assert.equal(screen.queryByRole('button', { name: /More time here/ }), null, 'the sheet did not open');
+
+  await user.click(chip);
+  prompt = dialog();
+  within(prompt).getByRole('button', { name: YES }).focus();
+  await user.keyboard('{Enter}');
+  assert.equal(dialog(), null);
+  const more = screen.getByRole('button', { name: /More time here/ });
+  const sheet = more.closest('div.fixed');
+  assert.ok(sheet, 'the nights sheet is open');
+  assert.ok(inside(sheet), 'focus is in the nights sheet, not behind it');
+  assert.notEqual(active(), document.body);
+});
+
+test('amendment A1: "Yes" on the Refine path lands in the resulting interface, never on the removed dialog or the body', async () => {
+  const user = await reopenSaved(builtTrip('PE', 10));
+  await refineAndApply(user);
+  assert.ok(dialog());
+  await user.keyboard('{Enter}'); // focus starts on "Yes, from Vancouver"
+  await screen.findByText(GLANCE);
+  assert.equal(dialog(), null);
+  assert.equal(planner.calls.length, 1, 'the rebuild ran');
+  assert.ok(active().isConnected, 'focus is on something still on the page');
+  assert.notEqual(active(), document.body);
+  assert.equal(document.querySelector('div.fixed.inset-0.z-50'), null, 'no sheet is left open behind it');
+});
+
+test('amendment A1: a trip from another origin gets the same containment and Escape', async () => {
+  const base = builtTrip('PE', 10);
+  const user = await reopenSaved({ ...base, spec: { ...base.spec, originPlaceId: 'another_city' } });
+  const chip = screen.getAllByRole('button', { name: /^\d+ nights?$/ })[0];
+  await user.click(chip);
+  const prompt = dialog();
+  assert.ok(prompt);
+  assert.ok(inside(prompt), 'focus moved in');
+  for (let i = 0; i < 4; i++) { await user.tab(); assert.ok(inside(prompt)); }
+  await user.keyboard('{Escape}');
+  assert.equal(dialog(), null);
+  assert.equal(active(), chip);
+});
+
+// ── Amendment A2: the two replaced strings, as rendered ──────────────────────
+
+const FOOTER = 'Early-access planner — selected routes from Vancouver: New York City, Tokyo with Kyoto options, Peru classic with Huaraz options, and the Eastern Canada corridor.';
+const DRAFT_NOTE = 'Draft itinerary — some transport details have not been reviewed. Use this for testing and feedback, not for booking.';
+
+test('amendment A2: the results footer and the draft note render the owner-approved text, and the old text is gone', async () => {
+  await buildConfirmed('Peru', 10);
+  await screen.findByText(GLANCE);
+  assert.ok(screen.getByText(FOOTER));
+  assert.equal(screen.queryByText(DRAFT_NOTE), null, 'a reviewed trip carries no draft note');
+  assert.doesNotMatch(document.body.textContent, /Pilot preview — Peru and Eastern Canada|Not for real travellers/);
+
+  // The same trip, flagged draft: the flag decides which line shows, and nothing else changes.
+  const draft = { ...builtTrip('PE', 10), status: 'draft' };
+  await reopenSaved(draft);
+  const note = screen.getByText(DRAFT_NOTE);
+  assert.match(note.textContent, /transport details have not been reviewed/, 'still warns that transport is unreviewed');
+  assert.match(note.textContent, /not for booking/, 'still carries the booking caution');
+  assert.doesNotMatch(note.textContent, /verified|reviewed and|approved/i, 'does not suggest the transport has been verified');
+  assert.equal(screen.queryByText(FOOTER), null, 'the draft note replaces the footer, as before');
+  assert.doesNotMatch(document.body.textContent, /Not for real travellers/);
+  assert.equal(P.listDraftTrips().find((d) => d.label === 'Seeded trip').trip.status, 'draft', 'the stored flag is untouched');
+});

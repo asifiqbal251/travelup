@@ -2,7 +2,7 @@ import { buildF6Trip } from '@/lib/door2/connectionBuild';
 import { newSessionId } from '@/lib/door2/sessionId';
 import { connectionDisplay, editEvidenceGuard, hasEvidence, inspectEvidence, structuralEvidenceGuard } from '@/lib/door2/connectionEvidence';
 const EvidenceTripContext = createContext(null);
-import { createContext, useContext, useRef, useState } from "react";
+import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { makeDayLighter, swapActivity, swapDays, swappableDays, undo } from "@/lib/door2/edit";
 import { PILOT_DATA } from "@/lib/door2/planner";
 import { PILOT_PLACES, PILOT_ROUTE_FAMILIES, PILOT_ROUTE_PACKAGES } from "@/lib/door2/pilotData";
@@ -500,15 +500,83 @@ function DepartureQuestion({ answer, onAnswer, nudge = false }) {
 
 /** Asked when a rebuild is attempted outside the Basics step. A trip recorded from
  * another origin gets the limit only: answering could not make it a Vancouver trip. */
-function DeparturePrompt({ prompt, answer, originUnsupported, onAnswer, onClose }) {
+function DeparturePrompt({ prompt, answer, originUnsupported, onAnswer, onClose, fallbackFocusRef }) {
   if (!prompt) return null;
+  return (
+    <DeparturePromptDialog
+      answer={answer}
+      originUnsupported={originUnsupported}
+      onAnswer={onAnswer}
+      onClose={onClose}
+      fallbackFocusRef={fallbackFocusRef}
+    />
+  );
+}
+
+const FOCUSABLE = 'button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
+/** The modal itself. Local focus management, because the page's sheets are plain
+ * overlays and share no dialog component: focus moves in on open, Tab and Shift+Tab
+ * cycle inside, Escape closes, and on close focus goes back to where the traveller
+ * was. After "Yes" the question is gone and the tapped action has resumed, so focus
+ * goes into whatever it opened instead (the topmost sheet, else the page itself). */
+function DeparturePromptDialog({ answer, originUnsupported, onAnswer, onClose, fallbackFocusRef }) {
+  const dialogRef = useRef(null);
+  const closeRef = useRef(onClose);
+  closeRef.current = onClose;
+  const resumedRef = useRef(false);
+
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    const opener = document.activeElement;
+    const focusables = () => [...dialog.querySelectorAll(FOCUSABLE)];
+    const [first] = focusables();
+    // The answer buttons come after "Close"; start on the question, not the dismissal.
+    (focusables().find((el) => el.getAttribute("aria-label") !== "Close") ?? first ?? dialog).focus();
+
+    function onKeyDown(e) {
+      if (e.key === "Escape") { e.preventDefault(); closeRef.current(); return; }
+      if (e.key !== "Tab") return;
+      const items = focusables();
+      if (items.length === 0) { e.preventDefault(); dialog.focus(); return; }
+      const [head] = items;
+      const tail = items[items.length - 1];
+      const inside = dialog.contains(document.activeElement);
+      if (!inside || (e.shiftKey && document.activeElement === head) || (!e.shiftKey && document.activeElement === tail)) {
+        e.preventDefault();
+        (e.shiftKey ? tail : head).focus();
+      }
+    }
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("keydown", onKeyDown);
+      if (resumedRef.current) {
+        const sheets = document.querySelectorAll("div.fixed.inset-0.z-50");
+        const sheet = sheets[sheets.length - 1];
+        const target = (sheet && sheet.querySelector(FOCUSABLE)) ?? fallbackFocusRef?.current;
+        target?.focus();
+      } else if (opener?.isConnected) {
+        opener.focus();
+      } else {
+        fallbackFocusRef?.current?.focus();
+      }
+    };
+  }, []);
+
+  function answerAndRemember(next) {
+    if (next === "confirmed") resumedRef.current = true;
+    onAnswer(next);
+  }
+
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60" onClick={onClose}>
       <div
+        ref={dialogRef}
         role="dialog"
         aria-modal="true"
         aria-label={APPROVED_COPY.departureQuestion}
-        className="w-full max-w-2xl rounded-t-2xl bg-slate-900 border-t border-slate-700 p-6 space-y-4"
+        tabIndex={-1}
+        className="w-full max-w-2xl rounded-t-2xl bg-slate-900 border-t border-slate-700 p-6 space-y-4 outline-none"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex justify-end">
@@ -516,7 +584,7 @@ function DeparturePrompt({ prompt, answer, originUnsupported, onAnswer, onClose 
             ×
           </button>
         </div>
-        {originUnsupported ? <DepartureLimit /> : <DepartureQuestion answer={answer} onAnswer={onAnswer} />}
+        {originUnsupported ? <DepartureLimit /> : <DepartureQuestion answer={answer} onAnswer={answerAndRemember} />}
       </div>
     </div>
   );
@@ -1601,6 +1669,7 @@ export default function Door2Plan() {
   const departureRef = useRef(null);
   const [departureNudge, setDepartureNudge] = useState(false);
   const [departurePrompt, setDeparturePrompt] = useState(null);
+  const pageRef = useRef(null);
   // A fault from a rebuild attempted while a trip is on screen; the trip stays.
   const [rebuildFault, setRebuildFault] = useState(null);
   const [savedTrip, setSavedTrip] = useState(null);
@@ -2142,7 +2211,7 @@ export default function Door2Plan() {
   if (!evidenceStatus.ok) return <div role="alert">{evidenceStatus.message}</div>;
 
   return (
-    <div className="min-h-screen bg-slate-900">
+    <div ref={pageRef} tabIndex={-1} className="min-h-screen bg-slate-900 outline-none">
       <div className="max-w-2xl mx-auto px-4 py-10 space-y-4">
         {!showResults && (
           <header className="space-y-0.5">
@@ -2307,11 +2376,11 @@ export default function Door2Plan() {
 
                 {activeTrip.status === "draft" ? (
                   <p className="text-center text-xs text-amber-500/80 pt-4">
-                    Draft data — pilot connections unreviewed. Not for real travellers.
+                    Draft itinerary — some transport details have not been reviewed. Use this for testing and feedback, not for booking.
                   </p>
                 ) : (
                   <p className="text-center text-xs text-slate-500 pt-4">
-                    Pilot preview — Peru and Eastern Canada itineraries. Other destinations are limited or not yet available.
+                    Early-access planner — selected routes from Vancouver: New York City, Tokyo with Kyoto options, Peru classic with Huaraz options, and the Eastern Canada corridor.
                   </p>
                 )}
               </>
@@ -2382,6 +2451,7 @@ export default function Door2Plan() {
         originUnsupported={originUnsupported}
         onAnswer={handlePromptAnswer}
         onClose={() => setDeparturePrompt(null)}
+        fallbackFocusRef={pageRef}
       />
       {toast && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-slate-700 border border-slate-600 text-white text-sm px-4 py-2 rounded-full shadow-lg">
