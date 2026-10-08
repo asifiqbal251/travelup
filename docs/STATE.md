@@ -82,7 +82,7 @@ R1 **fixed and released** 6 Oct. R2–R4 dormant: preconditions for activating e
 
 ## Direction B Stage 2 — released 7 October 2026
 
-**Carrying the traveller's basic answers from `/plan` into the classic planner `/find`.** Pushed and published; desktop hosted checks pass; **the physical-phone checks have not been run by anyone.**
+**Carrying the traveller's basic answers from `/plan` into the classic planner `/find`.** Pushed and published; desktop hosted checks pass; **physical-phone checks are partly done (owner-reported, no rows or handset named) and not yet complete.**
 
 ### What is live
 
@@ -112,7 +112,7 @@ Checklist `hosted-check-b-stage2-2026-10-07.md` revision 4. **Build identity was
 | A9 `month=13&days=7.5&party=bogus` | PASS — month and party blank, 7 "— suggested", search text kept, no error page |
 | A10 direct `/find` | PASS — no notice, no reset control |
 | A11 Clear carried details | PASS — box empty, notice and control gone, **all 9 of the owner's saved Door 2 drafts untouched** |
-| A12 reload after clearing | **Behaves as designed — carried details return.** Needs the owner's explicit acceptance |
+| A12 reload after clearing | **Behaves as designed — carried details return. Accepted by the owner, 7 Oct 2026** |
 | A13 page Back | PASS — empty search box, no notice, carried text not re-applied |
 | A14 browser Back | **Recorded:** Chrome **restored the existing page** (back/forward cache) rather than remounting — React step state was preserved and the address was not re-read |
 | A15 built Japan 10 → Refine 19 | PASS — `days_req=19`, no `days`, correct sentence, **with** the itinerary disclosure |
@@ -124,8 +124,8 @@ Checklist `hosted-check-b-stage2-2026-10-07.md` revision 4. **Build identity was
 | **A20a** single destination 12 → Combine at its own 10 → build | **PASS — preferences 10, legs 10, 10-day trip.** The rejected build stored 12 |
 | **A20b** Combine 9 → single destination 11 → Combine again → build with no further tap | **PASS — preferences 9, legs 9, 9-day trip.** The rejected build stored 11 |
 | **A20c** choose 8 on one path, enter Combine first time | **PASS — Combine shows its own 7, labelled "— suggested", gate still closed.** The rejected build dropped the label |
-| A21 fault rebuild retaining the trip | **NOT RUN** — could not be provoked deliberately on the hosted app |
-| A22 unsupported-origin restored trip (E8) | **NOT RUN** — all nine saved drafts are Vancouver trips, so the notice cannot appear. Producing it means seeding a fabricated non-Vancouver saved trip into the owner's browser, which was not done without asking |
+| A21 fault rebuild retaining the trip | **NOT RUN** (owner confirmed 7 Oct) — could not be provoked deliberately on the hosted app |
+| A22 unsupported-origin restored trip (E8) | **NOT RUN** (owner confirmed 7 Oct) — all nine saved drafts are Vancouver trips, so the notice cannot appear. Producing it means seeding a fabricated non-Vancouver saved trip into the owner's browser, which was not done without asking |
 | A23 three public buttons | PASS — hero, footer and questionnaire links are all plain `/find` |
 
 **A20a, A20b and A20c are the rows that prove the approved build is live.** All three pass.
@@ -141,14 +141,14 @@ Checklist `hosted-check-b-stage2-2026-10-07.md` revision 4. **Build identity was
 
 ### Not proven by anyone
 
-- **Every row of section B — the physical phone.** Touch, swiping the day scroller, pull-to-refresh, thumb-sized targets, layout and overflow at narrow widths. Browser automation cannot substitute for a handset, and none was used. Section B is **not run**.
-- A21 and A22, as above.
+- **Section B — the physical phone — is only partly done.** The owner reported on 7 Oct 2026 that section B "works fine so far" and that the rest will be completed later. **No row list and no handset were given, so no individual row is recorded as passed.** Touch, swiping the day scroller, pull-to-refresh, thumb-sized targets, layout and overflow at narrow widths remain unconfirmed until the owner reports row by row. Browser automation cannot substitute for a handset, and none was used.
+- A21 and A22, as above — not run, and the owner has agreed they stay not run.
 - Screen-reader behaviour and old browsers, unchanged from Stage 1.
 
-### Two rows awaiting the owner's judgement
+### Owner's judgement
 
-- **A12** — a reload restores the carried details after "Clear carried details". By design: nothing about the handoff is persisted, so the page cannot remember that it was dismissed. Accept, or design a different answer.
-- **A22** — the departure sentence is shared between the declined-departure case and the unsupported-origin notice. It reads correctly in the declined case; nobody has read it in place on the other.
+- **A12 — accepted (7 Oct 2026).** A reload restores the carried details after "Clear carried details". By design: nothing about the handoff is persisted, so the page cannot remember that it was dismissed.
+- **A22 — no judgement possible.** Not run: the owner has no saved trip departing from a non-Vancouver city. The departure sentence is shared between the declined-departure case and the unsupported-origin notice; it reads correctly in the declined case, and nobody has read it in place on the other.
 
 ### Side effect of the desktop checks
 
@@ -163,8 +163,8 @@ Claude built several test trips in the owner's own Chrome. `travelup_state_v1` n
 
 ## Next
 
-1. **Stage 2 phone checks.** Section B of `hosted-check-b-stage2-2026-10-07.md` revision 4, on a real handset. This is the only outstanding verification of the release itself.
-2. The owner's judgement on **A12** (reload restores carried details) and **A22** (the shared departure sentence on the unsupported-origin notice).
+1. **Finish the Stage 2 phone checks.** Section B of `hosted-check-b-stage2-2026-10-07.md` revision 4, on a real handset; the owner reports pass / fail / not run per row plus the handset, and this file is updated. Partly done, rest owner-scheduled. This is the only outstanding verification of the release itself.
+2. A22 stays not run unless a non-Vancouver saved trip ever exists. A12 is closed (accepted).
 3. The unlisted Stage 1 trial continues. **Public entry buttons remain on `/find`.** The switch to `/plan` needs: the Stage 2 phone / save-and-reopen / fallback checks, **and resolution of the developer-harness item in `docs/PARKED.md`** (protect or remove `/dev/door2?key=door2`).
 4. Optional, each its own brief and review: pinning the two destination ids from the section C data above, and the parked direct-arrival preferences fix.
 5. Then the next bounded convergence scope, including Q8 preparation if F7 is chosen.
