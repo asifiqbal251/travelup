@@ -80,12 +80,95 @@ R1 **fixed and released** 6 Oct. R2–R4 dormant: preconditions for activating e
   - **A7 on the hosted app: not separately confirmed**, because that message only appears after a search with no results.
   - **Not proven by anyone:** screen-reader behaviour (the departure dialog's background is not made inert), old browsers.
 
+## Direction B Stage 2 — released 7 October 2026
+
+**Carrying the traveller's basic answers from `/plan` into the classic planner `/find`.** Pushed and published; desktop hosted checks pass; **the physical-phone checks have not been run by anyone.**
+
+### What is live
+
+- **Commit `f1535f1`** on `origin/main`, directly on top of `988a242`. Its tree is `d79b660af8849c6ca529a92f0b571cebdbd60b92` — **byte-identical to the Codex-approved tree**, verified by fetching `origin/main` after the push. The approval was issued against local commit `b5e700c`; `git am` re-dated it, which is why the id differs and the tree does not.
+- Eight files: `classicHandoff.js` (new), `Door2Plan.jsx`, `DoorB.jsx`, `DestinationSearch.jsx`, `DayScroller.jsx`, and three test files. No protected file, no engine, no storage implementation, no dependency, and none of the three public `/find` links changed.
+- Checks at that tree: **726 Door 2 tests**, checker 111 verified / 0 failed, lint, build, both frozen fixtures byte-identical.
+- Published on Base44 by the owner the same evening. **Base44's `last_deployed_git_commit_hash` was not read by Claude** — build identity was established functionally instead (below), which is the stronger evidence. The owner can still confirm that field.
+
+### Review history — three rounds, three real defects
+
+1. **`198766e`** — Codex found two: a changed Combine length was replaced by the incoming value on the page's Back button, and a chosen length reached the route but not `prefs.travelDays`.
+2. **`107d68e`** — Codex found two more: after switching between the single-destination and Combine paths the build could take the other path's length, and a global explicit-choice flag made one path's choice confirm the other path's untouched default.
+3. **`b5e700c`** — approved. The fix is structural rather than patched: each path keeps its own current length, gate and label, and the build reads the length of the path it is building, so the route and the stored preferences cannot disagree. Codex ran eight independent probes including a region-step journey and a capped-catalogue case.
+
+### Hosted checks — desktop, by Claude in the owner's Chrome, on the published app
+
+Checklist `hosted-check-b-stage2-2026-10-07.md` revision 4. **Build identity was established functionally, not from the `route=peru` marker**, which also exists in the rejected `198766e`.
+
+| Row | Result |
+|---|---|
+| A1 limits-block link, empty search | PASS — plain `/find`, no second sentence |
+| A2 / A3 typed text | PASS — both the limits-block and miss-message links carry `dest_q=Reykjavik` with "We'll take what you typed with you." |
+| A4 / A7 Eastern Canada exit | PASS — `dest_q=Canada`, `route=eastern-canada`, `month=10`, `days=10`, `party=two`, with the approved declined-departure sentence |
+| A5 route arrival | PASS — "Your full route hasn't been transferred…" and **not** the search sentence; Peru's 3 records and Combine offered; nothing selected |
+| A6 essentials after selecting | PASS — October, 10 days, Two of us already set; **no "— suggested"** |
+| A8 unrecognised `route=japan` | PASS — falls back to the search sentence, everything else still carried |
+| A9 `month=13&days=7.5&party=bogus` | PASS — month and party blank, 7 "— suggested", search text kept, no error page |
+| A10 direct `/find` | PASS — no notice, no reset control |
+| A11 Clear carried details | PASS — box empty, notice and control gone, **all 9 of the owner's saved Door 2 drafts untouched** |
+| A12 reload after clearing | **Behaves as designed — carried details return.** Needs the owner's explicit acceptance |
+| A13 page Back | PASS — empty search box, no notice, carried text not re-applied |
+| A14 browser Back | **Recorded:** Chrome **restored the existing page** (back/forward cache) rather than remounting — React step state was preserved and the address was not re-read |
+| A15 built Japan 10 → Refine 19 | PASS — `days_req=19`, no `days`, correct sentence, **with** the itinerary disclosure |
+| A16 Japan 19 as a first build | PASS — same href and sentence, **without** the disclosure. The two cases are correctly separated |
+| A17 gate | PASS — Build inert with the 19-day notice; after choosing 9, built a 9-day trip |
+| A18 Combine with carried 10 | PASS — 10 selected, not "suggested" |
+| A19 change to 12, Continue, page Back | PASS — **12 retained** (the original `198766e` defect) |
+| A20 build it | PASS — preferences 12, legs 12, "A suggested 12-day plan" |
+| **A20a** single destination 12 → Combine at its own 10 → build | **PASS — preferences 10, legs 10, 10-day trip.** The rejected build stored 12 |
+| **A20b** Combine 9 → single destination 11 → Combine again → build with no further tap | **PASS — preferences 9, legs 9, 9-day trip.** The rejected build stored 11 |
+| **A20c** choose 8 on one path, enter Combine first time | **PASS — Combine shows its own 7, labelled "— suggested", gate still closed.** The rejected build dropped the label |
+| A21 fault rebuild retaining the trip | **NOT RUN** — could not be provoked deliberately on the hosted app |
+| A22 unsupported-origin restored trip (E8) | **NOT RUN** — all nine saved drafts are Vancouver trips, so the notice cannot appear. Producing it means seeding a fabricated non-Vancouver saved trip into the owner's browser, which was not done without asking |
+| A23 three public buttons | PASS — hero, footer and questionnaire links are all plain `/find` |
+
+**A20a, A20b and A20c are the rows that prove the approved build is live.** All three pass.
+
+### Catalogue — section C
+
+- **C1 New York City** — id `6a7e984900175cfc5fe2005a`, country United States, type `single_base`. Under the app's own matching rules the search text "New York City" matches **exactly one** record.
+- **C2 Tokyo & Kyoto, Japan** — id `6a7ced35c41497521b54e0bc`, country Japan, type `multi_stop`. "Tokyo" matches **exactly one** record.
+- **C3** — 64 destination records on 7 October 2026.
+- **C4 / C5** — PASS. "Peru" offers 3 records plus Combine; "Canada" offers 6 plus Combine; both pinnable names reach a usable record by hand.
+
+**This satisfies brief §11's condition for pinning the two `dest_id` values, but nothing was pinned.** `VERIFIED_CLASSIC_DESTINATION_IDS` still holds `null` for both, outgoing links still carry search text only, and pinning remains a separate brief, review and hosted re-check.
+
+### Not proven by anyone
+
+- **Every row of section B — the physical phone.** Touch, swiping the day scroller, pull-to-refresh, thumb-sized targets, layout and overflow at narrow widths. Browser automation cannot substitute for a handset, and none was used. Section B is **not run**.
+- A21 and A22, as above.
+- Screen-reader behaviour and old browsers, unchanged from Stage 1.
+
+### Two rows awaiting the owner's judgement
+
+- **A12** — a reload restores the carried details after "Clear carried details". By design: nothing about the handoff is persisted, so the page cannot remember that it was dismissed. Accept, or design a different answer.
+- **A22** — the departure sentence is shared between the declined-departure case and the unsupported-origin notice. It reads correctly in the declined case; nobody has read it in place on the other.
+
+### Side effect of the desktop checks
+
+Claude built several test trips in the owner's own Chrome. `travelup_state_v1` now holds the last of them (a 12-day Peru multi-stop: `prefs`, `prefsHistory`, `selectedDestinationId`, `multiStopLegs`, `packingByTrip`). **Nothing was saved to the account and nothing was deleted** — the nine Door 2 drafts are intact. Building any new trip overwrites this state.
+
+### Still held after this release
+
+- **The public buttons stay on `/find`.** Stage 2 completing does not authorize the switch; the parked developer-harness item (`/dev/door2?key=door2`) must be resolved first.
+- **The direct-arrival preferences defect is parked, not fixed.** On a direct, parameter-free `/find` arrival the Combine path's duration still does not reach `prefs.travelDays`. Codex accepted parking it and explicitly did not call it correct. Its own brief and review when wanted.
+- One behavioural change does reach direct arrivals: a chosen Combine length and its label now survive the page's Back button, where the old step reset them. Recorded rather than claimed as identity.
+- Everything on the held list above stays held.
+
 ## Next
 
-1. **Stage 2 brief:** handing trip details to the classic planner.
-2. The unlisted Stage 1 trial continues. **Public entry buttons remain on `/find`.** The switch to `/plan` needs: Stage 2, the phone / save-and-reopen / fallback checks on Stage 2, **and resolution of the developer-harness item in `docs/PARKED.md`** (protect or remove `/dev/door2?key=door2`).
-3. Then the next bounded convergence scope, including Q8 preparation if F7 is chosen.
-4. Everything on the held list stays held.
+1. **Stage 2 phone checks.** Section B of `hosted-check-b-stage2-2026-10-07.md` revision 4, on a real handset. This is the only outstanding verification of the release itself.
+2. The owner's judgement on **A12** (reload restores carried details) and **A22** (the shared departure sentence on the unsupported-origin notice).
+3. The unlisted Stage 1 trial continues. **Public entry buttons remain on `/find`.** The switch to `/plan` needs: the Stage 2 phone / save-and-reopen / fallback checks, **and resolution of the developer-harness item in `docs/PARKED.md`** (protect or remove `/dev/door2?key=door2`).
+4. Optional, each its own brief and review: pinning the two destination ids from the section C data above, and the parked direct-arrival preferences fix.
+5. Then the next bounded convergence scope, including Q8 preparation if F7 is chosen.
+6. Everything on the held list stays held.
 
 ## Where things live
 
