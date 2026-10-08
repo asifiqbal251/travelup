@@ -82,7 +82,7 @@ R1 **fixed and released** 6 Oct. R2–R4 dormant: preconditions for activating e
 
 ## Direction B Stage 2 — released 7 October 2026
 
-**Carrying the traveller's basic answers from `/plan` into the classic planner `/find`.** Pushed and published; desktop hosted checks pass; **physical-phone checks are partly done (owner-reported, no rows or handset named) and not yet complete.**
+**Carrying the traveller's basic answers from `/plan` into the classic planner `/find`.** Pushed and published; desktop hosted checks pass; **physical-phone section B passed (owner-reported, 7 Oct 2026).**
 
 ### What is live
 
@@ -141,7 +141,7 @@ Checklist `hosted-check-b-stage2-2026-10-07.md` revision 4. **Build identity was
 
 ### Not proven by anyone
 
-- **Section B — the physical phone — is only partly done.** The owner reported on 7 Oct 2026 that section B "works fine so far" and that the rest will be completed later. **No row list and no handset were given, so no individual row is recorded as passed.** Touch, swiping the day scroller, pull-to-refresh, thumb-sized targets, layout and overflow at narrow widths remain unconfirmed until the owner reports row by row. Browser automation cannot substitute for a handset, and none was used.
+- **Section B — the physical phone — passed, owner-reported (7 Oct 2026, evening).** The owner first reported "works fine so far", then later that evening reported all of section B complete and passed. **The report was a single statement: no per-row list and no handset name were given**, so the record holds "section B passed, owner-reported" and not row-level detail. Browser automation cannot substitute for a handset, and none was used by Claude.
 - A21 and A22, as above — not run, and the owner has agreed they stay not run.
 - Screen-reader behaviour and old browsers, unchanged from Stage 1.
 
@@ -163,9 +163,9 @@ Claude built several test trips in the owner's own Chrome. `travelup_state_v1` n
 
 ## Next
 
-1. **Finish the Stage 2 phone checks.** Section B of `hosted-check-b-stage2-2026-10-07.md` revision 4, on a real handset; the owner reports pass / fail / not run per row plus the handset, and this file is updated. Partly done, rest owner-scheduled. This is the only outstanding verification of the release itself.
-2. A22 stays not run unless a non-Vancouver saved trip ever exists. A12 is closed (accepted).
-3. The unlisted Stage 1 trial continues. **Public entry buttons remain on `/find`.** The switch to `/plan` needs: the Stage 2 phone / save-and-reopen / fallback checks, **and resolution of the developer-harness item in `docs/PARKED.md`** (protect or remove `/dev/door2?key=door2`).
+1. **Stage 2 is complete** apart from A21 and A22, which stay not run (A21 cannot be provoked by hand; A22 needs a non-Vancouver saved trip). A12 is closed (accepted).
+2. **Resolve the developer-harness item in `docs/PARKED.md`** (protect or remove `/dev/door2?key=door2`). It is the remaining named blocker for switching the public buttons.
+3. The unlisted Stage 1 trial continues. **Public entry buttons remain on `/find`.** The Stage 2 phone, save-and-reopen and fallback checks are now reported done; the switch to `/plan` still needs **resolution of the developer-harness item in `docs/PARKED.md`** (item 2) and the owner's explicit approval.
 4. Optional, each its own brief and review: pinning the two destination ids from the section C data above, and the parked direct-arrival preferences fix.
 5. Then the next bounded convergence scope, including Q8 preparation if F7 is chosen.
 6. Everything on the held list stays held.
