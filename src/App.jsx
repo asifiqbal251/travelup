@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react';
 import { Toaster } from "@/components/ui/toaster"
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClientInstance } from '@/lib/query-client'
@@ -22,8 +23,15 @@ import Login from '@/pages/Login';
 import Register from '@/pages/Register';
 import ForgotPassword from '@/pages/ForgotPassword';
 import OAuthConsent from '@/pages/OAuthConsent';
-import Door2Dev from '@/pages/Door2Dev';
 import Door2Plan from '@/pages/Door2Plan';
+
+// Door 2 developer harness: development builds only. Both flags are replaced with
+// constants at build time, so a production build drops the dynamic import and the
+// harness module is never reachable. MODE is checked as well as DEV because DEV
+// follows NODE_ENV, and a build run with NODE_ENV=development in its environment
+// would otherwise ship the harness. See docs/PARKED.md.
+const HARNESS_ENABLED = import.meta.env.DEV && import.meta.env.MODE !== 'production';
+const Door2Dev = HARNESS_ENABLED ? lazy(() => import('@/pages/Door2Dev')) : null;
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -56,7 +64,7 @@ const AuthenticatedApp = () => {
         {/* Full-bleed immersive routes -- no site chrome (see docs/travelfit-visual-fidelity-pass.md #1) */}
         <Route path="/questionnaire" element={<Questionnaire />} />
         <Route path="/find" element={<DoorB />} />
-        <Route path="/dev/door2" element={<Door2Dev />} />
+        {Door2Dev && <Route path="/dev/door2" element={<Suspense fallback={null}><Door2Dev /></Suspense>} />}
         <Route path="/plan" element={<Door2Plan />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
