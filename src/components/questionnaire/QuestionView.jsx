@@ -64,10 +64,10 @@ export default function QuestionView({
               <p className="mt-5 text-[13px] text-wn-text-3">
                 Already know where you're going?{" "}
                 <Link
-                  to="/find"
+                  to="/plan"
                   className="text-wn-text-2 underline underline-offset-2 hover:text-wn-text focus:outline-none focus-visible:ring-2 focus-visible:ring-wn-cyan rounded"
                 >
-                  Skip straight to the dates →
+                  Go to the planner →
                 </Link>
               </p>
             )}

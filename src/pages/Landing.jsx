@@ -207,7 +207,7 @@ export default function Landing() {
               size="lg"
               className="w-full bg-ink text-on-dark ring-1 ring-teal/40 hover:bg-surface-dark hover:ring-teal/70 min-h-12 px-6 text-base focus-visible:!ring-teal focus-visible:ring-offset-cinema"
             >
-              <Link to="/find">
+              <Link to="/plan">
                 <MapPin className="w-4 h-4 mr-2" /> I know where I&apos;m going
               </Link>
             </Button>
