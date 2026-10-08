@@ -161,11 +161,70 @@ Claude built several test trips in the owner's own Chrome. `travelup_state_v1` n
 - One behavioural change does reach direct arrivals: a chosen Combine length and its label now survive the page's Back button, where the old step reset them. Recorded rather than claimed as identity.
 - Everything on the held list above stays held.
 
+## Developer harness closed on the published app — released 7 October 2026
+
+**The Door 2 developer harness is development-builds-only. Pushed, published and hosted-verified. The `docs/PARKED.md` item is resolved, and with it the last named blocker on switching the public entry buttons.** The buttons themselves have **not** moved and still go to `/find`; moving them remains a separate owner decision.
+
+### What is live
+
+- **Commit `2816ece`** on `origin/main`, directly on top of `db403cb`. Its tree is `a876b91b50fd19da2cd3a26f8bf9f80888f41ca3` — **byte-identical to the Codex-approved tree**, verified from the sandbox by fetching `origin/main` after the owner's push, and by a `git diff` against the reviewed commit returning empty. The approval was issued against local commit `78a2d41`; `git am` re-dated it on the owner's Mac, which is why the id differs and the tree does not.
+- **Two files:** `src/App.jsx` (+10/−2) and the new `tests/door2/devHarnessGate.test.js`. Everything else byte-identical to the base, including `Door2Dev.jsx` itself, `Door2Plan.jsx`, `DoorB.jsx`, `Landing.jsx`, all of `src/lib/**`, all of `src/components/**`, `vite.config.js`, `package.json` and the lockfile. No new dependency.
+- **The change.** The static harness import is gone. A module-scope gate — the development flag **and** a non-production mode — decides whether a lazy import of the harness exists at all, and the route is registered only when it does. A production build therefore contains neither the harness module nor its "Not for real travellers" wording. The development server is unchanged apart from a brief blank interval on first open while the module loads.
+- **Why two conditions, not one.** The development flag follows NODE_ENV. Measured: an ordinary build with NODE_ENV=development merely present in its environment **shipped the harness** under a one-flag gate. Passing a mode argument alone changed nothing. The two-condition gate excludes that case.
+- Checks at that tree: **734 Door 2 tests** (726 before, 8 new), lint clean, build succeeds, both frozen fixtures byte-identical.
+- Published on Base44 by the owner the same evening, shortly before 23:09 America/Vancouver. **The owner did not report the exact publish timestamp or Base44's `last_deployed_git_commit_hash`**, so hosted revision identity rests on the functional checks below rather than on a deployment record.
+
+### Review history
+
+Brief draft 1 → Codex **amend** (four required amendments: the hosted-failure diagnosis, a self-contradictory test rule, deterministic build environments, and the overstated name "local-only"). Draft 2 adopted all four, and chasing the third produced the finding above, which **changed the design** from one condition to two and added test T4. Codex **approved** draft 2's design with three editorial corrections; revision 3 made them. The patch was then independently diff-reviewed and **approved at the exact tree**, with no code amendment required.
+
+Codex independently reproduced: the patch hash and resulting tree, 726 tests before and 734 after, lint, the production build, the rendered development and production behaviour, and the mutation checks.
+
+### Verification
+
+**Local, by Claude (sandbox), reproduced by Codex in its own isolated clone:**
+
+| Check | Result |
+|---|---|
+| Door 2 suite at the base, before the change | 726 pass, 0 fail — re-run, not taken from this file |
+| Door 2 suite at the commit | **734 pass, 0 fail**; suite runtime grew about 22 seconds (three real builds) |
+| Lint, production build | clean; one JS bundle, harness wording absent (the base shipped it) |
+| Frozen fixtures | `88ebac17…e91e5d` and `d3f97744…b8491d` unchanged |
+| Rendered, development server, headless Chromium | `/dev/door2?key=door2` renders the harness and its warning; `/dev/door2` renders not-found |
+| Rendered, production preview, headless Chromium | **both** harness addresses render the ordinary not-found page **inside the site layout**; `/plan`, `/` render normally |
+
+**The new tests were shown able to fail.** Each protection was removed in turn and the right tests failed, in both Claude's and Codex's runs:
+
+| Mutation | Failed | Still passed |
+|---|---|---|
+| Gate reduced to the development flag alone | the gate test **and T4** | the production-build test |
+| Static import restored, route still conditional | the import tests, the production-build test, T4 | the positive control |
+| Route made unconditional | the route-structure test | the three build tests |
+
+The first row is the point of T4: a production build passes under a one-flag gate, so only T4 distinguishes the two designs.
+
+**Hosted, after publication — H1–H3 of the approved brief:**
+
+| Row | Owner, signed out, private window | Claude, in the owner's Chrome (signed in; supporting evidence only) |
+|---|---|---|
+| H1 `/dev/door2?key=door2` | **PASS** (owner-reported) | **PASS** — "404 Page Not Found … The page \"dev/door2\" could not be found", no harness wording |
+| H2 `/dev/door2` | **PASS** (owner-reported) | **PASS** — same not-found page |
+| H3 `/plan?key=door2`, `/find`, `/` | **PASS** (owner-reported) | **PASS** — `/plan` shows the early-access catalogue and the owner's three saved trips; `/find` loads its destination screen; the landing page renders with both entry buttons |
+
+**The owner's signed-out private-window check is the acceptance record.** Claude's pass is a second observation in a signed-in browser, not a repeat of it. Neither establishes the hosted source revision; that remains inferred from the pushed tree plus these functional results.
+
+### Honest limits of this release
+
+- **This is not authentication.** A build with NODE_ENV=development **and a custom non-production mode** would still include the harness, and nothing here confines a development server to one machine. Recorded and accepted; the published app was the exposure that mattered.
+- **No deployment record.** Base44's publish timestamp and deployed commit hash were not read, so hosted revision identity is inferred, not established.
+- **The source tests pin this implementation closely**, including the exact gate text. Codex accepted that for this boundary; an equivalent future refactor will need the tests changed with it.
+- `/find`'s destination list could not load in Claude's sandbox. A build of the **unmodified base** showed the identical message there, so it is the sandbox and not this change; the live `/find` loads normally. The underlying sandbox cause was not diagnosed.
+
 ## Next
 
 1. **Stage 2 is complete** apart from A21 and A22, which stay not run (A21 cannot be provoked by hand; A22 needs a non-Vancouver saved trip). A12 is closed (accepted).
-2. **Resolve the developer-harness item in `docs/PARKED.md`** (protect or remove `/dev/door2?key=door2`). It is the remaining named blocker for switching the public buttons.
-3. The unlisted Stage 1 trial continues. **Public entry buttons remain on `/find`.** The Stage 2 phone, save-and-reopen and fallback checks are now reported done; the switch to `/plan` still needs **resolution of the developer-harness item in `docs/PARKED.md`** (item 2) and the owner's explicit approval.
+2. **The developer-harness item is resolved** (above, and `docs/PARKED.md`). No named blocker on the public-button switch remains.
+3. The unlisted Stage 1 trial continues. **Public entry buttons remain on `/find`.** With the Stage 2 checks reported done and the harness closed, the switch to `/plan` now needs only **the owner's explicit decision** — and its own brief, review and hosted check like any other change. Nothing about this release moves it.
 4. Optional, each its own brief and review: pinning the two destination ids from the section C data above, and the parked direct-arrival preferences fix.
 5. Then the next bounded convergence scope, including Q8 preparation if F7 is chosen.
 6. Everything on the held list stays held.
