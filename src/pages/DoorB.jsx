@@ -229,11 +229,13 @@ export default function DoorB() {
   const activeTravelDays = () => (multiLegs ? combineDays : answers.travelDays);
 
   const buildAndGo = () => {
-    // Scope held: only a handoff arrival takes the active path's duration. The
-    // pre-existing split between the Combine path's duration and `answers.travelDays`
-    // on a direct, parameter-free arrival is older than Stage 2 and is parked for its
-    // own scoped correction (brief sections 15 and 18.2) — parked, not correct.
-    const prefs = buildPrefs(handoff ? { ...answers, travelDays: activeTravelDays() } : answers);
+    // Every arrival takes the active path's duration, not only a handoff one. Stage 2
+    // corrected the handoff case and parked the rest; the duration-fix packet of
+    // 8 Oct 2026 removed that condition, so on a direct arrival the Combine control's
+    // current displayed value is what is stored — the same value the route was fitted
+    // to. The single-destination path is unaffected: `activeTravelDays()` returns
+    // `answers.travelDays` there, so this is value-identical to the old expression.
+    const prefs = buildPrefs({ ...answers, travelDays: activeTravelDays() });
     setPrefsWithHistory(prefs);
     if (multiLegs) {
       // Multi-stop: store the ordered leg IDs + days; TripDetail fetches full objects.

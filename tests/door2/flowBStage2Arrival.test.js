@@ -611,3 +611,101 @@ test('"Clear carried details" returns both paths to an unconfirmed default', asy
   assert.ok(checked('7 days'));
   assert.ok(document.body.textContent.includes('suggested'));
 });
+
+// ── D1, D2, D2b, D3, D5: the direct-arrival Combine duration fix ─────────────
+// Build brief "direct-arrival Combine duration defect" revision 3 (8 Oct 2026),
+// section 6. Before the fix, `buildAndGo` took the active path's duration only on a
+// recognised handoff arrival, so a Combine length chosen after a parameter-free
+// arrival reached the route but never `prefs.travelDays`.
+//
+// Change tests (D1, D2, D2b, D5) must FAIL against the pre-fix expression.
+// Preservation tests (D3 here, and the R2 handoff cases above, which are D4) must
+// PASS both before and after, and are proved instead by their own targeted
+// mutation: making the single-destination build read the Combine value must fail
+// D3, which is why D3's chosen length differs from the Combine control's default.
+
+/** Two legs that cannot absorb a large budget: caps force unallocated free days. */
+const CAPPED_DESTS = [
+  { id: 'cusco', name: 'Cusco', country: 'Peru', min_days: 3, max_days: 4 },
+  { id: 'lima', name: 'Lima', country: 'Peru', min_days: 2, max_days: 4 },
+];
+
+/** A parameter-free arrival, taken into the Combine path by typing a country. */
+async function combineDirect(list = DESTS) {
+  const user = open('', list);
+  await waitFor(() => assert.ok(screen.getByPlaceholderText('Type a destination or country')));
+  await user.clear(input());
+  await user.type(input(), 'Peru');
+  await user.click(await screen.findByRole('button', { name: /Combine 2 of these/ }));
+  return user;
+}
+
+/** A direct arrival carries no answers, so the essentials have to be given here. */
+async function fillEssentials(user) {
+  await user.click(radio('March'));
+  await user.click(radio('Two of us'));
+}
+
+/** DaysStep -> proposal -> essentials -> build, for the Combine path. */
+async function combineThroughToBuild(user) {
+  await user.click(screen.getByRole('button', { name: /Continue/ }));
+  await user.click(screen.getByRole('button', { name: /Build full itinerary/ }));
+  await fillEssentials(user);
+  await user.click(screen.getByRole('button', { name: /Build my trip/ }));
+  assert.ok(await screen.findByText('TRIP PAGE'));
+}
+
+test('D1: a direct arrival stores the chosen Combine length, and the route agrees', async () => {
+  const user = await combineDirect();
+  await user.click(radio('12 days'));
+  await combineThroughToBuild(user);
+  assert.equal(prefDays(), 12, 'the preferences say 12');
+  assert.equal(legTotal(), 12, 'this fixture is uncapped, so all 12 are allocated');
+});
+
+test('D2: a direct arrival stores exactly the length chosen, not merely "not 7"', async () => {
+  const user = await combineDirect();
+  await user.click(radio('9 days'));
+  await combineThroughToBuild(user);
+  assert.equal(prefDays(), 9, 'exactly the 9 recorded by the interaction above');
+});
+
+test('D2b: capped legs keep the requested budget in preferences, never the leg sum', async () => {
+  const user = await combineDirect(CAPPED_DESTS);
+  await user.click(radio('12 days'));
+  await combineThroughToBuild(user);
+  assert.equal(legTotal(), 8, 'two legs capped at 4 days each allocate 8 of the 12');
+  assert.equal(prefDays(), 12, 'the preference keeps the requested budget: 12, not 8 and not 7');
+});
+
+test('D3 (preservation): a direct single-destination length is unaffected by the fix', async () => {
+  const user = open('');
+  await waitFor(() => assert.ok(screen.getByPlaceholderText('Type a destination or country')));
+  await user.type(input(), 'Tokyo');
+  await pickFromDropdown(user, 'Tokyo');
+  await user.click(radio('11 days'));
+  await fillEssentials(user);
+  await user.click(buildButton());
+  assert.ok(await screen.findByText('TRIP PAGE'));
+  assert.equal(prefDays(), 11, 'the single-destination answer, not the Combine control');
+});
+
+test('D5: the Combine control\'s displayed value is authoritative, untouched included', async () => {
+  const user = open('');
+  await waitFor(() => assert.ok(screen.getByPlaceholderText('Type a destination or country')));
+  await user.type(input(), 'Tokyo');
+  await pickFromDropdown(user, 'Tokyo');
+  await user.click(radio('11 days'));
+  await fillEssentials(user);
+  await user.click(screen.getByRole('button', { name: 'Back' }));
+  await user.clear(input());
+  await user.type(input(), 'Peru');
+  await user.click(await screen.findByRole('button', { name: /Combine 2 of these/ }));
+  assert.ok(checked('7 days'), 'the Combine control shows its own untouched suggestion');
+  await user.click(screen.getByRole('button', { name: /Continue/ }));
+  await user.click(screen.getByRole('button', { name: /Build full itinerary/ }));
+  await user.click(screen.getByRole('button', { name: /Build my trip/ }));
+  assert.ok(await screen.findByText('TRIP PAGE'));
+  assert.equal(prefDays(), 7, 'the displayed Combine value, not the 11 set in essentials');
+  assert.equal(legTotal(), 7, 'and the route was fitted to that same 7');
+});
