@@ -18,7 +18,7 @@
 - **Reviewed:** A1–A5 by Codex (approve at `bf2715d`). A6–A7 checked by Claude chat only; no Codex round, by design.
 - **Pushed (owner-reported):** `e1caecc` and `d8a809b` are on GitHub `main`. Not verified from the sandbox; the owner's next push output will confirm it.
 - **Published (owner-reported):** the owner published in Base44. Hosted Git SHA still not established.
-- **Hosted-checked:** by Claude chat (read-only, desktop Chrome) and by the owner on a physical phone; see the 6–7 October events below. **The unlisted Stage 1 trial is in progress.** "Unlisted" is not private. The public entry buttons still go to `/find`.
+- **Hosted-checked:** by Claude chat (read-only, desktop Chrome) and by the owner on a physical phone; see the 6–7 October events below. **The unlisted Stage 1 trial is in progress.** "Unlisted" is not private. The public entry buttons still went to `/find` at that date. *(Superseded 8 October: the three entry links now go to `/plan` — see "Direction B Stage 3" below.)*
 
 **Active work:** direction B, Stage 1 of the public Door 2 replacement. Build brief B revision 3 was approved by the owner and Stage 1 implemented locally (`cb4982e`). Codex independently reviewed it and returned **approve with required amendments**; the amendments were then committed locally, and Codex reviewed `cb4982e..bf2715d` and returned **approve** (6 October). Since then the amendments were approved, A6–A7 added, and Stage 1 pushed, published and hosted-checked (events below). Earlier install and check rows below are retained as dated history.
 
@@ -156,14 +156,14 @@ Claude built several test trips in the owner's own Chrome. `travelup_state_v1` n
 
 ### Still held after this release
 
-- **The public buttons stay on `/find`.** Stage 2 completing does not authorize the switch; the parked developer-harness item (`/dev/door2?key=door2`) must be resolved first.
+- **The public buttons stay on `/find`.** *(Written 7 October; superseded 8 October — see "Direction B Stage 3" below.)* Stage 2 completing does not authorize the switch; the parked developer-harness item (`/dev/door2?key=door2`) must be resolved first.
 - **The direct-arrival preferences defect is parked, not fixed.** On a direct, parameter-free `/find` arrival the Combine path's duration still does not reach `prefs.travelDays`. Codex accepted parking it and explicitly did not call it correct. Its own brief and review when wanted.
 - One behavioural change does reach direct arrivals: a chosen Combine length and its label now survive the page's Back button, where the old step reset them. Recorded rather than claimed as identity.
 - Everything on the held list above stays held.
 
 ## Developer harness closed on the published app — released 7 October 2026
 
-**The Door 2 developer harness is development-builds-only. Pushed, published and hosted-verified. The `docs/PARKED.md` item is resolved, and with it the last named blocker on switching the public entry buttons.** The buttons themselves have **not** moved and still go to `/find`; moving them remains a separate owner decision.
+**The Door 2 developer harness is development-builds-only. Pushed, published and hosted-verified. The `docs/PARKED.md` item is resolved, and with it the last named blocker on switching the public entry buttons.** The buttons themselves had **not** moved at that point and still went to `/find`; moving them was a separate owner decision, made and released on 8 October (see "Direction B Stage 3" below).
 
 ### What is live
 
@@ -220,14 +220,65 @@ The first row is the point of T4: a production build passes under a one-flag gat
 - **The source tests pin this implementation closely**, including the exact gate text. Codex accepted that for this boundary; an equivalent future refactor will need the tests changed with it.
 - `/find`'s destination list could not load in Claude's sandbox. A build of the **unmodified base** showed the identical message there, so it is the sandbox and not this change; the live `/find` loads normally. The underlying sandbox cause was not diagnosed.
 
+## Direction B Stage 3 — public entry links switched to the new planner — released 8 October 2026
+
+**The three "I know where I'm going" entry links now open the new planner at `/plan`. Pushed, published, hosted-checked.** The owner decided on 8 October (D15, option 1) to make the new planner the main starting point for Door 2 now, given very few users, while it continues to improve. The classic planner at `/find` stays available, including existing links and bookmarks, and remains the explained fallback.
+
+### What is live
+
+- **Commit `be34e5e`** on `origin/main`, directly on top of `4db146c`. Its tree is `d0be1d960cd608db62dd9418318c43d9e0d4563d` — **byte-identical to the Codex-approved tree**, verified from the sandbox by fetching `origin/main` after the owner's push. The approval was issued against local commit `140b45d`; `git am` re-dated it on the owner's Mac, which is why the id differs and the tree does not. Patch v2, sha256 `59a43669cb0402227fcde9b506e57e2a201a2640df33a81cd64c02a8c34eb834`.
+- **Four files:** `src/pages/Landing.jsx` (+1/−1), `src/components/LandingHeroSlideshow.jsx` (+1/−1), `src/components/questionnaire/QuestionView.jsx` (+2/−2), and the new `tests/door2/publicEntryLinks.test.js`. Everything else byte-identical to the base, including `App.jsx`, `Door2Plan.jsx`, `classicHandoff.js` and all of `src/lib/**` (so `scoring.js`, `practicality.js`, `itinerary.js` and `questionnaireFlow.js` are untouched). No new dependency.
+- **The change.** Landing's final-CTA entry link and the hero entry link now target `/plan`. The questionnaire's existing shortcut now reads "Already know where you're going? **Go to the planner →**" and targets `/plan` (it said "Skip straight to the dates →" and targeted `/find`, which was never accurate: the classic planner opens on destination search). The two "I know where I'm going" button labels and both "Find my Travel Fit" buttons are unchanged.
+- Checks at that tree: **748 Door 2 tests** (734 before, 14 new), lint clean, build succeeds, both frozen fixtures byte-identical.
+- Published on Base44 by the owner on 8 October. **The owner did not report the publish timestamp or Base44's `last_deployed_git_commit_hash`**, so hosted revision identity rests on the functional checks below, not a deployment record.
+
+### Review history
+
+Brief draft 1 → Codex **amend** (five corrections: preservation tests need their own mutation checks; a hosted failure does not prove the wrong build; the classic planner opens on destination search; rollback reverts the whole commit and does not undo saved trips; Travel Fit completion and output parity must be separated). Revision 2 → Codex **approve**, with one small A9b wording correction made in revision 3. The owner chose the wording "Go to the planner →", kept both button labels, and had all three links switch together. The first patch (`4f1aaf7`) → Codex diff review **amend** (T1 counted links instead of identifying the intended button, so swapping the hero's two targets passed; T5 used inclusion, so appended words passed; Travel Fit completion had no acceptance route → hosted H8; a claim about computed targets was withdrawn). The v2 patch (`140b45d`) → Codex diff review **approve**, with one non-blocking wording correction (T1 requires literal targets on the five named controls; T2 detects literal `/find` targets elsewhere and does not evaluate computed destinations).
+
+Codex independently reproduced the patch hash and resulting tree, 748 tests, lint, build, 21/0/9 on the brief checker, **all twelve mutations failing as listed**, and 9 failing / 5 passing against the base app files (the five passes being the preservation checks).
+
+### Local verification — what it did and did not cover
+
+- Acceptance examples A1–A8c: **pass** against a real production build in headless Chromium, zero uncaught page errors; Codex additionally built, saved and reopened a Peru trip through Continue.
+- **A9a (Travel Fit completion): partial locally** — the shortlist cannot render without the Base44 backend; carried to hosted H8 below. **A9b (output parity): not run** — no pinned catalogue snapshot, no comparison, **no parity claim**. The boundary diff (every file under `src/lib` byte-identical; `QuestionView.jsx` differs only in the shortcut's target and label) is unchanged-source evidence, not an executed output comparison.
+
+### Hosted checks — 8 October 2026
+
+Checklist: brief §8 / review packet v2, rows H1–H8. Record: `hosted-check-b-stage3-2026-10-08.md` in the Claude project.
+
+| Row | Result |
+|---|---|
+| H1 landing entry link | **PASS** (Claude, in the owner's Chrome) — `href="/plan"`; click lands on `/plan` with the limits block |
+| H2 hero entry link | **PASS** (Claude) — same |
+| H3 questionnaire shortcut | **PASS** (Claude) — approved wording, `href="/plan"`, lands on `/plan`; retired wording absent |
+| H4 direct `/find` | **PASS** (Claude) — classic destination screen, no carried-details notice |
+| H5 `/plan` miss → fallback | **PASS** (Claude) — typed "Bali"; fallback link opened `/find?dest_q=Bali` with the carried notice and Bali offered |
+| H6 Travel Fit button | **PASS** (Claude) — opens the questionnaire at step 1 of 9 |
+| H7 physical phone | **PASS — owner-reported.** A single statement ("H7 worked"); no per-row list and no handset name were given, so the record holds "H7 passed, owner-reported", not row-level detail |
+| H8 Travel Fit completed against the live catalogue | **PASS** (Claude) — answers recorded first (Vancouver, 8 days, May, a couple, Food/Cities/History, Mild, Balanced, Moderate, budget 65; read back from stored preferences), then top 3: Mexico City 87, New York City 80, Montréal and Québec City 71; score breakdown visible; "View my trip" opened a full 8-day Mexico City itinerary. Nothing saved |
+
+**All eight rows pass.** Two deviations from the packet stand recorded: **Claude's rows ran in the owner's normal, signed-in Chrome profile, not a signed-out private window**, and the signed-out repetition was not run; and H8 observed behaviour, it did not compare output with the pre-switch Travel Fit (A9b stays not run).
+
+### Side effect of the hosted checks
+
+Running H8 in the owner's Chrome **overwrote the stored Travel Fit preferences** in that browser (previously October, 10 days, a couple) and added an entry to the preference history. No trip was saved or deleted; the three saved trips (Japan, Canada, Peru) were untouched. A stray click on the Base44 "Built with Base44" badge opened its promo modal; it was closed and nothing was cloned.
+
+### Honest limits of this release
+
+- **No deployment record.** Base44's publish timestamp and deployed commit hash were not read; hosted revision identity is inferred from the pushed tree plus the functional results.
+- **Source-structure tests do not evaluate computed destinations** (see review history); rendered and hosted checks cover real navigation.
+- **Accessibility unchanged and unproven.** No screen reader; the departure dialog's background is still not made inert.
+- **Stage 2's A21 and A22 stay not run**, by agreement.
+- The new planner's limits (selected routes from Vancouver, trips saved only in this browser) and its fallback to the classic planner are as released in Stages 1–2; this release changes where the three links go, not those limits.
+
 ## Next
 
-1. **Stage 2 is complete** apart from A21 and A22, which stay not run (A21 cannot be provoked by hand; A22 needs a non-Vancouver saved trip). A12 is closed (accepted).
-2. **The developer-harness item is resolved** (above, and `docs/PARKED.md`). No named blocker on the public-button switch remains.
-3. The unlisted Stage 1 trial continues. **Public entry buttons remain on `/find`.** With the Stage 2 checks reported done and the harness closed, the switch to `/plan` now needs only **the owner's explicit decision** — and its own brief, review and hosted check like any other change. Nothing about this release moves it.
-4. Optional, each its own brief and review: pinning the two destination ids from the section C data above, and the parked direct-arrival preferences fix.
-5. Then the next bounded convergence scope, including Q8 preparation if F7 is chosen.
-6. Everything on the held list stays held.
+1. **Stage 3 is complete.** The three public entry links go to `/plan`; the classic planner at `/find` remains available as the fallback. Roadmap v1.7 records D15 closed.
+2. **Rollback, if ever wanted:** revert the complete Stage 3 commit, tests included. That restores the links and the shortcut wording; it does not undo anything travellers saved meanwhile.
+3. Optional, each its own brief, review and hosted check: pinning the two destination ids from the section C data above (NYC `6a7e984900175cfc5fe2005a`; Tokyo & Kyoto `6a7ced35c41497521b54e0bc`), and the parked direct-arrival preferences fix.
+4. **D16 (whether to open F7/Q8 preparation) remains the owner's decision.** Then the next bounded convergence scope.
+5. Everything on the held list stays held.
 
 ## Where things live
 
