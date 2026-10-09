@@ -21,7 +21,7 @@
 | **Mac checkout** | level with the remote; the nine untracked historical documents preserved |
 | **Public entry** | all three "I know where I'm going" links open `/plan`; `/find` remains available as the explained fallback |
 | **Checks at that tree** | 748 Door 2 tests, lint clean, build succeeds, both frozen fixtures byte-exact |
-| **Stage 3 release** | implemented, independently approved, pushed and published. **Acceptance is NOT yet complete**: the approved brief §7.2 requires the hosted rows signed out in a private window, and they were run signed in. See the Stage 3 section below |
+| **Stage 3 release** | implemented, independently approved, pushed, published and **accepted** (8 October): the owner's signed-out private-window run passed (owner-reported, one statement, no per-row detail) and the phone check passed (owner-reported). See the Stage 3 section below |
 | **Hosted revision identity** | inferred, never established, for every release so far |
 | **The open decision** | **D16 — F7 preparation: OPENED by the owner 8 October**, bounded to planning and design. Its brief is in independent review. D15 (the front-door switch) is closed |
 | **Held** | production estimate and experience activation · any record migration · Q8 durable identity · all Q10 conditions |
@@ -276,11 +276,13 @@ Checklist: brief §8 / review packet v2, rows H1–H8. Record: `hosted-check-b-s
 | H7 physical phone | **PASS — owner-reported.** A single statement ("H7 worked"); no per-row list and no handset name were given, so the record holds "H7 passed, owner-reported", not row-level detail |
 | H8 Travel Fit completed against the live catalogue | **PASS** (Claude) — answers recorded first (Vancouver, 8 days, May, a couple, Food/Cities/History, Mild, Balanced, Moderate, budget 65; read back from stored preferences), then top 3: Mexico City 87, New York City 80, Montréal and Québec City 71; score breakdown visible; "View my trip" opened a full 8-day Mexico City itinerary. Nothing saved |
 
-**All eight rows pass as run — but the acceptance condition is not yet met.** The approved brief §7.2 specifies these rows **signed out, in a private window**, and says in terms that this is the acceptance record. Claude's rows ran in the owner's normal, signed-in Chrome profile, with saved trips and stored preferences present. **Recording that deviation does not waive the condition**, and no owner waiver exists. The correct status: Stage 3 is implemented, independently approved, pushed and published, with signed-in desktop observations and an owner-reported phone pass; **the signed-out desktop acceptance run is pending.** Corrected 8 October after an independent review of the records pointed this out.
+**Acceptance — 8 October, evening.** The approved brief §7.2 makes the owner's signed-out, private-window run the acceptance record. The owner ran it on the published app and reported "all works fine" for the signed-out check. That is a **single owner statement with no per-row detail**: it is recorded as "the signed-out run passed, owner-reported", not as seven separately observed rows. Together with Claude's signed-in rows (H1–H6, H8) and the owner's phone pass (H7), the acceptance condition in §7.2 is met, and Stage 3 is recorded as **accepted**.
 
-The difference is not cosmetic. With stored preferences present the landing page renders its returning-traveller strip, so a genuinely first-time visitor sees a different page from the one checked. The three entry links are the same elements either way, which is why the rows passed; the first-visit rendering is what has not been observed.
+History, kept because it was corrected once: Claude first recorded these rows as accepted on the signed-in run alone; an independent review pointed out that §7.2 requires the signed-out run, and the status was changed to "released, acceptance pending" until the owner's run was reported.
 
-**A9b (exact output parity) is separately allowed to stay not run** and is not equivalent to the pending signed-out check. One is an optional comparison nobody required; the other is the agreed acceptance gate.
+What the signed-in run could not show, and the owner's run now covers: with stored preferences present the landing page renders its returning-traveller strip, so a first-time visitor sees a different page from the one Claude checked. The three entry links are the same elements either way.
+
+**A9b (exact output parity) is separately allowed to stay not run** and is not equivalent to the signed-out acceptance check. One is an optional comparison nobody required; the other was the agreed acceptance gate, now met.
 
 ### Side effect of the hosted checks
 
@@ -296,7 +298,7 @@ Running H8 in the owner's Chrome **overwrote the stored Travel Fit preferences**
 
 ## Next
 
-1. **Finish Stage 3 acceptance.** Run H1–H6 and H8 signed out in a private window, as the approved brief requires, and record the result. Until then the switch is released but not accepted. The owner's phone pass (H7) stands as reported.
+1. ~~Finish Stage 3 acceptance~~ — **done, 8 October evening** (owner-reported signed-out pass; see the Stage 3 section). Optional still: read Base44's publish timestamp and deployed commit hash, which would turn inferred hosted identity into established identity.
 2. **Rollback, if ever wanted:** revert the complete Stage 3 commit, tests included. That restores the links and the shortcut wording; it does not undo anything travellers saved meanwhile.
 3. **F7 preparation — OPENED by the owner, 8 October 2026 (D16).** Bounded to planning and design: a brief and a Q8 identity design, independently reviewed and owner-approved before any implementation. **Preparation authorizes no production-record write, no migration, no live engine switch and no activation of the held estimate and experience features.** Opening it triggers the Q8 work; it does not clear Q8 or any of the six Q10 conditions.
 4. **Two small packets, each its own brief, review and hosted check**, neither a migration-gate prerequisite: the parked direct-arrival preferences fix (the higher priority of the two — it is a known defect), and pinning the two destination ids (NYC `6a7e984900175cfc5fe2005a`; Tokyo & Kyoto `6a7ced35c41497521b54e0bc`, both dated 7 October and to be re-read against the live catalogue before use).
