@@ -10,9 +10,27 @@
 - This file records state and decisions made elsewhere. It changes no gate, contract or approval. Gates and product choices keep their normal approval path.
 - Routine evidenced updates do not need cross-model review. A changed gate, product decision or architecture decision does.
 
-## Current state — 7 October 2026, after A6/A7, the push and the hosted checks
+## Current snapshot — 8 October 2026, evening
 
-**Known application code revision:** `d8a809b` — direction B Stage 1 (`cb4982e`) plus the product amendments A1–A5 (independently approved by Codex at `bf2715d`) and the copy amendments A6 (`e1caecc`) and A7 (`d8a809b`) (checked by Claude chat, not by Codex). **Read current HEAD from Git**; do not rely on a SHA written here. Separate states, none of them implying another:
+**This is the live summary. Everything below it is dated history, kept as evidence and not rewritten.** Read current HEAD from Git rather than trusting any SHA written here.
+
+| | |
+|---|---|
+| **GitHub `main`** | `9522b32`, a records-only commit (`docs/STATE.md`), tree `81c494da…`, directly on `be34e5e` |
+| **Application code** | `be34e5e` — direction B Stage 3, tree `d0be1d96…`, byte-identical to the Codex-approved `140b45d` tree |
+| **Mac checkout** | level with the remote; the nine untracked historical documents preserved |
+| **Public entry** | all three "I know where I'm going" links open `/plan`; `/find` remains available as the explained fallback |
+| **Checks at that tree** | 748 Door 2 tests, lint clean, build succeeds, both frozen fixtures byte-exact |
+| **Stage 3 release** | implemented, independently approved, pushed and published. **Acceptance is NOT yet complete**: the approved brief §7.2 requires the hosted rows signed out in a private window, and they were run signed in. See the Stage 3 section below |
+| **Hosted revision identity** | inferred, never established, for every release so far |
+| **The open decision** | **D16 — F7 preparation: OPENED by the owner 8 October**, bounded to planning and design. Its brief is in independent review. D15 (the front-door switch) is closed |
+| **Held** | production estimate and experience activation · any record migration · Q8 durable identity · all Q10 conditions |
+
+## Historical — current state as recorded on 7 October 2026, after A6/A7, the push and the hosted checks
+
+*Superseded by the snapshot above and by the dated sections that follow. Retained because it is the record of that day, not because it is current.*
+
+**Known application code revision at that date:** `d8a809b` — direction B Stage 1 (`cb4982e`) plus the product amendments A1–A5 (independently approved by Codex at `bf2715d`) and the copy amendments A6 (`e1caecc`) and A7 (`d8a809b`) (checked by Claude chat, not by Codex). **Read current HEAD from Git**; do not rely on a SHA written here. Separate states, none of them implying another:
 
 - **Implemented:** Stage 1 with A1–A7 (`6f7ce54`, `cb4982e`, `71373b9`, `b7e4beb`, `ecac7e2`, `bf2715d`, `e1caecc`, `d8a809b`).
 - **Reviewed:** A1–A5 by Codex (approve at `bf2715d`). A6–A7 checked by Claude chat only; no Codex round, by design.
@@ -258,7 +276,11 @@ Checklist: brief §8 / review packet v2, rows H1–H8. Record: `hosted-check-b-s
 | H7 physical phone | **PASS — owner-reported.** A single statement ("H7 worked"); no per-row list and no handset name were given, so the record holds "H7 passed, owner-reported", not row-level detail |
 | H8 Travel Fit completed against the live catalogue | **PASS** (Claude) — answers recorded first (Vancouver, 8 days, May, a couple, Food/Cities/History, Mild, Balanced, Moderate, budget 65; read back from stored preferences), then top 3: Mexico City 87, New York City 80, Montréal and Québec City 71; score breakdown visible; "View my trip" opened a full 8-day Mexico City itinerary. Nothing saved |
 
-**All eight rows pass.** Two deviations from the packet stand recorded: **Claude's rows ran in the owner's normal, signed-in Chrome profile, not a signed-out private window**, and the signed-out repetition was not run; and H8 observed behaviour, it did not compare output with the pre-switch Travel Fit (A9b stays not run).
+**All eight rows pass as run — but the acceptance condition is not yet met.** The approved brief §7.2 specifies these rows **signed out, in a private window**, and says in terms that this is the acceptance record. Claude's rows ran in the owner's normal, signed-in Chrome profile, with saved trips and stored preferences present. **Recording that deviation does not waive the condition**, and no owner waiver exists. The correct status: Stage 3 is implemented, independently approved, pushed and published, with signed-in desktop observations and an owner-reported phone pass; **the signed-out desktop acceptance run is pending.** Corrected 8 October after an independent review of the records pointed this out.
+
+The difference is not cosmetic. With stored preferences present the landing page renders its returning-traveller strip, so a genuinely first-time visitor sees a different page from the one checked. The three entry links are the same elements either way, which is why the rows passed; the first-visit rendering is what has not been observed.
+
+**A9b (exact output parity) is separately allowed to stay not run** and is not equivalent to the pending signed-out check. One is an optional comparison nobody required; the other is the agreed acceptance gate.
 
 ### Side effect of the hosted checks
 
@@ -274,12 +296,12 @@ Running H8 in the owner's Chrome **overwrote the stored Travel Fit preferences**
 
 ## Next
 
-1. **Stage 3 is complete.** The three public entry links go to `/plan`; the classic planner at `/find` remains available as the fallback. Roadmap v1.7 records D15 closed.
+1. **Finish Stage 3 acceptance.** Run H1–H6 and H8 signed out in a private window, as the approved brief requires, and record the result. Until then the switch is released but not accepted. The owner's phone pass (H7) stands as reported.
 2. **Rollback, if ever wanted:** revert the complete Stage 3 commit, tests included. That restores the links and the shortcut wording; it does not undo anything travellers saved meanwhile.
-3. Optional, each its own brief, review and hosted check: pinning the two destination ids from the section C data above (NYC `6a7e984900175cfc5fe2005a`; Tokyo & Kyoto `6a7ced35c41497521b54e0bc`), and the parked direct-arrival preferences fix.
-4. **D16 (whether to open F7/Q8 preparation) remains the owner's decision.** Then the next bounded convergence scope.
+3. **F7 preparation — OPENED by the owner, 8 October 2026 (D16).** Bounded to planning and design: a brief and a Q8 identity design, independently reviewed and owner-approved before any implementation. **Preparation authorizes no production-record write, no migration, no live engine switch and no activation of the held estimate and experience features.** Opening it triggers the Q8 work; it does not clear Q8 or any of the six Q10 conditions.
+4. **Two small packets, each its own brief, review and hosted check**, neither a migration-gate prerequisite: the parked direct-arrival preferences fix (the higher priority of the two — it is a known defect), and pinning the two destination ids (NYC `6a7e984900175cfc5fe2005a`; Tokyo & Kyoto `6a7ced35c41497521b54e0bc`, both dated 7 October and to be re-read against the live catalogue before use).
 5. Everything on the held list stays held.
 
 ## Where things live
 
-Repo `github.com/asifiqbal251/travelup`, branch `main` · Base44 app `6a7ce8f29cef18f569162dc7` · public `wherenova.base44.app` · hidden Door 2 pilot `/plan?key=door2` · Door 2 approvals, releases and briefs in the Codex outputs folder and the Claude project.
+Repo `github.com/asifiqbal251/travelup`, branch `main` · Base44 app `6a7ce8f29cef18f569162dc7` · public `wherenova.base44.app` · the Door 2 planner at `/plan`, **the public entry since 8 October** — no key, reached by all three "I know where I'm going" links, with `/find` as the fallback · Door 2 approvals, releases and briefs in the Codex outputs folder and the Claude project.
