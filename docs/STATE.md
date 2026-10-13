@@ -10,20 +10,21 @@
 - This file records state and decisions made elsewhere. It changes no gate, contract or approval. Gates and product choices keep their normal approval path.
 - Routine evidenced updates do not need cross-model review. A changed gate, product decision or architecture decision does.
 
-## Current snapshot — 8 October 2026, evening
+## Current snapshot — 13 October 2026
 
 **This is the live summary. Everything below it is dated history, kept as evidence and not rewritten.** Read current HEAD from Git rather than trusting any SHA written here.
 
 | | |
 |---|---|
-| **GitHub `main`** | `9522b32`, a records-only commit (`docs/STATE.md`), tree `81c494da…`, directly on `be34e5e` |
-| **Application code** | `be34e5e` — direction B Stage 3, tree `d0be1d96…`, byte-identical to the Codex-approved `140b45d` tree |
-| **Mac checkout** | level with the remote; the nine untracked historical documents preserved |
+| **GitHub `main`** | `3c11c52`, a Base44-bot commit of 13 October (one line in `package.json` and its lockfile: `@base44/vite-plugin` 1.0.44 → 1.0.45), directly on `b8fff25`. **Not independently reviewed, and not part of any release record below.** Read from GitHub by Claude on 13 October |
+| **Application code** | `b8fff25` — the direct-arrival Combine duration fix, tree `b63a2c11…`, byte-identical to the Codex-approved `5ab7894` tree, directly on `37cb366` (the Stage 3 acceptance records). The Stage 3 code `be34e5e` is the release before it |
+| **Mac checkout** | Not read by Claude since 8 October. The owner's Terminal output on applying the patch showed the matching tree; the nine untracked historical documents were expected to remain |
 | **Public entry** | all three "I know where I'm going" links open `/plan`; `/find` remains available as the explained fallback |
-| **Checks at that tree** | 748 Door 2 tests, lint clean, build succeeds, both frozen fixtures byte-exact |
-| **Stage 3 release** | implemented, independently approved, pushed, published and **accepted** (8 October): the owner's signed-out private-window run passed (owner-reported, one statement, no per-row detail) and the phone check passed (owner-reported). See the Stage 3 section below |
-| **Hosted revision identity** | inferred, never established, for every release so far |
-| **The open decision** | **D16 — F7 preparation: OPENED by the owner 8 October**, bounded to planning and design. Its brief is in independent review. D15 (the front-door switch) is closed |
+| **Checks at the `b8fff25` tree** | 753 Door 2 tests (748 before, 5 new), lint clean, build succeeds, frozen fixtures byte-exact — run by Claude, reproduced by Codex. Not re-run after the bot commit |
+| **Stage 3 release** | accepted 8 October (owner-reported signed-out run). See the Stage 3 section |
+| **Direct-arrival duration fix** | implemented, independently approved, pushed, published, hosted-checked and **accepted on the owner's signed-out private-window run (owner-reported, 13 October)**. Most signed-out rows are a single owner statement without values; see the section below for what is evidenced and what is not |
+| **Hosted revision identity** | inferred, never established, for every release so far. For the duration fix there is a further unknown: the bot commit landed on GitHub at 17:44 UTC on 13 October, and nobody has said whether the published build included it |
+| **The open decision** | **D16 — F7 preparation, opened by the owner 8 October**, bounded to planning and design. The five design papers (D-A to D-E) are at revision 3 after two Codex AMEND rounds; revision 3 awaits independent review and the owner's decision. Nothing is approved for implementation. D15 is closed |
 | **Held** | production estimate and experience activation · any record migration · Q8 durable identity · all Q10 conditions |
 
 ## Historical — current state as recorded on 7 October 2026, after A6/A7, the push and the hosted checks
@@ -175,7 +176,7 @@ Claude built several test trips in the owner's own Chrome. `travelup_state_v1` n
 ### Still held after this release
 
 - **The public buttons stay on `/find`.** *(Written 7 October; superseded 8 October — see "Direction B Stage 3" below.)* Stage 2 completing does not authorize the switch; the parked developer-harness item (`/dev/door2?key=door2`) must be resolved first.
-- **The direct-arrival preferences defect is parked, not fixed.** On a direct, parameter-free `/find` arrival the Combine path's duration still does not reach `prefs.travelDays`. Codex accepted parking it and explicitly did not call it correct. Its own brief and review when wanted.
+- **The direct-arrival preferences defect is parked, not fixed.** On a direct, parameter-free `/find` arrival the Combine path's duration still does not reach `prefs.travelDays`. Codex accepted parking it and explicitly did not call it correct. Its own brief and review when wanted. *(Written 7 October; fixed and released — see "Direct-arrival Combine duration fix" below.)*
 - One behavioural change does reach direct arrivals: a chosen Combine length and its label now survive the page's Back button, where the old step reset them. Recorded rather than claimed as identity.
 - Everything on the held list above stays held.
 
@@ -296,13 +297,78 @@ Running H8 in the owner's Chrome **overwrote the stored Travel Fit preferences**
 - **Stage 2's A21 and A22 stay not run**, by agreement.
 - The new planner's limits (selected routes from Vancouver, trips saved only in this browser) and its fallback to the classic planner are as released in Stages 1–2; this release changes where the three links go, not those limits.
 
+## Direct-arrival Combine duration fix — released by 9 October, accepted 13 October 2026
+
+**On the classic planner, the length a traveller chooses on the Combine control now reaches the stored preferences, and so the saved-trip label and snapshot, when they arrive directly at `/find` as well as through a handoff.** Before, a parameter-free arrival that combined two destinations stored the single-destination default (7), so a trip combined at 10 days could be saved with a "7-day trip" label. Pushed, published, hosted-checked; acceptance rests on the owner's signed-out private-window run, which is a mostly single-statement report (see below).
+
+### What is live
+
+- **Commit `b8fff253cae127567e51648fd70834ab3ede803b`** on `origin/main`, directly on `37cb366`. Its tree is `b63a2c11b8df639f5a0b62117359e4745ae3eba6` — **byte-identical to the Codex-approved tree**, read from GitHub by Claude on 13 October (the commit and tree ids matched). The approval was issued against local commit `5ab7894`; `git am` re-dated it on the owner's Mac (23:31, 8 October), which is why the id differs and the tree does not. Patch sha256 `e20dae49366b7dc4f395e9e5e81c71168f8a2632aaa213a9c41f14efa415d5fb`.
+- **Two files:** `src/pages/DoorB.jsx` (+7/−5, one expression and its comment) and `tests/door2/flowBStage2Arrival.test.js` (+98). Everything else byte-identical to the base, including the four protected files, every engine and storage module, the dependencies and the frozen fixtures.
+- **The change.** `buildAndGo` now always hands `activeTravelDays()` to the preferences builder. When combining, that is the Combine control's displayed value, **including an untouched default of 7**; for a single destination it is `answers.travelDays`, so that path is value-identical to before. The owner approved this reading (brief revision 3, §4.1). Handoff behaviour, route fitting, itinerary generation, the storage format and already-saved trips are unchanged.
+- Checks at that tree: **753 Door 2 tests** (748 before, 5 new, no existing test edited), lint clean, build succeeds, both frozen fixtures byte-identical.
+- Published on Base44 by the owner by 9 October (the first hosted run saved a trip dated 9 October). **The owner did not report the publish timestamp or Base44's `last_deployed_git_commit_hash`**, so hosted revision identity rests on the functional checks below, not a deployment record.
+
+### Review history
+
+Brief draft 1 → Codex **amend** (findings on how change and preservation tests were classified, exact equality in D2, the chosen budget versus capped allocations, itinerary claims, and handoff versus re-entry paths — all resolved in revision 2). Revision 2 → Codex **amend, limited to hosted-check wording**: H3 could not observe a carried duration through the search-miss link (it carries search text only), and H6 had to separate the saved preference from the rendered itinerary. Revision 3 → **owner approved** (8 October), with the §4.1 behaviour. Implementation by Claude as sole declared writer → Codex diff review **approve** at the tree (8 October), no required changes.
+
+Codex independently reproduced the patch hash and resulting tree, 753 / 753, lint, build, a clean whitespace check and unchanged fixtures, and the three mutations:
+
+| Mutation | Result |
+|---|---|
+| **M1** — the pre-fix expression put back | D1, D2, D2b and D5 fail; D3 and the handoff cases pass (40 pass, 4 fail) |
+| **M2** — `activeTravelDays` always returns the Combine value | D3 and two existing single-destination handoff cases fail (41 pass, 3 fail) |
+| **M3** — duration inferred by summing the fitted legs | only D2b fails, 8 instead of 12 (43 pass, 1 fail) |
+
+### Local verification — what it did and did not cover
+
+The harness bundles the real `DoorB.jsx`, stubs only the catalogue call, and reads the **stored route and stored preferences**. It has not seen the rendered itinerary, the saved list or the packing list; those are the point of the hosted rows. **Three numbers stay distinct** throughout: the requested budget, the allocated leg days (capped by each destination's maximum) and the generated itinerary days. The tests assert equality between budget and leg days only on an uncapped fixture, and assert 12 requested against 8 allocated on a capped one.
+
+### Hosted checks
+
+Checklist: brief revision 3 §8, rows H1–H6 with H3a, H3b and H3c. Record: `hosted-check-direct-arrival-duration-2026-10-13.md` in the Claude project.
+
+| Row | Signed out, private window — the owner, 13 October (acceptance record) | Signed in, Claude in the owner's Chrome (supporting evidence only) |
+|---|---|---|
+| H1 bare path, combine, budget 10 | **PASS, owner-reported.** Screenshot: Mendoza 5d → Buenos Aires 5d, "A suggested 10-day plan", Day 1–Day 10. The budget the owner clicked was not stated; the 5d + 5d split is the one the signed-in runs gave for 10. The owner first wrote "worked mostly" and did not say what "mostly" meant; the later statement is that H1–H6 all worked | **PASS** — budget 10, legs 5 + 5, itinerary Day 1–10, stored 10 |
+| H2 save; label and snapshot | **PASS, owner-reported.** Screenshot of the list: "Mendoza · Argentina · From home · 10-day trip", updated 13 October, "Trip saved to this device". The opened snapshot was reported as working, with no screenshot | **PASS** — same label; the opened trip says "A suggested 10-day plan" |
+| H3a query-only handoff | **PASS, owner-reported.** Screenshot: `/find?dest_q=argentina` (lowercase as typed, no `days`), notice "We've brought your destination search. Choose a destination below." The control's starting value, the chosen length and the result were not given | **PASS** — notice as above, control 7 untouched, chose 9 → stored 9, legs 5 + 4, itinerary 9. Not saved |
+| H3b duration-carrying handoff | **PASS, owner-reported.** Screenshots: `/find?dest_q=New+York+City&month=10&days=6&party=two`, the same notice, and a built 8-day plan (Mendoza 4d → Buenos Aires 4d, Day 1–Day 8). The control's starting value was not given; the owner changed the search text to Argentina to reach Combine, as instructed | **PASS** — control opened at 6, chose 8 → stored 8, legs 4 + 4, itinerary 8; October and a party of two carried. Not saved |
+| H3c bare re-entry | **PASS, owner-reported, no values** | **PASS** — bare `/find`, no notice, control 7, chose 11 → stored 11, legs 6 + 5, itinerary 11. Not saved |
+| H4 single destination | **PASS, owner-reported, no values** | **PASS** — Buenos Aires, chose 9 → stored 9, "9-day plan" |
+| H5 packing list | **PASS, owner-reported** ("present, in the optional items"); no screenshot | **PASS** — "Laundry bag" and "Travel detergent" present on the 10-day combined trip |
+| H6 Essentials, Back, Combine untouched | **PASS, owner-reported, no values and no screenshot** — in particular the saved label for this row was not shown | **PASS, with a limit** — control showed 7 untouched; stored 7; legs 4 + 3; itinerary 7; saved label "Mendoza · Argentina · From home · 7-day trip". A second run set Essentials to 11 by script before Back; Claude did not independently confirm that the 11 had registered |
+
+**Acceptance — 13 October.** The owner ran the signed-out run in a private window and reported that H1–H6 all worked. That is recorded as **"the signed-out run passed, owner-reported"**. Four rows (H1, H2 label, H3a, H3b) have screenshots with part of their values, and the other rows and the remaining values are the owner's statement only. The duration fix is recorded as **accepted** on that basis, with the evidence limits above stated in the record rather than left implicit.
+
+### Observations — not part of this fix, and not expanded
+
+- **The saved-trip label names only the first stop** ("Mendoza · Argentina" for a Mendoza + Buenos Aires trip). Claude did not establish whether this behaviour changed; it is a separate observation, not claimed as a regression and not a reason to widen the fix.
+- **The arrival notice for a duration-carrying link names only the search** — the link also carried the days, month and party, and the control opened at the carried 6. Consistent with what the approved checklist describes; recorded because a traveller may notice it.
+- **Signed out, saving works on the device.** "Save itinerary" stored the trip in the browser with "Trip saved to this device" and offered "Create free account"; the owner did not use it. The signed-out header also shows "Clear this device".
+
+### Side effects of the hosted checks
+
+Claude's signed-in rows created two Mendoza trips (a 10-day and a 7-day) in the owner's synced saved list, and overwrote the stored Travel Fit and Combine preferences in that browser. Claude cannot delete trips; the owner was asked to remove the two. **Deletion has not been confirmed.** The signed-out run left nothing behind, because a private window discards its storage on closing. A stray click on the Base44 badge opened its promo modal during the signed-in rows; it was closed and nothing was cloned.
+
+### Honest limits of this release
+
+- **No deployment record.** The publish timestamp and deployed commit hash were not read. A Base44-bot commit (`3c11c52`) reached GitHub on 13 October at 17:44 UTC, before the owner's signed-out run; whether the published build includes it is unknown.
+- **Most signed-out detail is a statement, not an observation.** See the table: H3c, H4, H5, H6, the H2 snapshot and several starting values have no signed-out evidence beyond the owner's word.
+- **H1's budget and the word "mostly"** were never pinned down.
+- **No migration.** A trip saved before the fix keeps its old label; one saved afterwards carries the chosen length. Nothing rewrote any record.
+- **Generator shortfalls were not examined.** The runs happened to fill every day; a route that cannot fill its budget would still show fewer days than requested, and that is pre-existing behaviour this fix does not touch.
+- **Rollback, if ever wanted:** revert `b8fff25` whole, tests included. It cannot undo trips travellers saved meanwhile.
+
 ## Next
 
-1. ~~Finish Stage 3 acceptance~~ — **done, 8 October evening** (owner-reported signed-out pass; see the Stage 3 section). Optional still: read Base44's publish timestamp and deployed commit hash, which would turn inferred hosted identity into established identity.
-2. **Rollback, if ever wanted:** revert the complete Stage 3 commit, tests included. That restores the links and the shortcut wording; it does not undo anything travellers saved meanwhile.
-3. **F7 preparation — OPENED by the owner, 8 October 2026 (D16).** Bounded to planning and design: a brief and a Q8 identity design, independently reviewed and owner-approved before any implementation. **Preparation authorizes no production-record write, no migration, no live engine switch and no activation of the held estimate and experience features.** Opening it triggers the Q8 work; it does not clear Q8 or any of the six Q10 conditions.
-4. **Two small packets, each its own brief, review and hosted check**, neither a migration-gate prerequisite: the parked direct-arrival preferences fix (the higher priority of the two — it is a known defect), and pinning the two destination ids (NYC `6a7e984900175cfc5fe2005a`; Tokyo & Kyoto `6a7ced35c41497521b54e0bc`, both dated 7 October and to be re-read against the live catalogue before use).
-5. Everything on the held list stays held.
+1. **The direct-arrival duration fix is done** (accepted 13 October on the owner's signed-out run). Still open from it: the owner deleting the two test trips from the synced saved list, and the unconfirmed owner-run details above, if the owner wants them recorded.
+2. **The Base44-bot commit `3c11c52`** (`@base44/vite-plugin` 1.0.44 → 1.0.45) sits on `main` unreviewed. The earlier dependency update `cbad952` was independently approved before it was recorded. Whether to ask for the same review, and whether the published build already includes it, are the owner's calls. It is not mixed into the release records above.
+3. **F7 preparation — opened by the owner, 8 October 2026 (D16).** Bounded to planning and design. The five papers (D-A to D-E) are at revision 3 after two Codex AMEND rounds and await independent review of revision 3, then the owner's decision. **Preparation authorizes no production-record write, no migration, no live engine switch and no activation of the held estimate and experience features.** Opening it triggers the Q8 work; it does not clear Q8 or any of the six Q10 conditions.
+4. **Optional small packets, each its own brief, review and hosted check:** pinning the two destination ids (NYC `6a7e984900175cfc5fe2005a`; Tokyo & Kyoto `6a7ced35c41497521b54e0bc`, both dated 7 October and to be re-read against the live catalogue before use), and — only if the owner wants it — a decision on whether the first-stop-only saved label is its own item.
+5. **Optional:** read Base44's publish timestamp and deployed commit hash, which would turn inferred hosted identity into established identity for every release.
+6. Everything on the held list stays held.
 
 ## Where things live
 
