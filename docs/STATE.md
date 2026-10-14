@@ -10,7 +10,7 @@
 - This file records state and decisions made elsewhere. It changes no gate, contract or approval. Gates and product choices keep their normal approval path.
 - Routine evidenced updates do not need cross-model review. A changed gate, product decision or architecture decision does.
 
-## Current snapshot — 13 October 2026
+## Current snapshot — 13 October 2026, evening
 
 **This is the live summary. Everything below it is dated history, kept as evidence and not rewritten.** Read current HEAD from Git rather than trusting any SHA written here.
 
@@ -23,8 +23,8 @@
 | **Checks at the `b8fff25` tree** | 753 Door 2 tests (748 before, 5 new), lint clean, build succeeds, frozen fixtures byte-exact — run by Claude, reproduced by Codex. Not re-run after the bot commit |
 | **Stage 3 release** | accepted 8 October (owner-reported signed-out run). See the Stage 3 section |
 | **Direct-arrival duration fix** | implemented, independently approved, pushed, published, hosted-checked and **accepted on the owner's signed-out private-window run (owner-reported, 13 October)**. Most signed-out rows are a single owner statement without values; see the section below for what is evidenced and what is not |
-| **Hosted revision identity** | inferred, never established, for every release so far. For the duration fix there is a further unknown: the bot commit landed on GitHub at 17:44 UTC on 13 October, and nobody has said whether the published build included it |
-| **The open decision** | **D16 — F7 preparation, opened by the owner 8 October**, bounded to planning and design. The five design papers (D-A to D-E) are at revision 3 after two Codex AMEND rounds; revision 3 awaits independent review and the owner's decision. Nothing is approved for implementation. D15 is closed |
+| **Hosted revision identity** | **ESTABLISHED, 13 October — the first time in this project.** The live app is built from **`b8fff25`**, published **9 October 2026 at 18:27:58 UTC (11:27 Vancouver)**. Read by Claude from Base44's checkpoint list, which carries `git_commit_hash` and `last_deployed_at` per checkpoint. **The full deploy history back to 6 October is recovered** — see the section below. **The bot commit `3c11c52` is NOT in the live build**, which answers the question this row previously left open |
+| **D16 — F7 preparation** | **DESIGN PACKET APPROVED BY THE OWNER, 13 October**, at revision 6, after four independent review rounds. **This authorizes an implementation brief and nothing else:** no record write, no migration, no engine switch, no flag flip, no activation. Q8 and all six Q10 conditions stay unmet. D15 is closed |
 | **Held** | production estimate and experience activation · any record migration · Q8 durable identity · all Q10 conditions |
 
 ## Historical — current state as recorded on 7 October 2026, after A6/A7, the push and the hosted checks
@@ -307,7 +307,7 @@ Running H8 in the owner's Chrome **overwrote the stored Travel Fit preferences**
 - **Two files:** `src/pages/DoorB.jsx` (+7/−5, one expression and its comment) and `tests/door2/flowBStage2Arrival.test.js` (+98). Everything else byte-identical to the base, including the four protected files, every engine and storage module, the dependencies and the frozen fixtures.
 - **The change.** `buildAndGo` now always hands `activeTravelDays()` to the preferences builder. When combining, that is the Combine control's displayed value, **including an untouched default of 7**; for a single destination it is `answers.travelDays`, so that path is value-identical to before. The owner approved this reading (brief revision 3, §4.1). Handoff behaviour, route fitting, itinerary generation, the storage format and already-saved trips are unchanged.
 - Checks at that tree: **753 Door 2 tests** (748 before, 5 new, no existing test edited), lint clean, build succeeds, both frozen fixtures byte-identical.
-- Published on Base44 by the owner by 9 October (the first hosted run saved a trip dated 9 October). **The owner did not report the publish timestamp or Base44's `last_deployed_git_commit_hash`**, so hosted revision identity rests on the functional checks below, not a deployment record.
+- **Published on Base44 on 9 October 2026 at 18:27:58 UTC — 11:27 America/Vancouver.** Checkpoint `6ac9321987c59fc2cc3ea34c`, `git_commit_hash` `b8fff253cae127567e51648fd70834ab3ede803b`. **Read directly from Base44 on 13 October**, so this release's hosted identity is established rather than inferred. It is the most recent deployment: no checkpoint created after it carries one.
 
 ### Review history
 
@@ -348,26 +348,92 @@ Checklist: brief revision 3 §8, rows H1–H6 with H3a, H3b and H3c. Record: `ho
 - **The arrival notice for a duration-carrying link names only the search** — the link also carried the days, month and party, and the control opened at the carried 6. Consistent with what the approved checklist describes; recorded because a traveller may notice it.
 - **Signed out, saving works on the device.** "Save itinerary" stored the trip in the browser with "Trip saved to this device" and offered "Create free account"; the owner did not use it. The signed-out header also shows "Clear this device".
 
+### Deployment identity — established 13 October
+
+**Read by Claude from `GET /api/apps/{app_id}/app-checkpoints`**, which carries `git_commit_hash` and `last_deployed_at` per checkpoint. Scanned across the 24 most recent checkpoints. **Read-only: no builder turn, no app edit, no entity write, no checkpoint, no deploy.**
+
+| Deployed (UTC) | Commit | Release |
+|---|---|---|
+| 2026-10-06 16:17:00 | `cbad952` | F6 plus the first dependency bump |
+| 2026-10-07 02:58:27 | `2944b0e` | `docs/STATE.md` introduced |
+| 2026-10-07 06:18:38 | `9fd1de5` | Stage 1 owner-decision records |
+| 2026-10-07 17:09:19 | `d8a809b` | A7 copy |
+| 2026-10-08 03:13:51 | `f1535f1` | Direction B Stage 2 |
+| 2026-10-08 04:11:56 | `93526b3` | Stage 2 records |
+| 2026-10-08 06:06:04 and 06:06:38 | `2816ece` | Developer-harness closure |
+| 2026-10-08 23:55:29 | `be34e5e` | Direction B Stage 3 |
+| **2026-10-09 18:27:58** | **`b8fff25`** | **This fix — the current live build** |
+
+**Three consequences:**
+
+1. **The bot commit `3c11c52` is not in the live build.** This file previously recorded that as unknown. The live build predates it by four days, so `@base44/vite-plugin` 1.0.45 has never been deployed. Its independent review returned **KEEP** (owner-reported 13 October; the review document is not in Claude's hands).
+2. **The owner's signed-out acceptance run tested `b8fff25`** — the approved tree, and the correct build. That was assumed on 13 October; it is now established, and it strengthens this release's acceptance.
+3. **The records commit `b48f1a5` is not deployed**, which is correct for a docs-only commit.
+
+**One platform observation**, recorded and not investigated: checkpoint `6ac732c36d690833bcb679e3` (commit `2816ece`, created 8 October) shows `build_ended_at` of 13 October 17:44:49, five seconds before the bot commit reached GitHub. **A GitHub push appears to trigger a rebuild without a deploy.**
+
+**Every earlier release's inference turns out to have been correct.** They are simply no longer inferences.
+
 ### Side effects of the hosted checks
 
-Claude's signed-in rows created two Mendoza trips (a 10-day and a 7-day) in the owner's synced saved list, and overwrote the stored Travel Fit and Combine preferences in that browser. Claude cannot delete trips; the owner was asked to remove the two. **Deletion has not been confirmed.** The signed-out run left nothing behind, because a private window discards its storage on closing. A stray click on the Base44 badge opened its promo modal during the signed-in rows; it was closed and nothing was cloned.
+Claude's signed-in rows created two Mendoza trips (a 10-day and a 7-day) in the owner's synced saved list, and overwrote the stored Travel Fit and Combine preferences in that browser. Claude cannot delete trips; the owner was asked to remove the two and **confirmed on 13 October that both are deleted** (owner-reported; not independently checked by Claude or by the reviewer). The signed-out run left nothing behind, because a private window discards its storage on closing. A stray click on the Base44 badge opened its promo modal during the signed-in rows; it was closed and nothing was cloned.
 
 ### Honest limits of this release
 
-- **No deployment record.** The publish timestamp and deployed commit hash were not read. A Base44-bot commit (`3c11c52`) reached GitHub on 13 October at 17:44 UTC, before the owner's signed-out run; whether the published build includes it is unknown.
+- **The deployment record now exists** (above), so this release's hosted identity is established. What remains unestablished is any claim about *behaviour* beyond the rows actually run.
 - **Most signed-out detail is a statement, not an observation.** See the table: H3c, H4, H5, H6, the H2 snapshot and several starting values have no signed-out evidence beyond the owner's word.
 - **H1's budget and the word "mostly"** were never pinned down.
 - **No migration.** A trip saved before the fix keeps its old label; one saved afterwards carries the chosen length. Nothing rewrote any record.
 - **Generator shortfalls were not examined.** The runs happened to fill every day; a route that cannot fill its budget would still show fewer days than requested, and that is pre-existing behaviour this fix does not touch.
 - **Rollback, if ever wanted:** revert `b8fff25` whole, tests included. It cannot undo trips travellers saved meanwhile.
 
+## F7 preparation — the design packet, approved 13 October 2026
+
+**D16 was opened by the owner on 8 October, bounded to planning and design. The five design documents (D-A to D-E) are now approved by the owner at revision 6**, after four independent review rounds. **Approval authorizes an implementation brief and nothing else.**
+
+### Review history — four rounds, three of them AMEND
+
+| Round | Verdict | What it found |
+|---|---|---|
+| Revision 1 → 2 | **AMEND** | Five required amendments (R1–R5) plus four D-C corrections |
+| Revision 2 → 3 | **AMEND** | The correspondence rule still violated the governing flag-don't-reattach invariant; a two-pin counterexample showed a displaced pin taking a survivor's block |
+| Revision 3 → 4 | **AMEND** | Five findings. Two were defects proved by executed probes: an issued id could be **reused** after apply-and-undo, and a reader-only client could write **identity-bearing state under the old payload version**. A third showed the reversal claim false on real Eastern Canada data |
+| Revision 4 → 5 | **AMEND** | Two focused corrections: validation was ordered **before** issuance, so any proposal that added a block would have been rejected; and the ambiguity rule never terminated, stripping a new owner's identity on every rebuild |
+| Revision 5 → 6 | **APPROVE WITH REQUIRED CLARIFICATIONS** | Targeted models passed 27 assertions across issuance, undo, conflicts and refusal. Three clarifications, all in D-A, incorporated at revision 6 |
+
+**Claude confirmed the mechanism of each finding in source** rather than accepting it on the reviewer's word; the reviewer's two probe results (the reversal measurement and the v7-carrying-identity probe) are attributed to the reviewer and were not re-run.
+
+### The product decision the owner took with this approval
+
+> **A day that changes shape is treated as a different block, so the traveller is asked before a pinned activity is moved.** Where a suitable window exists an explicit offer is made; if the original day later returns, the pin returns with it.
+>
+> **Stated accurately, because an earlier revision overclaimed it:** today's engine **already** declines to keep the pin when the slot class changes (`restructure.js:182`) and already records the item as affected rather than losing it silently (`:160`). **The design changes the form of that outcome, not its existence** — a named placement with a state, the chance to say yes or no, and recovery. **The alternative is not a silent design**: ineligible items, removed stops and lost excursions are reported either way.
+>
+> **Nobody has measured how often this fires**, nor how often today's engine already drops a pin in the same situation. The implementation brief must measure both before the behaviour ships.
+
+### What the packet settles, and what it does not
+
+**Settled:** the correspondence rule (exact logical address, no proximity fallback); the allocation-versus-issuance protocol, with nothing minted before apply and a four-phase atomic commit; the lifecycle states and the terminal resolution of contested addresses; saved-trip compatibility with two client rules that keep new state from escaping under an old version; the payload bump to `door2-v8` with the envelope and engine unmoved; the three-stage F7/F8 sequence with content staged behind an isolation boundary covering both the graph and the activity shelf; and the F6 design delta.
+
+**Not settled, and explicitly so:** Q8 is **not implemented** and its six acceptance cases are **not run**; all six Q10 conditions remain unmet; `TripSequence` stays provisional; wave-1 conditions (a), (b) and (d) are unknown and (c), (e), (f) unmet; and no eligibility rule is added or deferred feature activated.
+
+### A finding from the live catalogue, 13 October
+
+Read-only queries against Base44 while the packet was in review:
+
+- **Wave-1 records confirmed live**, with their declared ranges: **34 Lima** `6a7e98494622807c9c3429bf` (single_base, 2–6 days); **38 New York City** `6a7e984900175cfc5fe2005a` (single_base, 3–9); **39 Huaraz and the Cordillera Blanca** `6a7e984900175cfc5fe20055` (single_base, 4–12). Record 39 declares `single_base` despite its region-like name, which partly eases D-C's "likeliest failure" concern.
+- **The `Destination` schema contains no place reference of any kind** — no `placeId`, no `routeFamilyId`. D-C asks for each record's required Places "resolved from its own reference"; **there is no such field**, so the required-Place set must be authored and reviewed during migration, not derived. **This is a finding for the next revision of D-C**, not folded into the approved packet.
+- **The two destination ids re-verified against the live catalogue**, as the roadmap required before use. One correction: the Tokyo record's stored name is **"Tokyo & Kyoto, Japan"**, id `6a7ced35c41497521b54e0bc`, `multi_stop`, 7–14 days.
+
+Record: `base44-read-findings-deployment-identity-2026-10-13.md` in the Claude project.
+
 ## Next
 
-1. **The direct-arrival duration fix is done** (accepted 13 October on the owner's signed-out run). Still open from it: the owner deleting the two test trips from the synced saved list, and the unconfirmed owner-run details above, if the owner wants them recorded.
-2. **The Base44-bot commit `3c11c52`** (`@base44/vite-plugin` 1.0.44 → 1.0.45) sits on `main` unreviewed. The earlier dependency update `cbad952` was independently approved before it was recorded. Whether to ask for the same review, and whether the published build already includes it, are the owner's calls. It is not mixed into the release records above.
-3. **F7 preparation — opened by the owner, 8 October 2026 (D16).** Bounded to planning and design. The five papers (D-A to D-E) are at revision 3 after two Codex AMEND rounds and await independent review of revision 3, then the owner's decision. **Preparation authorizes no production-record write, no migration, no live engine switch and no activation of the held estimate and experience features.** Opening it triggers the Q8 work; it does not clear Q8 or any of the six Q10 conditions.
-4. **Optional small packets, each its own brief, review and hosted check:** pinning the two destination ids (NYC `6a7e984900175cfc5fe2005a`; Tokyo & Kyoto `6a7ced35c41497521b54e0bc`, both dated 7 October and to be re-read against the live catalogue before use), and — only if the owner wants it — a decision on whether the first-stop-only saved label is its own item.
-5. **Optional:** read Base44's publish timestamp and deployed commit hash, which would turn inferred hosted identity into established identity for every release.
+1. **The Q8 implementation brief** is the next packet, now authorized by the owner's approval of the design. It must carry **D-A §11's seventeen acceptance cases** plus the identity-only stale-preview check, one declared writer, independent diff review, and owner-controlled push and publish. **Writing the brief authorizes no code.**
+2. **The Base44-bot commit `3c11c52`** was independently reviewed with a **KEEP** verdict (owner-reported; the document is not in Claude's hands). It is **not in the live build**, so nothing is pending on it. It remains unmerged into any release record.
+3. **Optional, each its own brief, review and hosted check:** pinning the two destination ids (both re-verified live on 13 October), and a decision on whether the first-stop-only saved-trip label is its own item.
+4. **Separately authorizable, each on its own brief and owner go-ahead:** D-C §5's read-only assessment (its first input is now partly answered), the F6 delta's own review, and D-D's Stage 1 content preparation — whose brief must state the staging boundary for **both** the graph and the activity shelf.
+5. **For the next revision of D-C:** the `Destination` schema carries no place reference, so the required-Place set is authored rather than derived.
 6. Everything on the held list stays held.
 
 ## Where things live
