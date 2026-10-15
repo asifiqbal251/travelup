@@ -1,6 +1,6 @@
 import { buildF6Trip } from '@/lib/door2/connectionBuild';
 import { newSessionId } from '@/lib/door2/sessionId';
-import { connectionDisplay, editEvidenceGuard, hasEvidence, inspectEvidence, structuralEvidenceGuard } from '@/lib/door2/connectionEvidence';
+import { connectionDisplay, editEvidenceGuard, hasEvidence, inspectEvidence } from '@/lib/door2/connectionEvidence';
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 const EvidenceTripContext = createContext(null);
 import { makeDayLighter, swapActivity, swapDays, swappableDays, undo } from "@/lib/door2/edit";
@@ -30,6 +30,7 @@ import {
   saveDraftTrip,
 } from "@/lib/door2/draftStorage";
 import { buildClassicHandoff, handoffNote } from "@/lib/door2/classicHandoff";
+import { schemaLockFor, schemaLockGuard, structuralOrSchemaGuard } from "@/lib/door2/tripLock";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -643,10 +644,14 @@ function SavedTripsList({ onLoad }) {
     setDrafts(listDraftTrips());
   }
 
+  // The whole load result is forwarded, not just r.trip: the schema lock and the
+  // identity classification live on the result, and the trip alone cannot supply them.
+  // A v6 or v7 result carries none of those keys, so the page derives its existing
+  // legacy policy for them — the normal path, not a fallback.
   function handleLoad(id) {
     const r = loadDraftTrip(id);
     if (r.compatible) {
-      onLoad(r.trip);
+      onLoad(r);
     } else {
       setInlineErrors((e) => ({ ...e, [id]: r.reason }));
     }
@@ -1739,6 +1744,11 @@ export default function Door2Plan() {
     return null;
   })();
 
+  // The schema lock is held on the tripResult object, set in the same state transition
+  // as the trip it belongs to. Every build replaces tripResult with a fresh object, so a
+  // lock cannot survive into a newly built trip or a later legacy load (L8, L8b).
+  const tripLock = tripResult?.lock ?? null;
+
   // A restored trip recorded from another origin is never rebuilt here: a rebuild
   // would silently make it a Vancouver trip.
   const originUnsupported = !!activeTrip && activeTrip.spec?.originPlaceId !== SUPPORTED_ORIGIN_ID;
@@ -1785,8 +1795,21 @@ export default function Door2Plan() {
 
   // ── Build ──────────────────────────────────────────────────────────────────
 
+  // The page's existing structural gate, now also carrying the schema lock. Evidence
+  // keeps its priority in what the traveller is told; the schema lock is additive and
+  // still refuses when evidence is clean (brief §3.3).
   function blockedStructure() {
-    const blocked = activeTrip && structuralEvidenceGuard(activeTrip);
+    const blocked = activeTrip && structuralOrSchemaGuard(activeTrip, tripLock);
+    if (blocked) { setEditError(blocked.message); return true; }
+    return false;
+  }
+
+  // The schema rule alone, for the command entry points whose existing engine-level
+  // guard is editEvidenceGuard rather than structuralEvidenceGuard. Composing the
+  // structural guard in at those points would add the estimated-transport rebuild rule
+  // to handlers that do not have it today, which packet 1a must not change.
+  function blockedSchema() {
+    const blocked = schemaLockGuard(tripLock);
     if (blocked) { setEditError(blocked.message); return true; }
     return false;
   }
@@ -1838,7 +1861,9 @@ export default function Door2Plan() {
     }
     setRebuildFault(null);
     setResultFollowedTrip(Boolean(activeTrip));
-    setTripResult({ result, thrown });
+    // A freshly built trip is never schema-locked: the engine emits door2-v6 and the
+    // writer stamps door2-v7. Stated explicitly so the lock cannot be inherited.
+    setTripResult({ result, thrown, lock: null });
     setEditTrip(null);
     setEditError(null);
     setBlockErrors({});
@@ -1966,7 +1991,7 @@ export default function Door2Plan() {
   }
 
   function handleSaveDraft() {
-    const blocked = activeTrip && editEvidenceGuard(activeTrip);
+    const blocked = (activeTrip && editEvidenceGuard(activeTrip)) ?? schemaLockGuard(tripLock);
     if (blocked) { setSaveMsg({ ok: false, text: blocked.message }); return; }
     const t = activeTrip;
     if (!t) return;
@@ -1992,14 +2017,18 @@ export default function Door2Plan() {
     }
   }
 
-  function handleLoadDraft(trip) {
+  // Takes the whole load result from SavedTripsList, not a bare trip, so the schema
+  // lock is stored in the same state transition as the trip it applies to. A v6 or v7
+  // result yields no lock, which is the existing legacy policy unchanged.
+  function handleLoadDraft(loaded) {
+    const trip = loaded?.trip ?? loaded;
     connectionSession.current = null;
     // Reopening never carries a confirmation over: the first rebuild asks.
     setDeparture(null);
     setDeparturePrompt(null);
     setRebuildFault(null);
     setSavedTrip(null);
-    setTripResult({ result: trip, thrown: null });
+    setTripResult({ result: trip, thrown: null, lock: schemaLockFor(loaded) });
     setEditTrip(null);
     setEditError(null);
     setBlockErrors({});
@@ -2018,6 +2047,7 @@ export default function Door2Plan() {
   // ── Edit handlers ──────────────────────────────────────────────────────────
 
   function handleSwap(blockId) {
+    if (blockedSchema()) return;
     const t = activeTrip;
     if (!t) return;
     const result = swapActivity(t, blockId);
@@ -2035,6 +2065,7 @@ export default function Door2Plan() {
   }
 
   function handleMakeLighter(dayNumber) {
+    if (blockedSchema()) return;
     const t = activeTrip;
     if (!t) return;
     const before = t.days.find((d) => d.dayNumber === dayNumber);
@@ -2064,6 +2095,7 @@ export default function Door2Plan() {
   }
 
   function handleUndo() {
+    if (blockedSchema()) return;
     const t = activeTrip;
     if (!t) return;
     const r = undo(t);
@@ -2100,6 +2132,7 @@ export default function Door2Plan() {
   }
 
   function handleAddOptional(optionalId) {
+    if (blockedSchema()) return;
     const t = activeTrip;
     if (!t) return;
     if (departureBlocked(() => handleAddOptional(optionalId))) return;
@@ -2112,6 +2145,7 @@ export default function Door2Plan() {
   }
 
   function handleRemoveOptional(optionalId) {
+    if (blockedSchema()) return;
     const t = activeTrip;
     if (!t) return;
     if (departureBlocked(() => handleRemoveOptional(optionalId))) return;
@@ -2141,6 +2175,7 @@ export default function Door2Plan() {
   }
 
   function handleAdjustNights(stopKey, delta) {
+    if (blockedSchema()) return;
     const t = activeTrip;
     if (!t) return;
     if (departureBlocked(() => handleAdjustNights(stopKey, delta))) return;
@@ -2185,6 +2220,7 @@ export default function Door2Plan() {
   }
 
   function handleRemoveDayTrip(stopKey, item) {
+    if (blockedSchema()) return;
     const t = activeTrip;
     if (!t) return;
     if (departureBlocked(() => handleRemoveDayTrip(stopKey, item))) return;
@@ -2206,7 +2242,11 @@ export default function Door2Plan() {
     setStructureSheet({ stage: "proposals", proposals: [alternative.proposal], title: alternative.label });
   }
 
+  // The apply boundary is gated on its own, independently of the preview entry points.
+  // Gating only the sheet openers would leave this reachable by any other route to a
+  // proposal, which is the hole the existing blockedStructure() placement already has.
   function handleUseProposal(proposal) {
+    if (blockedSchema()) return;
     const t = activeTrip;
     if (!t) return;
     if (departureBlocked(() => handleUseProposal(proposal))) return;
@@ -2243,6 +2283,7 @@ export default function Door2Plan() {
   }
 
   function handleConfirmSwapDay(targetDayNumber) {
+    if (blockedSchema()) return;
     const t = activeTrip;
     if (!t || !swapPicker) return;
     const result = swapDays(t, swapPicker.dayNumber, targetDayNumber);
@@ -2379,6 +2420,10 @@ export default function Door2Plan() {
                 )}
 
                 {evidenceStatus.readOnly && <p role="status">{evidenceStatus.notice}</p>}
+                {/* The schema lock's own sentence, additive to the evidence notice
+                    above rather than replacing it: a trip can be both, and each
+                    explanation is true of its own reason. */}
+                {tripLock && <p role="status" className="text-xs text-amber-400">{tripLock.notice}</p>}
                 {activeTrip.evidence && <section aria-label="Recorded reasons"><h2>Recorded reasons</h2>{activeTrip.evidence.entries.map((e, i) => <p key={i}>{e.values.recordedText}</p>)}</section>}
                 <TripAtAGlance
                   trip={activeTrip}

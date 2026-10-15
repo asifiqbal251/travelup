@@ -1,0 +1,3680 @@
+[
+  {
+    "envelopeVersion": 2,
+    "id": "zz_test_v8_valid",
+    "label": "ZZ-TEST valid v8",
+    "destinationLabel": "ZZ-TEST valid v8",
+    "savedAt": "2026-10-14T12:00:00.000Z",
+    "trip": {
+      "id": "door2:vancouver:PE:10:peru_classic",
+      "status": "valid",
+      "spec": {
+        "originPlaceId": "vancouver",
+        "destination": {
+          "kind": "country",
+          "id": "PE"
+        },
+        "travelMonth": 10,
+        "totalDays": 10,
+        "travellerType": "couple",
+        "interests": [],
+        "pace": "balanced",
+        "budget": "mid",
+        "routeTemplateId": "peru_classic",
+        "stops": [
+          {
+            "id": "pc_lima_in",
+            "placeId": "lima",
+            "placeSource": "recommendation",
+            "nights": 2,
+            "isRequired": false
+          },
+          {
+            "id": "pc_cusco",
+            "placeId": "cusco",
+            "placeSource": "recommendation",
+            "nights": 3,
+            "isRequired": false
+          },
+          {
+            "id": "pc_sacred_valley",
+            "placeId": "ollantaytambo",
+            "placeSource": "recommendation",
+            "nights": 0,
+            "isRequired": false
+          },
+          {
+            "id": "pc_aguas",
+            "placeId": "aguas_calientes",
+            "placeSource": "recommendation",
+            "nights": 1,
+            "isRequired": false
+          },
+          {
+            "id": "pc_olly_return",
+            "placeId": "ollantaytambo",
+            "placeSource": "recommendation",
+            "nights": 0,
+            "isRequired": false
+          },
+          {
+            "id": "pc_cusco_return",
+            "placeId": "cusco",
+            "placeSource": "recommendation",
+            "nights": 0,
+            "isRequired": false
+          },
+          {
+            "id": "pc_lima_out",
+            "placeId": "lima",
+            "placeSource": "recommendation",
+            "nights": 1,
+            "isRequired": false
+          }
+        ],
+        "requiredPlaceIds": [],
+        "choices": {
+          "pinned": [],
+          "rejected": [],
+          "placed": []
+        }
+      },
+      "routePlan": {
+        "familyId": "peru_classic",
+        "variantId": "peru_classic",
+        "source": "authored",
+        "stops": [
+          {
+            "key": "pc_lima_in",
+            "placeId": "lima",
+            "nights": 2,
+            "minNights": 1,
+            "maxNights": 3,
+            "role": "core",
+            "selectionSource": "default",
+            "isRequired": false,
+            "excursions": []
+          },
+          {
+            "key": "pc_cusco",
+            "placeId": "cusco",
+            "nights": 3,
+            "minNights": 2,
+            "maxNights": 4,
+            "role": "core",
+            "selectionSource": "default",
+            "isRequired": false,
+            "excursions": []
+          },
+          {
+            "key": "pc_sacred_valley",
+            "placeId": "ollantaytambo",
+            "nights": 0,
+            "minNights": 0,
+            "maxNights": 1,
+            "role": "core",
+            "selectionSource": "default",
+            "isRequired": false,
+            "excursions": []
+          },
+          {
+            "key": "pc_aguas",
+            "placeId": "aguas_calientes",
+            "nights": 1,
+            "minNights": 1,
+            "maxNights": 2,
+            "role": "core",
+            "selectionSource": "default",
+            "isRequired": false,
+            "excursions": [
+              {
+                "placeId": "machu_picchu",
+                "connectionId": "conn_agc_mp_shuttle",
+                "hoursOnSite": 4
+              }
+            ]
+          },
+          {
+            "key": "pc_olly_return",
+            "placeId": "ollantaytambo",
+            "nights": 0,
+            "minNights": 0,
+            "maxNights": 0,
+            "role": "pass_through",
+            "selectionSource": "default",
+            "isRequired": false,
+            "excursions": []
+          },
+          {
+            "key": "pc_cusco_return",
+            "placeId": "cusco",
+            "nights": 0,
+            "minNights": 0,
+            "maxNights": 0,
+            "role": "pass_through",
+            "selectionSource": "default",
+            "isRequired": false,
+            "excursions": []
+          },
+          {
+            "key": "pc_lima_out",
+            "placeId": "lima",
+            "nights": 1,
+            "minNights": 1,
+            "maxNights": 1,
+            "role": "core",
+            "selectionSource": "default",
+            "isRequired": false,
+            "excursions": []
+          }
+        ],
+        "nightsSource": "auto",
+        "connectionIds": [
+          "conn_yvr_lim_air",
+          "conn_lim_cuz_air",
+          "conn_cuz_olly_road",
+          "conn_olly_agc_train",
+          "conn_olly_agc_train",
+          "conn_cuz_olly_road",
+          "conn_lim_cuz_air",
+          "conn_yvr_lim_air"
+        ],
+        "minDays": 8,
+        "maxDays": 14,
+        "optionals": []
+      },
+      "days": [
+        {
+          "id": "day:1",
+          "dayNumber": 1,
+          "blocks": [
+            {
+              "id": "tr:origin_out>pc_lima_in",
+              "type": "travel",
+              "anchor": {
+                "stopId": "pc_lima_in",
+                "contentId": "conn_yvr_lim_air"
+              },
+              "placeId": "vancouver",
+              "startTime": "09:00",
+              "durationHours": 17.95,
+              "transport": {
+                "connectionId": "conn_yvr_lim_air",
+                "mode": "flight_international",
+                "inVehicleHours": 11.2,
+                "layoverHours": 2,
+                "bufferRulesetId": "buffer_ruleset_v2",
+                "bufferRulesetVersion": 2,
+                "computedUsableTimeLost": 17.95,
+                "estimated": true,
+                "fromPlaceId": "vancouver",
+                "toPlaceId": "lima",
+                "overnight": true,
+                "arriveDayNumber": 2,
+                "arriveTime": "04:57"
+              },
+              "provenance": {
+                "source": "curated",
+                "reviewed": true,
+                "confidence": "medium"
+              },
+              "generationStatus": "ok",
+              "userEdited": false,
+              "locked": false
+            }
+          ]
+        },
+        {
+          "id": "day:2",
+          "dayNumber": 2,
+          "blocks": [
+            {
+              "id": "op:pc_lima_in:d0",
+              "type": "activity",
+              "anchor": {
+                "stopId": "pc_lima_in",
+                "contentId": "lima_miraflores"
+              },
+              "placeId": "lima",
+              "startTime": "09:00",
+              "durationHours": 4,
+              "provenance": {
+                "source": "curated",
+                "reviewed": false,
+                "confidence": "high",
+                "content": {
+                  "kind": "extracted",
+                  "bundleId": "6a7e98494622807c9c3429bf",
+                  "bundleName": "Lima",
+                  "templateTitle": "Miraflores malecón"
+                }
+              },
+              "generationStatus": "ok",
+              "userEdited": false,
+              "locked": false,
+              "activity": {
+                "templateId": "lima_miraflores",
+                "title": "Miraflores clifftops",
+                "slot": "half",
+                "summary": "Walk the Miraflores clifftop parks down to Larcomar and the bay views.",
+                "intensity": "Light",
+                "interests": [
+                  "Cities",
+                  "Food"
+                ],
+                "foodNote": "Try a fresh ceviche."
+              }
+            }
+          ]
+        },
+        {
+          "id": "day:3",
+          "dayNumber": 3,
+          "blocks": [
+            {
+              "id": "op:pc_lima_in:d1",
+              "type": "activity",
+              "anchor": {
+                "stopId": "pc_lima_in",
+                "contentId": "lima_historic_centre"
+              },
+              "placeId": "lima",
+              "startTime": "09:00",
+              "durationHours": 12,
+              "provenance": {
+                "source": "curated",
+                "reviewed": false,
+                "confidence": "high",
+                "content": {
+                  "kind": "extracted",
+                  "bundleId": "6a7e98494622807c9c3429bf",
+                  "bundleName": "Lima",
+                  "templateTitle": "Historic centre"
+                }
+              },
+              "generationStatus": "ok",
+              "userEdited": false,
+              "locked": false,
+              "activity": {
+                "templateId": "lima_historic_centre",
+                "title": "Historic centre & Larco Museum",
+                "slot": "full",
+                "summary": "Plaza Mayor and the cathedral, then the Larco Museum.",
+                "intensity": "Light",
+                "interests": [
+                  "Cities",
+                  "History and culture",
+                  "Food"
+                ],
+                "foodNote": "Try lomo saltado.",
+                "morning": "Plaza Mayor and the cathedral.",
+                "afternoon": "Larco Museum of pre-Columbian art.",
+                "evening": "Dinner in Barranco."
+              }
+            }
+          ]
+        },
+        {
+          "id": "day:4",
+          "dayNumber": 4,
+          "blocks": [
+            {
+              "id": "tr:pc_lima_in>pc_cusco",
+              "type": "travel",
+              "anchor": {
+                "stopId": "pc_cusco",
+                "contentId": "conn_lim_cuz_air"
+              },
+              "placeId": "lima",
+              "startTime": "09:00",
+              "durationHours": 5,
+              "transport": {
+                "connectionId": "conn_lim_cuz_air",
+                "mode": "flight_domestic",
+                "inVehicleHours": 1.25,
+                "bufferRulesetId": "buffer_ruleset_v2",
+                "bufferRulesetVersion": 2,
+                "computedUsableTimeLost": 5,
+                "estimated": true,
+                "fromPlaceId": "lima",
+                "toPlaceId": "cusco",
+                "overnight": false,
+                "arriveDayNumber": 4,
+                "arriveTime": "14:00"
+              },
+              "provenance": {
+                "source": "curated",
+                "reviewed": true,
+                "confidence": "medium"
+              },
+              "generationStatus": "ok",
+              "userEdited": false,
+              "locked": false
+            },
+            {
+              "id": "op:pc_cusco:d0",
+              "type": "activity",
+              "anchor": {
+                "stopId": "pc_cusco",
+                "contentId": "cusco_acclimatise"
+              },
+              "placeId": "cusco",
+              "startTime": "14:00",
+              "durationHours": 7,
+              "provenance": {
+                "source": "curated",
+                "reviewed": false,
+                "confidence": "high",
+                "content": {
+                  "kind": "extracted",
+                  "bundleId": "6a7ced35c41497521b54e0c5",
+                  "bundleName": "Cusco & Machu Picchu, Peru",
+                  "templateTitle": "Cusco acclimatise",
+                  "edited": true
+                }
+              },
+              "generationStatus": "ok",
+              "userEdited": false,
+              "locked": false,
+              "activity": {
+                "templateId": "cusco_acclimatise",
+                "title": "Easy first day at altitude",
+                "slot": "half",
+                "summary": "Take it slowly at 3,400 m: the old city and Qorikancha, then a light dinner.",
+                "intensity": "Light",
+                "interests": [
+                  "History and culture",
+                  "Cities"
+                ],
+                "foodNote": "Quinoa soup and coca tea; avoid heavy meals."
+              }
+            }
+          ]
+        },
+        {
+          "id": "day:5",
+          "dayNumber": 5,
+          "blocks": [
+            {
+              "id": "op:pc_cusco:d1",
+              "type": "activity",
+              "anchor": {
+                "stopId": "pc_cusco",
+                "contentId": "cusco_market_san_blas"
+              },
+              "placeId": "cusco",
+              "startTime": "09:00",
+              "durationHours": 12,
+              "provenance": {
+                "source": "curated",
+                "reviewed": false,
+                "confidence": "medium",
+                "content": {
+                  "kind": "authored",
+                  "note": "Written for the Door 2 pilot; no standalone content existed."
+                }
+              },
+              "generationStatus": "ok",
+              "userEdited": false,
+              "locked": false,
+              "activity": {
+                "templateId": "cusco_market_san_blas",
+                "title": "San Pedro Market, cathedral & San Blas",
+                "slot": "full",
+                "summary": "San Pedro Market, the cathedral on the Plaza de Armas, and the artisan lanes of San Blas.",
+                "intensity": "Light",
+                "interests": [
+                  "Food",
+                  "Cities",
+                  "History and culture"
+                ],
+                "foodNote": "A fresh-fruit juice at the market stalls.",
+                "morning": "Breakfast and fresh juices at San Pedro Market.",
+                "afternoon": "Cusco Cathedral, then the artisan workshops of San Blas.",
+                "evening": "Dinner in San Blas."
+              }
+            }
+          ]
+        },
+        {
+          "id": "day:6",
+          "dayNumber": 6,
+          "blocks": [
+            {
+              "id": "op:pc_cusco:d2",
+              "type": "activity",
+              "anchor": {
+                "stopId": "pc_cusco",
+                "contentId": "cusco_sacsayhuaman"
+              },
+              "placeId": "cusco",
+              "startTime": "09:00",
+              "durationHours": 12,
+              "provenance": {
+                "source": "curated",
+                "reviewed": false,
+                "confidence": "medium",
+                "content": {
+                  "kind": "authored",
+                  "note": "Written for the Door 2 pilot; no standalone content existed."
+                }
+              },
+              "generationStatus": "ok",
+              "userEdited": false,
+              "locked": false,
+              "activity": {
+                "templateId": "cusco_sacsayhuaman",
+                "title": "Sacsayhuamán & the ruins above Cusco",
+                "slot": "full",
+                "summary": "Sacsayhuamán's giant walls, then Q'enqo, Puka Pukara and Tambomachay.",
+                "intensity": "Moderate",
+                "interests": [
+                  "History and culture",
+                  "Photography"
+                ],
+                "foodNote": "Try alpaca or trout at dinner.",
+                "morning": "The fortress of Sacsayhuamán above the city.",
+                "afternoon": "Q'enqo, Puka Pukara and Tambomachay.",
+                "evening": "Dinner near the Plaza de Armas."
+              }
+            }
+          ]
+        },
+        {
+          "id": "day:7",
+          "dayNumber": 7,
+          "blocks": [
+            {
+              "id": "tr:pc_cusco>pc_sacred_valley",
+              "type": "travel",
+              "anchor": {
+                "stopId": "pc_sacred_valley",
+                "contentId": "conn_cuz_olly_road"
+              },
+              "placeId": "cusco",
+              "startTime": "09:00",
+              "durationHours": 2.05,
+              "transport": {
+                "connectionId": "conn_cuz_olly_road",
+                "mode": "road_private_transfer",
+                "inVehicleHours": 1.5,
+                "bufferRulesetId": "buffer_ruleset_v2",
+                "bufferRulesetVersion": 2,
+                "computedUsableTimeLost": 2.0500000000000003,
+                "estimated": true,
+                "fromPlaceId": "cusco",
+                "toPlaceId": "ollantaytambo",
+                "overnight": false,
+                "arriveDayNumber": 7,
+                "arriveTime": "11:03"
+              },
+              "provenance": {
+                "source": "curated",
+                "reviewed": true,
+                "confidence": "medium"
+              },
+              "generationStatus": "ok",
+              "userEdited": false,
+              "locked": false
+            },
+            {
+              "id": "tr:pc_sacred_valley>pc_aguas",
+              "type": "travel",
+              "anchor": {
+                "stopId": "pc_aguas",
+                "contentId": "conn_olly_agc_train"
+              },
+              "placeId": "ollantaytambo",
+              "startTime": "11:03",
+              "durationHours": 2.6,
+              "transport": {
+                "connectionId": "conn_olly_agc_train",
+                "mode": "train",
+                "inVehicleHours": 1.5,
+                "bufferRulesetId": "buffer_ruleset_v2",
+                "bufferRulesetVersion": 2,
+                "computedUsableTimeLost": 2.6,
+                "estimated": true,
+                "fromPlaceId": "ollantaytambo",
+                "toPlaceId": "aguas_calientes",
+                "overnight": false,
+                "arriveDayNumber": 7,
+                "arriveTime": "13:39"
+              },
+              "provenance": {
+                "source": "curated",
+                "reviewed": true,
+                "confidence": "medium"
+              },
+              "generationStatus": "ok",
+              "userEdited": false,
+              "locked": false
+            },
+            {
+              "id": "ex:pc_aguas:machu_picchu:out",
+              "type": "travel",
+              "anchor": {
+                "stopId": "pc_aguas",
+                "contentId": "conn_agc_mp_shuttle"
+              },
+              "placeId": "aguas_calientes",
+              "startTime": "13:39",
+              "durationHours": 0.85,
+              "transport": {
+                "connectionId": "conn_agc_mp_shuttle",
+                "mode": "local_shuttle",
+                "inVehicleHours": 0.45,
+                "bufferRulesetId": "buffer_ruleset_v2",
+                "bufferRulesetVersion": 2,
+                "computedUsableTimeLost": 0.85,
+                "estimated": true,
+                "fromPlaceId": "aguas_calientes",
+                "toPlaceId": "machu_picchu",
+                "overnight": false,
+                "arriveDayNumber": 7,
+                "arriveTime": "14:30"
+              },
+              "provenance": {
+                "source": "curated",
+                "reviewed": true,
+                "confidence": "medium"
+              },
+              "generationStatus": "ok",
+              "userEdited": false,
+              "locked": false
+            },
+            {
+              "id": "ex:pc_aguas:machu_picchu:site",
+              "type": "activity",
+              "anchor": {
+                "stopId": "pc_aguas",
+                "contentId": "mp_citadel"
+              },
+              "placeId": "machu_picchu",
+              "startTime": "14:30",
+              "durationHours": 4,
+              "provenance": {
+                "source": "curated",
+                "reviewed": false,
+                "confidence": "high",
+                "content": {
+                  "kind": "extracted",
+                  "bundleId": "6a7ced35c41497521b54e0c5",
+                  "bundleName": "Cusco & Machu Picchu, Peru",
+                  "templateTitle": "Machu Picchu",
+                  "edited": true
+                }
+              },
+              "generationStatus": "ok",
+              "userEdited": false,
+              "locked": false,
+              "activity": {
+                "templateId": "mp_citadel",
+                "title": "Machu Picchu citadel",
+                "slot": "half",
+                "summary": "Guided tour of the Machu Picchu citadel (timed entry ticket required).",
+                "intensity": "High",
+                "interests": [
+                  "History and culture",
+                  "Photography",
+                  "Nature"
+                ],
+                "foodNote": "Pack a lunch; no food inside the site."
+              }
+            },
+            {
+              "id": "ex:pc_aguas:machu_picchu:back",
+              "type": "travel",
+              "anchor": {
+                "stopId": "pc_aguas",
+                "contentId": "conn_agc_mp_shuttle"
+              },
+              "placeId": "machu_picchu",
+              "startTime": "18:30",
+              "durationHours": 0.85,
+              "transport": {
+                "connectionId": "conn_agc_mp_shuttle",
+                "mode": "local_shuttle",
+                "inVehicleHours": 0.45,
+                "bufferRulesetId": "buffer_ruleset_v2",
+                "bufferRulesetVersion": 2,
+                "computedUsableTimeLost": 0.85,
+                "estimated": true,
+                "fromPlaceId": "machu_picchu",
+                "toPlaceId": "aguas_calientes",
+                "overnight": false,
+                "arriveDayNumber": 7,
+                "arriveTime": "19:21"
+              },
+              "provenance": {
+                "source": "curated",
+                "reviewed": true,
+                "confidence": "medium"
+              },
+              "generationStatus": "ok",
+              "userEdited": false,
+              "locked": false
+            },
+            {
+              "id": "op:pc_aguas:d0",
+              "type": "activity",
+              "anchor": {
+                "stopId": "pc_aguas",
+                "contentId": "agc_hot_springs"
+              },
+              "placeId": "aguas_calientes",
+              "startTime": "19:21",
+              "durationHours": 1.65,
+              "provenance": {
+                "source": "curated",
+                "reviewed": false,
+                "confidence": "medium",
+                "content": {
+                  "kind": "authored",
+                  "note": "Written for the Door 2 pilot; no standalone content existed."
+                }
+              },
+              "generationStatus": "ok",
+              "userEdited": false,
+              "locked": false,
+              "activity": {
+                "templateId": "agc_hot_springs",
+                "title": "Hot springs & craft market",
+                "slot": "evening",
+                "summary": "Soak in the town's thermal baths, then wander the craft market.",
+                "intensity": "Light",
+                "interests": [
+                  "Relaxation"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "id": "day:8",
+          "dayNumber": 8,
+          "blocks": [
+            {
+              "id": "tr:pc_aguas>pc_olly_return",
+              "type": "travel",
+              "anchor": {
+                "stopId": "pc_olly_return",
+                "contentId": "conn_olly_agc_train"
+              },
+              "placeId": "aguas_calientes",
+              "startTime": "09:00",
+              "durationHours": 2.6,
+              "transport": {
+                "connectionId": "conn_olly_agc_train",
+                "mode": "train",
+                "inVehicleHours": 1.5,
+                "bufferRulesetId": "buffer_ruleset_v2",
+                "bufferRulesetVersion": 2,
+                "computedUsableTimeLost": 2.6,
+                "estimated": true,
+                "fromPlaceId": "aguas_calientes",
+                "toPlaceId": "ollantaytambo",
+                "overnight": false,
+                "arriveDayNumber": 8,
+                "arriveTime": "11:36"
+              },
+              "provenance": {
+                "source": "curated",
+                "reviewed": true,
+                "confidence": "medium"
+              },
+              "generationStatus": "ok",
+              "userEdited": false,
+              "locked": false
+            },
+            {
+              "id": "tr:pc_olly_return>pc_cusco_return",
+              "type": "travel",
+              "anchor": {
+                "stopId": "pc_cusco_return",
+                "contentId": "conn_cuz_olly_road"
+              },
+              "placeId": "ollantaytambo",
+              "startTime": "11:36",
+              "durationHours": 2.05,
+              "transport": {
+                "connectionId": "conn_cuz_olly_road",
+                "mode": "road_private_transfer",
+                "inVehicleHours": 1.5,
+                "bufferRulesetId": "buffer_ruleset_v2",
+                "bufferRulesetVersion": 2,
+                "computedUsableTimeLost": 2.0500000000000003,
+                "estimated": true,
+                "fromPlaceId": "ollantaytambo",
+                "toPlaceId": "cusco",
+                "overnight": false,
+                "arriveDayNumber": 8,
+                "arriveTime": "13:39"
+              },
+              "provenance": {
+                "source": "curated",
+                "reviewed": true,
+                "confidence": "medium"
+              },
+              "generationStatus": "ok",
+              "userEdited": false,
+              "locked": false
+            },
+            {
+              "id": "tr:pc_cusco_return>pc_lima_out",
+              "type": "travel",
+              "anchor": {
+                "stopId": "pc_lima_out",
+                "contentId": "conn_lim_cuz_air"
+              },
+              "placeId": "cusco",
+              "startTime": "13:39",
+              "durationHours": 5,
+              "transport": {
+                "connectionId": "conn_lim_cuz_air",
+                "mode": "flight_domestic",
+                "inVehicleHours": 1.25,
+                "bufferRulesetId": "buffer_ruleset_v2",
+                "bufferRulesetVersion": 2,
+                "computedUsableTimeLost": 5,
+                "estimated": true,
+                "fromPlaceId": "cusco",
+                "toPlaceId": "lima",
+                "overnight": false,
+                "arriveDayNumber": 8,
+                "arriveTime": "18:39"
+              },
+              "provenance": {
+                "source": "curated",
+                "reviewed": true,
+                "confidence": "medium"
+              },
+              "generationStatus": "ok",
+              "userEdited": false,
+              "locked": false
+            },
+            {
+              "id": "op:pc_lima_out:d0",
+              "type": "activity",
+              "anchor": {
+                "stopId": "pc_lima_out",
+                "contentId": "lima_magic_water"
+              },
+              "placeId": "lima",
+              "startTime": "18:39",
+              "durationHours": 2.35,
+              "provenance": {
+                "source": "curated",
+                "reviewed": false,
+                "confidence": "high",
+                "content": {
+                  "kind": "extracted",
+                  "bundleId": "6a7e98494622807c9c3429bf",
+                  "bundleName": "Lima",
+                  "templateTitle": "Magic water circuit",
+                  "edited": true
+                }
+              },
+              "generationStatus": "ok",
+              "userEdited": false,
+              "locked": false,
+              "activity": {
+                "templateId": "lima_magic_water",
+                "title": "Magic Water Circuit",
+                "slot": "evening",
+                "summary": "The lit fountains of the Magic Water Circuit in Parque de la Reserva, then dinner.",
+                "intensity": "Light",
+                "interests": [
+                  "Cities",
+                  "Relaxation"
+                ],
+                "foodNote": "Picarones for dessert."
+              }
+            }
+          ]
+        },
+        {
+          "id": "day:9",
+          "dayNumber": 9,
+          "blocks": [
+            {
+              "id": "tr:pc_lima_out>origin_home",
+              "type": "travel",
+              "anchor": {
+                "stopId": "origin_home",
+                "contentId": "conn_yvr_lim_air"
+              },
+              "placeId": "lima",
+              "startTime": "09:00",
+              "durationHours": 17.95,
+              "transport": {
+                "connectionId": "conn_yvr_lim_air",
+                "mode": "flight_international",
+                "inVehicleHours": 11.2,
+                "layoverHours": 2,
+                "bufferRulesetId": "buffer_ruleset_v2",
+                "bufferRulesetVersion": 2,
+                "computedUsableTimeLost": 17.95,
+                "estimated": true,
+                "fromPlaceId": "lima",
+                "toPlaceId": "vancouver",
+                "overnight": true,
+                "arriveDayNumber": 10,
+                "arriveTime": "00:57"
+              },
+              "provenance": {
+                "source": "curated",
+                "reviewed": true,
+                "confidence": "medium"
+              },
+              "generationStatus": "ok",
+              "userEdited": false,
+              "locked": false
+            }
+          ]
+        },
+        {
+          "id": "day:10",
+          "dayNumber": 10,
+          "blocks": [
+            {
+              "id": "rest:d10",
+              "type": "rest",
+              "anchor": {
+                "stopId": null,
+                "contentId": null
+              },
+              "placeId": null,
+              "startTime": "00:00",
+              "durationHours": 0,
+              "note": "in_transit",
+              "provenance": {
+                "source": "curated",
+                "reviewed": true,
+                "confidence": "medium"
+              },
+              "generationStatus": "ok",
+              "userEdited": false,
+              "locked": false
+            }
+          ]
+        }
+      ],
+      "warnings": [],
+      "versions": {
+        "engine": "door2-skeleton-0.1",
+        "schema": "door2-v8",
+        "content": "pilot-content-v1",
+        "routeData": "pilot-catalogue-v2",
+        "bufferRuleset": "buffer_ruleset_v2@2"
+      },
+      "history": [],
+      "contentGaps": [],
+      "identity": {
+        "version": 1,
+        "used": [
+          "luid_zz1"
+        ],
+        "blocks": {
+          "luid_zz1": {
+            "slot": "full"
+          }
+        },
+        "edits": {}
+      }
+    }
+  },
+  {
+    "envelopeVersion": 2,
+    "id": "zz_test_v8_absent",
+    "label": "ZZ-TEST v8 identity absent",
+    "destinationLabel": "ZZ-TEST v8 identity absent",
+    "savedAt": "2026-10-14T12:00:00.000Z",
+    "trip": {
+      "id": "door2:vancouver:PE:10:peru_classic",
+      "status": "valid",
+      "spec": {
+        "originPlaceId": "vancouver",
+        "destination": {
+          "kind": "country",
+          "id": "PE"
+        },
+        "travelMonth": 10,
+        "totalDays": 10,
+        "travellerType": "couple",
+        "interests": [],
+        "pace": "balanced",
+        "budget": "mid",
+        "routeTemplateId": "peru_classic",
+        "stops": [
+          {
+            "id": "pc_lima_in",
+            "placeId": "lima",
+            "placeSource": "recommendation",
+            "nights": 2,
+            "isRequired": false
+          },
+          {
+            "id": "pc_cusco",
+            "placeId": "cusco",
+            "placeSource": "recommendation",
+            "nights": 3,
+            "isRequired": false
+          },
+          {
+            "id": "pc_sacred_valley",
+            "placeId": "ollantaytambo",
+            "placeSource": "recommendation",
+            "nights": 0,
+            "isRequired": false
+          },
+          {
+            "id": "pc_aguas",
+            "placeId": "aguas_calientes",
+            "placeSource": "recommendation",
+            "nights": 1,
+            "isRequired": false
+          },
+          {
+            "id": "pc_olly_return",
+            "placeId": "ollantaytambo",
+            "placeSource": "recommendation",
+            "nights": 0,
+            "isRequired": false
+          },
+          {
+            "id": "pc_cusco_return",
+            "placeId": "cusco",
+            "placeSource": "recommendation",
+            "nights": 0,
+            "isRequired": false
+          },
+          {
+            "id": "pc_lima_out",
+            "placeId": "lima",
+            "placeSource": "recommendation",
+            "nights": 1,
+            "isRequired": false
+          }
+        ],
+        "requiredPlaceIds": [],
+        "choices": {
+          "pinned": [],
+          "rejected": [],
+          "placed": []
+        }
+      },
+      "routePlan": {
+        "familyId": "peru_classic",
+        "variantId": "peru_classic",
+        "source": "authored",
+        "stops": [
+          {
+            "key": "pc_lima_in",
+            "placeId": "lima",
+            "nights": 2,
+            "minNights": 1,
+            "maxNights": 3,
+            "role": "core",
+            "selectionSource": "default",
+            "isRequired": false,
+            "excursions": []
+          },
+          {
+            "key": "pc_cusco",
+            "placeId": "cusco",
+            "nights": 3,
+            "minNights": 2,
+            "maxNights": 4,
+            "role": "core",
+            "selectionSource": "default",
+            "isRequired": false,
+            "excursions": []
+          },
+          {
+            "key": "pc_sacred_valley",
+            "placeId": "ollantaytambo",
+            "nights": 0,
+            "minNights": 0,
+            "maxNights": 1,
+            "role": "core",
+            "selectionSource": "default",
+            "isRequired": false,
+            "excursions": []
+          },
+          {
+            "key": "pc_aguas",
+            "placeId": "aguas_calientes",
+            "nights": 1,
+            "minNights": 1,
+            "maxNights": 2,
+            "role": "core",
+            "selectionSource": "default",
+            "isRequired": false,
+            "excursions": [
+              {
+                "placeId": "machu_picchu",
+                "connectionId": "conn_agc_mp_shuttle",
+                "hoursOnSite": 4
+              }
+            ]
+          },
+          {
+            "key": "pc_olly_return",
+            "placeId": "ollantaytambo",
+            "nights": 0,
+            "minNights": 0,
+            "maxNights": 0,
+            "role": "pass_through",
+            "selectionSource": "default",
+            "isRequired": false,
+            "excursions": []
+          },
+          {
+            "key": "pc_cusco_return",
+            "placeId": "cusco",
+            "nights": 0,
+            "minNights": 0,
+            "maxNights": 0,
+            "role": "pass_through",
+            "selectionSource": "default",
+            "isRequired": false,
+            "excursions": []
+          },
+          {
+            "key": "pc_lima_out",
+            "placeId": "lima",
+            "nights": 1,
+            "minNights": 1,
+            "maxNights": 1,
+            "role": "core",
+            "selectionSource": "default",
+            "isRequired": false,
+            "excursions": []
+          }
+        ],
+        "nightsSource": "auto",
+        "connectionIds": [
+          "conn_yvr_lim_air",
+          "conn_lim_cuz_air",
+          "conn_cuz_olly_road",
+          "conn_olly_agc_train",
+          "conn_olly_agc_train",
+          "conn_cuz_olly_road",
+          "conn_lim_cuz_air",
+          "conn_yvr_lim_air"
+        ],
+        "minDays": 8,
+        "maxDays": 14,
+        "optionals": []
+      },
+      "days": [
+        {
+          "id": "day:1",
+          "dayNumber": 1,
+          "blocks": [
+            {
+              "id": "tr:origin_out>pc_lima_in",
+              "type": "travel",
+              "anchor": {
+                "stopId": "pc_lima_in",
+                "contentId": "conn_yvr_lim_air"
+              },
+              "placeId": "vancouver",
+              "startTime": "09:00",
+              "durationHours": 17.95,
+              "transport": {
+                "connectionId": "conn_yvr_lim_air",
+                "mode": "flight_international",
+                "inVehicleHours": 11.2,
+                "layoverHours": 2,
+                "bufferRulesetId": "buffer_ruleset_v2",
+                "bufferRulesetVersion": 2,
+                "computedUsableTimeLost": 17.95,
+                "estimated": true,
+                "fromPlaceId": "vancouver",
+                "toPlaceId": "lima",
+                "overnight": true,
+                "arriveDayNumber": 2,
+                "arriveTime": "04:57"
+              },
+              "provenance": {
+                "source": "curated",
+                "reviewed": true,
+                "confidence": "medium"
+              },
+              "generationStatus": "ok",
+              "userEdited": false,
+              "locked": false
+            }
+          ]
+        },
+        {
+          "id": "day:2",
+          "dayNumber": 2,
+          "blocks": [
+            {
+              "id": "op:pc_lima_in:d0",
+              "type": "activity",
+              "anchor": {
+                "stopId": "pc_lima_in",
+                "contentId": "lima_miraflores"
+              },
+              "placeId": "lima",
+              "startTime": "09:00",
+              "durationHours": 4,
+              "provenance": {
+                "source": "curated",
+                "reviewed": false,
+                "confidence": "high",
+                "content": {
+                  "kind": "extracted",
+                  "bundleId": "6a7e98494622807c9c3429bf",
+                  "bundleName": "Lima",
+                  "templateTitle": "Miraflores malecón"
+                }
+              },
+              "generationStatus": "ok",
+              "userEdited": false,
+              "locked": false,
+              "activity": {
+                "templateId": "lima_miraflores",
+                "title": "Miraflores clifftops",
+                "slot": "half",
+                "summary": "Walk the Miraflores clifftop parks down to Larcomar and the bay views.",
+                "intensity": "Light",
+                "interests": [
+                  "Cities",
+                  "Food"
+                ],
+                "foodNote": "Try a fresh ceviche."
+              }
+            }
+          ]
+        },
+        {
+          "id": "day:3",
+          "dayNumber": 3,
+          "blocks": [
+            {
+              "id": "op:pc_lima_in:d1",
+              "type": "activity",
+              "anchor": {
+                "stopId": "pc_lima_in",
+                "contentId": "lima_historic_centre"
+              },
+              "placeId": "lima",
+              "startTime": "09:00",
+              "durationHours": 12,
+              "provenance": {
+                "source": "curated",
+                "reviewed": false,
+                "confidence": "high",
+                "content": {
+                  "kind": "extracted",
+                  "bundleId": "6a7e98494622807c9c3429bf",
+                  "bundleName": "Lima",
+                  "templateTitle": "Historic centre"
+                }
+              },
+              "generationStatus": "ok",
+              "userEdited": false,
+              "locked": false,
+              "activity": {
+                "templateId": "lima_historic_centre",
+                "title": "Historic centre & Larco Museum",
+                "slot": "full",
+                "summary": "Plaza Mayor and the cathedral, then the Larco Museum.",
+                "intensity": "Light",
+                "interests": [
+                  "Cities",
+                  "History and culture",
+                  "Food"
+                ],
+                "foodNote": "Try lomo saltado.",
+                "morning": "Plaza Mayor and the cathedral.",
+                "afternoon": "Larco Museum of pre-Columbian art.",
+                "evening": "Dinner in Barranco."
+              }
+            }
+          ]
+        },
+        {
+          "id": "day:4",
+          "dayNumber": 4,
+          "blocks": [
+            {
+              "id": "tr:pc_lima_in>pc_cusco",
+              "type": "travel",
+              "anchor": {
+                "stopId": "pc_cusco",
+                "contentId": "conn_lim_cuz_air"
+              },
+              "placeId": "lima",
+              "startTime": "09:00",
+              "durationHours": 5,
+              "transport": {
+                "connectionId": "conn_lim_cuz_air",
+                "mode": "flight_domestic",
+                "inVehicleHours": 1.25,
+                "bufferRulesetId": "buffer_ruleset_v2",
+                "bufferRulesetVersion": 2,
+                "computedUsableTimeLost": 5,
+                "estimated": true,
+                "fromPlaceId": "lima",
+                "toPlaceId": "cusco",
+                "overnight": false,
+                "arriveDayNumber": 4,
+                "arriveTime": "14:00"
+              },
+              "provenance": {
+                "source": "curated",
+                "reviewed": true,
+                "confidence": "medium"
+              },
+              "generationStatus": "ok",
+              "userEdited": false,
+              "locked": false
+            },
+            {
+              "id": "op:pc_cusco:d0",
+              "type": "activity",
+              "anchor": {
+                "stopId": "pc_cusco",
+                "contentId": "cusco_acclimatise"
+              },
+              "placeId": "cusco",
+              "startTime": "14:00",
+              "durationHours": 7,
+              "provenance": {
+                "source": "curated",
+                "reviewed": false,
+                "confidence": "high",
+                "content": {
+                  "kind": "extracted",
+                  "bundleId": "6a7ced35c41497521b54e0c5",
+                  "bundleName": "Cusco & Machu Picchu, Peru",
+                  "templateTitle": "Cusco acclimatise",
+                  "edited": true
+                }
+              },
+              "generationStatus": "ok",
+              "userEdited": false,
+              "locked": false,
+              "activity": {
+                "templateId": "cusco_acclimatise",
+                "title": "Easy first day at altitude",
+                "slot": "half",
+                "summary": "Take it slowly at 3,400 m: the old city and Qorikancha, then a light dinner.",
+                "intensity": "Light",
+                "interests": [
+                  "History and culture",
+                  "Cities"
+                ],
+                "foodNote": "Quinoa soup and coca tea; avoid heavy meals."
+              }
+            }
+          ]
+        },
+        {
+          "id": "day:5",
+          "dayNumber": 5,
+          "blocks": [
+            {
+              "id": "op:pc_cusco:d1",
+              "type": "activity",
+              "anchor": {
+                "stopId": "pc_cusco",
+                "contentId": "cusco_market_san_blas"
+              },
+              "placeId": "cusco",
+              "startTime": "09:00",
+              "durationHours": 12,
+              "provenance": {
+                "source": "curated",
+                "reviewed": false,
+                "confidence": "medium",
+                "content": {
+                  "kind": "authored",
+                  "note": "Written for the Door 2 pilot; no standalone content existed."
+                }
+              },
+              "generationStatus": "ok",
+              "userEdited": false,
+              "locked": false,
+              "activity": {
+                "templateId": "cusco_market_san_blas",
+                "title": "San Pedro Market, cathedral & San Blas",
+                "slot": "full",
+                "summary": "San Pedro Market, the cathedral on the Plaza de Armas, and the artisan lanes of San Blas.",
+                "intensity": "Light",
+                "interests": [
+                  "Food",
+                  "Cities",
+                  "History and culture"
+                ],
+                "foodNote": "A fresh-fruit juice at the market stalls.",
+                "morning": "Breakfast and fresh juices at San Pedro Market.",
+                "afternoon": "Cusco Cathedral, then the artisan workshops of San Blas.",
+                "evening": "Dinner in San Blas."
+              }
+            }
+          ]
+        },
+        {
+          "id": "day:6",
+          "dayNumber": 6,
+          "blocks": [
+            {
+              "id": "op:pc_cusco:d2",
+              "type": "activity",
+              "anchor": {
+                "stopId": "pc_cusco",
+                "contentId": "cusco_sacsayhuaman"
+              },
+              "placeId": "cusco",
+              "startTime": "09:00",
+              "durationHours": 12,
+              "provenance": {
+                "source": "curated",
+                "reviewed": false,
+                "confidence": "medium",
+                "content": {
+                  "kind": "authored",
+                  "note": "Written for the Door 2 pilot; no standalone content existed."
+                }
+              },
+              "generationStatus": "ok",
+              "userEdited": false,
+              "locked": false,
+              "activity": {
+                "templateId": "cusco_sacsayhuaman",
+                "title": "Sacsayhuamán & the ruins above Cusco",
+                "slot": "full",
+                "summary": "Sacsayhuamán's giant walls, then Q'enqo, Puka Pukara and Tambomachay.",
+                "intensity": "Moderate",
+                "interests": [
+                  "History and culture",
+                  "Photography"
+                ],
+                "foodNote": "Try alpaca or trout at dinner.",
+                "morning": "The fortress of Sacsayhuamán above the city.",
+                "afternoon": "Q'enqo, Puka Pukara and Tambomachay.",
+                "evening": "Dinner near the Plaza de Armas."
+              }
+            }
+          ]
+        },
+        {
+          "id": "day:7",
+          "dayNumber": 7,
+          "blocks": [
+            {
+              "id": "tr:pc_cusco>pc_sacred_valley",
+              "type": "travel",
+              "anchor": {
+                "stopId": "pc_sacred_valley",
+                "contentId": "conn_cuz_olly_road"
+              },
+              "placeId": "cusco",
+              "startTime": "09:00",
+              "durationHours": 2.05,
+              "transport": {
+                "connectionId": "conn_cuz_olly_road",
+                "mode": "road_private_transfer",
+                "inVehicleHours": 1.5,
+                "bufferRulesetId": "buffer_ruleset_v2",
+                "bufferRulesetVersion": 2,
+                "computedUsableTimeLost": 2.0500000000000003,
+                "estimated": true,
+                "fromPlaceId": "cusco",
+                "toPlaceId": "ollantaytambo",
+                "overnight": false,
+                "arriveDayNumber": 7,
+                "arriveTime": "11:03"
+              },
+              "provenance": {
+                "source": "curated",
+                "reviewed": true,
+                "confidence": "medium"
+              },
+              "generationStatus": "ok",
+              "userEdited": false,
+              "locked": false
+            },
+            {
+              "id": "tr:pc_sacred_valley>pc_aguas",
+              "type": "travel",
+              "anchor": {
+                "stopId": "pc_aguas",
+                "contentId": "conn_olly_agc_train"
+              },
+              "placeId": "ollantaytambo",
+              "startTime": "11:03",
+              "durationHours": 2.6,
+              "transport": {
+                "connectionId": "conn_olly_agc_train",
+                "mode": "train",
+                "inVehicleHours": 1.5,
+                "bufferRulesetId": "buffer_ruleset_v2",
+                "bufferRulesetVersion": 2,
+                "computedUsableTimeLost": 2.6,
+                "estimated": true,
+                "fromPlaceId": "ollantaytambo",
+                "toPlaceId": "aguas_calientes",
+                "overnight": false,
+                "arriveDayNumber": 7,
+                "arriveTime": "13:39"
+              },
+              "provenance": {
+                "source": "curated",
+                "reviewed": true,
+                "confidence": "medium"
+              },
+              "generationStatus": "ok",
+              "userEdited": false,
+              "locked": false
+            },
+            {
+              "id": "ex:pc_aguas:machu_picchu:out",
+              "type": "travel",
+              "anchor": {
+                "stopId": "pc_aguas",
+                "contentId": "conn_agc_mp_shuttle"
+              },
+              "placeId": "aguas_calientes",
+              "startTime": "13:39",
+              "durationHours": 0.85,
+              "transport": {
+                "connectionId": "conn_agc_mp_shuttle",
+                "mode": "local_shuttle",
+                "inVehicleHours": 0.45,
+                "bufferRulesetId": "buffer_ruleset_v2",
+                "bufferRulesetVersion": 2,
+                "computedUsableTimeLost": 0.85,
+                "estimated": true,
+                "fromPlaceId": "aguas_calientes",
+                "toPlaceId": "machu_picchu",
+                "overnight": false,
+                "arriveDayNumber": 7,
+                "arriveTime": "14:30"
+              },
+              "provenance": {
+                "source": "curated",
+                "reviewed": true,
+                "confidence": "medium"
+              },
+              "generationStatus": "ok",
+              "userEdited": false,
+              "locked": false
+            },
+            {
+              "id": "ex:pc_aguas:machu_picchu:site",
+              "type": "activity",
+              "anchor": {
+                "stopId": "pc_aguas",
+                "contentId": "mp_citadel"
+              },
+              "placeId": "machu_picchu",
+              "startTime": "14:30",
+              "durationHours": 4,
+              "provenance": {
+                "source": "curated",
+                "reviewed": false,
+                "confidence": "high",
+                "content": {
+                  "kind": "extracted",
+                  "bundleId": "6a7ced35c41497521b54e0c5",
+                  "bundleName": "Cusco & Machu Picchu, Peru",
+                  "templateTitle": "Machu Picchu",
+                  "edited": true
+                }
+              },
+              "generationStatus": "ok",
+              "userEdited": false,
+              "locked": false,
+              "activity": {
+                "templateId": "mp_citadel",
+                "title": "Machu Picchu citadel",
+                "slot": "half",
+                "summary": "Guided tour of the Machu Picchu citadel (timed entry ticket required).",
+                "intensity": "High",
+                "interests": [
+                  "History and culture",
+                  "Photography",
+                  "Nature"
+                ],
+                "foodNote": "Pack a lunch; no food inside the site."
+              }
+            },
+            {
+              "id": "ex:pc_aguas:machu_picchu:back",
+              "type": "travel",
+              "anchor": {
+                "stopId": "pc_aguas",
+                "contentId": "conn_agc_mp_shuttle"
+              },
+              "placeId": "machu_picchu",
+              "startTime": "18:30",
+              "durationHours": 0.85,
+              "transport": {
+                "connectionId": "conn_agc_mp_shuttle",
+                "mode": "local_shuttle",
+                "inVehicleHours": 0.45,
+                "bufferRulesetId": "buffer_ruleset_v2",
+                "bufferRulesetVersion": 2,
+                "computedUsableTimeLost": 0.85,
+                "estimated": true,
+                "fromPlaceId": "machu_picchu",
+                "toPlaceId": "aguas_calientes",
+                "overnight": false,
+                "arriveDayNumber": 7,
+                "arriveTime": "19:21"
+              },
+              "provenance": {
+                "source": "curated",
+                "reviewed": true,
+                "confidence": "medium"
+              },
+              "generationStatus": "ok",
+              "userEdited": false,
+              "locked": false
+            },
+            {
+              "id": "op:pc_aguas:d0",
+              "type": "activity",
+              "anchor": {
+                "stopId": "pc_aguas",
+                "contentId": "agc_hot_springs"
+              },
+              "placeId": "aguas_calientes",
+              "startTime": "19:21",
+              "durationHours": 1.65,
+              "provenance": {
+                "source": "curated",
+                "reviewed": false,
+                "confidence": "medium",
+                "content": {
+                  "kind": "authored",
+                  "note": "Written for the Door 2 pilot; no standalone content existed."
+                }
+              },
+              "generationStatus": "ok",
+              "userEdited": false,
+              "locked": false,
+              "activity": {
+                "templateId": "agc_hot_springs",
+                "title": "Hot springs & craft market",
+                "slot": "evening",
+                "summary": "Soak in the town's thermal baths, then wander the craft market.",
+                "intensity": "Light",
+                "interests": [
+                  "Relaxation"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "id": "day:8",
+          "dayNumber": 8,
+          "blocks": [
+            {
+              "id": "tr:pc_aguas>pc_olly_return",
+              "type": "travel",
+              "anchor": {
+                "stopId": "pc_olly_return",
+                "contentId": "conn_olly_agc_train"
+              },
+              "placeId": "aguas_calientes",
+              "startTime": "09:00",
+              "durationHours": 2.6,
+              "transport": {
+                "connectionId": "conn_olly_agc_train",
+                "mode": "train",
+                "inVehicleHours": 1.5,
+                "bufferRulesetId": "buffer_ruleset_v2",
+                "bufferRulesetVersion": 2,
+                "computedUsableTimeLost": 2.6,
+                "estimated": true,
+                "fromPlaceId": "aguas_calientes",
+                "toPlaceId": "ollantaytambo",
+                "overnight": false,
+                "arriveDayNumber": 8,
+                "arriveTime": "11:36"
+              },
+              "provenance": {
+                "source": "curated",
+                "reviewed": true,
+                "confidence": "medium"
+              },
+              "generationStatus": "ok",
+              "userEdited": false,
+              "locked": false
+            },
+            {
+              "id": "tr:pc_olly_return>pc_cusco_return",
+              "type": "travel",
+              "anchor": {
+                "stopId": "pc_cusco_return",
+                "contentId": "conn_cuz_olly_road"
+              },
+              "placeId": "ollantaytambo",
+              "startTime": "11:36",
+              "durationHours": 2.05,
+              "transport": {
+                "connectionId": "conn_cuz_olly_road",
+                "mode": "road_private_transfer",
+                "inVehicleHours": 1.5,
+                "bufferRulesetId": "buffer_ruleset_v2",
+                "bufferRulesetVersion": 2,
+                "computedUsableTimeLost": 2.0500000000000003,
+                "estimated": true,
+                "fromPlaceId": "ollantaytambo",
+                "toPlaceId": "cusco",
+                "overnight": false,
+                "arriveDayNumber": 8,
+                "arriveTime": "13:39"
+              },
+              "provenance": {
+                "source": "curated",
+                "reviewed": true,
+                "confidence": "medium"
+              },
+              "generationStatus": "ok",
+              "userEdited": false,
+              "locked": false
+            },
+            {
+              "id": "tr:pc_cusco_return>pc_lima_out",
+              "type": "travel",
+              "anchor": {
+                "stopId": "pc_lima_out",
+                "contentId": "conn_lim_cuz_air"
+              },
+              "placeId": "cusco",
+              "startTime": "13:39",
+              "durationHours": 5,
+              "transport": {
+                "connectionId": "conn_lim_cuz_air",
+                "mode": "flight_domestic",
+                "inVehicleHours": 1.25,
+                "bufferRulesetId": "buffer_ruleset_v2",
+                "bufferRulesetVersion": 2,
+                "computedUsableTimeLost": 5,
+                "estimated": true,
+                "fromPlaceId": "cusco",
+                "toPlaceId": "lima",
+                "overnight": false,
+                "arriveDayNumber": 8,
+                "arriveTime": "18:39"
+              },
+              "provenance": {
+                "source": "curated",
+                "reviewed": true,
+                "confidence": "medium"
+              },
+              "generationStatus": "ok",
+              "userEdited": false,
+              "locked": false
+            },
+            {
+              "id": "op:pc_lima_out:d0",
+              "type": "activity",
+              "anchor": {
+                "stopId": "pc_lima_out",
+                "contentId": "lima_magic_water"
+              },
+              "placeId": "lima",
+              "startTime": "18:39",
+              "durationHours": 2.35,
+              "provenance": {
+                "source": "curated",
+                "reviewed": false,
+                "confidence": "high",
+                "content": {
+                  "kind": "extracted",
+                  "bundleId": "6a7e98494622807c9c3429bf",
+                  "bundleName": "Lima",
+                  "templateTitle": "Magic water circuit",
+                  "edited": true
+                }
+              },
+              "generationStatus": "ok",
+              "userEdited": false,
+              "locked": false,
+              "activity": {
+                "templateId": "lima_magic_water",
+                "title": "Magic Water Circuit",
+                "slot": "evening",
+                "summary": "The lit fountains of the Magic Water Circuit in Parque de la Reserva, then dinner.",
+                "intensity": "Light",
+                "interests": [
+                  "Cities",
+                  "Relaxation"
+                ],
+                "foodNote": "Picarones for dessert."
+              }
+            }
+          ]
+        },
+        {
+          "id": "day:9",
+          "dayNumber": 9,
+          "blocks": [
+            {
+              "id": "tr:pc_lima_out>origin_home",
+              "type": "travel",
+              "anchor": {
+                "stopId": "origin_home",
+                "contentId": "conn_yvr_lim_air"
+              },
+              "placeId": "lima",
+              "startTime": "09:00",
+              "durationHours": 17.95,
+              "transport": {
+                "connectionId": "conn_yvr_lim_air",
+                "mode": "flight_international",
+                "inVehicleHours": 11.2,
+                "layoverHours": 2,
+                "bufferRulesetId": "buffer_ruleset_v2",
+                "bufferRulesetVersion": 2,
+                "computedUsableTimeLost": 17.95,
+                "estimated": true,
+                "fromPlaceId": "lima",
+                "toPlaceId": "vancouver",
+                "overnight": true,
+                "arriveDayNumber": 10,
+                "arriveTime": "00:57"
+              },
+              "provenance": {
+                "source": "curated",
+                "reviewed": true,
+                "confidence": "medium"
+              },
+              "generationStatus": "ok",
+              "userEdited": false,
+              "locked": false
+            }
+          ]
+        },
+        {
+          "id": "day:10",
+          "dayNumber": 10,
+          "blocks": [
+            {
+              "id": "rest:d10",
+              "type": "rest",
+              "anchor": {
+                "stopId": null,
+                "contentId": null
+              },
+              "placeId": null,
+              "startTime": "00:00",
+              "durationHours": 0,
+              "note": "in_transit",
+              "provenance": {
+                "source": "curated",
+                "reviewed": true,
+                "confidence": "medium"
+              },
+              "generationStatus": "ok",
+              "userEdited": false,
+              "locked": false
+            }
+          ]
+        }
+      ],
+      "warnings": [],
+      "versions": {
+        "engine": "door2-skeleton-0.1",
+        "schema": "door2-v8",
+        "content": "pilot-content-v1",
+        "routeData": "pilot-catalogue-v2",
+        "bufferRuleset": "buffer_ruleset_v2@2"
+      },
+      "history": [],
+      "contentGaps": []
+    }
+  },
+  {
+    "envelopeVersion": 2,
+    "id": "zz_test_v8_unsafe",
+    "label": "ZZ-TEST v8 unsafe render",
+    "destinationLabel": "ZZ-TEST v8 unsafe render",
+    "savedAt": "2026-10-14T12:00:00.000Z",
+    "trip": {
+      "id": "door2:vancouver:PE:10:peru_classic",
+      "status": "valid",
+      "spec": {
+        "originPlaceId": "vancouver",
+        "destination": {
+          "kind": "country",
+          "id": "PE"
+        },
+        "travelMonth": 10,
+        "totalDays": 10,
+        "travellerType": "couple",
+        "interests": [],
+        "pace": "balanced",
+        "budget": "mid",
+        "routeTemplateId": "peru_classic",
+        "stops": [
+          {
+            "id": "pc_lima_in",
+            "placeId": "lima",
+            "placeSource": "recommendation",
+            "nights": 2,
+            "isRequired": false
+          },
+          {
+            "id": "pc_cusco",
+            "placeId": "cusco",
+            "placeSource": "recommendation",
+            "nights": 3,
+            "isRequired": false
+          },
+          {
+            "id": "pc_sacred_valley",
+            "placeId": "ollantaytambo",
+            "placeSource": "recommendation",
+            "nights": 0,
+            "isRequired": false
+          },
+          {
+            "id": "pc_aguas",
+            "placeId": "aguas_calientes",
+            "placeSource": "recommendation",
+            "nights": 1,
+            "isRequired": false
+          },
+          {
+            "id": "pc_olly_return",
+            "placeId": "ollantaytambo",
+            "placeSource": "recommendation",
+            "nights": 0,
+            "isRequired": false
+          },
+          {
+            "id": "pc_cusco_return",
+            "placeId": "cusco",
+            "placeSource": "recommendation",
+            "nights": 0,
+            "isRequired": false
+          },
+          {
+            "id": "pc_lima_out",
+            "placeId": "lima",
+            "placeSource": "recommendation",
+            "nights": 1,
+            "isRequired": false
+          }
+        ],
+        "requiredPlaceIds": [],
+        "choices": {
+          "pinned": [],
+          "rejected": [],
+          "placed": []
+        }
+      },
+      "routePlan": {
+        "familyId": "peru_classic",
+        "variantId": "peru_classic",
+        "source": "authored",
+        "stops": [
+          {
+            "key": "pc_lima_in",
+            "placeId": "lima",
+            "nights": 2,
+            "minNights": 1,
+            "maxNights": 3,
+            "role": "core",
+            "selectionSource": "default",
+            "isRequired": false,
+            "excursions": []
+          },
+          {
+            "key": "pc_cusco",
+            "placeId": "cusco",
+            "nights": 3,
+            "minNights": 2,
+            "maxNights": 4,
+            "role": "core",
+            "selectionSource": "default",
+            "isRequired": false,
+            "excursions": []
+          },
+          {
+            "key": "pc_sacred_valley",
+            "placeId": "ollantaytambo",
+            "nights": 0,
+            "minNights": 0,
+            "maxNights": 1,
+            "role": "core",
+            "selectionSource": "default",
+            "isRequired": false,
+            "excursions": []
+          },
+          {
+            "key": "pc_aguas",
+            "placeId": "aguas_calientes",
+            "nights": 1,
+            "minNights": 1,
+            "maxNights": 2,
+            "role": "core",
+            "selectionSource": "default",
+            "isRequired": false,
+            "excursions": [
+              {
+                "placeId": "machu_picchu",
+                "connectionId": "conn_agc_mp_shuttle",
+                "hoursOnSite": 4
+              }
+            ]
+          },
+          {
+            "key": "pc_olly_return",
+            "placeId": "ollantaytambo",
+            "nights": 0,
+            "minNights": 0,
+            "maxNights": 0,
+            "role": "pass_through",
+            "selectionSource": "default",
+            "isRequired": false,
+            "excursions": []
+          },
+          {
+            "key": "pc_cusco_return",
+            "placeId": "cusco",
+            "nights": 0,
+            "minNights": 0,
+            "maxNights": 0,
+            "role": "pass_through",
+            "selectionSource": "default",
+            "isRequired": false,
+            "excursions": []
+          },
+          {
+            "key": "pc_lima_out",
+            "placeId": "lima",
+            "nights": 1,
+            "minNights": 1,
+            "maxNights": 1,
+            "role": "core",
+            "selectionSource": "default",
+            "isRequired": false,
+            "excursions": []
+          }
+        ],
+        "nightsSource": "auto",
+        "connectionIds": [
+          "conn_yvr_lim_air",
+          "conn_lim_cuz_air",
+          "conn_cuz_olly_road",
+          "conn_olly_agc_train",
+          "conn_olly_agc_train",
+          "conn_cuz_olly_road",
+          "conn_lim_cuz_air",
+          "conn_yvr_lim_air"
+        ],
+        "minDays": 8,
+        "maxDays": 14,
+        "optionals": []
+      },
+      "days": [
+        {
+          "id": "day:1",
+          "dayNumber": 1,
+          "blocks": [
+            {
+              "id": "tr:origin_out>pc_lima_in",
+              "type": "travel",
+              "anchor": {
+                "stopId": "pc_lima_in",
+                "contentId": "conn_yvr_lim_air"
+              },
+              "placeId": "vancouver",
+              "startTime": "09:00",
+              "durationHours": 17.95,
+              "transport": {
+                "connectionId": "conn_yvr_lim_air",
+                "mode": "flight_international",
+                "inVehicleHours": 11.2,
+                "layoverHours": 2,
+                "bufferRulesetId": "buffer_ruleset_v2",
+                "bufferRulesetVersion": 2,
+                "computedUsableTimeLost": 17.95,
+                "estimated": true,
+                "fromPlaceId": "vancouver",
+                "toPlaceId": "lima",
+                "overnight": true,
+                "arriveDayNumber": 2,
+                "arriveTime": "04:57"
+              },
+              "provenance": {
+                "source": "curated",
+                "reviewed": true,
+                "confidence": "medium"
+              },
+              "generationStatus": "ok",
+              "userEdited": false,
+              "locked": false
+            }
+          ]
+        },
+        {
+          "id": "day:2",
+          "dayNumber": 2,
+          "blocks": [
+            {
+              "id": "op:pc_lima_in:d0",
+              "type": "activity",
+              "anchor": {
+                "stopId": "pc_lima_in",
+                "contentId": "lima_miraflores"
+              },
+              "placeId": "lima",
+              "startTime": "09:00",
+              "durationHours": 4,
+              "provenance": {
+                "source": "curated",
+                "reviewed": false,
+                "confidence": "high",
+                "content": {
+                  "kind": "extracted",
+                  "bundleId": "6a7e98494622807c9c3429bf",
+                  "bundleName": "Lima",
+                  "templateTitle": "Miraflores malecón"
+                }
+              },
+              "generationStatus": "ok",
+              "userEdited": false,
+              "locked": false,
+              "activity": {
+                "templateId": "lima_miraflores",
+                "title": "Miraflores clifftops",
+                "slot": "half",
+                "summary": {
+                  "unexpected": "object"
+                },
+                "intensity": "Light",
+                "interests": [
+                  "Cities",
+                  "Food"
+                ],
+                "foodNote": "Try a fresh ceviche."
+              }
+            }
+          ]
+        },
+        {
+          "id": "day:3",
+          "dayNumber": 3,
+          "blocks": [
+            {
+              "id": "op:pc_lima_in:d1",
+              "type": "activity",
+              "anchor": {
+                "stopId": "pc_lima_in",
+                "contentId": "lima_historic_centre"
+              },
+              "placeId": "lima",
+              "startTime": "09:00",
+              "durationHours": 12,
+              "provenance": {
+                "source": "curated",
+                "reviewed": false,
+                "confidence": "high",
+                "content": {
+                  "kind": "extracted",
+                  "bundleId": "6a7e98494622807c9c3429bf",
+                  "bundleName": "Lima",
+                  "templateTitle": "Historic centre"
+                }
+              },
+              "generationStatus": "ok",
+              "userEdited": false,
+              "locked": false,
+              "activity": {
+                "templateId": "lima_historic_centre",
+                "title": "Historic centre & Larco Museum",
+                "slot": "full",
+                "summary": "Plaza Mayor and the cathedral, then the Larco Museum.",
+                "intensity": "Light",
+                "interests": [
+                  "Cities",
+                  "History and culture",
+                  "Food"
+                ],
+                "foodNote": "Try lomo saltado.",
+                "morning": "Plaza Mayor and the cathedral.",
+                "afternoon": "Larco Museum of pre-Columbian art.",
+                "evening": "Dinner in Barranco."
+              }
+            }
+          ]
+        },
+        {
+          "id": "day:4",
+          "dayNumber": 4,
+          "blocks": [
+            {
+              "id": "tr:pc_lima_in>pc_cusco",
+              "type": "travel",
+              "anchor": {
+                "stopId": "pc_cusco",
+                "contentId": "conn_lim_cuz_air"
+              },
+              "placeId": "lima",
+              "startTime": "09:00",
+              "durationHours": 5,
+              "transport": {
+                "connectionId": "conn_lim_cuz_air",
+                "mode": "flight_domestic",
+                "inVehicleHours": 1.25,
+                "bufferRulesetId": "buffer_ruleset_v2",
+                "bufferRulesetVersion": 2,
+                "computedUsableTimeLost": 5,
+                "estimated": true,
+                "fromPlaceId": "lima",
+                "toPlaceId": "cusco",
+                "overnight": false,
+                "arriveDayNumber": 4,
+                "arriveTime": "14:00"
+              },
+              "provenance": {
+                "source": "curated",
+                "reviewed": true,
+                "confidence": "medium"
+              },
+              "generationStatus": "ok",
+              "userEdited": false,
+              "locked": false
+            },
+            {
+              "id": "op:pc_cusco:d0",
+              "type": "activity",
+              "anchor": {
+                "stopId": "pc_cusco",
+                "contentId": "cusco_acclimatise"
+              },
+              "placeId": "cusco",
+              "startTime": "14:00",
+              "durationHours": 7,
+              "provenance": {
+                "source": "curated",
+                "reviewed": false,
+                "confidence": "high",
+                "content": {
+                  "kind": "extracted",
+                  "bundleId": "6a7ced35c41497521b54e0c5",
+                  "bundleName": "Cusco & Machu Picchu, Peru",
+                  "templateTitle": "Cusco acclimatise",
+                  "edited": true
+                }
+              },
+              "generationStatus": "ok",
+              "userEdited": false,
+              "locked": false,
+              "activity": {
+                "templateId": "cusco_acclimatise",
+                "title": "Easy first day at altitude",
+                "slot": "half",
+                "summary": "Take it slowly at 3,400 m: the old city and Qorikancha, then a light dinner.",
+                "intensity": "Light",
+                "interests": [
+                  "History and culture",
+                  "Cities"
+                ],
+                "foodNote": "Quinoa soup and coca tea; avoid heavy meals."
+              }
+            }
+          ]
+        },
+        {
+          "id": "day:5",
+          "dayNumber": 5,
+          "blocks": [
+            {
+              "id": "op:pc_cusco:d1",
+              "type": "activity",
+              "anchor": {
+                "stopId": "pc_cusco",
+                "contentId": "cusco_market_san_blas"
+              },
+              "placeId": "cusco",
+              "startTime": "09:00",
+              "durationHours": 12,
+              "provenance": {
+                "source": "curated",
+                "reviewed": false,
+                "confidence": "medium",
+                "content": {
+                  "kind": "authored",
+                  "note": "Written for the Door 2 pilot; no standalone content existed."
+                }
+              },
+              "generationStatus": "ok",
+              "userEdited": false,
+              "locked": false,
+              "activity": {
+                "templateId": "cusco_market_san_blas",
+                "title": "San Pedro Market, cathedral & San Blas",
+                "slot": "full",
+                "summary": "San Pedro Market, the cathedral on the Plaza de Armas, and the artisan lanes of San Blas.",
+                "intensity": "Light",
+                "interests": [
+                  "Food",
+                  "Cities",
+                  "History and culture"
+                ],
+                "foodNote": "A fresh-fruit juice at the market stalls.",
+                "morning": "Breakfast and fresh juices at San Pedro Market.",
+                "afternoon": "Cusco Cathedral, then the artisan workshops of San Blas.",
+                "evening": "Dinner in San Blas."
+              }
+            }
+          ]
+        },
+        {
+          "id": "day:6",
+          "dayNumber": 6,
+          "blocks": [
+            {
+              "id": "op:pc_cusco:d2",
+              "type": "activity",
+              "anchor": {
+                "stopId": "pc_cusco",
+                "contentId": "cusco_sacsayhuaman"
+              },
+              "placeId": "cusco",
+              "startTime": "09:00",
+              "durationHours": 12,
+              "provenance": {
+                "source": "curated",
+                "reviewed": false,
+                "confidence": "medium",
+                "content": {
+                  "kind": "authored",
+                  "note": "Written for the Door 2 pilot; no standalone content existed."
+                }
+              },
+              "generationStatus": "ok",
+              "userEdited": false,
+              "locked": false,
+              "activity": {
+                "templateId": "cusco_sacsayhuaman",
+                "title": "Sacsayhuamán & the ruins above Cusco",
+                "slot": "full",
+                "summary": "Sacsayhuamán's giant walls, then Q'enqo, Puka Pukara and Tambomachay.",
+                "intensity": "Moderate",
+                "interests": [
+                  "History and culture",
+                  "Photography"
+                ],
+                "foodNote": "Try alpaca or trout at dinner.",
+                "morning": "The fortress of Sacsayhuamán above the city.",
+                "afternoon": "Q'enqo, Puka Pukara and Tambomachay.",
+                "evening": "Dinner near the Plaza de Armas."
+              }
+            }
+          ]
+        },
+        {
+          "id": "day:7",
+          "dayNumber": 7,
+          "blocks": [
+            {
+              "id": "tr:pc_cusco>pc_sacred_valley",
+              "type": "travel",
+              "anchor": {
+                "stopId": "pc_sacred_valley",
+                "contentId": "conn_cuz_olly_road"
+              },
+              "placeId": "cusco",
+              "startTime": "09:00",
+              "durationHours": 2.05,
+              "transport": {
+                "connectionId": "conn_cuz_olly_road",
+                "mode": "road_private_transfer",
+                "inVehicleHours": 1.5,
+                "bufferRulesetId": "buffer_ruleset_v2",
+                "bufferRulesetVersion": 2,
+                "computedUsableTimeLost": 2.0500000000000003,
+                "estimated": true,
+                "fromPlaceId": "cusco",
+                "toPlaceId": "ollantaytambo",
+                "overnight": false,
+                "arriveDayNumber": 7,
+                "arriveTime": "11:03"
+              },
+              "provenance": {
+                "source": "curated",
+                "reviewed": true,
+                "confidence": "medium"
+              },
+              "generationStatus": "ok",
+              "userEdited": false,
+              "locked": false
+            },
+            {
+              "id": "tr:pc_sacred_valley>pc_aguas",
+              "type": "travel",
+              "anchor": {
+                "stopId": "pc_aguas",
+                "contentId": "conn_olly_agc_train"
+              },
+              "placeId": "ollantaytambo",
+              "startTime": "11:03",
+              "durationHours": 2.6,
+              "transport": {
+                "connectionId": "conn_olly_agc_train",
+                "mode": "train",
+                "inVehicleHours": 1.5,
+                "bufferRulesetId": "buffer_ruleset_v2",
+                "bufferRulesetVersion": 2,
+                "computedUsableTimeLost": 2.6,
+                "estimated": true,
+                "fromPlaceId": "ollantaytambo",
+                "toPlaceId": "aguas_calientes",
+                "overnight": false,
+                "arriveDayNumber": 7,
+                "arriveTime": "13:39"
+              },
+              "provenance": {
+                "source": "curated",
+                "reviewed": true,
+                "confidence": "medium"
+              },
+              "generationStatus": "ok",
+              "userEdited": false,
+              "locked": false
+            },
+            {
+              "id": "ex:pc_aguas:machu_picchu:out",
+              "type": "travel",
+              "anchor": {
+                "stopId": "pc_aguas",
+                "contentId": "conn_agc_mp_shuttle"
+              },
+              "placeId": "aguas_calientes",
+              "startTime": "13:39",
+              "durationHours": 0.85,
+              "transport": {
+                "connectionId": "conn_agc_mp_shuttle",
+                "mode": "local_shuttle",
+                "inVehicleHours": 0.45,
+                "bufferRulesetId": "buffer_ruleset_v2",
+                "bufferRulesetVersion": 2,
+                "computedUsableTimeLost": 0.85,
+                "estimated": true,
+                "fromPlaceId": "aguas_calientes",
+                "toPlaceId": "machu_picchu",
+                "overnight": false,
+                "arriveDayNumber": 7,
+                "arriveTime": "14:30"
+              },
+              "provenance": {
+                "source": "curated",
+                "reviewed": true,
+                "confidence": "medium"
+              },
+              "generationStatus": "ok",
+              "userEdited": false,
+              "locked": false
+            },
+            {
+              "id": "ex:pc_aguas:machu_picchu:site",
+              "type": "activity",
+              "anchor": {
+                "stopId": "pc_aguas",
+                "contentId": "mp_citadel"
+              },
+              "placeId": "machu_picchu",
+              "startTime": "14:30",
+              "durationHours": 4,
+              "provenance": {
+                "source": "curated",
+                "reviewed": false,
+                "confidence": "high",
+                "content": {
+                  "kind": "extracted",
+                  "bundleId": "6a7ced35c41497521b54e0c5",
+                  "bundleName": "Cusco & Machu Picchu, Peru",
+                  "templateTitle": "Machu Picchu",
+                  "edited": true
+                }
+              },
+              "generationStatus": "ok",
+              "userEdited": false,
+              "locked": false,
+              "activity": {
+                "templateId": "mp_citadel",
+                "title": "Machu Picchu citadel",
+                "slot": "half",
+                "summary": "Guided tour of the Machu Picchu citadel (timed entry ticket required).",
+                "intensity": "High",
+                "interests": [
+                  "History and culture",
+                  "Photography",
+                  "Nature"
+                ],
+                "foodNote": "Pack a lunch; no food inside the site."
+              }
+            },
+            {
+              "id": "ex:pc_aguas:machu_picchu:back",
+              "type": "travel",
+              "anchor": {
+                "stopId": "pc_aguas",
+                "contentId": "conn_agc_mp_shuttle"
+              },
+              "placeId": "machu_picchu",
+              "startTime": "18:30",
+              "durationHours": 0.85,
+              "transport": {
+                "connectionId": "conn_agc_mp_shuttle",
+                "mode": "local_shuttle",
+                "inVehicleHours": 0.45,
+                "bufferRulesetId": "buffer_ruleset_v2",
+                "bufferRulesetVersion": 2,
+                "computedUsableTimeLost": 0.85,
+                "estimated": true,
+                "fromPlaceId": "machu_picchu",
+                "toPlaceId": "aguas_calientes",
+                "overnight": false,
+                "arriveDayNumber": 7,
+                "arriveTime": "19:21"
+              },
+              "provenance": {
+                "source": "curated",
+                "reviewed": true,
+                "confidence": "medium"
+              },
+              "generationStatus": "ok",
+              "userEdited": false,
+              "locked": false
+            },
+            {
+              "id": "op:pc_aguas:d0",
+              "type": "activity",
+              "anchor": {
+                "stopId": "pc_aguas",
+                "contentId": "agc_hot_springs"
+              },
+              "placeId": "aguas_calientes",
+              "startTime": "19:21",
+              "durationHours": 1.65,
+              "provenance": {
+                "source": "curated",
+                "reviewed": false,
+                "confidence": "medium",
+                "content": {
+                  "kind": "authored",
+                  "note": "Written for the Door 2 pilot; no standalone content existed."
+                }
+              },
+              "generationStatus": "ok",
+              "userEdited": false,
+              "locked": false,
+              "activity": {
+                "templateId": "agc_hot_springs",
+                "title": "Hot springs & craft market",
+                "slot": "evening",
+                "summary": "Soak in the town's thermal baths, then wander the craft market.",
+                "intensity": "Light",
+                "interests": [
+                  "Relaxation"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "id": "day:8",
+          "dayNumber": 8,
+          "blocks": [
+            {
+              "id": "tr:pc_aguas>pc_olly_return",
+              "type": "travel",
+              "anchor": {
+                "stopId": "pc_olly_return",
+                "contentId": "conn_olly_agc_train"
+              },
+              "placeId": "aguas_calientes",
+              "startTime": "09:00",
+              "durationHours": 2.6,
+              "transport": {
+                "connectionId": "conn_olly_agc_train",
+                "mode": "train",
+                "inVehicleHours": 1.5,
+                "bufferRulesetId": "buffer_ruleset_v2",
+                "bufferRulesetVersion": 2,
+                "computedUsableTimeLost": 2.6,
+                "estimated": true,
+                "fromPlaceId": "aguas_calientes",
+                "toPlaceId": "ollantaytambo",
+                "overnight": false,
+                "arriveDayNumber": 8,
+                "arriveTime": "11:36"
+              },
+              "provenance": {
+                "source": "curated",
+                "reviewed": true,
+                "confidence": "medium"
+              },
+              "generationStatus": "ok",
+              "userEdited": false,
+              "locked": false
+            },
+            {
+              "id": "tr:pc_olly_return>pc_cusco_return",
+              "type": "travel",
+              "anchor": {
+                "stopId": "pc_cusco_return",
+                "contentId": "conn_cuz_olly_road"
+              },
+              "placeId": "ollantaytambo",
+              "startTime": "11:36",
+              "durationHours": 2.05,
+              "transport": {
+                "connectionId": "conn_cuz_olly_road",
+                "mode": "road_private_transfer",
+                "inVehicleHours": 1.5,
+                "bufferRulesetId": "buffer_ruleset_v2",
+                "bufferRulesetVersion": 2,
+                "computedUsableTimeLost": 2.0500000000000003,
+                "estimated": true,
+                "fromPlaceId": "ollantaytambo",
+                "toPlaceId": "cusco",
+                "overnight": false,
+                "arriveDayNumber": 8,
+                "arriveTime": "13:39"
+              },
+              "provenance": {
+                "source": "curated",
+                "reviewed": true,
+                "confidence": "medium"
+              },
+              "generationStatus": "ok",
+              "userEdited": false,
+              "locked": false
+            },
+            {
+              "id": "tr:pc_cusco_return>pc_lima_out",
+              "type": "travel",
+              "anchor": {
+                "stopId": "pc_lima_out",
+                "contentId": "conn_lim_cuz_air"
+              },
+              "placeId": "cusco",
+              "startTime": "13:39",
+              "durationHours": 5,
+              "transport": {
+                "connectionId": "conn_lim_cuz_air",
+                "mode": "flight_domestic",
+                "inVehicleHours": 1.25,
+                "bufferRulesetId": "buffer_ruleset_v2",
+                "bufferRulesetVersion": 2,
+                "computedUsableTimeLost": 5,
+                "estimated": true,
+                "fromPlaceId": "cusco",
+                "toPlaceId": "lima",
+                "overnight": false,
+                "arriveDayNumber": 8,
+                "arriveTime": "18:39"
+              },
+              "provenance": {
+                "source": "curated",
+                "reviewed": true,
+                "confidence": "medium"
+              },
+              "generationStatus": "ok",
+              "userEdited": false,
+              "locked": false
+            },
+            {
+              "id": "op:pc_lima_out:d0",
+              "type": "activity",
+              "anchor": {
+                "stopId": "pc_lima_out",
+                "contentId": "lima_magic_water"
+              },
+              "placeId": "lima",
+              "startTime": "18:39",
+              "durationHours": 2.35,
+              "provenance": {
+                "source": "curated",
+                "reviewed": false,
+                "confidence": "high",
+                "content": {
+                  "kind": "extracted",
+                  "bundleId": "6a7e98494622807c9c3429bf",
+                  "bundleName": "Lima",
+                  "templateTitle": "Magic water circuit",
+                  "edited": true
+                }
+              },
+              "generationStatus": "ok",
+              "userEdited": false,
+              "locked": false,
+              "activity": {
+                "templateId": "lima_magic_water",
+                "title": "Magic Water Circuit",
+                "slot": "evening",
+                "summary": "The lit fountains of the Magic Water Circuit in Parque de la Reserva, then dinner.",
+                "intensity": "Light",
+                "interests": [
+                  "Cities",
+                  "Relaxation"
+                ],
+                "foodNote": "Picarones for dessert."
+              }
+            }
+          ]
+        },
+        {
+          "id": "day:9",
+          "dayNumber": 9,
+          "blocks": [
+            {
+              "id": "tr:pc_lima_out>origin_home",
+              "type": "travel",
+              "anchor": {
+                "stopId": "origin_home",
+                "contentId": "conn_yvr_lim_air"
+              },
+              "placeId": "lima",
+              "startTime": "09:00",
+              "durationHours": 17.95,
+              "transport": {
+                "connectionId": "conn_yvr_lim_air",
+                "mode": "flight_international",
+                "inVehicleHours": 11.2,
+                "layoverHours": 2,
+                "bufferRulesetId": "buffer_ruleset_v2",
+                "bufferRulesetVersion": 2,
+                "computedUsableTimeLost": 17.95,
+                "estimated": true,
+                "fromPlaceId": "lima",
+                "toPlaceId": "vancouver",
+                "overnight": true,
+                "arriveDayNumber": 10,
+                "arriveTime": "00:57"
+              },
+              "provenance": {
+                "source": "curated",
+                "reviewed": true,
+                "confidence": "medium"
+              },
+              "generationStatus": "ok",
+              "userEdited": false,
+              "locked": false
+            }
+          ]
+        },
+        {
+          "id": "day:10",
+          "dayNumber": 10,
+          "blocks": [
+            {
+              "id": "rest:d10",
+              "type": "rest",
+              "anchor": {
+                "stopId": null,
+                "contentId": null
+              },
+              "placeId": null,
+              "startTime": "00:00",
+              "durationHours": 0,
+              "note": "in_transit",
+              "provenance": {
+                "source": "curated",
+                "reviewed": true,
+                "confidence": "medium"
+              },
+              "generationStatus": "ok",
+              "userEdited": false,
+              "locked": false
+            }
+          ]
+        }
+      ],
+      "warnings": [],
+      "versions": {
+        "engine": "door2-skeleton-0.1",
+        "schema": "door2-v8",
+        "content": "pilot-content-v1",
+        "routeData": "pilot-catalogue-v2",
+        "bufferRuleset": "buffer_ruleset_v2@2"
+      },
+      "history": [],
+      "contentGaps": [],
+      "identity": {
+        "version": 1,
+        "used": [
+          "luid_zz1"
+        ],
+        "blocks": {
+          "luid_zz1": {
+            "slot": "full"
+          }
+        },
+        "edits": {}
+      }
+    }
+  },
+  {
+    "envelopeVersion": 2,
+    "id": "zz_test_v7_control",
+    "label": "ZZ-TEST v7 control",
+    "destinationLabel": "ZZ-TEST v7 control",
+    "savedAt": "2026-10-14T12:00:00.000Z",
+    "trip": {
+      "id": "door2:vancouver:PE:10:peru_classic",
+      "status": "valid",
+      "spec": {
+        "originPlaceId": "vancouver",
+        "destination": {
+          "kind": "country",
+          "id": "PE"
+        },
+        "travelMonth": 10,
+        "totalDays": 10,
+        "travellerType": "couple",
+        "interests": [],
+        "pace": "balanced",
+        "budget": "mid",
+        "routeTemplateId": "peru_classic",
+        "stops": [
+          {
+            "id": "pc_lima_in",
+            "placeId": "lima",
+            "placeSource": "recommendation",
+            "nights": 2,
+            "isRequired": false
+          },
+          {
+            "id": "pc_cusco",
+            "placeId": "cusco",
+            "placeSource": "recommendation",
+            "nights": 3,
+            "isRequired": false
+          },
+          {
+            "id": "pc_sacred_valley",
+            "placeId": "ollantaytambo",
+            "placeSource": "recommendation",
+            "nights": 0,
+            "isRequired": false
+          },
+          {
+            "id": "pc_aguas",
+            "placeId": "aguas_calientes",
+            "placeSource": "recommendation",
+            "nights": 1,
+            "isRequired": false
+          },
+          {
+            "id": "pc_olly_return",
+            "placeId": "ollantaytambo",
+            "placeSource": "recommendation",
+            "nights": 0,
+            "isRequired": false
+          },
+          {
+            "id": "pc_cusco_return",
+            "placeId": "cusco",
+            "placeSource": "recommendation",
+            "nights": 0,
+            "isRequired": false
+          },
+          {
+            "id": "pc_lima_out",
+            "placeId": "lima",
+            "placeSource": "recommendation",
+            "nights": 1,
+            "isRequired": false
+          }
+        ],
+        "requiredPlaceIds": [],
+        "choices": {
+          "pinned": [],
+          "rejected": [],
+          "placed": []
+        }
+      },
+      "routePlan": {
+        "familyId": "peru_classic",
+        "variantId": "peru_classic",
+        "source": "authored",
+        "stops": [
+          {
+            "key": "pc_lima_in",
+            "placeId": "lima",
+            "nights": 2,
+            "minNights": 1,
+            "maxNights": 3,
+            "role": "core",
+            "selectionSource": "default",
+            "isRequired": false,
+            "excursions": []
+          },
+          {
+            "key": "pc_cusco",
+            "placeId": "cusco",
+            "nights": 3,
+            "minNights": 2,
+            "maxNights": 4,
+            "role": "core",
+            "selectionSource": "default",
+            "isRequired": false,
+            "excursions": []
+          },
+          {
+            "key": "pc_sacred_valley",
+            "placeId": "ollantaytambo",
+            "nights": 0,
+            "minNights": 0,
+            "maxNights": 1,
+            "role": "core",
+            "selectionSource": "default",
+            "isRequired": false,
+            "excursions": []
+          },
+          {
+            "key": "pc_aguas",
+            "placeId": "aguas_calientes",
+            "nights": 1,
+            "minNights": 1,
+            "maxNights": 2,
+            "role": "core",
+            "selectionSource": "default",
+            "isRequired": false,
+            "excursions": [
+              {
+                "placeId": "machu_picchu",
+                "connectionId": "conn_agc_mp_shuttle",
+                "hoursOnSite": 4
+              }
+            ]
+          },
+          {
+            "key": "pc_olly_return",
+            "placeId": "ollantaytambo",
+            "nights": 0,
+            "minNights": 0,
+            "maxNights": 0,
+            "role": "pass_through",
+            "selectionSource": "default",
+            "isRequired": false,
+            "excursions": []
+          },
+          {
+            "key": "pc_cusco_return",
+            "placeId": "cusco",
+            "nights": 0,
+            "minNights": 0,
+            "maxNights": 0,
+            "role": "pass_through",
+            "selectionSource": "default",
+            "isRequired": false,
+            "excursions": []
+          },
+          {
+            "key": "pc_lima_out",
+            "placeId": "lima",
+            "nights": 1,
+            "minNights": 1,
+            "maxNights": 1,
+            "role": "core",
+            "selectionSource": "default",
+            "isRequired": false,
+            "excursions": []
+          }
+        ],
+        "nightsSource": "auto",
+        "connectionIds": [
+          "conn_yvr_lim_air",
+          "conn_lim_cuz_air",
+          "conn_cuz_olly_road",
+          "conn_olly_agc_train",
+          "conn_olly_agc_train",
+          "conn_cuz_olly_road",
+          "conn_lim_cuz_air",
+          "conn_yvr_lim_air"
+        ],
+        "minDays": 8,
+        "maxDays": 14,
+        "optionals": []
+      },
+      "days": [
+        {
+          "id": "day:1",
+          "dayNumber": 1,
+          "blocks": [
+            {
+              "id": "tr:origin_out>pc_lima_in",
+              "type": "travel",
+              "anchor": {
+                "stopId": "pc_lima_in",
+                "contentId": "conn_yvr_lim_air"
+              },
+              "placeId": "vancouver",
+              "startTime": "09:00",
+              "durationHours": 17.95,
+              "transport": {
+                "connectionId": "conn_yvr_lim_air",
+                "mode": "flight_international",
+                "inVehicleHours": 11.2,
+                "layoverHours": 2,
+                "bufferRulesetId": "buffer_ruleset_v2",
+                "bufferRulesetVersion": 2,
+                "computedUsableTimeLost": 17.95,
+                "estimated": true,
+                "fromPlaceId": "vancouver",
+                "toPlaceId": "lima",
+                "overnight": true,
+                "arriveDayNumber": 2,
+                "arriveTime": "04:57"
+              },
+              "provenance": {
+                "source": "curated",
+                "reviewed": true,
+                "confidence": "medium"
+              },
+              "generationStatus": "ok",
+              "userEdited": false,
+              "locked": false
+            }
+          ]
+        },
+        {
+          "id": "day:2",
+          "dayNumber": 2,
+          "blocks": [
+            {
+              "id": "op:pc_lima_in:d0",
+              "type": "activity",
+              "anchor": {
+                "stopId": "pc_lima_in",
+                "contentId": "lima_miraflores"
+              },
+              "placeId": "lima",
+              "startTime": "09:00",
+              "durationHours": 4,
+              "provenance": {
+                "source": "curated",
+                "reviewed": false,
+                "confidence": "high",
+                "content": {
+                  "kind": "extracted",
+                  "bundleId": "6a7e98494622807c9c3429bf",
+                  "bundleName": "Lima",
+                  "templateTitle": "Miraflores malecón"
+                }
+              },
+              "generationStatus": "ok",
+              "userEdited": false,
+              "locked": false,
+              "activity": {
+                "templateId": "lima_miraflores",
+                "title": "Miraflores clifftops",
+                "slot": "half",
+                "summary": "Walk the Miraflores clifftop parks down to Larcomar and the bay views.",
+                "intensity": "Light",
+                "interests": [
+                  "Cities",
+                  "Food"
+                ],
+                "foodNote": "Try a fresh ceviche."
+              }
+            }
+          ]
+        },
+        {
+          "id": "day:3",
+          "dayNumber": 3,
+          "blocks": [
+            {
+              "id": "op:pc_lima_in:d1",
+              "type": "activity",
+              "anchor": {
+                "stopId": "pc_lima_in",
+                "contentId": "lima_historic_centre"
+              },
+              "placeId": "lima",
+              "startTime": "09:00",
+              "durationHours": 12,
+              "provenance": {
+                "source": "curated",
+                "reviewed": false,
+                "confidence": "high",
+                "content": {
+                  "kind": "extracted",
+                  "bundleId": "6a7e98494622807c9c3429bf",
+                  "bundleName": "Lima",
+                  "templateTitle": "Historic centre"
+                }
+              },
+              "generationStatus": "ok",
+              "userEdited": false,
+              "locked": false,
+              "activity": {
+                "templateId": "lima_historic_centre",
+                "title": "Historic centre & Larco Museum",
+                "slot": "full",
+                "summary": "Plaza Mayor and the cathedral, then the Larco Museum.",
+                "intensity": "Light",
+                "interests": [
+                  "Cities",
+                  "History and culture",
+                  "Food"
+                ],
+                "foodNote": "Try lomo saltado.",
+                "morning": "Plaza Mayor and the cathedral.",
+                "afternoon": "Larco Museum of pre-Columbian art.",
+                "evening": "Dinner in Barranco."
+              }
+            }
+          ]
+        },
+        {
+          "id": "day:4",
+          "dayNumber": 4,
+          "blocks": [
+            {
+              "id": "tr:pc_lima_in>pc_cusco",
+              "type": "travel",
+              "anchor": {
+                "stopId": "pc_cusco",
+                "contentId": "conn_lim_cuz_air"
+              },
+              "placeId": "lima",
+              "startTime": "09:00",
+              "durationHours": 5,
+              "transport": {
+                "connectionId": "conn_lim_cuz_air",
+                "mode": "flight_domestic",
+                "inVehicleHours": 1.25,
+                "bufferRulesetId": "buffer_ruleset_v2",
+                "bufferRulesetVersion": 2,
+                "computedUsableTimeLost": 5,
+                "estimated": true,
+                "fromPlaceId": "lima",
+                "toPlaceId": "cusco",
+                "overnight": false,
+                "arriveDayNumber": 4,
+                "arriveTime": "14:00"
+              },
+              "provenance": {
+                "source": "curated",
+                "reviewed": true,
+                "confidence": "medium"
+              },
+              "generationStatus": "ok",
+              "userEdited": false,
+              "locked": false
+            },
+            {
+              "id": "op:pc_cusco:d0",
+              "type": "activity",
+              "anchor": {
+                "stopId": "pc_cusco",
+                "contentId": "cusco_acclimatise"
+              },
+              "placeId": "cusco",
+              "startTime": "14:00",
+              "durationHours": 7,
+              "provenance": {
+                "source": "curated",
+                "reviewed": false,
+                "confidence": "high",
+                "content": {
+                  "kind": "extracted",
+                  "bundleId": "6a7ced35c41497521b54e0c5",
+                  "bundleName": "Cusco & Machu Picchu, Peru",
+                  "templateTitle": "Cusco acclimatise",
+                  "edited": true
+                }
+              },
+              "generationStatus": "ok",
+              "userEdited": false,
+              "locked": false,
+              "activity": {
+                "templateId": "cusco_acclimatise",
+                "title": "Easy first day at altitude",
+                "slot": "half",
+                "summary": "Take it slowly at 3,400 m: the old city and Qorikancha, then a light dinner.",
+                "intensity": "Light",
+                "interests": [
+                  "History and culture",
+                  "Cities"
+                ],
+                "foodNote": "Quinoa soup and coca tea; avoid heavy meals."
+              }
+            }
+          ]
+        },
+        {
+          "id": "day:5",
+          "dayNumber": 5,
+          "blocks": [
+            {
+              "id": "op:pc_cusco:d1",
+              "type": "activity",
+              "anchor": {
+                "stopId": "pc_cusco",
+                "contentId": "cusco_market_san_blas"
+              },
+              "placeId": "cusco",
+              "startTime": "09:00",
+              "durationHours": 12,
+              "provenance": {
+                "source": "curated",
+                "reviewed": false,
+                "confidence": "medium",
+                "content": {
+                  "kind": "authored",
+                  "note": "Written for the Door 2 pilot; no standalone content existed."
+                }
+              },
+              "generationStatus": "ok",
+              "userEdited": false,
+              "locked": false,
+              "activity": {
+                "templateId": "cusco_market_san_blas",
+                "title": "San Pedro Market, cathedral & San Blas",
+                "slot": "full",
+                "summary": "San Pedro Market, the cathedral on the Plaza de Armas, and the artisan lanes of San Blas.",
+                "intensity": "Light",
+                "interests": [
+                  "Food",
+                  "Cities",
+                  "History and culture"
+                ],
+                "foodNote": "A fresh-fruit juice at the market stalls.",
+                "morning": "Breakfast and fresh juices at San Pedro Market.",
+                "afternoon": "Cusco Cathedral, then the artisan workshops of San Blas.",
+                "evening": "Dinner in San Blas."
+              }
+            }
+          ]
+        },
+        {
+          "id": "day:6",
+          "dayNumber": 6,
+          "blocks": [
+            {
+              "id": "op:pc_cusco:d2",
+              "type": "activity",
+              "anchor": {
+                "stopId": "pc_cusco",
+                "contentId": "cusco_sacsayhuaman"
+              },
+              "placeId": "cusco",
+              "startTime": "09:00",
+              "durationHours": 12,
+              "provenance": {
+                "source": "curated",
+                "reviewed": false,
+                "confidence": "medium",
+                "content": {
+                  "kind": "authored",
+                  "note": "Written for the Door 2 pilot; no standalone content existed."
+                }
+              },
+              "generationStatus": "ok",
+              "userEdited": false,
+              "locked": false,
+              "activity": {
+                "templateId": "cusco_sacsayhuaman",
+                "title": "Sacsayhuamán & the ruins above Cusco",
+                "slot": "full",
+                "summary": "Sacsayhuamán's giant walls, then Q'enqo, Puka Pukara and Tambomachay.",
+                "intensity": "Moderate",
+                "interests": [
+                  "History and culture",
+                  "Photography"
+                ],
+                "foodNote": "Try alpaca or trout at dinner.",
+                "morning": "The fortress of Sacsayhuamán above the city.",
+                "afternoon": "Q'enqo, Puka Pukara and Tambomachay.",
+                "evening": "Dinner near the Plaza de Armas."
+              }
+            }
+          ]
+        },
+        {
+          "id": "day:7",
+          "dayNumber": 7,
+          "blocks": [
+            {
+              "id": "tr:pc_cusco>pc_sacred_valley",
+              "type": "travel",
+              "anchor": {
+                "stopId": "pc_sacred_valley",
+                "contentId": "conn_cuz_olly_road"
+              },
+              "placeId": "cusco",
+              "startTime": "09:00",
+              "durationHours": 2.05,
+              "transport": {
+                "connectionId": "conn_cuz_olly_road",
+                "mode": "road_private_transfer",
+                "inVehicleHours": 1.5,
+                "bufferRulesetId": "buffer_ruleset_v2",
+                "bufferRulesetVersion": 2,
+                "computedUsableTimeLost": 2.0500000000000003,
+                "estimated": true,
+                "fromPlaceId": "cusco",
+                "toPlaceId": "ollantaytambo",
+                "overnight": false,
+                "arriveDayNumber": 7,
+                "arriveTime": "11:03"
+              },
+              "provenance": {
+                "source": "curated",
+                "reviewed": true,
+                "confidence": "medium"
+              },
+              "generationStatus": "ok",
+              "userEdited": false,
+              "locked": false
+            },
+            {
+              "id": "tr:pc_sacred_valley>pc_aguas",
+              "type": "travel",
+              "anchor": {
+                "stopId": "pc_aguas",
+                "contentId": "conn_olly_agc_train"
+              },
+              "placeId": "ollantaytambo",
+              "startTime": "11:03",
+              "durationHours": 2.6,
+              "transport": {
+                "connectionId": "conn_olly_agc_train",
+                "mode": "train",
+                "inVehicleHours": 1.5,
+                "bufferRulesetId": "buffer_ruleset_v2",
+                "bufferRulesetVersion": 2,
+                "computedUsableTimeLost": 2.6,
+                "estimated": true,
+                "fromPlaceId": "ollantaytambo",
+                "toPlaceId": "aguas_calientes",
+                "overnight": false,
+                "arriveDayNumber": 7,
+                "arriveTime": "13:39"
+              },
+              "provenance": {
+                "source": "curated",
+                "reviewed": true,
+                "confidence": "medium"
+              },
+              "generationStatus": "ok",
+              "userEdited": false,
+              "locked": false
+            },
+            {
+              "id": "ex:pc_aguas:machu_picchu:out",
+              "type": "travel",
+              "anchor": {
+                "stopId": "pc_aguas",
+                "contentId": "conn_agc_mp_shuttle"
+              },
+              "placeId": "aguas_calientes",
+              "startTime": "13:39",
+              "durationHours": 0.85,
+              "transport": {
+                "connectionId": "conn_agc_mp_shuttle",
+                "mode": "local_shuttle",
+                "inVehicleHours": 0.45,
+                "bufferRulesetId": "buffer_ruleset_v2",
+                "bufferRulesetVersion": 2,
+                "computedUsableTimeLost": 0.85,
+                "estimated": true,
+                "fromPlaceId": "aguas_calientes",
+                "toPlaceId": "machu_picchu",
+                "overnight": false,
+                "arriveDayNumber": 7,
+                "arriveTime": "14:30"
+              },
+              "provenance": {
+                "source": "curated",
+                "reviewed": true,
+                "confidence": "medium"
+              },
+              "generationStatus": "ok",
+              "userEdited": false,
+              "locked": false
+            },
+            {
+              "id": "ex:pc_aguas:machu_picchu:site",
+              "type": "activity",
+              "anchor": {
+                "stopId": "pc_aguas",
+                "contentId": "mp_citadel"
+              },
+              "placeId": "machu_picchu",
+              "startTime": "14:30",
+              "durationHours": 4,
+              "provenance": {
+                "source": "curated",
+                "reviewed": false,
+                "confidence": "high",
+                "content": {
+                  "kind": "extracted",
+                  "bundleId": "6a7ced35c41497521b54e0c5",
+                  "bundleName": "Cusco & Machu Picchu, Peru",
+                  "templateTitle": "Machu Picchu",
+                  "edited": true
+                }
+              },
+              "generationStatus": "ok",
+              "userEdited": false,
+              "locked": false,
+              "activity": {
+                "templateId": "mp_citadel",
+                "title": "Machu Picchu citadel",
+                "slot": "half",
+                "summary": "Guided tour of the Machu Picchu citadel (timed entry ticket required).",
+                "intensity": "High",
+                "interests": [
+                  "History and culture",
+                  "Photography",
+                  "Nature"
+                ],
+                "foodNote": "Pack a lunch; no food inside the site."
+              }
+            },
+            {
+              "id": "ex:pc_aguas:machu_picchu:back",
+              "type": "travel",
+              "anchor": {
+                "stopId": "pc_aguas",
+                "contentId": "conn_agc_mp_shuttle"
+              },
+              "placeId": "machu_picchu",
+              "startTime": "18:30",
+              "durationHours": 0.85,
+              "transport": {
+                "connectionId": "conn_agc_mp_shuttle",
+                "mode": "local_shuttle",
+                "inVehicleHours": 0.45,
+                "bufferRulesetId": "buffer_ruleset_v2",
+                "bufferRulesetVersion": 2,
+                "computedUsableTimeLost": 0.85,
+                "estimated": true,
+                "fromPlaceId": "machu_picchu",
+                "toPlaceId": "aguas_calientes",
+                "overnight": false,
+                "arriveDayNumber": 7,
+                "arriveTime": "19:21"
+              },
+              "provenance": {
+                "source": "curated",
+                "reviewed": true,
+                "confidence": "medium"
+              },
+              "generationStatus": "ok",
+              "userEdited": false,
+              "locked": false
+            },
+            {
+              "id": "op:pc_aguas:d0",
+              "type": "activity",
+              "anchor": {
+                "stopId": "pc_aguas",
+                "contentId": "agc_hot_springs"
+              },
+              "placeId": "aguas_calientes",
+              "startTime": "19:21",
+              "durationHours": 1.65,
+              "provenance": {
+                "source": "curated",
+                "reviewed": false,
+                "confidence": "medium",
+                "content": {
+                  "kind": "authored",
+                  "note": "Written for the Door 2 pilot; no standalone content existed."
+                }
+              },
+              "generationStatus": "ok",
+              "userEdited": false,
+              "locked": false,
+              "activity": {
+                "templateId": "agc_hot_springs",
+                "title": "Hot springs & craft market",
+                "slot": "evening",
+                "summary": "Soak in the town's thermal baths, then wander the craft market.",
+                "intensity": "Light",
+                "interests": [
+                  "Relaxation"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "id": "day:8",
+          "dayNumber": 8,
+          "blocks": [
+            {
+              "id": "tr:pc_aguas>pc_olly_return",
+              "type": "travel",
+              "anchor": {
+                "stopId": "pc_olly_return",
+                "contentId": "conn_olly_agc_train"
+              },
+              "placeId": "aguas_calientes",
+              "startTime": "09:00",
+              "durationHours": 2.6,
+              "transport": {
+                "connectionId": "conn_olly_agc_train",
+                "mode": "train",
+                "inVehicleHours": 1.5,
+                "bufferRulesetId": "buffer_ruleset_v2",
+                "bufferRulesetVersion": 2,
+                "computedUsableTimeLost": 2.6,
+                "estimated": true,
+                "fromPlaceId": "aguas_calientes",
+                "toPlaceId": "ollantaytambo",
+                "overnight": false,
+                "arriveDayNumber": 8,
+                "arriveTime": "11:36"
+              },
+              "provenance": {
+                "source": "curated",
+                "reviewed": true,
+                "confidence": "medium"
+              },
+              "generationStatus": "ok",
+              "userEdited": false,
+              "locked": false
+            },
+            {
+              "id": "tr:pc_olly_return>pc_cusco_return",
+              "type": "travel",
+              "anchor": {
+                "stopId": "pc_cusco_return",
+                "contentId": "conn_cuz_olly_road"
+              },
+              "placeId": "ollantaytambo",
+              "startTime": "11:36",
+              "durationHours": 2.05,
+              "transport": {
+                "connectionId": "conn_cuz_olly_road",
+                "mode": "road_private_transfer",
+                "inVehicleHours": 1.5,
+                "bufferRulesetId": "buffer_ruleset_v2",
+                "bufferRulesetVersion": 2,
+                "computedUsableTimeLost": 2.0500000000000003,
+                "estimated": true,
+                "fromPlaceId": "ollantaytambo",
+                "toPlaceId": "cusco",
+                "overnight": false,
+                "arriveDayNumber": 8,
+                "arriveTime": "13:39"
+              },
+              "provenance": {
+                "source": "curated",
+                "reviewed": true,
+                "confidence": "medium"
+              },
+              "generationStatus": "ok",
+              "userEdited": false,
+              "locked": false
+            },
+            {
+              "id": "tr:pc_cusco_return>pc_lima_out",
+              "type": "travel",
+              "anchor": {
+                "stopId": "pc_lima_out",
+                "contentId": "conn_lim_cuz_air"
+              },
+              "placeId": "cusco",
+              "startTime": "13:39",
+              "durationHours": 5,
+              "transport": {
+                "connectionId": "conn_lim_cuz_air",
+                "mode": "flight_domestic",
+                "inVehicleHours": 1.25,
+                "bufferRulesetId": "buffer_ruleset_v2",
+                "bufferRulesetVersion": 2,
+                "computedUsableTimeLost": 5,
+                "estimated": true,
+                "fromPlaceId": "cusco",
+                "toPlaceId": "lima",
+                "overnight": false,
+                "arriveDayNumber": 8,
+                "arriveTime": "18:39"
+              },
+              "provenance": {
+                "source": "curated",
+                "reviewed": true,
+                "confidence": "medium"
+              },
+              "generationStatus": "ok",
+              "userEdited": false,
+              "locked": false
+            },
+            {
+              "id": "op:pc_lima_out:d0",
+              "type": "activity",
+              "anchor": {
+                "stopId": "pc_lima_out",
+                "contentId": "lima_magic_water"
+              },
+              "placeId": "lima",
+              "startTime": "18:39",
+              "durationHours": 2.35,
+              "provenance": {
+                "source": "curated",
+                "reviewed": false,
+                "confidence": "high",
+                "content": {
+                  "kind": "extracted",
+                  "bundleId": "6a7e98494622807c9c3429bf",
+                  "bundleName": "Lima",
+                  "templateTitle": "Magic water circuit",
+                  "edited": true
+                }
+              },
+              "generationStatus": "ok",
+              "userEdited": false,
+              "locked": false,
+              "activity": {
+                "templateId": "lima_magic_water",
+                "title": "Magic Water Circuit",
+                "slot": "evening",
+                "summary": "The lit fountains of the Magic Water Circuit in Parque de la Reserva, then dinner.",
+                "intensity": "Light",
+                "interests": [
+                  "Cities",
+                  "Relaxation"
+                ],
+                "foodNote": "Picarones for dessert."
+              }
+            }
+          ]
+        },
+        {
+          "id": "day:9",
+          "dayNumber": 9,
+          "blocks": [
+            {
+              "id": "tr:pc_lima_out>origin_home",
+              "type": "travel",
+              "anchor": {
+                "stopId": "origin_home",
+                "contentId": "conn_yvr_lim_air"
+              },
+              "placeId": "lima",
+              "startTime": "09:00",
+              "durationHours": 17.95,
+              "transport": {
+                "connectionId": "conn_yvr_lim_air",
+                "mode": "flight_international",
+                "inVehicleHours": 11.2,
+                "layoverHours": 2,
+                "bufferRulesetId": "buffer_ruleset_v2",
+                "bufferRulesetVersion": 2,
+                "computedUsableTimeLost": 17.95,
+                "estimated": true,
+                "fromPlaceId": "lima",
+                "toPlaceId": "vancouver",
+                "overnight": true,
+                "arriveDayNumber": 10,
+                "arriveTime": "00:57"
+              },
+              "provenance": {
+                "source": "curated",
+                "reviewed": true,
+                "confidence": "medium"
+              },
+              "generationStatus": "ok",
+              "userEdited": false,
+              "locked": false
+            }
+          ]
+        },
+        {
+          "id": "day:10",
+          "dayNumber": 10,
+          "blocks": [
+            {
+              "id": "rest:d10",
+              "type": "rest",
+              "anchor": {
+                "stopId": null,
+                "contentId": null
+              },
+              "placeId": null,
+              "startTime": "00:00",
+              "durationHours": 0,
+              "note": "in_transit",
+              "provenance": {
+                "source": "curated",
+                "reviewed": true,
+                "confidence": "medium"
+              },
+              "generationStatus": "ok",
+              "userEdited": false,
+              "locked": false
+            }
+          ]
+        }
+      ],
+      "warnings": [],
+      "versions": {
+        "engine": "door2-skeleton-0.1",
+        "schema": "door2-v7",
+        "content": "pilot-content-v1",
+        "routeData": "pilot-catalogue-v2",
+        "bufferRuleset": "buffer_ruleset_v2@2"
+      },
+      "history": [],
+      "contentGaps": []
+    }
+  }
+]
