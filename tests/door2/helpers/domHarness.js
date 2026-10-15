@@ -52,17 +52,42 @@ const { rmSync, readFileSync } = await import('node:fs');
 
 const root = fileURLToPath(new URL('../../../', import.meta.url));
 
-let cachedModule = null;
+// One bundle per variant: the plain page, the F6-controlled page, and the
+// handler-exposed page used by the packet 1a lock tests.
+const cachedModules = new Map();
 
 /** Bundle the real Door2Plan page (and a few lib exports flow tests need for
  * setup/assertions) with esbuild, exactly as tests/door2/moveUi.test.js does,
  * so flow tests exercise the shipped component, not a reimplementation. */
-export async function loadDoor2PlanModule({ f6Control } = {}) {
-  if (cachedModule) return cachedModule;
-  const outfile = fileURLToPath(new URL(`./.flow.bundle.${process.pid}.mjs`, import.meta.url));
+export async function loadDoor2PlanModule({ f6Control, exposeHandlers = false } = {}) {
+  const variant = f6Control ? 'f6' : exposeHandlers ? 'expose' : 'plain';
+  if (cachedModules.has(variant)) return cachedModules.get(variant);
+  const outfile = fileURLToPath(new URL(`./.flow.bundle.${variant}.${process.pid}.mjs`, import.meta.url));
   if (f6Control) globalThis.__f6Harness = f6Control;
+  // A test-only seam. It publishes the REAL rendered component's handlers and state on
+  // globalThis so a test can call a command boundary that no UI route reaches — the
+  // apply handler on a locked trip, which every preview entry is gated against. It adds
+  // nothing to production: the transform is applied only by this harness, only when a
+  // test asks for it, and it calls no handler itself.
+  const exposePlugin = {
+    name: 'door2-expose-handlers',
+    setup(build) {
+      build.onLoad({ filter: /pages\/Door2Plan\.jsx$/ }, (args) => {
+        const src = readFileSync(args.path, 'utf8');
+        const anchor = '  const evidenceStatus = activeTrip ? inspectEvidence(activeTrip) : { ok: true };';
+        if (!src.includes(anchor)) throw new Error('domHarness: the handler-expose anchor is gone; fix the seam, do not skip it');
+        return {
+          contents: src.replace(
+            anchor,
+            `  globalThis.__door2 = { handleUseProposal, handleSwap, handleUndo, handleSaveDraft, handleOpenRefine, showRefine, activeTrip, tripLock, setDeparture, blockedCommand };\n${anchor}`
+          ),
+          loader: 'jsx'
+        };
+      });
+    }
+  };
   await build({
-    plugins: f6Control ? [{ name: 'f6-controlled-inputs', setup(build) {
+    plugins: exposeHandlers ? [exposePlugin] : f6Control ? [{ name: 'f6-controlled-inputs', setup(build) {
       build.onLoad({ filter: /connectionBuild\.js$/ }, args => ({ contents: readFileSync(args.path, 'utf8').replace('const c = options.connectionContext;', `const c = globalThis.__f6Harness.context ? { ...options.connectionContext, ...globalThis.__f6Harness.context } : options.connectionContext;
         if (globalThis.__f6Harness.data) data = globalThis.__f6Harness.data;
         if (globalThis.__f6Harness.content) options = { ...options, content: globalThis.__f6Harness.content };
@@ -102,9 +127,10 @@ export async function loadDoor2PlanModule({ f6Control } = {}) {
     packages: 'external',
     logLevel: 'silent',
   });
-  cachedModule = await import(outfile);
+  const mod = await import(outfile);
   rmSync(outfile);
-  return cachedModule;
+  cachedModules.set(variant, mod);
+  return mod;
 }
 
 export function resetLocation(path = '/plan?key=door2') {

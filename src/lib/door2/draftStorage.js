@@ -323,6 +323,22 @@ function v8DisplayFailure(trip) {
   if (!spec.stops.every((s) => isPlaceRefOrAbsent(s.placeId))) return 'spec.stops[].placeId';
   if (!spec.stops.every((s) => isInt(s.nights))) return 'spec.stops[].nights';
   if (!isPlaceRefOrAbsent(spec.originPlaceId)) return 'spec.originPlaceId';
+  // Restored into the Refine form by formFromSpec (Door2Plan.jsx:169-170) with `?? []`,
+  // which does not protect a non-array object; RefineSheet then calls .includes on it
+  // (:1515, :1548). The Refine opener is schema-gated too, but an accepted record must
+  // not be able to crash the page even if another route to the form appears.
+  if (!isAbsent(spec.interests)) {
+    if (!Array.isArray(spec.interests)) return 'spec.interests';
+    if (!spec.interests.every((v) => typeof v === 'string')) return 'spec.interests[]';
+  }
+  if (!isAbsent(spec.requiredPlaceIds)) {
+    if (!Array.isArray(spec.requiredPlaceIds)) return 'spec.requiredPlaceIds';
+    if (!spec.requiredPlaceIds.every((v) => typeof v === 'string')) return 'spec.requiredPlaceIds[]';
+  }
+  // Also restored into the form and rendered by the sheet's own controls.
+  if (!isTextOrAbsent(spec.travellerType)) return 'spec.travellerType';
+  if (!isTextOrAbsent(spec.pace)) return 'spec.pace';
+  if (!isAbsent(spec.travelMonth) && !isInt(spec.travelMonth)) return 'spec.travelMonth';
 
   // addableOptionalsFor does (routePlan.optionals ?? []).map(o => o.optionalId): the ??
   // catches null and undefined but not a non-array object, which then throws on .map.

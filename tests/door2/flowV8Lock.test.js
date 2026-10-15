@@ -1,9 +1,16 @@
 // Q8 packet 1a: the read-only lock on a door2-v8 record, driven through the real
-// Door2Plan page. Build brief draft 7 §5.3, tests L1-L12.
+// Door2Plan page. Build brief draft 7 §5.3, tests L1-L13.
 //
 // Every v8 record here is seeded directly into localStorage, because no client can
 // produce one: the writer still stamps door2-v7 and refuses anything carrying identity.
-// That is the point of the packet — the reader and the lock ship before the writer.
+//
+// REVISED after the diff review of 7e85395 (R2). The first version of this file asserted
+// that storage bytes were unchanged and that the standing lock notice was still on
+// screen. Neither proves refusal: a bounded edit changes the in-memory itinerary and
+// writes nothing, and the standing notice is present for the whole of a locked trip's
+// life. Removing the real Swap guard left all 15 tests green. Every attempted edit below
+// now asserts the ITINERARY ITSELF is unchanged, each with a v7 control proving the same
+// action really does change it when the trip is not locked.
 import { test, after } from 'node:test';
 import assert from 'node:assert/strict';
 import {
@@ -15,15 +22,14 @@ import {
   window
 } from './helpers/domHarness.js';
 
-const M = await loadDoor2PlanModule();
-// Let any pending timer or animation frame scheduled by the last test flush while the
-// jsdom window still exists; closing it first leaves a re-render reading a trip that is
-// already gone, which node:test reports as activity after the test ended.
+// The handler-exposed variant: it publishes the real component's handlers and state so
+// L2b can call the apply boundary, which no UI route reaches on a locked trip.
+const M = await loadDoor2PlanModule({ exposeHandlers: true });
 after(async () => {
   await new Promise((resolve) => setTimeout(resolve, 50));
   await teardown();
 });
-const { render, screen, cleanup, within } = await import('@testing-library/react');
+const { render, screen, cleanup, within, act, fireEvent } = await import('@testing-library/react');
 const userEvent = (await import('@testing-library/user-event')).default;
 
 const KEY = 'door2_drafts_v1';
@@ -58,7 +64,6 @@ const NOTICE = {
   unknown: 'This trip was saved by a newer version of the planner, so it opens read-only.'
 };
 
-/** Mount the real page over storage holding exactly these entries. */
 function mountOver(entries) {
   cleanup();
   resetLocation('/plan?key=door2');
@@ -70,176 +75,249 @@ function mountOver(entries) {
 
 const rowOf = (label) => screen.getByText(label).closest('li');
 
-/** The sentence is on screen at least once. A refused command deliberately shows it
- * twice — the standing lock notice stays, and the inline edit error repeats it — so an
- * exact-one query would fail on correct behaviour. */
+/** The sentence is on screen at least once. A refused command shows it twice — the
+ * standing notice stays and the inline edit error repeats it — so an exact-one query
+ * would fail on correct behaviour. */
 const shows = (text) => assert.ok(screen.queryAllByText(text).length > 0, `expected on screen: ${text}`);
 const absent = (text) => assert.equal(screen.queryAllByText(text).length, 0, `expected absent: ${text}`);
 
-/** Mount over one v8 record and open it through the real "Continue" action. */
-async function openV8(trip, opts) {
-  const { user } = mountOver([envelope(trip, opts)]);
-  await user.click(await screen.findByRole('button', { name: 'Continue' }));
-  await screen.findByText('Your trip at a glance');
-  return { user, bytes: raw() };
+/**
+ * What the traveller can actually see of the itinerary. This is the observable that
+ * distinguishes a refused edit from a successful one: a bounded edit writes no storage,
+ * so storage equality proves nothing, but it does change what is rendered.
+ */
+function itinerarySignature() {
+  return Array.from(document.querySelectorAll('li'))
+    .map((li) => li.textContent.trim())
+    .filter((t) => t.length > 0)
+    .join('\u001f');
 }
 
+/** The structural sheet's own close control; it exists only while a sheet is open.
+ * StructureSheet has no dialog role, so role-based queries cannot see it. */
+const sheetOpen = () => screen.queryAllByRole('button', { name: '×' }).length > 0;
+
+async function openRecord(entries, label) {
+  const { user } = mountOver(entries);
+  await user.click(within(rowOf(label)).getByRole('button', { name: 'Continue' }));
+  await screen.findByText('Your trip at a glance');
+  return { user, bytes: raw(), before: itinerarySignature() };
+}
+
+const openV8 = (trip, opts) => openRecord([envelope(trip, opts)], opts?.label ?? 'Peru v8');
+
 const unchanged = (bytes, what) => assert.equal(raw(), bytes, `${what}: storage is unchanged`);
+const itineraryUnchanged = (before, what) =>
+  assert.equal(itinerarySignature(), before, `${what}: the rendered itinerary is unchanged`);
 
 // ---------------------------------------------------------------------------
-// L1: a valid v8 record renders, shows its sentence, and refuses every edit
+// L0: the controls these tests drive really do work on an unlocked trip
+//
+// Without this, every "refused" assertion below could pass on a page where the action
+// never worked at all. Each L-test that attempts an edit names its control here.
 
-test('L1: a valid v8 trip renders read-only, with the row-1 sentence and no working edit', async () => {
-  const trip = stamp('door2-v8', PERU, { identity: IDENTITY, history: [] });
-  const { user, bytes } = await openV8(trip);
-
-  shows(NOTICE.valid);
-  // The itinerary really did render: this is not a refusal page.
-  assert.ok(screen.getByText('Your trip at a glance'));
-
-  // Swap, from the activity row.
+test('L0 (control): on a v7 record, Swap changes the itinerary and the sheet opens', async () => {
+  const { user, before } = await openRecord(
+    [envelope(stamp('door2-v7', PERU, { history: [] }), { id: 'seven', label: 'Peru v7' })],
+    'Peru v7'
+  );
   const swap = screen.queryAllByRole('button', { name: 'Swap' });
-  assert.ok(swap.length > 0, 'the control trip has at least one activity row');
+  assert.ok(swap.length > 0, 'the control trip offers Swap');
   await user.click(swap[0]);
+  assert.notEqual(itinerarySignature(), before, 'Swap really does change the itinerary on v7');
+
+  // And a structural entry really does open a sheet on v7.
+  // Same preparation as L1 and L2a, so the comparison is like for like.
+  await act(async () => { globalThis.__door2.setDeparture('confirmed'); });
+  const chips = screen.queryAllByRole('button', { name: /^\d+ nights?$/ });
+  assert.ok(chips.length > 0);
+  await user.click(chips[0]);
+  assert.ok(sheetOpen(), 'the structural sheet really does open on v7 once departure is confirmed');
+});
+
+// ---------------------------------------------------------------------------
+// L1: a valid v8 record renders, shows its sentence, and no edit takes effect
+
+test('L1: a valid v8 trip renders read-only and no attempted edit changes it', async () => {
+  const trip = stamp('door2-v8', PERU, { identity: IDENTITY, history: [] });
+  const { user, bytes, before } = await openV8(trip);
+
   shows(NOTICE.valid);
+  assert.ok(screen.getByText('Your trip at a glance'), 'the itinerary really rendered');
+
+  // Swap — the action whose guard removal left the whole first version of this file green.
+  const swap = screen.queryAllByRole('button', { name: 'Swap' });
+  assert.ok(swap.length > 0, 'the control trip offers Swap');
+  await user.click(swap[0]);
+  itineraryUnchanged(before, 'a refused swap');
+  absent('Swapped');
   unchanged(bytes, 'a refused swap');
 
-  // A structural entry point: the nights chip.
+  // A structural entry point, with the departure consent already given so the schema
+  // lock is the only thing left that can refuse.
+  await act(async () => { globalThis.__door2.setDeparture('confirmed'); });
   const chips = screen.queryAllByRole('button', { name: /^\d+ nights?$/ });
-  assert.ok(chips.length > 0, 'the control trip has nights chips');
+  assert.ok(chips.length > 0);
   await user.click(chips[0]);
-  assert.equal(screen.queryByRole('dialog'), null, 'no structural sheet opens on a locked trip');
-  unchanged(bytes, 'a refused nights entry');
+  assert.equal(sheetOpen(), false, 'no structural sheet opens on a locked trip');
+  itineraryUnchanged(before, 'a refused nights entry');
 
   // Save.
   await user.click(screen.getByRole('button', { name: 'Save' }));
+  absent('Saved');
   unchanged(bytes, 'a refused save');
 });
 
 // ---------------------------------------------------------------------------
-// L2a / L2b: the preview entry and the apply boundary refuse independently
+// L2a / L2b: the preview entries and the apply boundary refuse independently
 
-test('L2a: a structural preview entry on a locked v8 trip is refused and writes nothing', async () => {
+test('L2a: no route to a proposal opens on a locked v8 trip', async () => {
   const trip = stamp('door2-v8', PERU, { identity: IDENTITY, history: [] });
-  const { user, bytes } = await openV8(trip);
+  const { user, bytes, before } = await openV8(trip);
+  // Confirm the departure first. A reopened trip has no confirmation, so an ungated
+  // chip would stop at the departure prompt and never reach the sheet — which would
+  // make every assertion below pass with the schema rule removed.
+  await act(async () => { globalThis.__door2.setDeparture('confirmed'); });
+  let clicked = 0;
   for (const chip of screen.queryAllByRole('button', { name: /^\d+ nights?$/ })) {
     await user.click(chip);
-    assert.equal(screen.queryByRole('dialog'), null, 'no sheet opens');
+    clicked += 1;
+    assert.equal(sheetOpen(), false, 'no sheet opens');
+    assert.equal(screen.queryAllByRole('button', { name: /^Use this/ }).length, 0, 'no proposal is offered');
   }
+  assert.ok(clicked > 0, 'at least one real entry point was exercised');
+  itineraryUnchanged(before, 'refused previews');
   unchanged(bytes, 'refused previews');
 });
 
-test('L2b: every route to a proposal is gated, so the apply boundary is unreachable', async () => {
-  // Draft 7 §6 mutation 3 removes blockedSchema() from handleUseProposal. It fails no
-  // test, and this is why: with every preview entry gated, nothing on a locked trip can
-  // reach the proposals stage, so the apply handler's own check is defence in depth that
-  // the page cannot exercise. Recorded as a finding in the implementation report rather
-  // than removed — the gate is correct, and it is what stops any future route to a
-  // proposal from bypassing the lock.
-  //
-  // What this test can establish, and does: no route reaches the stage. Each entry below
-  // is one of the handlers the §3.1 enumeration found, driven for real.
+test('L2b: the real apply handler refuses a locked trip, called directly', async () => {
+  // No UI route reaches apply on a locked trip, because every preview entry is gated.
+  // That makes the apply handler's own guard defence in depth — and the brief's §5.3
+  // allows exercising it in a controlled harness rather than counting it untested. The
+  // harness publishes the real component's handler; nothing about production changes.
+  const proposal = M.previewAdjustNights(PERU, PERU.routePlan.stops[0].key, 1, { generatedAt: new Date().toISOString() });
+  assert.equal(proposal.ok, true, 'the control proposal must build');
+  assert.ok(proposal.proposals?.[0], 'and must carry a proposal');
+
   const trip = stamp('door2-v8', PERU, { identity: IDENTITY, history: [] });
-  const { user, bytes } = await openV8(trip);
+  const { before } = await openV8(trip);
 
-  const routes = [
-    ['nights chip', () => screen.queryAllByRole('button', { name: /^\d+ nights?$/ })],
-    ['day-trip or optional entry', () => screen.queryAllByRole('button', { name: /Add|Remove|Day trip/i })]
-  ];
+  const api = globalThis.__door2;
+  assert.ok(api && typeof api.handleUseProposal === 'function', 'the harness seam is present');
+  assert.ok(api.tripLock, 'the loaded trip really is schema-locked');
+  const activeBefore = clone(api.activeTrip);
 
-  let clicked = 0;
-  for (const [name, find] of routes) {
-    for (const el of find()) {
-      await user.click(el);
-      clicked += 1;
-      assert.equal(screen.queryByRole('dialog'), null, `${name}: no sheet opens on a locked trip`);
-      assert.equal(screen.queryByText('Use this'), null, `${name}: no proposal is offered`);
-    }
-  }
-  assert.ok(clicked > 0, 'at least one real entry point was exercised');
-  unchanged(bytes, 'no route to apply wrote anything');
-  shows(NOTICE.valid);
+  // The departure consent is a separate gate; confirm it so the only thing left that can
+  // refuse is the schema lock.
+  await act(async () => { api.setDeparture('confirmed'); });
+  await act(async () => { globalThis.__door2.handleUseProposal(proposal.proposals[0]); });
+
+  assert.deepStrictEqual(clone(globalThis.__door2.activeTrip), activeBefore, 'the active trip is unchanged by a refused apply');
+  itineraryUnchanged(before, 'a refused apply');
+  absent('Trip updated');
 });
 
 // ---------------------------------------------------------------------------
-// L3: rebuild and refine paths
+// L3: Refine — the opener mounts an edit form built from the restored spec
 
-test('L3: Refine and rebuild entry points are refused on a locked v8 trip', async () => {
+// Asserted through the harness seam on the exposed state flag rather than by querying
+// the DOM after a click. The Refine sheet is a full-screen overlay, and once it mounts
+// any further DOM work hangs the harness — which turns a clean named failure into a
+// file-level SIGKILL and hides which test caught the regression. Reading showRefine
+// settles the question before anything can mount.
+test('L3: Refine is refused on a locked v8 trip and the form never opens', async () => {
   const trip = stamp('door2-v8', PERU, { identity: IDENTITY, history: [] });
-  const { user, bytes } = await openV8(trip);
-  const refine = screen.queryByRole('button', { name: /Refine/i });
-  if (refine) {
-    await user.click(refine);
-    unchanged(bytes, 'a refused refine');
+  await openV8(trip);
+  const api = globalThis.__door2;
+  assert.ok(api.tripLock, 'the loaded trip really is schema-locked');
+  assert.equal(api.showRefine, false, 'the form starts closed');
+  await act(async () => { api.handleOpenRefine(); });
+  assert.equal(globalThis.__door2.showRefine, false, 'the refused opener never sets the form open');
+  assert.equal(screen.queryByText('Must include'), null, 'and no form is on screen');
+});
+
+test('L3b (control): Refine opens the form on a v7 record', async () => {
+  const { user } = await openRecord(
+    [envelope(stamp('door2-v7', PERU, { history: [] }), { id: 'seven', label: 'Peru v7' })],
+    'Peru v7'
+  );
+  await act(async () => { globalThis.__door2.handleOpenRefine(); });
+  assert.equal(globalThis.__door2.showRefine, true, 'the opener really does work on v7, so L3 is not vacuous');
+  assert.ok(screen.queryByText('Must include'), 'and the form is on screen');
+});
+
+// R1: an accepted v8 record whose restored form arrays are malformed must be refused by
+// the reader, so the form can never be built from them even if a route to it appears.
+test('L3c: malformed refine-form fields are refused by the reader, not left to crash', async () => {
+  for (const field of ['interests', 'requiredPlaceIds']) {
+    const trip = stamp('door2-v8', PERU, { identity: IDENTITY, history: [] });
+    trip.spec[field] = {};
+    mountOver([envelope(trip, { id: 'bad', label: 'Peru bad' })]);
+    fireEvent.click(within(rowOf('Peru bad')).getByRole('button', { name: 'Continue' }));
+    assert.equal(screen.queryByText('Your trip at a glance'), null, `spec.${field}: the itinerary never renders`);
   }
-  shows(NOTICE.valid);
 });
 
 // ---------------------------------------------------------------------------
-// L4 / L4c: Undo, non-vacuously — with a positive control that proves it is reachable
+// L4 / L4c: Undo, with a control proving the fixture reaches it
 
 const withHistory = (schema, extra = {}) => {
   const base = clone(PERU);
-  // Undo renders only when history is non-empty, and normal saves strip history, so a
-  // seeded record is the only way to reach the control. A history entry is a trip
-  // snapshot carrying history: [] (edit.js: entries that kept their own stacks doubled
-  // the saved size per edit) — not a {label, trip} wrapper.
+  // A history entry is a trip snapshot carrying history: [] (edit.js), not a
+  // {label, trip} wrapper. Normal saves strip history, so only a seeded record reaches
+  // the Undo control.
   base.history = [{ ...clone(PERU), history: [] }];
   return stamp(schema, base, extra);
 };
 
-test('L4c (positive control): the same fixture stamped v7 reaches a working Undo', async () => {
-  const { user } = mountOver([envelope(withHistory('door2-v7'), { id: 'd_v7', label: 'Peru v7' })]);
-  await user.click(await screen.findByRole('button', { name: 'Continue' }));
-  await screen.findByText('Your trip at a glance');
+test('L4c (control): the same fixture stamped v7 reaches a working Undo', async () => {
+  const { user, before } = await openRecord(
+    [envelope(withHistory('door2-v7'), { id: 'd_v7', label: 'Peru v7' })],
+    'Peru v7'
+  );
   const undo = screen.getByRole('button', { name: 'Undo last change' });
-  assert.ok(undo, 'the v7 fixture reaches Undo, so L4 is not vacuous');
   await user.click(undo);
-  // The v7 path is unlocked: the click is not refused by the schema lock.
-  absent(NOTICE.valid);
-  absent(NOTICE.absent);
+  // The history entry is consumed, so the control goes away: a real undo happened.
+  assert.equal(screen.queryByRole('button', { name: 'Undo last change' }), null, 'the undo really took effect on v7');
+  assert.equal(itinerarySignature(), before, 'and it restored the same itinerary, since the snapshot is identical');
 });
 
-test('L4: Undo on a locked v8 trip is refused, using the same history-bearing fixture', async () => {
+test('L4: Undo on a locked v8 trip is refused', async () => {
   const trip = withHistory('door2-v8', { identity: IDENTITY });
   const { user, bytes } = await openV8(trip);
   await user.click(screen.getByRole('button', { name: 'Undo last change' }));
-  // The standing lock notice is on screen for the whole of a locked trip's life, so its
-  // presence after the click proves nothing. What proves the refusal is that the undo
-  // did not happen: the history entry is still there, so the control is still offered,
-  // and nothing reports a completed undo.
-  assert.ok(
-    screen.queryByRole('button', { name: 'Undo last change' }),
-    'the history entry was not consumed, so Undo is still offered'
-  );
+  // The standing notice is always on screen, so what proves the refusal is that the
+  // history entry was not consumed and no undo was reported.
+  assert.ok(screen.queryByRole('button', { name: 'Undo last change' }), 'the history entry survived, so Undo is still offered');
   absent('Undone');
   unchanged(bytes, 'a refused undo');
 });
 
 // ---------------------------------------------------------------------------
-// L5: Save refuses by name
+// L5: Save
 
 test('L5: Save on a loaded v8 trip is refused and the stored bytes do not change', async () => {
   const trip = stamp('door2-v8', PERU, { identity: IDENTITY, history: [] });
   const { user, bytes } = await openV8(trip);
   await user.click(screen.getByRole('button', { name: 'Save' }));
-  assert.equal(screen.queryByText('Saved'), null, 'nothing reports a successful save');
+  absent('Saved');
   unchanged(bytes, 'a refused save');
 });
 
 // ---------------------------------------------------------------------------
 // L6 / L7: every identity row locks, each with its own sentence
 
-test('L6: a v8 record with identity absent opens and is locked', async () => {
+test('L6: a v8 record with identity absent opens, is locked, and no edit takes effect', async () => {
   const trip = stamp('door2-v8', PERU, { history: [] });
   assert.equal('identity' in trip, false);
-  const { user, bytes } = await openV8(trip);
+  const { user, bytes, before } = await openV8(trip);
   shows(NOTICE.absent);
   await user.click(screen.queryAllByRole('button', { name: 'Swap' })[0]);
+  itineraryUnchanged(before, 'a refused swap on row 3');
   unchanged(bytes, 'a refused swap on row 3');
 });
 
-test('L7: rows 2, 4 and 5 each lock with their own sentence', async () => {
+test('L7: rows 2, 4 and 5 each lock with their own sentence and refuse edits', async () => {
   const rows = [
     [EMPTY_IDENTITY, NOTICE.valid],
     [{ version: 1, used: 'not-an-array', blocks: {}, edits: {} }, NOTICE.malformed],
@@ -247,25 +325,25 @@ test('L7: rows 2, 4 and 5 each lock with their own sentence', async () => {
   ];
   for (const [identity, notice] of rows) {
     const trip = stamp('door2-v8', PERU, { identity, history: [] });
-    const { user, bytes } = await openV8(trip);
+    const { user, bytes, before } = await openV8(trip);
     shows(notice);
     await user.click(screen.queryAllByRole('button', { name: 'Swap' })[0]);
+    itineraryUnchanged(before, 'a refused swap');
     unchanged(bytes, 'a refused swap');
   }
 });
 
 // ---------------------------------------------------------------------------
-// L8 / L8b: the lock does not leak
+// L8 / L8b: the lock does not leak — both transitions on ONE component instance
 
-test('L8: a freshly built trip after a locked v8 open is fully functional', async () => {
+test('L8: a trip built after a locked v8 open is fully functional, same instance', async () => {
   const trip = stamp('door2-v8', PERU, { identity: IDENTITY, history: [] });
   const { user } = await openV8(trip);
   shows(NOTICE.valid);
 
-  // "Start a new trip" (handleStartOver -> confirmFreshStart, which needs no
-  // confirmation because this fixture carries no traveller work) is the real route from
-  // a live locked trip back to the intake wizard, inside the same mounted component.
-  // The lock lives on tripResult, which the next build replaces, so it must not survive.
+  // "Start a new trip" (handleStartOver -> confirmFreshStart; no confirmation is needed
+  // because this fixture carries no traveller work) is the real route from a live locked
+  // trip back to intake, inside the same mounted component.
   await user.click(screen.getByRole('button', { name: 'Start a new trip' }));
   await user.click(await screen.findByText('Peru'));
   await user.click(screen.getByRole('button', { name: 'Yes, from Vancouver' }));
@@ -274,33 +352,46 @@ test('L8: a freshly built trip after a locked v8 open is fully functional', asyn
 
   absent(NOTICE.valid);
   absent(NOTICE.absent);
+  // "Fully functional" has to mean an edit actually lands, not just that no sentence shows.
+  const fresh = itinerarySignature();
   const swap = screen.queryAllByRole('button', { name: 'Swap' });
   assert.ok(swap.length > 0, 'the newly built trip offers a real edit control');
   await user.click(swap[0]);
-  absent(NOTICE.valid);
-  // The edit actually went through on the fresh trip.
-  assert.equal(screen.queryAllByText(NOTICE.absent).length, 0, 'no lock leaked into the new trip');
+  assert.notEqual(itinerarySignature(), fresh, 'the edit really landed on the fresh trip');
 });
 
-test('L8b: a legacy v7 load after a locked v8 open is fully editable', async () => {
-  const { user } = mountOver([
+test('L8b: a v7 record opened after a locked v8, on the same component instance, is editable', async () => {
+  const entries = [
     envelope(stamp('door2-v8', PERU, { identity: IDENTITY, history: [] }), { id: 'eight', label: 'Peru v8' }),
     envelope(stamp('door2-v7', PERU, { history: [] }), { id: 'seven', label: 'Peru v7' })
-  ]);
+  ];
+  const { user } = mountOver(entries);
   await user.click(within(rowOf('Peru v8')).getByRole('button', { name: 'Continue' }));
   await screen.findByText('Your trip at a glance');
   shows(NOTICE.valid);
 
-  // Reopen the list and load the v7 record. The previously held lock must be gone.
-  cleanup();
-  const second = mountOver([
-    envelope(stamp('door2-v8', PERU, { identity: IDENTITY, history: [] }), { id: 'eight', label: 'Peru v8' }),
-    envelope(stamp('door2-v7', PERU, { history: [] }), { id: 'seven', label: 'Peru v7' })
-  ]);
-  await second.user.click(within(rowOf('Peru v7')).getByRole('button', { name: 'Continue' }));
+  // Back to intake and open the v7 record WITHOUT remounting, so the previously held
+  // lock has to be cleared by the page rather than by a fresh component.
+  await user.click(screen.getByRole('button', { name: 'Start a new trip' }));
+  await user.click(within(rowOf('Peru v7')).getByRole('button', { name: 'Continue' }));
   await screen.findByText('Your trip at a glance');
+
   absent(NOTICE.valid);
   absent(NOTICE.absent);
+  const before = itinerarySignature();
+  const swap = screen.queryAllByRole('button', { name: 'Swap' });
+  assert.ok(swap.length > 0);
+  await user.click(swap[0]);
+  assert.notEqual(itinerarySignature(), before, 'the v7 record really is editable after the locked open');
+});
+
+test('L8c (clean-mount control): a v7 record opens editable in a fresh mount', async () => {
+  const { user, before } = await openRecord(
+    [envelope(stamp('door2-v7', PERU, { history: [] }), { id: 'seven', label: 'Peru v7' })],
+    'Peru v7'
+  );
+  await user.click(screen.queryAllByRole('button', { name: 'Swap' })[0]);
+  assert.notEqual(itinerarySignature(), before, 'editable from a clean mount too');
 });
 
 // ---------------------------------------------------------------------------
@@ -309,63 +400,120 @@ test('L8b: a legacy v7 load after a locked v8 open is fully editable', async () 
 test('L9: a v6 and a v7 record open fully editable through the same path', async () => {
   for (const [schema, id] of [['door2-v6', 'six'], ['door2-v7', 'seven']]) {
     const entry = schema === 'door2-v6'
-      // v6 lives in the unversioned legacy envelope, which is the route that must not change.
+      // v6 lives in the unversioned legacy envelope, the route that must not change.
       ? { id, label: `Peru ${schema}`, savedAt: '2026-10-01T10:00:00.000Z', trip: stamp(schema, PERU, { history: [] }) }
       : envelope(stamp(schema, PERU, { history: [] }), { id, label: `Peru ${schema}` });
-    const { user } = mountOver([entry]);
-    await user.click(await screen.findByRole('button', { name: 'Continue' }));
-    await screen.findByText('Your trip at a glance');
+    const { user, before } = await openRecord([entry], `Peru ${schema}`);
     absent(NOTICE.valid);
     absent(NOTICE.absent);
     const swap = screen.queryAllByRole('button', { name: 'Swap' });
-    if (swap.length > 0) {
-      await user.click(swap[0]);
-      absent(NOTICE.valid);
-    }
+    assert.ok(swap.length > 0, `${schema}: offers Swap`);
+    await user.click(swap[0]);
+    assert.notEqual(itinerarySignature(), before, `${schema}: the edit really landed`);
   }
 });
 
 // ---------------------------------------------------------------------------
-// L10: every exposed command the §3.1 enumeration found
+// L10: every exposed command, each with an observable outcome
 
-test('L10: every exposed command on a locked v8 trip refuses and writes nothing', async () => {
+test('L10: every exposed command on a locked v8 trip refuses observably', async () => {
   const trip = withHistory('door2-v8', { identity: IDENTITY });
-  const { user, bytes } = await openV8(trip);
+  const { user, bytes, before } = await openV8(trip);
+
+  const dayMenus = screen.queryAllByRole('button', { name: /^Day \d+ options$/ });
+  assert.ok(dayMenus.length > 0, 'the day menu is found by its accessible name, not its glyph');
 
   const probes = [
     ['Swap', () => screen.queryAllByRole('button', { name: 'Swap' })[0]],
     ['nights chip', () => screen.queryAllByRole('button', { name: /^\d+ nights?$/ })[0]],
     ['Undo last change', () => screen.queryByRole('button', { name: 'Undo last change' })],
     ['Save', () => screen.queryByRole('button', { name: 'Save' })],
-    ['day menu', () => screen.queryAllByRole('button', { name: '⋯' })[0]]
+    ['Refine', () => screen.queryByRole('button', { name: 'Refine' })],
+    ['day menu', () => dayMenus[0]]
   ];
 
   let exercised = 0;
   for (const [name, find] of probes) {
     const el = find();
-    if (!el) continue;
+    assert.ok(el, `${name}: the control is present, so the probe is not vacuous`);
     exercised += 1;
-    await user.click(el);
+    if (name === 'Refine') fireEvent.click(el); else await user.click(el);
+    itineraryUnchanged(before, `a refused ${name}`);
     unchanged(bytes, `a refused ${name}`);
   }
-  assert.ok(exercised >= 4, `expected to exercise the real controls, exercised ${exercised}`);
-  // The trip is still the one that was loaded, and still locked.
-  shows(NOTICE.valid);
+  assert.equal(exercised, probes.length, 'every enumerated control was exercised');
+
+  // The day menu opens (it is a display toggle, not a command), but the commands inside
+  // it must still refuse.
+  const swapActivity = screen.queryByRole('button', { name: 'Swap activity' });
+  if (swapActivity) {
+    await user.click(swapActivity);
+    itineraryUnchanged(before, 'a refused Swap activity from the day menu');
+  }
+  const lighter = screen.queryByRole('button', { name: 'Make lighter' });
+  if (lighter) {
+    await user.click(lighter);
+    itineraryUnchanged(before, 'a refused Make lighter from the day menu');
+  }
+  absent('Day lightened');
 });
 
 // ---------------------------------------------------------------------------
-// L11: evidence precedence, and the lock is additive
+// L11: evidence precedence, with evidence that is actually unsupported
 
-test('L11: a v8 record is returned with its evidence fields exactly as seeded', async () => {
+/** Structurally acceptable evidence at a ruleset this build does not know: the trip
+ * stays viewable under the existing evidence explanation. */
+function withUnsupportedEvidence(schema, extra = {}) {
+  const t = stamp(schema, PERU, extra);
+  t.evidence = { rulesetVersion: 'future@2', generatedAt: '2026-10-14T12:00:00.000Z', entries: [] };
+  t.versions = { ...t.versions, connectionEvidence: 'future@2' };
+  return t;
+}
+
+test('L11: on a v8 trip that is also evidence-read-only, the evidence reason is reported first', async () => {
+  const trip = withUnsupportedEvidence('door2-v8', { identity: IDENTITY, history: [] });
+  const reread = (() => {
+    window.localStorage.setItem(KEY, JSON.stringify([envelope(trip)]));
+    return M.loadDraftTrip('d_v8');
+  })();
+  assert.equal(reread.compatible, true, 'unsupported-but-structural evidence stays viewable');
+  assert.equal(reread.evidenceReadOnly, true, 'and is reported as evidence-read-only');
+  assert.equal(reread.readOnly, true, 'while the schema lock is still set');
+  assert.equal(reread.readOnlyReason, 'schema', 'and is never cancelled by the evidence result');
+
+  const { user, before } = await openV8(trip);
+  // Both standing notices are shown.
+  shows(reread.evidenceNotice);
+  shows(NOTICE.valid);
+
+  // A bounded command must report the EXISTING evidence explanation, not the schema one.
+  await user.click(screen.queryAllByRole('button', { name: 'Swap' })[0]);
+  itineraryUnchanged(before, 'a refused swap');
+  const inline = Array.from(document.querySelectorAll('p.text-rose-400')).map((n) => n.textContent.trim());
+  assert.ok(inline.length > 0, 'a refusal was reported inline');
+  assert.ok(
+    inline.some((t) => t === reread.evidenceNotice),
+    `the inline refusal is the evidence explanation, not the schema one. Got: ${JSON.stringify(inline)}`
+  );
+});
+
+test('L11b: malformed evidence on a v8 record is refused outright, not opened read-only', async () => {
+  const trip = stamp('door2-v8', PERU, { identity: IDENTITY, history: [] });
+  trip.evidence = { rulesetVersion: 'nope', generatedAt: 'not-a-date', entries: [] };
+  const { user } = mountOver([envelope(trip, { id: 'bad', label: 'Peru bad' })]);
+  await user.click(within(rowOf('Peru bad')).getByRole('button', { name: 'Continue' }));
+  assert.equal(screen.queryByText('Your trip at a glance'), null, 'it never opens');
+  assert.ok(screen.getByText(/saved evidence is incomplete/), 'refused by name for evidence');
+});
+
+test('L11c: a loaded v8 trip is returned with its evidence and versions exactly as seeded', async () => {
   const trip = stamp('door2-v8', PERU, { identity: IDENTITY, history: [] });
   const { bytes } = await openV8(trip);
   const stored = JSON.parse(bytes)[0].trip;
   const reread = M.loadDraftTrip('d_v8');
   assert.equal(reread.compatible, true);
-  assert.deepStrictEqual(reread.trip.evidence, stored.evidence, 'evidence is unchanged against the seeded bytes');
-  assert.deepStrictEqual(reread.trip.versions, stored.versions, 'versions are unchanged against the seeded bytes');
-  assert.equal(reread.readOnly, true, 'and the schema lock is reported');
-  assert.equal(reread.readOnlyReason, 'schema');
+  assert.deepStrictEqual(reread.trip.evidence, stored.evidence, 'evidence unchanged against the seeded bytes');
+  assert.deepStrictEqual(reread.trip.versions, stored.versions, 'versions unchanged against the seeded bytes');
 });
 
 // ---------------------------------------------------------------------------
