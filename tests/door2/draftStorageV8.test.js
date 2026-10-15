@@ -118,45 +118,50 @@ test('M5b: a real producer trip stamped v8, with no new block fields, still open
   }
 });
 
-// R4 from the diff review of 7e85395. The first version of this test observed the types
-// in one Peru build, checked they were all in the accepted set, and then synthetically
-// marked an activity as a gap — which did not establish that the producer emits `open`
-// at all.
+// R4, finished after the review of 482bcaf. Two earlier versions of this test were
+// weaker than they looked: the first checked observed types against the accepted set and
+// then synthetically marked an activity as a gap; the second reconstructed the unfilled
+// shape by hand. Neither used real producer output containing an `open` block.
 //
-// What the source actually shows: schedule.js:161 creates every non-travel slot as
-// `open`, and fill.js:240 rewrites it to `activity` when eligible content is found, or
-// leaves it `open` with gap: { reason, slot } when none is (fill.js:234). So `open` is
-// the unfilled-slot type. **No pilot build at this revision leaves one unfilled** —
-// every family's slots are covered by PILOT_CONTENT — so this test reconstructs the real
-// unfilled shape from fill.js rather than claiming a pilot trip contains one. `open`
-// stays in the accepted set because the producers do emit it.
-test('M5c: the accepted block types are exactly the produced set, and an unfilled open slot is viewable', () => {
+// What the source shows: schedule.js:161 creates every non-travel slot as `open`, and
+// fill.js:240 rewrites it to `activity` when eligible content is found, or leaves it
+// `open` with gap: { reason, slot } when none is (fill.js:234). So `open` is the
+// unfilled-slot type. Building with `content: []` starves the filler and the producer
+// emits genuine open blocks — no hand construction needed.
+//
+// Named as a subset check, not an equality one: it proves every type the producer emits
+// is accepted, which is the property that matters for not refusing legitimate trips.
+test('M5c: every type the producer emits is accepted, and genuine open blocks stay viewable', () => {
   const produced = new Set();
   for (const spec of Object.values(SKELETON_FIXTURES)) {
     const built = buildFilledTrip(spec, PILOT_DATA, DRAFTS);
     if (built.ok === false) continue;
     for (const b of built.days.flatMap((d) => d.blocks)) produced.add(b.type);
   }
+  // Recorded rather than desired: every pilot slot is covered by PILOT_CONTENT today, so
+  // no ordinary build leaves one unfilled. If that changes this flips, and the starved
+  // build below is what keeps `open` covered either way.
+  assert.equal(produced.has('open'), false, 'no ordinary pilot build currently leaves a slot unfilled');
+
+  // A controlled producer run with no content at all: the filler finds nothing eligible
+  // and leaves real open blocks behind.
+  const starved = buildFilledTrip(SKELETON_FIXTURES.F2, PILOT_DATA, { ...DRAFTS, content: [] });
+  assert.notEqual(starved.ok, false, 'the starved build must still produce a trip');
+  const openBlocks = starved.days.flatMap((d) => d.blocks).filter((b) => b.type === 'open');
+  assert.ok(openBlocks.length > 0, `the starved build must contain open blocks, found ${openBlocks.length}`);
+  assert.ok(openBlocks.every((b) => b.gap && b.gap.reason === 'no_eligible_content'), 'each carries the real gap shape');
+  for (const b of starved.days.flatMap((d) => d.blocks)) produced.add(b.type);
+
   for (const t of produced) {
     assert.ok(['travel', 'open', 'rest', 'activity'].includes(t), `a produced type is not accepted: ${t}`);
   }
-  // Recorded rather than asserted as a desired state: if a future build does leave a
-  // slot unfilled, this flips and the comment above stops being true.
-  assert.equal(produced.has('open'), false, 'no pilot build currently leaves a slot unfilled');
 
-  // The real unfilled shape, as fill.js:234 produces it.
-  const trip = v8();
-  const block = trip.days.flatMap((d) => d.blocks).find((b) => b.type === 'activity');
-  assert.ok(block, 'the control trip has an activity slot to unfill');
-  delete block.activity;
-  block.type = 'open';
-  block.generationStatus = 'unavailable';
-  block.gap = { reason: 'no_eligible_content', slot: 'full' };
+  // The reader must open that genuine output, not refuse it.
   store.clear();
-  seed([env(trip)]);
+  seed([env(v8(starved))]);
   const r = load('d_v8');
-  assert.equal(r.compatible, true, `an unfilled open slot must stay viewable: ${r.reason}`);
-  assert.equal(r.readOnly, true);
+  assert.equal(r.compatible, true, `genuine open blocks must stay viewable: ${r.reason}`);
+  assert.equal(r.readOnly, true, 'and the schema lock still applies');
 });
 
 // ---------------------------------------------------------------------------

@@ -106,6 +106,13 @@ async function openRecord(entries, label) {
 
 const openV8 = (trip, opts) => openRecord([envelope(trip, opts)], opts?.label ?? 'Peru v8');
 
+/** The complete active trip, history included, read from the real component. The
+ * rendered itinerary is not enough on its own: an edit can leave every visible row
+ * identical and still append an Undo snapshot (R2a). */
+const activeSnapshot = () => clone(globalThis.__door2.activeTrip);
+const activeUnchanged = (before, what) =>
+  assert.deepStrictEqual(activeSnapshot(), before, `${what}: the active trip, history included, is unchanged`);
+
 const unchanged = (bytes, what) => assert.equal(raw(), bytes, `${what}: storage is unchanged`);
 const itineraryUnchanged = (before, what) =>
   assert.equal(itinerarySignature(), before, `${what}: the rendered itinerary is unchanged`);
@@ -416,7 +423,10 @@ test('L9: a v6 and a v7 record open fully editable through the same path', async
 // ---------------------------------------------------------------------------
 // L10: every exposed command, each with an observable outcome
 
-test('L10: every exposed command on a locked v8 trip refuses observably', async () => {
+// Narrowed after R2b: this covers the controls reachable directly from the results
+// screen. The two day-menu commands are carried by L13 and L14, which follow them
+// through to the action rather than counting a menu click.
+test('L10: the results-screen controls on a locked v8 trip refuse observably', async () => {
   const trip = withHistory('door2-v8', { identity: IDENTITY });
   const { user, bytes, before } = await openV8(trip);
 
@@ -443,19 +453,106 @@ test('L10: every exposed command on a locked v8 trip refuses observably', async 
   }
   assert.equal(exercised, probes.length, 'every enumerated control was exercised');
 
-  // The day menu opens (it is a display toggle, not a command), but the commands inside
-  // it must still refuse.
-  const swapActivity = screen.queryByRole('button', { name: 'Swap activity' });
-  if (swapActivity) {
-    await user.click(swapActivity);
-    itineraryUnchanged(before, 'a refused Swap activity from the day menu');
-  }
-  const lighter = screen.queryByRole('button', { name: 'Make lighter' });
-  if (lighter) {
-    await user.click(lighter);
-    itineraryUnchanged(before, 'a refused Make lighter from the day menu');
-  }
+  // The day menu itself opens, because it is a display toggle rather than a command.
+  // Its commands are covered by L13 (Make lighter) and L14 (Swap with another day),
+  // which assert the full active trip instead of only the rendered rows.
+  assert.ok(screen.queryByRole('button', { name: 'Make lighter' }), 'the day menu really did open');
+});
+
+// ---------------------------------------------------------------------------
+// L13 / L14: the two day-menu commands the previous L10 never actually proved
+//
+// R2a and R2b from the diff review of 482bcaf. Removing either guard left all 799
+// committed tests green: L10 exercised Make lighter on Day 1, which in the Peru fixture
+// holds only a travel block, so an unguarded run changed nothing visible while still
+// appending an Undo snapshot; and L10 opened a day menu without ever selecting "Swap
+// with another day" or confirming a target. Both now assert the complete active trip,
+// and both have a v7 control proving the command really does land when unlocked.
+
+const dayMenuButton = (dayNumber) => screen.getByRole('button', { name: `Day ${dayNumber} options` });
+
+/** The day whose menu L13 uses: the first with an activity, so Make lighter has
+ * something to act on, plus Day 1, which has none. Both are exercised. */
+function firstActivityDay(trip) {
+  const day = trip.days.find((d) => d.blocks.some((b) => b.type === 'activity'));
+  assert.ok(day, 'the control trip has a day with an activity');
+  return day.dayNumber;
+}
+
+test('L13c (control): Make lighter really lands on v7, even when no block changes', async () => {
+  const { user } = await openRecord(
+    [envelope(stamp('door2-v7', PERU, { history: [] }), { id: 'seven', label: 'Peru v7' })],
+    'Peru v7'
+  );
+  const before = activeSnapshot();
+  assert.equal(before.history.length, 0, 'starts with no history');
+
+  // Day 1 in this fixture is travel-only: the engine completes the edit and appends an
+  // Undo snapshot while leaving every day identical. That is precisely the case whose
+  // invisibility hid the missing guard.
+  await user.click(dayMenuButton(1));
+  await user.click(screen.getByRole('button', { name: 'Make lighter' }));
+  const after = activeSnapshot();
+  assert.equal(after.history.length, before.history.length + 1, 'history grew, so the command ran');
+  assert.deepStrictEqual(after.days, before.days, 'and it changed no day, which is why the itinerary alone proves nothing');
+});
+
+test('L13: Make lighter on a locked v8 trip leaves the whole active trip unchanged', async () => {
+  const trip = stamp('door2-v8', PERU, { identity: IDENTITY, history: [] });
+  const { user, bytes } = await openV8(trip);
+  const before = activeSnapshot();
+
+  // The travel-only day, where only the full snapshot can tell refusal from success.
+  await user.click(dayMenuButton(1));
+  const lighter1 = screen.getByRole('button', { name: 'Make lighter' });
+  await user.click(lighter1);
+  activeUnchanged(before, 'a refused Make lighter on a travel-only day');
+
+  // And a day that really does have an activity to drop.
+  const day = firstActivityDay(before);
+  await user.click(dayMenuButton(day));
+  await user.click(screen.getByRole('button', { name: 'Make lighter' }));
+  activeUnchanged(before, `a refused Make lighter on day ${day}`);
+
   absent('Day lightened');
+  unchanged(bytes, 'a refused Make lighter');
+});
+
+test('L14c (control): Swap with another day really lands on v7, through confirmation', async () => {
+  const { user } = await openRecord(
+    [envelope(stamp('door2-v7', PERU, { history: [] }), { id: 'seven', label: 'Peru v7' })],
+    'Peru v7'
+  );
+  const before = activeSnapshot();
+
+  await user.click(dayMenuButton(5));
+  await user.click(screen.getByRole('button', { name: 'Swap with another day' }));
+  await screen.findByText('Swap Day 5 with…');
+  const target = screen.getByRole('button', { name: 'Day 6' });
+  await user.click(target);
+
+  const after = activeSnapshot();
+  assert.notDeepStrictEqual(after.days, before.days, 'the days really were swapped on v7');
+  assert.equal(after.history.length, before.history.length + 1, 'and the command appended a snapshot');
+});
+
+test('L14: the day-swap confirmation on a locked v8 trip is refused', async () => {
+  const trip = stamp('door2-v8', PERU, { identity: IDENTITY, history: [] });
+  const { user, bytes } = await openV8(trip);
+  const before = activeSnapshot();
+
+  // The menu and the picker are display surfaces, so they open; the confirmation is the
+  // command, and it is what must refuse.
+  await user.click(dayMenuButton(5));
+  await user.click(screen.getByRole('button', { name: 'Swap with another day' }));
+  await screen.findByText('Swap Day 5 with…');
+  const target = screen.getByRole('button', { name: 'Day 6' });
+  assert.ok(target, 'the confirmation really is reachable, so this is not vacuous');
+  await user.click(target);
+
+  activeUnchanged(before, 'a refused day swap');
+  absent('Day 5 and Day 6 swapped');
+  unchanged(bytes, 'a refused day swap');
 });
 
 // ---------------------------------------------------------------------------
