@@ -118,22 +118,45 @@ test('M5b: a real producer trip stamped v8, with no new block fields, still open
   }
 });
 
-test('M5c: real producer output including open blocks and gap days stays viewable', () => {
-  const types = new Set(PERU.days.flatMap((d) => d.blocks).map((b) => b.type));
-  assert.ok(types.size > 0, 'the control trip has blocks');
-  for (const t of types) {
-    assert.ok(['travel', 'open', 'rest', 'activity'].includes(t), `producer emitted an unadmitted type: ${t}`);
+// R4 from the diff review of 7e85395. The first version of this test observed the types
+// in one Peru build, checked they were all in the accepted set, and then synthetically
+// marked an activity as a gap — which did not establish that the producer emits `open`
+// at all.
+//
+// What the source actually shows: schedule.js:161 creates every non-travel slot as
+// `open`, and fill.js:240 rewrites it to `activity` when eligible content is found, or
+// leaves it `open` with gap: { reason, slot } when none is (fill.js:234). So `open` is
+// the unfilled-slot type. **No pilot build at this revision leaves one unfilled** —
+// every family's slots are covered by PILOT_CONTENT — so this test reconstructs the real
+// unfilled shape from fill.js rather than claiming a pilot trip contains one. `open`
+// stays in the accepted set because the producers do emit it.
+test('M5c: the accepted block types are exactly the produced set, and an unfilled open slot is viewable', () => {
+  const produced = new Set();
+  for (const spec of Object.values(SKELETON_FIXTURES)) {
+    const built = buildFilledTrip(spec, PILOT_DATA, DRAFTS);
+    if (built.ok === false) continue;
+    for (const b of built.days.flatMap((d) => d.blocks)) produced.add(b.type);
   }
-  // A gap day is legitimate producer output and must not be refused.
-  const gapped = v8();
-  const block = gapped.days.flatMap((d) => d.blocks).find((b) => b.type === 'activity');
-  if (block) {
-    block.gap = true;
-    delete block.activity;
-    store.clear();
-    seed([env(gapped)]);
-    assert.equal(load('d_v8').compatible, true, 'a gap block carries no activity and must still open');
+  for (const t of produced) {
+    assert.ok(['travel', 'open', 'rest', 'activity'].includes(t), `a produced type is not accepted: ${t}`);
   }
+  // Recorded rather than asserted as a desired state: if a future build does leave a
+  // slot unfilled, this flips and the comment above stops being true.
+  assert.equal(produced.has('open'), false, 'no pilot build currently leaves a slot unfilled');
+
+  // The real unfilled shape, as fill.js:234 produces it.
+  const trip = v8();
+  const block = trip.days.flatMap((d) => d.blocks).find((b) => b.type === 'activity');
+  assert.ok(block, 'the control trip has an activity slot to unfill');
+  delete block.activity;
+  block.type = 'open';
+  block.generationStatus = 'unavailable';
+  block.gap = { reason: 'no_eligible_content', slot: 'full' };
+  store.clear();
+  seed([env(trip)]);
+  const r = load('d_v8');
+  assert.equal(r.compatible, true, `an unfilled open slot must stay viewable: ${r.reason}`);
+  assert.equal(r.readOnly, true);
 });
 
 // ---------------------------------------------------------------------------
@@ -214,6 +237,44 @@ test('M6c-4: malformed travel display values are refused before rendering', () =
     seed([env(trip)]);
     refusedByName(load('d_v8'), new RegExp(field.replace('.', '\\.')));
   }
+});
+
+// R1 from the diff review of 7e85395: these fields are restored into the Refine form by
+// formFromSpec with `?? []`, which does not protect a non-array object, and RefineSheet
+// then calls .includes on them. Asserted at the storage layer so the failure is precise
+// and cannot hang on the sheet's overlay the way a DOM probe does.
+test('M6c-6: malformed refine-form spec fields are refused before the page sees the trip', () => {
+  const cases = [
+    ['spec.interests', (t) => { t.spec.interests = {}; }],
+    ['spec.interests[]', (t) => { t.spec.interests = [{ not: 'a string' }]; }],
+    ['spec.requiredPlaceIds', (t) => { t.spec.requiredPlaceIds = {}; }],
+    ['spec.requiredPlaceIds[]', (t) => { t.spec.requiredPlaceIds = [7]; }],
+    ['spec.travellerType', (t) => { t.spec.travellerType = { kind: 'couple' }; }],
+    ['spec.pace', (t) => { t.spec.pace = ['balanced']; }],
+    ['spec.travelMonth', (t) => { t.spec.travelMonth = '10'; }]
+  ];
+  for (const [field, mutate] of cases) {
+    store.clear();
+    const trip = v8();
+    mutate(trip);
+    seed([env(trip)]);
+    const bytes = raw();
+    const r = load('d_v8');
+    refusedByName(r, /can't be shown by this version/);
+    assert.match(r.reason, new RegExp(field.replace(/[.[\]]/g, '\\$&')), `names the failing field (${field})`);
+    assert.equal(r.trip, undefined, `${field}: the trip is never handed over`);
+    assert.equal(raw(), bytes, `${field}: refusing writes nothing`);
+  }
+});
+
+// A real producer trip's own values for these fields must still pass.
+test('M6c-6b (control): the producer\'s own refine-form fields are accepted', () => {
+  store.clear();
+  const trip = v8();
+  assert.ok(Array.isArray(trip.spec.interests), 'the producer emits an array for interests');
+  assert.ok(Array.isArray(trip.spec.requiredPlaceIds), 'and for requiredPlaceIds');
+  seed([env(trip)]);
+  assert.equal(load('d_v8').compatible, true);
 });
 
 test('M6c-5: a non-array selectedExcursionIds is refused (listExcursionMenu would throw)', () => {

@@ -1808,8 +1808,12 @@ export default function Door2Plan() {
   // guard is editEvidenceGuard rather than structuralEvidenceGuard. Composing the
   // structural guard in at those points would add the estimated-transport rebuild rule
   // to handlers that do not have it today, which packet 1a must not change.
-  function blockedSchema() {
-    const blocked = schemaLockGuard(tripLock);
+  // Bounded commands: the existing evidence rule first, then the schema lock. Composed
+  // with editEvidenceGuard rather than structuralEvidenceGuard so this does not add the
+  // estimated-transport rebuild restriction to ordinary edits, which packet 1a must not
+  // change. The schema lock is additive and still refuses when evidence is clean.
+  function blockedCommand() {
+    const blocked = (activeTrip && editEvidenceGuard(activeTrip)) ?? schemaLockGuard(tripLock);
     if (blocked) { setEditError(blocked.message); return true; }
     return false;
   }
@@ -2020,6 +2024,13 @@ export default function Door2Plan() {
   // Takes the whole load result from SavedTripsList, not a bare trip, so the schema
   // lock is stored in the same state transition as the trip it applies to. A v6 or v7
   // result yields no lock, which is the existing legacy policy unchanged.
+  // Refine mounts an edit form built from the restored spec, so it is a command, not a
+  // display toggle, and it is gated like the others.
+  function handleOpenRefine() {
+    if (blockedCommand()) return;
+    setShowRefine(true);
+  }
+
   function handleLoadDraft(loaded) {
     const trip = loaded?.trip ?? loaded;
     connectionSession.current = null;
@@ -2047,7 +2058,7 @@ export default function Door2Plan() {
   // ── Edit handlers ──────────────────────────────────────────────────────────
 
   function handleSwap(blockId) {
-    if (blockedSchema()) return;
+    if (blockedCommand()) return;
     const t = activeTrip;
     if (!t) return;
     const result = swapActivity(t, blockId);
@@ -2065,7 +2076,7 @@ export default function Door2Plan() {
   }
 
   function handleMakeLighter(dayNumber) {
-    if (blockedSchema()) return;
+    if (blockedCommand()) return;
     const t = activeTrip;
     if (!t) return;
     const before = t.days.find((d) => d.dayNumber === dayNumber);
@@ -2095,7 +2106,7 @@ export default function Door2Plan() {
   }
 
   function handleUndo() {
-    if (blockedSchema()) return;
+    if (blockedCommand()) return;
     const t = activeTrip;
     if (!t) return;
     const r = undo(t);
@@ -2132,7 +2143,7 @@ export default function Door2Plan() {
   }
 
   function handleAddOptional(optionalId) {
-    if (blockedSchema()) return;
+    if (blockedCommand()) return;
     const t = activeTrip;
     if (!t) return;
     if (departureBlocked(() => handleAddOptional(optionalId))) return;
@@ -2145,7 +2156,7 @@ export default function Door2Plan() {
   }
 
   function handleRemoveOptional(optionalId) {
-    if (blockedSchema()) return;
+    if (blockedCommand()) return;
     const t = activeTrip;
     if (!t) return;
     if (departureBlocked(() => handleRemoveOptional(optionalId))) return;
@@ -2175,7 +2186,7 @@ export default function Door2Plan() {
   }
 
   function handleAdjustNights(stopKey, delta) {
-    if (blockedSchema()) return;
+    if (blockedCommand()) return;
     const t = activeTrip;
     if (!t) return;
     if (departureBlocked(() => handleAdjustNights(stopKey, delta))) return;
@@ -2220,7 +2231,7 @@ export default function Door2Plan() {
   }
 
   function handleRemoveDayTrip(stopKey, item) {
-    if (blockedSchema()) return;
+    if (blockedCommand()) return;
     const t = activeTrip;
     if (!t) return;
     if (departureBlocked(() => handleRemoveDayTrip(stopKey, item))) return;
@@ -2246,7 +2257,7 @@ export default function Door2Plan() {
   // Gating only the sheet openers would leave this reachable by any other route to a
   // proposal, which is the hole the existing blockedStructure() placement already has.
   function handleUseProposal(proposal) {
-    if (blockedSchema()) return;
+    if (blockedCommand()) return;
     const t = activeTrip;
     if (!t) return;
     if (departureBlocked(() => handleUseProposal(proposal))) return;
@@ -2283,7 +2294,7 @@ export default function Door2Plan() {
   }
 
   function handleConfirmSwapDay(targetDayNumber) {
-    if (blockedSchema()) return;
+    if (blockedCommand()) return;
     const t = activeTrip;
     if (!t || !swapPicker) return;
     const result = swapDays(t, swapPicker.dayNumber, targetDayNumber);
@@ -2394,7 +2405,7 @@ export default function Door2Plan() {
                   <div className="flex items-center gap-2 shrink-0">
                     <button
                       type="button"
-                      onClick={() => setShowRefine(true)}
+                      onClick={handleOpenRefine}
                       className="text-xs px-3 py-1.5 rounded-lg bg-slate-700 border border-slate-600 text-slate-300 hover:bg-slate-600 font-medium transition-colors"
                     >
                       Refine
