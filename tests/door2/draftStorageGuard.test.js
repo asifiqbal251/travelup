@@ -140,8 +140,11 @@ const refusedAs = (r, pattern) => {
   assert.match(r.reason, pattern);
 };
 
-test('3a: envelopeVersion 2 refuses any payload schema but door2-v7', () => {
-  for (const schema of ['door2-v6', 'door2-v5', 'door2-v8', undefined]) {
+// door2-v8 was in this list until packet 1a, which gives it its own read-only branch
+// (loadV8). The mismatch refusal itself is unchanged for every other schema; the v8
+// path is asserted positively in draftStorageV8.test.js.
+test('3a: envelopeVersion 2 refuses any payload schema but door2-v7 and door2-v8', () => {
+  for (const schema of ['door2-v6', 'door2-v5', 'door2-v4', undefined]) {
     store.clear();
     seed([v2({ ...PERU, versions: { ...PERU.versions, schema } })]);
     refusedAs(load('d_v2'), /saved format and trip version don't match/);
