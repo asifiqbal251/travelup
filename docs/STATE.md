@@ -10,9 +10,27 @@
 - This file records state and decisions made elsewhere. It changes no gate, contract or approval. Gates and product choices keep their normal approval path.
 - Routine evidenced updates do not need cross-model review. A changed gate, product decision or architecture decision does.
 
-## Current snapshot — 13 October 2026, evening
+## Current snapshot — 18 October 2026
 
 **This is the live summary. Everything below it is dated history, kept as evidence and not rewritten.** Read current HEAD from Git rather than trusting any SHA written here.
+
+| | |
+|---|---|
+| **Live build** | **`31b5f52d8b9f54043c9477c61ade246f765ea22a`**, checkpoint `6ad144bd3ae501e5e9f4b039`, deployed **15 October 2026 at 21:28:20 UTC (14:28 Vancouver)**. **Identity source:** Claude read this from Base44's checkpoint metadata (`GET /api/apps/{app_id}/app-checkpoints`: `git_commit_hash`, `last_deployed_at`) **on 15 October**. That is the last observation; it was **not re-read on 18 October**, and Codex did not independently read Base44. **Corroboration only:** strings in the served bundle `index-IqZ-wLxc.js` (the packet 1a lock sentences, the `door2-v8` literal, the v8 block types) show the packet 1a features are present. They do not establish the exact revision, and byte-for-byte equivalence with a local build was **not** established — see the unexplained 523-byte difference in the packet 1a section |
+| **GitHub `main`** | `31b5f52` at the time of that deployment: Q8 packet 1a's three commits (`18ee1de`, `4e991dc`, `31b5f52`) rebased onto the Base44-bot commits `2cee987` and `2a8c7f9`. Push and publication by the owner. Read current HEAD from Git |
+| **Packet 1a** | **Released and hosted-accepted.** The reader for `door2-v8` payloads plus an enforced read-only lock. **The writer still stamps `door2-v7`. Identity is created nowhere. Q8 is unmet.** See the section "Q8 packet 1a" below |
+| **Checks at `31b5f52`** | **Independent (Codex, 15 October):** on an isolated archive of the combined tree, the Door 2 suite passed **803 / 0 fail** with nothing skipped, lint exit 0, production build exit 0; `git range-diff` showed all three packet commits patch-identical to the approved ones, and the tree difference from `e749006` was `package.json` and `package-lock.json` only (10 insertions, 10 deletions). Codex did not run a separate full `npm ci`. **Owner (Mac, after the rebase):** `npm ci`, 803 tests, lint and build, from the owner's pasted terminal output. Claude did not re-run them |
+| **Hosted checks** | H1, H2, H3, H5 and a dependency smoke check **run by Claude** on the published build; **H4 owner-reported**. All passed. **Claude-reported; not independently re-run by Codex.** Detailed report: Claude project file `claude/hosted-checks-q8-packet1a-31b5f52-2026-10-15.md`, supplied alongside this update |
+| **Dependencies** | `@base44/sdk` 0.8.53 → 0.8.54 and `@base44/vite-plugin` 1.0.45 → 1.0.47 (bot commits `2cee987`, `2a8c7f9`), independent review **KEEP**, 15 October. Both lockfile integrity values match the registry |
+| **D16 — F7 preparation** | Design packet approved by the owner at revision 6 (13 October). **Packet 1a is the only implementation authorized under it.** The approved split (draft 7 §1): **1a** the v8 reader and read-only lock (released); **1b** the *dormant* identity engine — correspondence, four-phase commit, fingerprint extension, real Undo registry union, swap intent, relocation API and full identity validation; **2** activation — identity created at the live producer and on open, writer stamps v8, v8 lock lifted; **3** the required placement explanations, relocation offer and consent. **None of 1b, 2 or 3 is authorized.** Activation stays held until the lifecycle, explanations and consent paths are implemented, independently reviewed and accepted |
+| **Erratum 01 v3** | Independently supported (14 and 18 October). **Approved by the owner, items A–D, on 18 October 2026**, recorded against the revision-6 packet as erratum 01 v3 (Claude project file `claude/f7-rev6-erratum-01-v3-APPROVED-2026-10-18.md`). It is **dated 18 October; no earlier approval is claimed.** Approval authorizes no code, migration or activation. The explicit **Delete exception** to D-B §7 remains approved |
+| **Held** | production estimate and experience activation · any record migration · Q8 durable identity · all Q10 conditions · packets 1b, 2 and 3 (**including writing the 1b brief**) |
+
+## Historical — snapshot as recorded on 13 October 2026, evening
+
+*Superseded by the snapshot above. Its row on the live build (`b8fff25`) was true on 13 October and was replaced by the 15 October deployment.*
+
+**This was the live summary on that date. Everything below it is dated history, kept as evidence and not rewritten.** Read current HEAD from Git rather than trusting any SHA written here.
 
 | | |
 |---|---|
@@ -427,10 +445,59 @@ Read-only queries against Base44 while the packet was in review:
 
 Record: `base44-read-findings-deployment-identity-2026-10-13.md` in the Claude project.
 
+## Q8 packet 1a — the v8 reader and its read-only lock — released 15 October 2026
+
+**Scope, stated narrowly.** Packet 1a teaches the app to **read** a `door2-v8` payload and to hold it **read-only**. It creates no identity, the writer still stamps `door2-v7`, and no saved record is migrated. **Q8 remains unmet.**
+
+### What is live
+
+- **Commits** `18ee1de`, `4e991dc`, `31b5f52` on `main`, directly on `2a8c7f9`. They are the Codex-approved branch commit `e749006` rebased onto the two bot commits. `git diff --stat e749006 HEAD` after the rebase touched only `package.json` and `package-lock.json`. Tree of `31b5f52`: `31a384363d527839afec8af72911551a517d36d4`. (Rebase equivalence: the owner's pasted output and Claude's range-diff, and independently Codex's `git range-diff` on 15 October, which found all three commits patch-identical.)
+- **Base revision** of the work: `2eb9133def7d1a69cd2584832914b0070d8f2ab2`. Writer: Claude Code (Opus 5, Extra High), the sole declared writer.
+- **Lock behaviour.** A v8 trip opens read-only. Swap, nights, Make lighter, Swap-with-another-day, Undo, Refine, Apply and Save are refused; an explicit traveller-requested Delete is permitted. The lock is keyed on the stored schema and held on `tripResult.lock`. An unsafe-to-render v8 payload is refused by name and never rendered.
+- **Explicit Delete exception.** `deleteDraftTrip` calls `writeAll`, which is a `localStorage.setItem`, so Delete **is a write**. It is permitted as a recorded exception to D-B §7's no-write rule, limited to the selected record, with no upgrade or repair of surviving payloads and no automatic cleanup. The earlier statement "delete writes nothing" was retracted on 14 October.
+
+### Review history
+
+| Step | Verdict |
+|---|---|
+| Brief, drafts 1–6 | independent review returned AMEND at drafts 1, 2, 5 and 6 (draft 3's review was by its author and did not count) |
+| Brief, draft 7 | **APPROVE**, 14 October |
+| Diff `7e85395` | REQUEST CHANGES, 14 October |
+| Diff `482bcaf` | REQUEST CHANGES, 15 October — two command surfaces (Make lighter, Swap with another day) were exercised by tests that could not tell refusal from success |
+| Diff `e749006` | **APPROVE**, 15 October. Fixed by asserting the complete active trip with an unlocked control, not by adding selectors. A 22-fault mutation matrix is a *selected regression matrix*, not exhaustive proof |
+| Dependency commits `2cee987`, `2a8c7f9` | **KEEP**, 15 October. Carried two follow-ups: a smoke check on the SDK change (done, see below) and correction of two report errors (development-only visual-edit changes omitted from the plugin summary; bundle sizes measured without packet 1a) |
+
+### Hosted checks on the published build — by Claude, with the owner's H4
+
+| # | Result | What made it discriminating |
+|---|---|---|
+| H1 | Pass | Combine screen set to **11 days**, not the default 7, so the pre-fix expression would have stored 7. Built an 11-day plan, 11 tabs, legs 7d + 4d |
+| H2 | Pass | Build, save, reopen. Saved as `envelopeVersion: 2` / `door2-v7` |
+| H3 | Pass | Edit nights then Undo; full page text byte-identical (2,489 characters) to the pre-edit snapshot |
+| H4 | Pass — **owner-reported** | Trip saved before the release, reopened after |
+| H5 | Pass | Fixture `tests/fixtures/v8-hosted-seed.json`, sha256 `d2f50461178a4131bca640af4ed656a057d91a9af342801f974cd5fb35dd1aa0` verified inside the page. Four rows behaved as specified, the lock refused every command, stored-value hashes matched, the v7 control was genuinely editable. Run in an isolated session; the seeded key was removed afterwards |
+| Smoke | Pass | Signed-out destination read returned Peru's three records; a signed-in session rendered Saved trips and My profile |
+
+### Limits of this evidence
+
+- **No login was performed by Claude.** The signed-in smoke is of an already-authenticated session.
+- **H4 is a single owner statement**, without recorded values.
+- **H5 used a fixture**, not a v8 payload produced by the app, because the app produces none.
+- The owner's Chrome holds real trips and was **not** used to seed or save test data. It was left with exactly its prior trips.
+- **Deployment identity attribution.** Claude reported Base44 checkpoint metadata linking checkpoint `6ad144bd3ae501e5e9f4b039` to commit `31b5f52d8b9f54043c9477c61ade246f765ea22a`, deployed 15 October at 21:28:20 UTC; that observation was made on 15 October and is not a fresh check. The served-bundle markers corroborate the presence of packet 1a features.
+- **Unexplained:** the served bundle is 1,103,879 bytes against the reviewer's local 1,104,402 (a 523-byte difference). Recorded, **not investigated**; byte-for-byte artifact equivalence was not established.
+- `npm audit` was not re-examined after the dependency bumps.
+- An intermediate H5 comparison reported `storeUnchanged: false` because of a stale in-page variable after navigation, not a storage change; the stored value was hashed directly and matched the fixture. Recorded in the hosted-checks report.
+
+### Records still owed
+
+- **Done 18 October (Claude-project documents, not repository files):** erratum 01 v3 recorded against revision 6 on the owner's approval of that date; the stale line in `handoff-wherenova-q8-packet1-2026-10-13.md` §4 ("seasonal and availability rules") corrected, with a dated correction note. The implementation report's Save positive-control reference (B9, not L9) is already corrected in revision 3 of that report.
+- The stale comment at `flowReconciliation.test.js:82–86` ("never read by any UI code") — not touched by packet 1a; correct it in whichever packet next touches that test.
+
 ## Next
 
-1. **The Q8 implementation brief** is the next packet, now authorized by the owner's approval of the design. It must carry **D-A §11's seventeen acceptance cases** plus the identity-only stale-preview check, one declared writer, independent diff review, and owner-controlled push and publish. **Writing the brief authorizes no code.**
-2. **The Base44-bot commit `3c11c52`** was independently reviewed with a **KEEP** verdict (owner-reported; the document is not in Claude's hands). It is **not in the live build**, so nothing is pending on it. It remains unmerged into any release record.
+1. **Erratum 01 v3 is approved (18 October)** and recorded against revision 6. This records update authorizes the records work only.
+2. **Packet 1b — dormant identity-engine work** is next only if separately authorized by the owner. Its brief must implement against the corrected revision-6 text, preserve live v7 writing and the v8 read-only lock, and introduce no live identity creation or changed reconciliation. Activation belongs to packet 2 and remains held until the required packet-3 lifecycle, explanations and consent paths are implemented, independently reviewed and accepted. Approval of this records update authorizes no 1b implementation or activation, and **the 1b brief has not been started**.
 3. **Optional, each its own brief, review and hosted check:** pinning the two destination ids (both re-verified live on 13 October), and a decision on whether the first-stop-only saved-trip label is its own item.
 4. **Separately authorizable, each on its own brief and owner go-ahead:** D-C §5's read-only assessment (its first input is now partly answered), the F6 delta's own review, and D-D's Stage 1 content preparation — whose brief must state the staging boundary for **both** the graph and the activity shelf.
 5. **For the next revision of D-C:** the `Destination` schema carries no place reference, so the required-Place set is authored rather than derived.
