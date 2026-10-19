@@ -11,6 +11,17 @@
 //     acceptance.
 // R5  D-A §6.2's transition writes, from an explicitly supplied deterministic time input.
 //
+// ROUND 4, from the review of 0928272, corrects two of those where the fix had been placed
+// at the layer the symptom appeared on rather than the layer the promise lives at:
+//
+// R2.1  the recovery outcome must not enter the SERIALIZABLE TRIP GRAPH, history included.
+//       Round 3 carried it on the committed record; the review reached storage with two
+//       ordinary public operations. It now travels on the operation RESULT, and the engine
+//       refuses to hand back a trip whose graph carries one.
+// R5    the guard must test THIS OPERATION's supplied time, not whether the resulting
+//       stamp field is defined. A placement displaced, recovered and displaced again
+//       satisfied the old test with the stamp it had been carrying all along.
+//
 // Every assertion here runs through the real public opted-in routes on real producer
 // output, with the paired default control, and asserts the complete effect.
 
@@ -25,7 +36,18 @@ import { compileFamilies } from '../../src/lib/door2/families.js';
 import { buildFilledTrip } from '../../src/lib/door2/planner.js';
 import { eligibleItemsForBlock } from '../../src/lib/door2/fill.js';
 import { tripFingerprint } from '../../src/lib/door2/fingerprint.js';
+import { saveDraftTrip } from '../../src/lib/door2/draftStorage.js';
 import { synBundle, synSpec } from './helpers/syntheticHub.js';
+
+// A localStorage stand-in, the same shape `flowDraftStorage`'s seeding pattern uses. R2.1's
+// composed cycle ends at the REAL writer, so the stored bytes themselves can be read back.
+const store = new Map();
+globalThis.localStorage = {
+  getItem: (k) => store.get(k) ?? null,
+  setItem: (k, v) => store.set(k, String(v)),
+  removeItem: (k) => store.delete(k)
+};
+const STORAGE_KEY = 'door2_drafts_v1';
 
 // ---------------------------------------------------------------------------
 // The harness. Synthetic PACKAGE input driven through the real producer and the real
@@ -82,6 +104,27 @@ const states = (trip) => Object.fromEntries(Object.entries(trip.identity.blocks)
 function withoutIdentity(trip) {
   const { identity, ...rest } = trip;
   return rest;
+}
+
+/**
+ * Every place an operation-outcome key appears anywhere in a structure, at any depth and
+ * through any field — deliberately broader than `assertNoOutcomeMetadata`, which walks
+ * `history`. A regression test should prove the property, not re-run the guard.
+ */
+function outcomeKeysIn(value, path = '$') {
+  const hits = [];
+  if (value == null || typeof value !== 'object') return hits;
+  if (Array.isArray(value)) {
+    value.forEach((v, i) => hits.push(...outcomeKeysIn(v, `${path}[${i}]`)));
+    return hits;
+  }
+  for (const [key, v] of Object.entries(value)) {
+    if (key === 'identityOutcome' || key === 'identityUnrestorable' || key === 'identityRestored') {
+      hits.push(`${path}.${key}`);
+    }
+    hits.push(...outcomeKeysIn(v, `${path}.${key}`));
+  }
+  return hits;
 }
 
 const blockOf = (trip, blockId) => trip.days.flatMap((d) => d.blocks).find((b) => b.id === blockId);
@@ -342,19 +385,35 @@ test('R2: restoration cannot move an address — only content and the intent fla
 });
 
 // ---------------------------------------------------------------------------
-// R2.1 — an outcome the operation could not honour must survive the PUBLIC boundary.
+// R2.1 — an outcome the operation could not honour must survive the PUBLIC boundary,
+// ALONGSIDE the trip and never on it.
 //
-// The first R2 fix was made where the defect was reproduced — inside the restoration
-// helper — rather than where the contract is made, which is the opted-in public
-// operation. The helper computed an honest report and `applyProposal` dropped it, so
-// §3.3's "keeps its identity and edit and IS REPORTED" held for a local variable and for
-// nothing a caller could reach.
+// Round 2 fixed this inside the restoration helper, where the defect had been reproduced,
+// while the contract is made at the opted-in public operation. Round 3 moved it to that
+// operation and carried the report ON THE COMMITTED RECORD — and §4's prohibition on
+// adding metadata to a saved trip bites at the SERIALIZATION BOUNDARY. The review reached
+// storage with two ordinary public operations and no planted state: the opted-in recovery,
+// whose trip the writer does refuse, and then a DEFAULT previewAdjustNights and apply,
+// whose rebuilt trip has no top-level `identity` to trip the writer's presence guard while
+// `history` still holds the trip that does. The report was stored at history[3].
+//
+// The owner's decision of 19 October: the outcome moves OFF the trip to a separate
+// operation-outcome channel alongside it. The governing brief is NOT amended.
+//
+// So the tests below assert the channel, the graph and the stored bytes — in that order —
+// and the last of them ends at the real writer, because that is where the promise is kept.
 
-test('R2.1: through the real opted-in public route, a recovery the itinerary cannot honour is REPORTED ON THE COMMITTED RECORD, not discarded', () => {
-  const h = harness('u1');
+/**
+ * The review's step 1, through real opted-in public routes and nothing else: a pin is
+ * placed, displaced by a real excursion, its content withdrawn FROM THE CALLER'S OWN
+ * SHELF the way a catalogue change withdraws one, and the excursion removed so the exact
+ * window returns to a trip that can no longer honour what was waiting for it.
+ *
+ * Returns the whole apply RESULT, because the outcome channel is on the result.
+ */
+function unhonourableRecovery(h) {
   const seeded = h.seed(producerTrip(4, 'syn_hub'));
 
-  // 1. Pin the real full-day activity through the real `pinActivity`.
   const pinned = edit.pinActivity(seeded, 'op:lx_base:d1', { data: B.data, tokens: h.tokens });
   assert.equal(pinned.ok, true, `${pinned.reason ?? ''}`);
   const start = pinned.trip;
@@ -362,84 +421,158 @@ test('R2.1: through the real opted-in public route, a recovery the itinerary can
   const pinnedContent = blockOf(start, 'op:lx_base:d1').anchor.contentId;
   assert.equal(blockOf(start, 'op:lx_base:d1').locked, true, 'the pin really landed');
 
-  // 2. Adding the excursion reshapes that day, so the pinned window is displaced.
   const displaced = applyOptedIn(start, (t, o) => rs.previewAddExcursion(t, 'lx_base', 'sintra', o), h.optIn);
   assert.equal(displaced.identity.blocks[luid].state, 'displaced');
   assert.deepStrictEqual(displaced.identity.edits[luid].contentId, pinnedContent, 'the retained intent names the pinned content');
 
-  // 3. The pinned content is WITHDRAWN from the caller's shelf, the way a catalogue
-  //    change withdraws one. The shelf is the caller's own, so this is the supported way
-  //    to reach the branch, not a planted engine state.
   const withdrawn = B.content.filter((item) => item.id !== pinnedContent);
   const reducedOptIn = { ...h.optIn, content: withdrawn };
 
-  // 4. Remove the excursion through the real opted-in public route: the exact window
-  //    returns, correspondence recovers it, and its retained content can no longer be
-  //    placed there.
   const preview = rs.previewRemoveExcursion(displaced, 'lx_base', 'sintra', reducedOptIn);
   assert.equal(preview.ok, true, preview.why ?? '');
-  const applied = rs.applyProposal(displaced, preview.proposals[0]);
-  assert.equal(applied.ok, true, `${applied.reason ?? ''} ${JSON.stringify(applied.detail ?? {})}`);
+  const result = rs.applyProposal(displaced, preview.proposals[0]);
+  assert.equal(result.ok, true, `${result.reason ?? ''} ${JSON.stringify(result.detail ?? {})}`);
+  return { result, displaced, luid, pinnedContent };
+}
 
-  // The success shape is unchanged — the outcome rides on the RECORD, where a caller that
-  // keeps only `result.trip` still has it.
-  assert.deepStrictEqual(Object.keys(applied).sort(), ['ok', 'trip'], 'the result shape is still exactly { ok, trip }');
-  assert.deepStrictEqual(applied.trip.identityUnrestorable, [
-    { luid, blockId: 'op:lx_base:d1', contentId: pinnedContent, why: 'content_not_eligible' }
-  ], 'THE OUTCOME SURVIVES THE PUBLIC BOUNDARY');
+test('R2.1: through the real opted-in public route, a recovery the itinerary cannot honour is REPORTED ON THE OPERATION RESULT, with the committed trip graph free of it', () => {
+  const h = harness('u1');
+  const { result, displaced, luid, pinnedContent } = unhonourableRecovery(h);
+
+  // THE CHANNEL. A sibling of the trip on the RESULT, opted-in and conditional.
+  assert.deepStrictEqual(Object.keys(result).sort(), ['identityOutcome', 'ok', 'trip'], 'the outcome is a sibling of the trip, on the result');
+  assert.deepStrictEqual(result.identityOutcome, {
+    unrestorable: [{ luid, blockId: 'op:lx_base:d1', contentId: pinnedContent, why: 'content_not_eligible' }]
+  }, 'THE OUTCOME SURVIVES THE PUBLIC BOUNDARY');
+
+  // THE GRAPH. Not on the trip, not nested anywhere in it, under any of the names this
+  // outcome has ever been spelled with.
+  assert.deepStrictEqual(outcomeKeysIn(result.trip), [], 'the committed trip graph carries no outcome, at any depth');
+  assert.deepStrictEqual(id.assertNoOutcomeMetadata(result.trip), { ok: true }, 'and the engine would have refused to hand one back');
 
   // And the engine's own correct behaviour is unchanged: the window recovered, the edit
   // is kept, and the block is exactly as the filler left it — unlocked, with the filler's
   // own content, never the withdrawn one.
-  assert.equal(applied.trip.identity.blocks[luid].state, 'live', 'the window recovered');
-  assert.deepStrictEqual(applied.trip.identity.edits[luid], displaced.identity.edits[luid], 'the retained edit is kept verbatim');
-  const block = blockOf(applied.trip, 'op:lx_base:d1');
+  assert.equal(result.trip.identity.blocks[luid].state, 'live', 'the window recovered');
+  assert.deepStrictEqual(result.trip.identity.edits[luid], displaced.identity.edits[luid], 'the retained edit is kept verbatim');
+  const block = blockOf(result.trip, 'op:lx_base:d1');
   assert.notEqual(block.anchor.contentId, pinnedContent, 'the withdrawn content was not placed');
   assert.equal(block.locked, false, 'and no pin was asserted over content the traveller never chose');
-  assert.deepStrictEqual(id.validateIdentity(applied.trip, applied.trip.identity, { data: B.data }), { ok: true });
+  assert.deepStrictEqual(id.validateIdentity(result.trip, result.trip.identity, { data: B.data }), { ok: true });
 
   // PAIRED CONTROL — the same cycle with the content still on the shelf honours the pin
   // completely and reports NOTHING, so the channel is not simply always present.
-  const honoured = applyOptedIn(displaced, (t, o) => rs.previewRemoveExcursion(t, 'lx_base', 'sintra', o), h.optIn);
-  assert.equal('identityUnrestorable' in honoured, false, 'nothing unhonoured, so no outcome key at all');
-  assert.equal(blockOf(honoured, 'op:lx_base:d1').locked, true, 'and the pin really did return');
-  assert.equal(blockOf(honoured, 'op:lx_base:d1').anchor.contentId, pinnedContent);
+  const honourable = rs.previewRemoveExcursion(displaced, 'lx_base', 'sintra', h.optIn);
+  assert.equal(honourable.ok, true, honourable.why ?? '');
+  const honoured = rs.applyProposal(displaced, honourable.proposals[0]);
+  assert.equal(honoured.ok, true, honoured.reason ?? '');
+  assert.deepStrictEqual(Object.keys(honoured).sort(), ['ok', 'trip'], 'nothing unhonoured, so no outcome key at all');
+  assert.equal(blockOf(honoured.trip, 'op:lx_base:d1').locked, true, 'and the pin really did return');
+  assert.equal(blockOf(honoured.trip, 'op:lx_base:d1').anchor.contentId, pinnedContent);
 });
 
-test('R2.1: the outcome is installed EXPLICITLY — a stale one planted on the proposal trip never reaches the committed record', () => {
+test("R2.1 (THE REVIEW'S COMPOSED CYCLE, END TO END AT THE REAL WRITER): opted-in recovery, then a DEFAULT structural apply, then a save — and the stored record carries no outcome anywhere, history included", () => {
+  const h = harness('st');
+  const { result } = unhonourableRecovery(h);
+  // Non-vacuity first: the cycle must really have produced an outcome, or the absence of
+  // one downstream would prove nothing at all.
+  assert.ok(result.identityOutcome?.unrestorable?.length > 0, 'the cycle must really produce an outcome');
+
+  // Step 1 of the review's path: the opted-in result itself is refused by the writer,
+  // because it carries a top-level map. That is Rule B and is unchanged.
+  store.clear();
+  const control = saveDraftTrip({ ...producerTrip(4, 'syn_hub'), history: [] }, 'control', 'control');
+  assert.ok(control, 'a control save really works, so a later refusal is about the input');
+  const bytesBefore = store.get(STORAGE_KEY);
+  let refused = null;
+  try {
+    saveDraftTrip({ ...result.trip, history: [] }, 'bearing', 'bearing');
+  } catch (err) {
+    refused = err;
+  }
+  assert.equal(refused?.check, 'identity', 'the opted-in result is still refused by name');
+  assert.equal(store.get(STORAGE_KEY), bytesBefore, 'and the stored bytes are unchanged');
+
+  // Step 2: an ORDINARY DEFAULT structural operation on that same trip — no opt-in, no
+  // stripping, no planted anything. This is the step that got round 3's report into
+  // storage.
+  const preview = rs.previewAdjustNights(result.trip, 'lx_base', 1, h.dflt);
+  assert.equal(preview.ok, true, preview.why ?? '');
+  assert.equal(preview.proposals[0].identityMode, undefined, 'the default route records no mode');
+  const downstream = rs.applyProposal(result.trip, preview.proposals[0]);
+  assert.equal(downstream.ok, true, `${downstream.reason ?? ''}`);
+  assert.deepStrictEqual(Object.keys(downstream).sort(), ['ok', 'trip'], 'and a default result is exactly { ok, trip }');
+  assert.equal('identity' in downstream.trip, false, 'the rebuilt trip has no top-level map — which is why the writer guard passes');
+  assert.ok(downstream.trip.history.length > 0, 'while history retains the previous trip — the route the report took');
+  assert.ok(downstream.trip.history.some((h2) => h2.identity), 'and that retained snapshot really does carry a map');
+
+  // Step 3: the real writer, with the real history the page would not have stripped.
+  store.clear();
+  const draftId = saveDraftTrip(downstream.trip, 'composed', 'composed');
+  assert.ok(draftId, 'THE SAVE MUST SUCCEED — if it refused, the absence of a report would prove nothing');
+  const raw = store.get(STORAGE_KEY);
+  assert.ok(raw.length > 0, 'and something was really written');
+
+  // THE RULING. Not in the stored bytes, under any spelling; not anywhere in the parsed
+  // record, at any depth, history included.
+  for (const key of ['identityOutcome', 'identityUnrestorable', 'identityRestored']) {
+    assert.equal(raw.includes(key), false, `${key} reached the stored bytes`);
+  }
+  const stored = JSON.parse(raw);
+  assert.deepStrictEqual(outcomeKeysIn(stored), [], 'the stored record carries no outcome anywhere');
+  const entry = stored.find((e) => e.id === draftId);
+  assert.ok(entry?.trip?.history?.length > 0, 'the stored record really retains history, so the scan had somewhere to look');
+});
+
+test('R2.1: the engine REFUSES to hand back a trip whose graph carries an outcome — at the top level and nested in history alike, whatever its provenance', () => {
   const h = harness('u2');
   const start = h.seed(producerTrip(4, 'syn_hub'));
+  const snapshot = clone(start);
+  const GHOST = [{ luid: 'ghost', blockId: 'op:ghost:d9', contentId: 'nope', why: 'content_not_eligible' }];
 
+  // (a) Planted on the proposal's own trip: the top-level case.
   const preview = rs.previewAdjustNights(start, 'lx_base', 1, h.optIn);
   assert.equal(preview.ok, true, preview.why ?? '');
+  const minted = h.state.calls;
   const planted = {
     ...preview.proposals[0],
-    trip: { ...preview.proposals[0].trip, identityUnrestorable: [{ luid: 'ghost', blockId: 'op:ghost:d9', contentId: 'nope', why: 'content_not_eligible' }] }
+    trip: { ...preview.proposals[0].trip, identityUnrestorable: GHOST }
   };
-  const applied = rs.applyProposal(start, planted);
-  assert.equal(applied.ok, true, `${applied.reason ?? ''}`);
-  assert.equal('identityUnrestorable' in applied.trip, false, 'a planted outcome is removed, never inherited by spread');
-});
+  const refusedTop = rs.applyProposal(start, planted);
+  assert.equal(refusedTop.ok, false, 'a planted outcome must never be committed');
+  assert.equal(refusedTop.reason, 'operation_outcome_in_trip');
+  assert.deepStrictEqual(refusedTop.detail, { key: 'identityUnrestorable', at: 'trip' }, 'named, with the key and where it was found');
+  assert.equal(refusedTop.trip, undefined, 'nothing is installed');
+  assert.deepStrictEqual(start, snapshot, 'and the caller trip is exactly as it was');
+  assert.equal(h.state.calls, minted, 'a phase-1 abort, so this operation made zero token-source calls');
 
-test('R2.1: the outcome is outside BOTH digests, so it can never make a valid preview stale', () => {
-  const h = harness('u3');
-  const start = h.seed(producerTrip(4, 'syn_hub'));
-  const withOutcome = {
-    ...start,
-    identityUnrestorable: [{ luid: 'x', blockId: 'op:lx_base:d1', contentId: 'c', why: 'content_not_eligible' }]
-  };
-  assert.equal(tripFingerprint(withOutcome), tripFingerprint(start), 'the default digest cannot see it');
-  assert.equal(
-    tripFingerprint(withOutcome, { data: B.data }),
-    tripFingerprint(start, { data: B.data }),
-    'and neither can the identity-inclusive one — it is a sibling of the map, not part of it'
+  // (b) Riding in a HISTORY SNAPSHOT: the case the writer's own top-level guard misses,
+  // and the exact shape the review found in storage. The outcome is outside both digests,
+  // so the preview captured on this trip is not stale — the refusal is the guard's, not
+  // staleness.
+  const polluted = { ...start, identityUnrestorable: GHOST };
+  const nestedPreview = rs.previewAdjustNights(polluted, 'lx_base', 1, h.optIn);
+  assert.equal(nestedPreview.ok, true, nestedPreview.why ?? '');
+  const beforeNested = h.state.calls;
+  const refusedNested = rs.applyProposal(polluted, nestedPreview.proposals[0]);
+  assert.equal(refusedNested.ok, false, 'a snapshot in history is part of the serializable graph too');
+  assert.equal(refusedNested.reason, 'operation_outcome_in_trip');
+  assert.equal(refusedNested.detail.key, 'identityUnrestorable');
+  assert.match(refusedNested.detail.at, /^trip\.history\[\d+\]$/, 'and it is named at its place in history, not at the top level');
+  assert.equal(h.state.calls, beforeNested, 'also a phase-1 abort');
+
+  // (c) THE DEFAULT-PATH CONTROL. No default route acquires this check: an opaque field a
+  // default operation was handed is carried through exactly as it is at bc58722, which is
+  // base parity. The guard is opted-in only.
+  const defaulted = rs.previewAdjustNights(polluted, 'lx_base', 1, h.dflt);
+  assert.equal(defaulted.ok, true, defaulted.why ?? '');
+  const carried = rs.applyProposal(polluted, defaulted.proposals[0]);
+  assert.equal(carried.ok, true, `the default path must not refuse: ${carried.reason ?? ''}`);
+  assert.deepStrictEqual(
+    carried.trip.history.at(-1).identityUnrestorable,
+    GHOST,
+    'a default operation preserves an opaque field it was handed — unchanged from base'
   );
-
-  // Behaviourally: a preview captured before the outcome exists still applies after it.
-  const preview = rs.previewAdjustNights(start, 'lx_base', 1, h.optIn);
-  assert.equal(preview.ok, true, preview.why ?? '');
-  const applied = rs.applyProposal(withOutcome, preview.proposals[0]);
-  assert.equal(applied.ok, true, `a recovery outcome must never cause staleness: ${applied.reason ?? ''}`);
 });
 
 // ---------------------------------------------------------------------------
@@ -896,6 +1029,97 @@ test('R5: a committing transition REFUSES without a supplied time, through the r
   const [displacedLuid, displaced] = Object.entries(landed.identity.blocks).find(([, p]) => p.state === 'displaced');
   assert.ok(displacedLuid, 'the control must really displace a window');
   assert.equal(displaced.displacedAt, AT, 'and the committed transition carries the supplied time');
+});
+
+// The REPEATED transition, which round 3's guard let through (R5, round 4). The guard
+// asked only whether the resulting stamp field was `undefined`, and a placement that has
+// been displaced before carries its old `displacedAt` through a recovery, so the second
+// displacement paid for itself with the first one's moment. The cycle below is the
+// review's own, driven through three ordinary opted-in public operations.
+test('R5: a REPEATED transition cannot pay with an inherited stamp — the third operation supplies no time, so it refuses even though the field already has a value', () => {
+  const h = harness('rp');
+  const T1 = '2026-10-19T12:00:00.000Z';
+  const T2 = '2026-10-19T13:00:00.000Z';
+  const T3 = '2026-10-19T14:00:00.000Z';
+  const at = (t) => ({ ...h.optIn, at: t });
+
+  const start = h.seed(producerTrip(4, 'syn_hub'));
+
+  // 1. Add Sintra at T1: the full-day window is displaced and stamped T1.
+  const added = applyOptedIn(start, (t, o) => rs.previewAddExcursion(t, 'lx_base', 'sintra', o), at(T1));
+  const luid = Object.entries(added.identity.blocks).find(([, p]) => p.state === 'displaced')[0];
+  assert.ok(luid, 'the first addition must really displace a window');
+  assert.equal(added.identity.blocks[luid].displacedAt, T1);
+
+  // 2. Remove Sintra at T2: that same window returns to `live`, and correspondence
+  //    preserves the historical `displacedAt` — which is the stamp the next operation
+  //    would otherwise inherit. Asserted, because the whole counterexample rests on it.
+  const back = applyOptedIn(added, (t, o) => rs.previewRemoveExcursion(t, 'lx_base', 'sintra', o), at(T2));
+  assert.equal(back.identity.blocks[luid].state, 'live', 'the window came back');
+  assert.equal(back.identity.blocks[luid].displacedAt, T1, 'carrying the old stamp — the inheritance the guard must ignore');
+
+  // 3. Add Sintra AGAIN, supplying no time at all.
+  const snapshot = clone(back);
+  const noTime = optInWithoutTime(h);
+  const preview = rs.previewAddExcursion(back, 'lx_base', 'sintra', noTime);
+  assert.equal(preview.ok, true, preview.why ?? '');
+  assert.equal(preview.proposals[0].identityMode, true, 'the opt-in really is in force');
+  assert.equal('identityAt' in preview.proposals[0], false, 'and no time travels with it');
+  const minted = h.state.calls;
+
+  const refused = rs.applyProposal(back, preview.proposals[0]);
+  assert.equal(refused.ok, false, 'a SECOND displacement with no supplied time must refuse like the first');
+  assert.equal(refused.reason, 'transition_time_required');
+  assert.deepStrictEqual(refused.detail, { luid, state: 'displaced', field: 'displacedAt' }, 'named, with the placement and the field');
+  assert.equal(refused.trip, undefined, 'nothing is installed');
+  assert.deepStrictEqual(back, snapshot, 'and the caller trip is exactly as it was');
+  assert.equal(h.state.calls, minted, 'REFUSED BEFORE MINTING: zero token-source calls for this operation');
+
+  // PAIRED CONTROL (a): the same operation WITH a time lands, and the committed stamp is
+  // THIS operation's value, replacing the inherited one rather than keeping it.
+  const again = applyOptedIn(back, (t, o) => rs.previewAddExcursion(t, 'lx_base', 'sintra', o), at(T3));
+  assert.equal(again.identity.blocks[luid].state, 'displaced');
+  assert.equal(again.identity.blocks[luid].displacedAt, T3, "the stamp is this operation's time, not the inherited T1");
+
+  // PAIRED CONTROL (b): THE SAME FIXED TIME TWICE IS VALID. The guard asks whether this
+  // operation supplied a time, never whether the value changed — a caller may deliberately
+  // hand the same moment to two operations, and every test in this packet supplies one
+  // constant.
+  const repeated = applyOptedIn(back, (t, o) => rs.previewAddExcursion(t, 'lx_base', 'sintra', o), at(T1));
+  assert.equal(repeated.identity.blocks[luid].state, 'displaced');
+  assert.equal(repeated.identity.blocks[luid].displacedAt, T1, 'T1 again is accepted: a repeated value is not a missing one');
+});
+
+test('R5: relocation acceptance cannot pay with an inherited stamp either — a source dismissed, restored and dismissed again needs this acceptance\'s own time', () => {
+  const { withMap, sourceLuid, targetLuid } = relocationFixture('displaced');
+  const OLD = '2026-10-19T09:00:00.000Z';
+  const NOW = '2026-10-19T15:00:00.000Z';
+
+  // A source that carries a `dismissedAt` from an earlier acceptance and is displaced
+  // again — the same inheritance, on the other committing path.
+  const carrying = {
+    ...withMap,
+    identity: {
+      ...withMap.identity,
+      blocks: {
+        ...withMap.identity.blocks,
+        [sourceLuid]: { ...withMap.identity.blocks[sourceLuid], dismissedAt: OLD }
+      }
+    }
+  };
+  const snapshot = clone(carrying);
+
+  const refused = id.acceptRelocation(carrying, sourceLuid, targetLuid, { data: B.data, content: B.content });
+  assert.equal(refused.ok, false, 'the old dismissedAt must not satisfy this acceptance');
+  assert.equal(refused.reason, 'transition_time_required');
+  assert.deepStrictEqual(refused.detail, { luid: sourceLuid, state: 'dismissed', field: 'dismissedAt' });
+  assert.equal(refused.identity, undefined, 'nothing is installed');
+  assert.deepStrictEqual(carrying, snapshot, 'and the caller trip is untouched');
+
+  // PAIRED CONTROL: with this acceptance's own time it lands, and overwrites the old stamp.
+  const accepted = id.acceptRelocation(carrying, sourceLuid, targetLuid, { data: B.data, content: B.content, at: NOW });
+  assert.equal(accepted.ok, true, accepted.reason);
+  assert.equal(accepted.identity.blocks[sourceLuid].dismissedAt, NOW, "the stamp is this operation's, not the inherited one");
 });
 
 test('R5: relocation acceptance is a COMMITTING transition too — with no supplied time it refuses by name and transfers nothing', () => {

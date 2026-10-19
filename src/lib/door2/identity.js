@@ -62,8 +62,9 @@ import { findRoutePackage } from './planner.js';
 // ---------------------------------------------------------------------------
 // WHAT THIS MODULE DOES NOT DO. It adds no eligibility rule — §5.3 condition 4 calls the
 // engine's own `eligibleItemsForBlock` and reimplements no check it performs — and it
-// introduces no seasonal or availability behaviour. It never writes metadata into a saved
-// trip. It never reads `tripSequence.js`'s unrelated `stopKey`.
+// introduces no seasonal or availability behaviour. It writes no operation outcome into a
+// trip, and refuses to hand one back (`assertNoOutcomeMetadata`, below). It never reads
+// `tripSequence.js`'s unrelated `stopKey`.
 //
 // Deterministic apart from `newLuid`: no `Date.now()`, no `new Date()` and no other ambient
 // time source on any path, so a preview built twice from one trip is byte-identical.
@@ -98,6 +99,26 @@ import { findRoutePackage } from './planner.js';
 // A stamp is written at the TRANSITION only. A placement that was already `displaced` and
 // stays `displaced` keeps its original `displacedAt`, so the field means "when this
 // happened" and never decays into "when it was last noticed".
+//
+// AND THE GUARD TESTS THIS OPERATION'S SUPPLIED TIME, NOT THE RESULTING FIELD (R5, round
+// 4). Round 3's guard asked only whether the stamp field was `undefined` after the move,
+// which a value INHERITED FROM AN EARLIER OPERATION satisfies. The review walked it with
+// three ordinary opted-in operations: add Sintra at T1, which displaces a window and
+// stamps it T1; remove Sintra at T2, which returns that exact window to `live` carrying
+// its historical `displacedAt`; add Sintra again supplying NO time at all. The window
+// displaced for a second time, the guard saw a defined `displacedAt`, and the operation
+// committed a transition whose recorded moment belonged to a different operation.
+//
+// So the question is not "does the field have a value" but "did THIS operation supply the
+// time, and is the committed field that value". Both are asked of every new stamp-bearing
+// transition, independently of any historical field already on the placement. The
+// requirement is on the OPERATION, which is why the guard takes the resolved time rather
+// than inspecting the placement alone.
+//
+// It does NOT demand a different value. A caller may deliberately supply the same fixed
+// time twice — two transitions really can share a moment, and every test in this packet
+// supplies one constant — so the test is whether a time was supplied for this operation,
+// never whether it changed.
 
 export const IDENTITY_VERSION = 1;
 
@@ -117,6 +138,70 @@ const MINT_ATTEMPTS = 8;
  */
 export function identityRefusal(reason, detail = {}) {
   return { ok: false, reason, message: `identity: ${reason}`, detail };
+}
+
+// ---------------------------------------------------------------------------
+// THE SERIALIZATION BOUNDARY — an operation outcome is never trip state (R2.1, round 4).
+//
+// §4 forbids adding metadata to a saved trip. Round 3 put this packet's recovery report on
+// the committed record, reasoning that it sat outside both digests and that `saveDraftTrip`
+// refuses any trip carrying `identity` anyway. The review disproved the second half with
+// two ORDINARY PUBLIC OPERATIONS and no trickery: run the opted-in recovery, whose trip
+// the writer does refuse; then run a DEFAULT `previewAdjustNights(+1)` and
+// `applyProposal` on it. The rebuilt trip has no top-level `identity`, so the writer's
+// presence guard — which reads ONLY the top level (`draftStorage.js:137`) — passes, while
+// `history` still holds the previous trip and the writer preserves history. The report was
+// stored at `trip.history[3].identityUnrestorable`.
+//
+// Exclusion from a digest was never exclusion from storage, and the layer this prohibition
+// bites at is neither the trip nor the writer. The writer is out of scope and its guard is
+// top-level only; the trip is where round 3 put the report and is exactly what reaches
+// storage. The boundary that can hold is THE MOMENT A TRIP GRAPH LEAVES THIS ENGINE — and
+// it has to hold over the WHOLE GRAPH, every nested history snapshot included, because
+// that is the path the review actually walked.
+//
+// Two halves, together:
+//
+//   1. The outcome travels on the operation RESULT, alongside the trip — `applyProposal`
+//      returns `{ ok, trip, identityOutcome }` on the opted-in route and only when there
+//      is something to report. A future caller that keeps only `result.trip` loses it,
+//      which is a wiring requirement for that caller and not a reason to serialise a
+//      transient outcome.
+//   2. No opted-in operation hands back a trip whose graph carries an outcome key —
+//      whatever its provenance: this engine's own assignment, a planted `proposal.trip`,
+//      or a snapshot in `history`.
+//
+// It REFUSES rather than stripping. Silently deleting the key would hide the miswiring
+// that put it there, and stripping is the move §4 forbids in the neighbouring case.
+// Provenance-independent, exactly like §3.2's duplicate-site refusal. And opted-in only:
+// no default path acquires a check, so a default operation handed an opaque field it does
+// not understand still carries it through, which is base parity and is what the review
+// confirmed of the default routes.
+
+/** The keys this packet's operation outcome has been or is spelled with, in one place. */
+const OUTCOME_KEYS = Object.freeze(['identityOutcome', 'identityUnrestorable', 'identityRestored']);
+
+/**
+ * Refuses by name if this trip — or any history snapshot nested in it, at any depth —
+ * carries an operation-outcome key. Called in phase 1 on the trip about to be committed,
+ * where a refusal costs zero token-source calls, and again where an opted-in operation
+ * returns, because the outcome is produced AFTER phase 3 and so the phases cannot be the
+ * last word on it.
+ *
+ * @param {Trip} trip
+ * @param {string} [path]  Where the offending key was found, for the refusal detail.
+ */
+export function assertNoOutcomeMetadata(trip, path = 'trip') {
+  if (trip == null || typeof trip !== 'object') return { ok: true };
+  for (const key of OUTCOME_KEYS) {
+    if (key in trip) return identityRefusal('operation_outcome_in_trip', { key, at: path });
+  }
+  const history = Array.isArray(trip.history) ? trip.history : [];
+  for (let i = 0; i < history.length; i += 1) {
+    const nested = assertNoOutcomeMetadata(history[i], `${path}.history[${i}]`);
+    if (!nested.ok) return nested;
+  }
+  return { ok: true };
 }
 
 // ---------------------------------------------------------------------------
@@ -179,26 +264,49 @@ function transition(placement, state, at) {
  * D-A §6.2's write, required of every transition this operation is about to COMMIT.
  *
  * Compares the map as it will be installed against the map it came from, and refuses by
- * name if any placement has MOVED into a stamp-bearing state without its stamp. Comparing
- * the two maps, rather than trusting whichever function made the move, is what makes this
- * one guard cover every transition any committing path can produce — correspondence's
- * three, acceptance's one, and any later one — instead of one check per instance.
+ * name if any placement has MOVED into a stamp-bearing state without THIS OPERATION's
+ * time. Comparing the two maps, rather than trusting whichever function made the move, is
+ * what makes this one guard cover every transition any committing path can produce —
+ * correspondence's three, acceptance's one, and any later one — instead of one check per
+ * instance.
  *
- * Deliberately not a check on the placements themselves: a placement whose state is
+ * The test is the OPERATION's supplied time, never the resulting field's presence (R5).
+ * A placement that has been displaced before carries its old `displacedAt` through a
+ * recovery, so "the field is not `undefined`" is satisfied by a value this operation
+ * never supplied — which is how a repeated transition committed unstamped. Hence both
+ * halves, asked of every new stamp-bearing transition:
+ *
+ *   `at == null`              -> this operation supplied no time: REFUSE before minting.
+ *   `placement[field] !== at` -> the committed moment is not this operation's: REFUSE.
+ *
+ * The second half is what makes the first unspoofable by an inherited value. It does not
+ * demand a DIFFERENT value: `at` is whatever the caller supplied, and supplying the same
+ * fixed time twice is valid.
+ *
+ * Still deliberately not a check on the placements themselves: a placement whose state is
  * unchanged is not a transition, so an entry that arrived unstamped from an earlier map is
  * carried through exactly as it is rather than being retro-stamped with a time that would
  * be a fabrication.
  *
  * @param {Object|undefined} priorBlocks  The map's placements before this operation.
  * @param {Object} nextBlocks             The placements about to be committed.
+ * @param {string|number|null} at         THIS operation's resolved supplied time.
  */
-function requireTransitionStamps(priorBlocks, nextBlocks) {
+function requireTransitionStamps(priorBlocks, nextBlocks, at) {
   for (const [luid, placement] of Object.entries(nextBlocks)) {
     const field = TRANSITION_STAMP[placement?.state];
     if (field === undefined) continue; // `live` records no moment; neither does issuance
     if (priorBlocks?.[luid]?.state === placement.state) continue; // not a transition
-    if (placement[field] === undefined) {
+    if (at == null) {
       return identityRefusal('transition_time_required', { luid, state: placement.state, field });
+    }
+    if (placement[field] !== at) {
+      // The move happened but the recorded moment is not this operation's — an inherited
+      // stamp from an earlier transition of the same placement, or a write that bypassed
+      // `transition`. Either way the field would misname when this happened.
+      return identityRefusal('transition_time_not_this_operation', {
+        luid, state: placement.state, field, found: placement[field] ?? null
+      });
     }
   }
   return { ok: true };
@@ -750,6 +858,12 @@ function runPhases({ priorIdentity, nextTrip, data, tokens, at, allocation, atta
   const found = qualifyingTargets(nextTrip, { data });
   if (!found.ok) return found; // includes the duplicate-site refusal, before any issuance
 
+  // The serialization boundary's input half (R2.1). A trip graph that already carries an
+  // operation outcome — planted on `proposal.trip`, or riding in a history snapshot — must
+  // not be committed, and refusing here costs zero token-source calls, like a tie.
+  const unpolluted = assertNoOutcomeMetadata(nextTrip);
+  if (!unpolluted.ok) return unpolluted;
+
   const provisional = validateProvisional(allocation);
   if (!provisional.ok) return provisional;
 
@@ -758,8 +872,10 @@ function runPhases({ priorIdentity, nextTrip, data, tokens, at, allocation, atta
   if (!corr.ok) return corr; // a case-B tie aborts here, with zero token-source calls
 
   // D-A §6.2 is mandatory at a commit, and this is a commit (R5). Phase 1, so a missing
-  // time costs zero token-source calls and nothing is installed, exactly like a tie.
-  const stamped = requireTransitionStamps(priorIdentity?.blocks, corr.blocks);
+  // time costs zero token-source calls and nothing is installed, exactly like a tie. The
+  // guard is given THIS operation's resolved time, so a placement displaced once before
+  // and displaced again cannot satisfy it with the stamp it was already carrying.
+  const stamped = requireTransitionStamps(priorIdentity?.blocks, corr.blocks, time.at);
   if (!stamped.ok) return stamped;
 
   // --- Phase 2 — issue and resolve. --------------------------------------------------
@@ -1334,10 +1450,11 @@ export function acceptRelocation(trip, luid, targetLuid, { data, content, at } =
   const intent = identity.edits[luid];
   const blocks = { ...identity.blocks, [luid]: transition(identity.blocks[luid], 'dismissed', time.at) };
   // The same §6.2 guard as the four-phase commit, because this is the other path that
-  // commits a transition (R5). A `displaced` source always moves here, so acceptance
-  // always needs its time; refusing writes nothing — no intent is attached and `used` is
-  // untouched.
-  const stamped = requireTransitionStamps(identity.blocks, blocks);
+  // commits a transition (R5), and with this operation's own resolved time: a source that
+  // had been dismissed before and was put back cannot pay for this dismissal with that
+  // old stamp. A `displaced` source always moves here, so acceptance always needs its
+  // time; refusing writes nothing — no intent is attached and `used` is untouched.
+  const stamped = requireTransitionStamps(identity.blocks, blocks, time.at);
   if (!stamped.ok) return stamped;
 
   return {

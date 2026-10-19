@@ -7,7 +7,7 @@ import { iso, validateCatalogue } from './connectionModel.js';
 
 import { tripFingerprint } from './fingerprint.js';
 import { activityFor, classifySlot, eligibleItemsForBlock, fillTrip } from './fill.js';
-import { allocateIdentity, commitIdentity, identityOptions, restoreRecoveredIntents } from './identity.js';
+import { allocateIdentity, assertNoOutcomeMetadata, commitIdentity, identityOptions, restoreRecoveredIntents } from './identity.js';
 import { PILOT_CONTENT } from './pilotContent.js';
 import { PILOT_DATA, buildTripFromRoutePlan, findRoutePackage, planSelection, resolveExcursions } from './planner.js';
 import { PILOT_ROUTE_FAMILIES } from './pilotData.js';
@@ -1235,9 +1235,15 @@ export function listExcursionMenu(trip, stopKey, options = {}) {
  * stale refusal or any phase-1 abort. From phase 2 onwards candidates may have been
  * generated, and that is not a failure — what must hold is that nothing is committed.
  *
+ * The OPERATION OUTCOME is a sibling of the trip on this result, never a field on the
+ * trip: `identityOutcome` appears only on the opted-in route and only when the operation
+ * could not honour something, and nothing it reports is ever serializable trip state
+ * (R2.1). A default result is exactly `{ ok, trip }`, as it is at `bc58722`.
+ *
  * @param {Trip} trip
  * @param {Object} proposal
- * @returns {{ok: true, trip: Trip} | {ok: false, reason: string, message: string}}
+ * @returns {{ok: true, trip: Trip, identityOutcome?: {unrestorable: Object[]}}
+ *          | {ok: false, reason: string, message: string}}
  */
 export function applyProposal(trip, proposal) {
   const evidenceFailure = structuralEvidenceGuard(trip) ?? structuralEvidenceGuard(proposal?.trip);
@@ -1280,26 +1286,34 @@ export function applyProposal(trip, proposal) {
   // `proposal.trip` would carry `proposal.trip.identity` through — the same mechanism as
   // D-B §1's downgrade hole — so the key is assigned, never inherited.
   const committedWithMap = { ...restoration.trip, identity: committed.identity };
-  // R2.1: AN OUTCOME THE OPERATION COULD NOT HONOUR SURVIVES THIS BOUNDARY. §3.3 promises
-  // that a placement whose content is no longer eligible "keeps its identity and edit and
-  // is reported", and a report that reaches only a local variable inside the helper is not
-  // reported: an integrated caller keeps `result.trip`, so an outcome kept only on the
-  // result object is lost at the first state assignment. It is therefore carried ON THE
-  // COMMITTED RECORD.
+  // R2.1: AN OUTCOME THE OPERATION COULD NOT HONOUR SURVIVES THIS BOUNDARY — ALONGSIDE
+  // THE TRIP, NEVER ON IT. §3.3 promises that a placement whose content is no longer
+  // eligible "keeps its identity and edit and is reported", and a report that reaches only
+  // a local variable inside the restoration helper is not reported at all. Round 2 fixed
+  // that in the helper, where the defect was reproduced rather than where the contract is
+  // made. Round 3 moved it to the public operation and carried it ON THE COMMITTED RECORD,
+  // reasoning that a caller keeping only `result.trip` would otherwise lose it.
   //
-  // It is OUTSIDE BOTH DIGESTS, by construction: `tripFingerprint` hashes `{ spec,
-  // routePlan, days }` plus conditional evidence (`fingerprint.js:43-45`), and the
-  // identity addition digests `trip.identity` minus `used` (§3.7). A top-level sibling of
-  // `identity` is in neither, so a recovery outcome can never make a valid preview stale.
+  // That reasoning is withdrawn, by the owner's decision of 19 October: §4's prohibition on
+  // adding metadata to a saved trip stands unamended, and the review proved the placement
+  // reached storage through two ordinary public operations — this opted-in result, then a
+  // DEFAULT `previewAdjustNights` and apply, whose rebuilt trip has no top-level
+  // `identity` to trip the writer's guard while `history` still holds this one. A caller
+  // that assigns only `result.trip` is a WIRING REQUIREMENT FOR THAT CALLER; it was never a
+  // reason to serialise a transient outcome.
   //
-  // Emitted only on the opted-in route and only when there IS something unhonoured, so
-  // the success shape stays exactly `{ ok, trip }` and an opted-in trip with nothing
-  // unhonoured is key-for-key what it was before this correction. Installed EXPLICITLY,
-  // never inherited — the same discipline as the map above, so a stale outcome cannot ride
-  // in on `proposal.trip`.
-  if (restoration.unrestorable.length > 0) committedWithMap.identityUnrestorable = restoration.unrestorable;
-  else delete committedWithMap.identityUnrestorable;
-  return { ok: true, trip: committedWithMap };
+  // So the outcome is a sibling of the trip ON THE RESULT, and `assertNoOutcomeMetadata`
+  // refuses to hand back any trip whose graph carries one — history included, whatever its
+  // provenance. The phases cannot carry that check alone: this assignment happens after
+  // phase 3, so the invariant is re-asserted here, where the graph actually leaves the
+  // engine.
+  const clean = assertNoOutcomeMetadata(committedWithMap);
+  if (!clean.ok) return clean;
+  // Emitted only on the opted-in route and only when there IS something unhonoured, so a
+  // default result is untouched and an opted-in result with nothing unhonoured is still
+  // exactly `{ ok, trip }`.
+  if (restoration.unrestorable.length === 0) return { ok: true, trip: committedWithMap };
+  return { ok: true, trip: committedWithMap, identityOutcome: { unrestorable: restoration.unrestorable } };
 }
 
 export function previewAdjustNights(trip, stopKey, delta, options = {}) {
