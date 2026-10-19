@@ -6,6 +6,7 @@ import { editEvidenceGuard } from './connectionEvidence.js';
 
 import { FAILURE_STATES } from './failureStates.js';
 import { activityFor, blockContext, classifySlot, eligibleItemsForBlock, scoreItem } from './fill.js';
+import { identityOptions, recordBlockIntents, undoIdentity } from './identity.js';
 import { PILOT_CONTENT } from './pilotContent.js';
 import { validateEditInvariant } from './validate.js';
 
@@ -13,6 +14,22 @@ import { validateEditInvariant } from './validate.js';
 // Every function is pure: takes a Trip, returns a new Trip (or an EditResult
 // failure). The calendar never changes — same invariant as fill.js.
 // History is maintained as an in-memory stack on the trip; undo pops it.
+//
+// ---------------------------------------------------------------------------
+// Q8 packet 1b. Seven exports — `swapActivity`, `rejectActivity`, `pinActivity`,
+// `unpinActivity`, `makeDayLighter`, `swapDays` and `undo` — gain ONE appended optional
+// parameter, `identity`, after their existing content parameter where one exists. `null`
+// means exactly the behaviour each had before that packet, and `null` is what every
+// production caller gets: no call site in `src/pages/**` passes an opt-in.
+//
+// Bounded edits never pass through a structural path: this file has ZERO references to
+// `reconcile` or `applyProposal`, and the page calls `swapActivity` directly. So identity
+// here is only ever INTENT — `edits[luid]` — and never a placement or an issuance. A swap
+// changes `edits[luid].contentId` and leaves `blocks[luid]` untouched, because identity
+// belongs to the logical block independently of intent.
+//
+// Coverage is claimed as complete for these seven and no more. If another intent-bearing
+// export is found it is reported as a finding, not absorbed and not left without identity.
 
 // ---------------------------------------------------------------------------
 // Internal helpers
@@ -80,9 +97,13 @@ function buildActivityBlock(existingBlock, item, slot, { userEdited = true } = {
 
 const HISTORY_CAP = 20;
 
-/** Common finishing steps: update placed/meta, push history, validate. */
-function finish(newTrip, preTrip, newDays, updatedChoices) {
-  const withDays = { ...newTrip, days: newDays, spec: { ...newTrip.spec, choices: updatedChoices } };
+/**
+ * Common finishing steps: update placed/meta, push history, validate.
+ * `identityMap` is written only under the opt-in; omitting it leaves the result object
+ * identical to what this function produced before packet 1b.
+ */
+function finish(newTrip, preTrip, newDays, updatedChoices, identityMap) {
+  const withDays = { ...newTrip, days: newDays, spec: { ...newTrip.spec, choices: updatedChoices }, ...(identityMap !== undefined ? { identity: identityMap } : {}) };
   const withMeta = applyMeta(withDays, preTrip.status, preTrip.warnings);
   // Snapshot without its own history: entries that carried their stacks made the saved size double per edit.
   const history = [...(preTrip.history ?? []), { ...preTrip, history: [] }];
@@ -90,6 +111,36 @@ function finish(newTrip, preTrip, newDays, updatedChoices) {
   const result = { ...withMeta, history: capped };
   validateEditInvariant(result, preTrip);
   return { ok: true, trip: result };
+}
+
+/**
+ * One complete intent entry per changed block, describing each block AS THE OPERATION
+ * LEAVES IT, written onto a copy of the trip's map. A complete entry is constructed
+ * whether or not the placement already had one, so pin, unpin and a day swap record real
+ * intent even where their inputs carried no earlier edit.
+ *
+ * Refuses by name — leaving the caller's trip untouched — when the trip carries no map, or
+ * when no live placement covers a changed block. Packet 1b creates identity nowhere, so
+ * fabricating a partial map here would fail the coverage check and would be identity
+ * creation on a path the packet forbids.
+ *
+ * @param {Trip} trip
+ * @param {string} intent
+ * @param {string} provenance
+ * @param {Block[]} blocks  The blocks as the operation leaves them.
+ */
+function intentsFor(trip, intent, provenance, blocks) {
+  return recordBlockIntents(
+    trip,
+    blocks.map((block) => ({
+      block,
+      intent,
+      contentId: block.anchor?.contentId ?? null,
+      locked: block.locked === true,
+      userEdited: block.userEdited === true,
+      provenance
+    }))
+  );
 }
 
 function pickBest(eligible, trip, block, paceOverride) {
@@ -112,9 +163,10 @@ function pickBest(eligible, trip, block, paceOverride) {
  * @param {string} blockId
  * @param {string|null} [contentId]
  * @param {ContentItem[]} [content]
+ * @param {null|true|{data?: Object}} [identity]  Q8 1b's opt-in; `null` is today's behaviour.
  * @returns {EditResult}
  */
-export function swapActivity(trip, blockId, contentId = null, content = PILOT_CONTENT) {
+export function swapActivity(trip, blockId, contentId = null, content = PILOT_CONTENT, identity = null) {
   const evidenceFailure = editEvidenceGuard(trip); if (evidenceFailure) return evidenceFailure;
   const found = findBlock(trip, blockId);
   if (!found) return { ok: false, reason: 'block_not_found', message: `Block "${blockId}" not found.` };
@@ -145,7 +197,11 @@ export function swapActivity(trip, blockId, contentId = null, content = PILOT_CO
   const updatedChoices = { ...oldChoices, placed: placedWithoutOld };
 
   const newDays = replaceBlock(trip, newBlock);
-  return finish(trip, trip, newDays, updatedChoices);
+  if (!identityOptions(identity)) return finish(trip, trip, newDays, updatedChoices);
+  // `edits[luid].contentId` follows the new content; `blocks[luid]` is untouched.
+  const recorded = intentsFor(trip, 'swap', 'swapActivity', [newBlock]);
+  if (!recorded.ok) return recorded;
+  return finish(trip, trip, newDays, updatedChoices, recorded.identity);
 }
 
 // ---------------------------------------------------------------------------
@@ -157,9 +213,10 @@ export function swapActivity(trip, blockId, contentId = null, content = PILOT_CO
  * @param {Trip} trip
  * @param {string} blockId
  * @param {ContentItem[]} [content]
+ * @param {null|true|{data?: Object}} [identity]  Q8 1b's opt-in; `null` is today's behaviour.
  * @returns {EditResult}
  */
-export function rejectActivity(trip, blockId, content = PILOT_CONTENT) {
+export function rejectActivity(trip, blockId, content = PILOT_CONTENT, identity = null) {
   const evidenceFailure = editEvidenceGuard(trip); if (evidenceFailure) return evidenceFailure;
   const found = findBlock(trip, blockId);
   if (!found) return { ok: false, reason: 'block_not_found', message: `Block "${blockId}" not found.` };
@@ -194,7 +251,16 @@ export function rejectActivity(trip, blockId, content = PILOT_CONTENT) {
   }
 
   const newDays = replaceBlock(trip, newBlock);
-  return finish(trip, trip, newDays, updatedChoices);
+  if (!identityOptions(identity)) return finish(trip, trip, newDays, updatedChoices);
+  // Two outcomes, and BOTH keep the placement. Where an alternative was eligible,
+  // `edits[luid].contentId` is the replacement. Where none was, the block becomes an open
+  // gap at an UNCHANGED id and address, so the placement stays `live` and
+  // `edits[luid].contentId` is null: the window still exists, it is empty. That null
+  // records no trip-wide meaning — `choices.rejected` keeps exactly the content-id
+  // exclusion meaning it has today, and no refill or rebuild policy is widened by it.
+  const recorded = intentsFor(trip, 'reject', 'rejectActivity', [newBlock]);
+  if (!recorded.ok) return recorded;
+  return finish(trip, trip, newDays, updatedChoices, recorded.identity);
 }
 
 // ---------------------------------------------------------------------------
@@ -204,9 +270,10 @@ export function rejectActivity(trip, blockId, content = PILOT_CONTENT) {
  * Lock a block against future edits and add its content to spec.choices.pinned.
  * @param {Trip} trip
  * @param {string} blockId
+ * @param {null|true|{data?: Object}} [identity]  Q8 1b's opt-in; `null` is today's behaviour.
  * @returns {EditResult}
  */
-export function pinActivity(trip, blockId) {
+export function pinActivity(trip, blockId, identity = null) {
   const evidenceFailure = editEvidenceGuard(trip); if (evidenceFailure) return evidenceFailure;
   const found = findBlock(trip, blockId);
   if (!found) return { ok: false, reason: 'block_not_found', message: `Block "${blockId}" not found.` };
@@ -222,16 +289,22 @@ export function pinActivity(trip, blockId) {
   const updatedChoices = { ...oldChoices, pinned };
 
   const newDays = replaceBlock(trip, newBlock);
-  return finish(trip, trip, newDays, updatedChoices);
+  if (!identityOptions(identity)) return finish(trip, trip, newDays, updatedChoices);
+  // `edits[luid].locked` becomes true, in a COMPLETE entry constructed whether or not the
+  // placement already had one — a pin is often the first intent a window ever carries.
+  const recorded = intentsFor(trip, 'pin', 'pinActivity', [newBlock]);
+  if (!recorded.ok) return recorded;
+  return finish(trip, trip, newDays, updatedChoices, recorded.identity);
 }
 
 /**
  * Unlock a block and remove its content from spec.choices.pinned.
  * @param {Trip} trip
  * @param {string} blockId
+ * @param {null|true|{data?: Object}} [identity]  Q8 1b's opt-in; `null` is today's behaviour.
  * @returns {EditResult}
  */
-export function unpinActivity(trip, blockId) {
+export function unpinActivity(trip, blockId, identity = null) {
   const evidenceFailure = editEvidenceGuard(trip); if (evidenceFailure) return evidenceFailure;
   const found = findBlock(trip, blockId);
   if (!found) return { ok: false, reason: 'block_not_found', message: `Block "${blockId}" not found.` };
@@ -246,7 +319,11 @@ export function unpinActivity(trip, blockId) {
   const updatedChoices = { ...oldChoices, pinned };
 
   const newDays = replaceBlock(trip, newBlock);
-  return finish(trip, trip, newDays, updatedChoices);
+  if (!identityOptions(identity)) return finish(trip, trip, newDays, updatedChoices);
+  // `edits[luid].locked` becomes false, in a complete entry constructed either way.
+  const recorded = intentsFor(trip, 'unpin', 'unpinActivity', [newBlock]);
+  if (!recorded.ok) return recorded;
+  return finish(trip, trip, newDays, updatedChoices, recorded.identity);
 }
 
 // ---------------------------------------------------------------------------
@@ -259,9 +336,10 @@ export function unpinActivity(trip, blockId) {
  * @param {Trip} trip
  * @param {number} dayNumber
  * @param {ContentItem[]} [content]
+ * @param {null|true|{data?: Object}} [identity]  Q8 1b's opt-in; `null` is today's behaviour.
  * @returns {EditResult}
  */
-export function makeDayLighter(trip, dayNumber, content = PILOT_CONTENT) {
+export function makeDayLighter(trip, dayNumber, content = PILOT_CONTENT, identity = null) {
   const evidenceFailure = editEvidenceGuard(trip); if (evidenceFailure) return evidenceFailure;
   const day = trip.days.find((d) => d.dayNumber === dayNumber);
   if (!day) return { ok: false, reason: 'block_not_found', message: `Day ${dayNumber} not found.` };
@@ -314,7 +392,17 @@ export function makeDayLighter(trip, dayNumber, content = PILOT_CONTENT) {
 
   const newDays = trip.days.map((d) => (d.dayNumber === dayNumber ? { ...d, blocks: newBlocks } : d));
   const updatedChoices = trip.spec.choices;
-  return finish(trip, trip, newDays, updatedChoices);
+  if (!identityOptions(identity)) return finish(trip, trip, newDays, updatedChoices);
+  // Intent is recorded per block CHANGED, and only those: every branch above that leaves a
+  // block alone — locked, not an activity or gap, no eligible item, already the best —
+  // returns the same object, so identity comparison names exactly the changed set. Blocks
+  // skipped for `block.locked` therefore keep whatever intent they already had.
+  // An empty changed set still goes through the same path, so the opt-in refuses a trip
+  // with no map just as consistently as it would when a block did change.
+  const changed = newBlocks.filter((block, i) => block !== day.blocks[i]);
+  const recorded = intentsFor(trip, 'make_day_lighter', 'makeDayLighter', changed);
+  if (!recorded.ok) return recorded;
+  return finish(trip, trip, newDays, updatedChoices, recorded.identity);
 }
 
 // ---------------------------------------------------------------------------
@@ -415,9 +503,10 @@ function checkSwapDays(trip, dayNumberA, dayNumberB, content) {
  * @param {number} dayNumberA
  * @param {number} dayNumberB
  * @param {ContentItem[]} [content]
+ * @param {null|true|{data?: Object}} [identity]  Q8 1b's opt-in; `null` is today's behaviour.
  * @returns {EditResult}
  */
-export function swapDays(trip, dayNumberA, dayNumberB, content = PILOT_CONTENT) {
+export function swapDays(trip, dayNumberA, dayNumberB, content = PILOT_CONTENT, identity = null) {
   const evidenceFailure = editEvidenceGuard(trip); if (evidenceFailure) return evidenceFailure;
   const checked = checkSwapDays(trip, dayNumberA, dayNumberB, content);
   if (!checked.ok) return checked;
@@ -431,12 +520,21 @@ export function swapDays(trip, dayNumberA, dayNumberB, content = PILOT_CONTENT) 
     }
     return next;
   };
+  const newBlocksA = dayA.blocks.map((b, i) => moveInto(b, dayB.blocks[i]));
+  const newBlocksB = dayB.blocks.map((b, i) => moveInto(b, dayA.blocks[i]));
   const newDays = trip.days.map((d) => {
-    if (d === dayA) return { ...d, blocks: d.blocks.map((b, i) => moveInto(b, dayB.blocks[i])) };
-    if (d === dayB) return { ...d, blocks: d.blocks.map((b, i) => moveInto(b, dayA.blocks[i])) };
+    if (d === dayA) return { ...d, blocks: newBlocksA };
+    if (d === dayB) return { ...d, blocks: newBlocksB };
     return d;
   });
-  return finish(trip, trip, newDays, trip.spec.choices);
+  if (!identityOptions(identity)) return finish(trip, trip, newDays, trip.spec.choices);
+  // The edits follow the moved content while each placement keeps its OWN address: a
+  // window does not travel, its content does. Intent is recorded for every block of both
+  // days, because a day swap is a real operation on each of them even where the inputs
+  // carried no earlier edit.
+  const recorded = intentsFor(trip, 'swap_days', 'swapDays', [...newBlocksA, ...newBlocksB]);
+  if (!recorded.ok) return recorded;
+  return finish(trip, trip, newDays, trip.spec.choices, recorded.identity);
 }
 
 /**
@@ -459,14 +557,40 @@ export function swappableDays(trip, dayNumber, content = PILOT_CONTENT) {
 
 /**
  * Pop the most recent trip from the history stack.
+ *
+ * Q8 packet 1b: THE DEFAULT PATH IS UNCHANGED, and the default path is every production
+ * call — `handleUndo` calls `undo(t)` on any record the reader admits. With `identity`
+ * null the snapshot's own `identity` is restored exactly as it stands: no union, no
+ * mixed-history refusal, no behaviour change on any admitted record, identity-bearing
+ * ones included. An earlier draft of this packet made the union and the refusal
+ * unconditional, which would have changed behaviour on exactly the records the reader
+ * admits today; that is why both are gated here.
+ *
+ * Under the opt-in, `blocks` and `edits` rewind with the snapshot while `used` is the
+ * union of the snapshot's and the current trip's — the only field that does not rewind,
+ * and no entry is ever deleted to free a key. Mixed history, one side carrying a map and
+ * the other not, refuses by name rather than fabricating a `used`-only map.
+ *
+ * Two source facts this relies on: history entries carry no history of their own and are
+ * capped at HISTORY_CAP, which is harmless because the current trip's `used` has
+ * accumulated everything; and history is not persisted — the page saves with
+ * `history: []`.
+ *
  * @param {Trip} trip
+ * @param {null|true|{data?: Object}} [identity]  Q8 1b's opt-in; `null` is today's behaviour.
  * @returns {EditResult}
  */
-export function undo(trip) {
+export function undo(trip, identity = null) {
   const evidenceFailure = editEvidenceGuard(trip); if (evidenceFailure) return evidenceFailure;
   if (!trip.history?.length) return { ok: false, reason: 'nothing_to_undo', message: 'Nothing to undo.' };
   // Entries are stored without history, so the remaining stack is rebuilt from the outer array.
   const prior = trip.history[trip.history.length - 1];
   const priorFailure = editEvidenceGuard(prior); if (priorFailure) return priorFailure;
-  return { ok: true, trip: { ...prior, history: trip.history.slice(0, -1) } };
+  if (!identityOptions(identity)) return { ok: true, trip: { ...prior, history: trip.history.slice(0, -1) } };
+  const restored = undoIdentity(prior, trip);
+  if (!restored.ok) return restored;
+  return {
+    ok: true,
+    trip: { ...prior, history: trip.history.slice(0, -1), ...(restored.identity !== undefined ? { identity: restored.identity } : {}) }
+  };
 }

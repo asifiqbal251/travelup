@@ -1,0 +1,966 @@
+/** @typedef {import('./types.js').Trip} Trip */
+/** @typedef {import('./types.js').Block} Block */
+/** @typedef {import('./types.js').ContentItem} ContentItem */
+
+import { classifySlot, eligibleItemsForBlock } from './fill.js';
+import { findRoutePackage } from './planner.js';
+
+// Q8 durable edit identity — the engine (packet 1b).
+//
+// Layer 1 is the five generated block shapes (`tr:`, `ex:`, `op:`, `rest:`, `day:`),
+// regenerated freely on every rebuild. Layer 2 is a durable `luid`, issued once per
+// logical block and carried across rebuilds, so a traveller's edit belongs to a named
+// thing rather than to an id the scheduler is free to recompute (D-A §4).
+//
+//   trip.identity = {
+//     version: 1,
+//     used:   [ "<luid>", … ],                       // every luid ever ISSUED in this trip
+//     blocks: { "<luid>": { stopKey, kind, address, state, excursionId? } },
+//     edits:  { "<luid>": { intent, contentId, locked, userEdited, provenance } }
+//   }
+//
+// ---------------------------------------------------------------------------
+// DORMANCY. Nothing in this module runs on a production call path. Every caller
+// reaches it only through an explicit opt-in (`options.identity === true` at the seven
+// public previews, a trailing `identity` argument on the bounded edits and the
+// fingerprint), and no call site in `src/pages/**` passes one. This module creates no
+// identity by itself: `initialiseIdentityForBuild` and `initialiseIdentityForLegacyTrip`
+// are implemented here and called from nowhere, which is packet 2's work.
+//
+// ---------------------------------------------------------------------------
+// WHAT MINTS, per erratum 02 v2 to the revision-6 packet.
+//
+//   `op:<stopId>:d<offset>[:<k>]`   one luid, kind 'open',      address { dayOffset, ordinal, slot }
+//   `ex:<stopId>:<placeId>:site`    one luid, kind 'excursion',  address { excursionPlaceId }
+//   `ex:…:out`, `ex:…:back`         nothing — transport
+//   `tr:`, `day:`, `rest:`          nothing
+//
+// The excursion site block mints for FIXED and SELECTED excursions alike. `fill.js`
+// converts any `type: 'open'` block to an activity by type, not by id prefix
+// (`fill.js:238-242`), and `pinActivity` accepts any activity block (`edit.js:215`), so a
+// fixed excursion's site block is a real editable, pinnable surface. Excluding it would
+// leave an existing class of traveller edit with no identity.
+//
+// The address keys on PLACE, not on excursion id: `excursionId` is absent from every
+// block and exists only for *selected* excursions, while the editable surface exists for
+// both. `excursionId` is therefore recorded as placement metadata, resolved through the
+// compiled package with the CALLER's `data` — never `PILOT_DATA`, never a global — and
+// recorded as `null` when it cannot be resolved (a withdrawn menu entry, an unknown
+// variant, a fixed excursion with no menu). Unresolved metadata never drops a placement.
+//
+// Place is a sufficient key only within one stop, and its uniqueness is NOT guaranteed by
+// the authoring compiler: `checkExcursionMenus` skips a stop with no menu
+// (`families.js:181`), builds its place set *from* the fixed list and so collapses
+// duplicates within it (`:184`), and checks only menu entries against that set
+// (`:190-192`) — the fixed list is never checked against itself, though the header
+// comment at `:174-175` claims it is. A duplicate `(stopKey, excursionPlaceId)` site
+// target is therefore refused BY NAME, BEFORE issuance, whatever its provenance. The
+// refusal is local to this boundary: `families.js`, the scheduler and the address model
+// are unchanged.
+//
+// ---------------------------------------------------------------------------
+// WHAT THIS MODULE DOES NOT DO. It adds no eligibility rule — §5.3 condition 4 calls the
+// engine's own `eligibleItemsForBlock` and reimplements no check it performs — and it
+// introduces no seasonal or availability behaviour. It never writes metadata into a saved
+// trip. It never reads `tripSequence.js`'s unrelated `stopKey`.
+//
+// Deterministic apart from `newLuid`: no `Date.now()` on any path that shapes a map, so a
+// preview built twice from one trip is byte-identical. State transitions are recorded as
+// `state` alone; D-A §6.2's optional `displacedAt`/`orphanedAt`/`retiredAt`/`dismissedAt`
+// stamps are NOT written, because the only clock available here would make `restructure.js`
+// non-deterministic against its own stated contract. Recorded as a finding for the diff
+// review; packet 2 can add them with a supplied clock.
+
+export const IDENTITY_VERSION = 1;
+
+/** Lifecycle states that still contest an address on a rebuild (D-A §5.1 matching domain). */
+const RETAINED_STATES = Object.freeze(['live', 'displaced']);
+
+/** Bounded remint attempts before an issuance refuses the operation whole (D-A §6.1). */
+const MINT_ATTEMPTS = 8;
+
+// ---------------------------------------------------------------------------
+// Refusals. Every failure in this module is named, local, and installs nothing.
+
+/**
+ * @param {string} reason
+ * @param {Object} [detail]
+ * @returns {{ok: false, reason: string, message: string, detail: Object}}
+ */
+export function identityRefusal(reason, detail = {}) {
+  return { ok: false, reason, message: `identity: ${reason}`, detail };
+}
+
+// ---------------------------------------------------------------------------
+// The opt-in parameter.
+
+/**
+ * Normalises the trailing `identity` parameter the touched exports accept. `null`,
+ * `undefined` and `false` mean today's behaviour exactly; anything else opts in. An
+ * object supplies `data` (for excursion metadata) and `tokens` (a token environment,
+ * which only a test ever supplies).
+ *
+ * @param {null|true|{data?: Object, tokens?: Object}} identity
+ * @returns {{data: Object|null, tokens: Object|undefined}|null}
+ */
+export function identityOptions(identity) {
+  if (identity == null || identity === false) return null;
+  const o = typeof identity === 'object' ? identity : {};
+  return { data: o.data ?? null, tokens: o.tokens };
+}
+
+// ---------------------------------------------------------------------------
+// §3.1 The address, and the one tested id parser.
+
+/**
+ * `ordinal` is the scheduler's `k`, present in the id only when `k > 1`
+ * (`schedule.js:312`), and it is NOT recomputable from a persisted trip: the busy-interval
+ * set and the arrival clamp the scheduler used are not persisted. So the id is parsed.
+ * That is a specified choice, not a necessity, and the parser pays for it by validating
+ * its own grammar and cross-checking the stop it parsed against `block.anchor.stopId`.
+ * A malformed id or a mismatch fails BY NAME; an unparseable suffix never defaults to 1.
+ */
+const OP_ID = /^op:(.+):d(\d+)(?::(\d+))?$/;
+const EX_SITE_ID = /^ex:(.+):([^:]+):site$/;
+const EX_ANY_ID = /^ex:(.+):([^:]+):(out|site|back)$/;
+
+/** A plain non-negative integer with no leading zeros — what `schedule.js` emits. */
+function plainInt(text) {
+  return /^(0|[1-9]\d*)$/.test(text) ? Number(text) : null;
+}
+
+/**
+ * The identity target of one block, or `null` when the block does not mint.
+ *
+ * @param {Block} block
+ * @returns {{ok: true, kind: string, stopKey: string, address: Object, blockId: string, key: string}
+ *          | {ok: false, reason: string, message: string, detail: Object}
+ *          | null}
+ */
+export function identityTargetFor(block) {
+  const id = typeof block?.id === 'string' ? block.id : null;
+  if (id == null) return null;
+  const anchorStopId = block?.anchor?.stopId ?? null;
+
+  if (id.startsWith('op:')) {
+    const m = OP_ID.exec(id);
+    if (!m) return identityRefusal('op_id_malformed', { blockId: id });
+    const [, stopKey, offsetText, ordinalText] = m;
+    const dayOffset = plainInt(offsetText);
+    if (dayOffset === null) return identityRefusal('op_id_malformed', { blockId: id, part: 'dayOffset' });
+    let ordinal = 1;
+    if (ordinalText !== undefined) {
+      const k = plainInt(ordinalText);
+      // The generator appends `:k` only for `k > 1`, so `:0` and `:1` are not grammar.
+      if (k === null || k < 2) return identityRefusal('op_id_ordinal_invalid', { blockId: id, ordinal: ordinalText });
+      ordinal = k;
+    }
+    if (stopKey === '' || stopKey !== anchorStopId) {
+      return identityRefusal('op_id_stop_mismatch', { blockId: id, parsed: stopKey, anchorStopId });
+    }
+    const address = { dayOffset, ordinal, slot: classifySlot(block) };
+    return { ok: true, kind: 'open', stopKey, address, blockId: id, key: targetKey(stopKey, 'open', address) };
+  }
+
+  if (id.startsWith('ex:')) {
+    const site = EX_SITE_ID.exec(id);
+    if (!site) {
+      // `out` and `back` are transport and mint nothing; anything else is a malformed id.
+      return EX_ANY_ID.test(id) ? null : identityRefusal('excursion_id_malformed', { blockId: id });
+    }
+    const [, stopKey, excursionPlaceId] = site;
+    if (stopKey === '' || stopKey !== anchorStopId) {
+      return identityRefusal('excursion_id_stop_mismatch', { blockId: id, parsed: stopKey, anchorStopId });
+    }
+    const address = { excursionPlaceId };
+    return { ok: true, kind: 'excursion', stopKey, address, blockId: id, key: targetKey(stopKey, 'excursion', address) };
+  }
+
+  return null; // tr:, day:, rest: and anything else — unchanged, mints nothing.
+}
+
+/** The canonical comparison key of an address, by kind. */
+function addressKey(kind, address) {
+  if (kind === 'excursion') return `x|${address?.excursionPlaceId ?? ''}`;
+  return `o|${address?.dayOffset ?? ''}|${address?.ordinal ?? ''}|${address?.slot ?? ''}`;
+}
+
+/** Matching is always scoped to one stop, so the key carries `stopKey`. */
+function targetKey(stopKey, kind, address) {
+  return `${stopKey ?? ''}\u0000${addressKey(kind, address)}`;
+}
+
+/** The same key, derived from a stored placement rather than from a block. */
+export function placementKey(placement) {
+  return targetKey(placement?.stopKey, placement?.kind, placement?.address);
+}
+
+// ---------------------------------------------------------------------------
+// §3.2 Excursion metadata — resolved with the CALLER's data, never PILOT_DATA.
+
+/**
+ * The selected excursion whose place this site block visits, or `null` when it cannot be
+ * resolved. A fixed excursion has no id at all (`RoutePackageExcursion` carries only
+ * `placeId`, `connectionId`, `hoursOnSite`), so `null` is the correct, honest record for
+ * it as much as for a withdrawn menu entry or an unknown variant.
+ */
+function resolveExcursionId(data, routePlan, stopKey, excursionPlaceId) {
+  if (!data || !routePlan?.variantId) return null;
+  const menu = findRoutePackage(data, routePlan.variantId)?.stops.find((s) => s.id === stopKey)?.excursionMenu ?? [];
+  return menu.find((m) => m.placeId === excursionPlaceId)?.id ?? null;
+}
+
+/**
+ * Every qualifying target the build currently has, in day then block order, with the
+ * duplicate `(stopKey, excursionPlaceId)` site refusal applied BEFORE any issuance.
+ *
+ * @param {Trip} trip
+ * @param {{data?: Object}} [opts]
+ * @returns {{ok: true, targets: Object[]} | {ok: false, reason: string, message: string, detail: Object}}
+ */
+export function qualifyingTargets(trip, { data } = {}) {
+  const targets = [];
+  const seen = new Map();
+  for (const day of trip?.days ?? []) {
+    for (const block of day?.blocks ?? []) {
+      const t = identityTargetFor(block);
+      if (t === null) continue;
+      if (t.ok !== true) return t;
+      const first = seen.get(t.key);
+      if (first !== undefined) {
+        return identityRefusal(
+          t.kind === 'excursion' ? 'duplicate_site_target' : 'duplicate_target_address',
+          { stopKey: t.stopKey, kind: t.kind, address: t.address, blockIds: [first, t.blockId] }
+        );
+      }
+      seen.set(t.key, t.blockId);
+      targets.push(
+        t.kind === 'excursion'
+          ? { ...t, block, excursionId: resolveExcursionId(data, trip?.routePlan, t.stopKey, t.address.excursionPlaceId) }
+          : { ...t, block }
+      );
+    }
+  }
+  return { ok: true, targets };
+}
+
+/** What a placement looks like for a target, at issuance or on a match. */
+function placementFor(target) {
+  return {
+    stopKey: target.stopKey,
+    kind: target.kind,
+    address: { ...target.address },
+    state: 'live',
+    ...(target.kind === 'excursion' ? { excursionId: target.excursionId ?? null } : {})
+  };
+}
+
+// ---------------------------------------------------------------------------
+// §3.3 Correspondence — D-A §5.1, one pass, exact address, within one stop.
+
+/**
+ * Carries a prior map onto the targets a new build has.
+ *
+ * Domain: RETAINED placements only — `live` or `displaced`. `dismissed`, `retired` and
+ * `orphaned` are terminal for matching and are carried through untouched.
+ *
+ * Eligibility is never a matching criterion: a matched placement whose content is no
+ * longer eligible keeps its identity and its edit. This differs deliberately from
+ * `tryKeep` (`restructure.js:183`, `:186-187`), which folds eligibility into the match and
+ * which packet 1b does not change.
+ *
+ * Case A — an established holder (state `live` at that address) versus a dormant
+ * claimant: the holder keeps the window, the claimant is `retired` TERMINALLY with its
+ * edit retained. This is what stops the loop: an identity superseded once never contests
+ * the same address again, so a second rebuild does not displace the holder.
+ *
+ * Case B — a genuine tie, two or more claimants and no established holder: the operation
+ * is REFUSED WHOLE, naming the conflicting edits. Choosing either silently is the failure
+ * the governing rule exists to prevent; choosing neither leaves a trip that re-fails
+ * identically on the next rebuild.
+ *
+ * `address` is written only at issuance and on a match, never on displacement — that is
+ * what lets a displaced placement recover when its exact window returns.
+ *
+ * @param {Object|null|undefined} priorIdentity
+ * @param {Object[]} targets
+ * @param {Set<string>} stopKeys  The stops the new build has.
+ */
+export function correspond(priorIdentity, targets, stopKeys) {
+  const prior = priorIdentity?.blocks ?? {};
+  const targetByKey = new Map(targets.map((t) => [t.key, t]));
+
+  /** @type {Object<string, Object>} */
+  const blocks = {};
+  /** @type {Map<string, Array<[string, Object]>>} */
+  const claims = new Map();
+
+  for (const [luid, placement] of Object.entries(prior)) {
+    if (!RETAINED_STATES.includes(placement?.state)) {
+      blocks[luid] = placement; // terminal or already orphaned: carried through unchanged
+      continue;
+    }
+    const key = placementKey(placement);
+    if (!claims.has(key)) claims.set(key, []);
+    claims.get(key).push([luid, placement]);
+  }
+
+  const matched = new Set();
+  for (const [key, claimants] of claims) {
+    const target = targetByKey.get(key);
+
+    if (target === undefined) {
+      // No window at this address in this build. Its stop decides which state it takes,
+      // and its address is left exactly as it was so the window's return can recover it.
+      for (const [luid, placement] of claimants) {
+        const stopGone = placement.stopKey != null && !stopKeys.has(placement.stopKey);
+        blocks[luid] = { ...placement, state: stopGone ? 'orphaned' : 'displaced' };
+      }
+      continue;
+    }
+
+    if (claimants.length === 1) {
+      blocks[claimants[0][0]] = { ...claimants[0][1], ...placementFor(target) };
+      matched.add(key);
+      continue;
+    }
+
+    const holders = claimants.filter(([, placement]) => placement.state === 'live');
+
+    if (holders.length === 1) {
+      // Case A.
+      const [holderLuid, holder] = holders[0];
+      blocks[holderLuid] = { ...holder, ...placementFor(target) };
+      matched.add(key);
+      for (const [luid, placement] of claimants) {
+        if (luid !== holderLuid) blocks[luid] = { ...placement, state: 'retired' };
+      }
+      continue;
+    }
+
+    if (holders.length > 1) {
+      // Two live placements at one address is a defect in the map handed to us, which
+      // §3.5 check 2 exists to catch. It is not D-A's "genuine tie", so it is named apart.
+      return identityRefusal('duplicate_live_address', {
+        stopKey: target.stopKey,
+        address: target.address,
+        conflicting: holders.map(([luid]) => luid)
+      });
+    }
+
+    // Case B.
+    return identityRefusal('address_tie', {
+      stopKey: target.stopKey,
+      address: target.address,
+      conflicting: claimants.map(([luid]) => luid)
+    });
+  }
+
+  return { ok: true, blocks, newTargets: targets.filter((t) => !matched.has(t.key)) };
+}
+
+// ---------------------------------------------------------------------------
+// §3.5 Full validation — D-B §4.2, run in phase 3 on the RESOLVED result.
+//
+// Retained history does not participate. `displaced`, `orphaned`, `dismissed` and
+// `retired` placements legitimately outnumber the live surface, must not make a correct
+// map fail, and counting all entries must never masquerade as coverage. Coverage is a
+// per-target BIJECTION, never a count comparison.
+
+/**
+ * @param {Trip} trip      The resolved build the map must cover.
+ * @param {Object} identity
+ * @param {{data?: Object, registry?: Set<string>}} [opts]
+ */
+export function validateIdentity(trip, identity, { data, registry } = {}) {
+  if (identity == null || typeof identity !== 'object') return identityRefusal('absent');
+
+  const found = qualifyingTargets(trip, { data }); // check 5 lives here, before anything else
+  if (!found.ok) return found;
+
+  const blocks = identity.blocks ?? {};
+  const edits = identity.edits ?? {};
+
+  // 2. Every `live` placement has a unique address, within its own stop.
+  const liveByKey = new Map();
+  for (const [luid, placement] of Object.entries(blocks)) {
+    if (placement?.state !== 'live') continue;
+    const key = placementKey(placement);
+    const taken = liveByKey.get(key);
+    if (taken !== undefined) {
+      return identityRefusal('duplicate_live_address', {
+        stopKey: placement.stopKey, address: placement.address, conflicting: [taken, luid]
+      });
+    }
+    liveByKey.set(key, luid);
+  }
+
+  // 1. Coverage, bijective in both directions. Counts are never compared.
+  for (const target of found.targets) {
+    if (!liveByKey.has(target.key)) {
+      return identityRefusal('coverage_target_uncovered', {
+        blockId: target.blockId, stopKey: target.stopKey, kind: target.kind, address: target.address
+      });
+    }
+  }
+  const targetKeys = new Set(found.targets.map((t) => t.key));
+  for (const [key, luid] of liveByKey) {
+    if (!targetKeys.has(key)) {
+      const placement = blocks[luid];
+      return identityRefusal('coverage_placement_unmatched', {
+        luid, stopKey: placement.stopKey, kind: placement.kind, address: placement.address
+      });
+    }
+  }
+
+  // 3. Every `edits` key exists in `blocks`.
+  for (const luid of Object.keys(edits)) {
+    if (!(luid in blocks)) return identityRefusal('edit_without_placement', { luid });
+  }
+
+  // 4. Every key in `blocks` is in the working registry.
+  const reg = registry ?? new Set(identity.used ?? []);
+  for (const luid of Object.keys(blocks)) {
+    if (!reg.has(luid)) return identityRefusal('key_not_in_registry', { luid });
+  }
+
+  return { ok: true };
+}
+
+// ---------------------------------------------------------------------------
+// §3.4 Issuance. The `sessionId.js:34-70` tiering, COPIED and not imported: that module
+// states plainly that it is a transient label and not Q8 identity, so this reuses its
+// availability pattern rather than its meaning. The fallback tiers are safe only because
+// every candidate is checked against the working registry at the moment of issuance.
+
+const LUID_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/;
+
+// Module-local and monotonically increasing. It separates fallback tokens within one page
+// load even when the clock and the random sources repeat, throw or return garbage.
+let counter = 0;
+
+function guarded(fn, fallback) {
+  try {
+    return fn();
+  } catch {
+    return fallback;
+  }
+}
+
+// An explicitly supplied property (even one that later fails) overrides the default; only
+// an absent/undefined property uses the default.
+function source(env, key, defaultValue) {
+  const supplied = guarded(() => (env && typeof env === 'object' ? env[key] : undefined), undefined);
+  return supplied === undefined ? guarded(defaultValue, undefined) : supplied;
+}
+
+function fromRandomUuid(crypto) {
+  return guarded(() => {
+    const fn = crypto.randomUUID;
+    if (typeof fn !== 'function') return null;
+    const value = fn.call(crypto);
+    return typeof value === 'string' && LUID_PATTERN.test(value) ? value : null;
+  }, null);
+}
+
+function fromGetRandomValues(crypto) {
+  return guarded(() => {
+    const fn = crypto.getRandomValues;
+    if (typeof fn !== 'function') return null;
+    const bytes = new Uint8Array(16);
+    fn.call(crypto, bytes);
+    if (!bytes.some((b) => b !== 0)) return null; // unfilled
+    const hex = Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
+    return LUID_PATTERN.test(hex) ? hex : null;
+  }, null);
+}
+
+function fromClockAndCounter(env) {
+  const now = source(env, 'now', () => Date.now);
+  const random = source(env, 'random', () => Math.random);
+  const time = guarded(() => {
+    const v = now();
+    return typeof v === 'number' && Number.isFinite(v) && v >= 0 && v <= Number.MAX_SAFE_INTEGER ? Math.floor(v) : 0;
+  }, 0);
+  const fragment = guarded(() => {
+    const v = random();
+    return typeof v === 'number' && Number.isFinite(v) && v >= 0 && v < 1 ? Math.floor(v * 36 ** 8) : 0;
+  }, 0);
+  counter = counter >= Number.MAX_SAFE_INTEGER ? 1 : counter + 1;
+  const id = `u${time.toString(36)}-${fragment.toString(36)}-${counter.toString(36)}`;
+  // Always valid and bounded; the counter alone guarantees distinctness.
+  return LUID_PATTERN.test(id) ? id : `u${counter.toString(36)}`;
+}
+
+/**
+ * One candidate token. Never throws, for any input including a hostile `env`. A candidate
+ * is not an issuance: only the registry check in `mint` makes it one.
+ * @param {Object} [env]
+ * @returns {string}
+ */
+export function newLuid(env = {}) {
+  const crypto = source(env, 'crypto', () => globalThis.crypto);
+  return fromRandomUuid(crypto) ?? fromGetRandomValues(crypto) ?? fromClockAndCounter(env);
+}
+
+/** A provisional, proposal-local key (`#new1`): never a `luid`, never in `used`, never stored. */
+export function isProvisionalKey(key) {
+  return typeof key === 'string' && key.startsWith('#');
+}
+
+/**
+ * Mints against the working registry, which is the authority at the moment of issuance.
+ * Reminting is bounded; exhaustion refuses the operation whole rather than installing
+ * anything. A constant token source therefore yields distinct `luid`s or a refusal —
+ * never a duplicate, never a partial install.
+ */
+function mint(registry, env) {
+  for (let attempt = 1; attempt <= MINT_ATTEMPTS; attempt += 1) {
+    const candidate = newLuid(env);
+    if (typeof candidate !== 'string' || candidate === '' || isProvisionalKey(candidate)) continue;
+    if (!registry.has(candidate)) return { ok: true, luid: candidate };
+  }
+  return identityRefusal('token_exhausted', { attempts: MINT_ATTEMPTS });
+}
+
+// ---------------------------------------------------------------------------
+// §6.1 Allocation is not issuance.
+
+/**
+ * The proposal-local allocation: what a rebuild WOULD do, with a provisional key for each
+ * target no retained placement can match. A provisional key is not a `luid`, never enters
+ * `used`, never reaches storage and has no meaning outside its proposal. Nothing is
+ * minted here.
+ *
+ * This is advisory. `commitIdentity` recomputes correspondence itself and never trusts an
+ * allocation as the committed map, so a planted or stale allocation cannot reach a trip.
+ *
+ * @returns {{ok: true, identity: Object} | {ok: false, reason: string, message: string, detail: Object}}
+ */
+export function allocateIdentity(currentTrip, nextTrip, { data } = {}) {
+  const found = qualifyingTargets(nextTrip, { data });
+  if (!found.ok) return found;
+  const stopKeys = new Set((nextTrip?.routePlan?.stops ?? []).map((s) => s.key));
+  const corr = correspond(currentTrip?.identity, found.targets, stopKeys);
+  if (!corr.ok) return corr;
+
+  const blocks = { ...corr.blocks };
+  corr.newTargets.forEach((target, i) => {
+    blocks[`#new${i + 1}`] = placementFor(target);
+  });
+
+  return {
+    ok: true,
+    identity: {
+      version: IDENTITY_VERSION,
+      used: [...(currentTrip?.identity?.used ?? [])],
+      blocks,
+      edits: { ...(currentTrip?.identity?.edits ?? {}) }
+    }
+  };
+}
+
+// ---------------------------------------------------------------------------
+// §3.4 The four-phase commit.
+
+/**
+ * Provisional validation (phase 1), against an allocation as it stands. Provisional keys
+ * are EXPECTED here and are deliberately NOT checked against any registry — checking them
+ * would reject every addition, because a provisional key cannot be in a registry by
+ * definition. That was revision 4's error and is the reason the phase order matters.
+ */
+function validateProvisional(allocation) {
+  if (allocation == null) return { ok: true };
+  if (typeof allocation !== 'object') return identityRefusal('allocation_invalid', {});
+  const blocks = allocation.blocks ?? {};
+  const edits = allocation.edits ?? {};
+
+  const liveByKey = new Map();
+  for (const [key, placement] of Object.entries(blocks)) {
+    if (placement?.state !== 'live') continue;
+    const addr = placementKey(placement);
+    const taken = liveByKey.get(addr);
+    if (taken !== undefined) {
+      return identityRefusal('provisional_duplicate_live_address', { conflicting: [taken, key] });
+    }
+    liveByKey.set(addr, key);
+  }
+  for (const key of Object.keys(edits)) {
+    if (!(key in blocks)) return identityRefusal('provisional_edit_without_placement', { key });
+  }
+  return { ok: true };
+}
+
+/**
+ * The four phases, in this order, on a private working copy. Any failure in phases 1 to 3
+ * discards that copy entirely: nothing is installed, no token becomes a committed
+ * issuance, and the caller's trip is exactly as it was.
+ *
+ * The token contract, split. ZERO token-source calls for a phase-1 abort. From phase 2
+ * onwards calls MAY have occurred, and that is not a failure; what must hold is that
+ * nothing is committed. The distinction is a generated candidate versus a committed
+ * issuance.
+ *
+ * @param {{priorIdentity?: Object, nextTrip: Trip, data?: Object, tokens?: Object,
+ *          allocation?: Object, attachEdits?: Object[]}} args
+ * @returns {{ok: true, identity: Object} | {ok: false, reason: string, message: string, detail: Object}}
+ */
+function runPhases({ priorIdentity, nextTrip, data, tokens, allocation, attachEdits }) {
+  // --- Phase 1 — prepare. Nothing here touches the live trip, and nothing mints. -----
+  const registry = new Set(priorIdentity?.used ?? []);
+
+  const found = qualifyingTargets(nextTrip, { data });
+  if (!found.ok) return found; // includes the duplicate-site refusal, before any issuance
+
+  const provisional = validateProvisional(allocation);
+  if (!provisional.ok) return provisional;
+
+  const stopKeys = new Set((nextTrip?.routePlan?.stops ?? []).map((s) => s.key));
+  const corr = correspond(priorIdentity, found.targets, stopKeys);
+  if (!corr.ok) return corr; // a case-B tie aborts here, with zero token-source calls
+
+  // --- Phase 2 — issue and resolve. --------------------------------------------------
+  const blocks = { ...corr.blocks };
+  const resolvedFromProvisional = new Map();
+  const provisionalByAddress = new Map();
+  for (const [key, placement] of Object.entries(allocation?.blocks ?? {})) {
+    if (isProvisionalKey(key)) provisionalByAddress.set(placementKey(placement), key);
+  }
+
+  for (const target of corr.newTargets) {
+    const minted = mint(registry, tokens);
+    if (!minted.ok) return minted; // exhaustion refuses whole; nothing is installed
+    registry.add(minted.luid);
+    blocks[minted.luid] = placementFor(target);
+    const provisionalKey = provisionalByAddress.get(target.key);
+    if (provisionalKey !== undefined) resolvedFromProvisional.set(provisionalKey, minted.luid);
+  }
+
+  const edits = { ...(priorIdentity?.edits ?? {}) };
+  // Any intent the allocation carried on a provisional key follows it to the issued luid.
+  for (const [key, entry] of Object.entries(allocation?.edits ?? {})) {
+    if (!isProvisionalKey(key)) continue;
+    const luid = resolvedFromProvisional.get(key);
+    if (luid !== undefined) edits[luid] = { ...entry };
+  }
+  for (const update of attachEdits ?? []) {
+    const luid = isProvisionalKey(update.luid) ? resolvedFromProvisional.get(update.luid) : update.luid;
+    if (luid === undefined) return identityRefusal('provisional_key_unresolved', { key: update.luid });
+    edits[luid] = intentEntry(update);
+  }
+
+  // After phase 2 no provisional key may remain anywhere in the working copy.
+  for (const key of Object.keys(blocks)) {
+    if (isProvisionalKey(key)) return identityRefusal('provisional_key_unresolved', { key });
+  }
+  for (const key of Object.keys(edits)) {
+    if (isProvisionalKey(key)) return identityRefusal('provisional_key_unresolved', { key });
+  }
+
+  // --- Phase 3 — validate the completed, resolved result. ----------------------------
+  const identity = { version: IDENTITY_VERSION, used: [...registry], blocks, edits };
+  const valid = validateIdentity(nextTrip, identity, { data, registry });
+  if (!valid.ok) return valid;
+
+  // --- Phase 4 — the caller installs this EXPLICITLY, never by spread. ---------------
+  return { ok: true, identity };
+}
+
+/**
+ * The rebuild/apply path: carry the current trip's map onto the build a proposal produced.
+ *
+ * @param {{currentTrip: Trip, nextTrip: Trip, data?: Object, tokens?: Object, allocation?: Object}} args
+ */
+export function commitIdentity({ currentTrip, nextTrip, data, tokens, allocation }) {
+  return runPhases({ priorIdentity: currentTrip?.identity, nextTrip, data, tokens, allocation });
+}
+
+/**
+ * Fresh build (D-B §4.1). The working registry starts empty and every qualifying block is
+ * issued in phase 2. IMPLEMENTED AND CALLED FROM NOWHERE: wiring it into `buildF6Trip` is
+ * packet 2's work and is not authorized here.
+ */
+export function initialiseIdentityForBuild(trip, { data, tokens } = {}) {
+  return runPhases({ priorIdentity: null, nextTrip: trip, data, tokens });
+}
+
+/**
+ * An imported legacy snapshot, on open (D-B §4.1). The registry is seeded from the
+ * snapshot's own `used` where one exists and is empty where none does, and the `locked` /
+ * `userEdited` flags the loaded build genuinely carries are attached in phase 2 to the
+ * `luid`s of the blocks carrying them. That is not fabrication: those flags name blocks
+ * this build actually contains. What is NOT recovered is history — where a pin sat before
+ * some earlier rebuild — and nothing here invents it.
+ *
+ * IMPLEMENTED AND CALLED FROM NOWHERE: wiring it into the open path is packet 2's work.
+ */
+export function initialiseIdentityForLegacyTrip(trip, { data, tokens } = {}) {
+  const found = qualifyingTargets(trip, { data });
+  if (!found.ok) return found;
+
+  // Phase-2 attachments, addressed by the provisional keys phase 2 will issue against.
+  const allocation = { version: IDENTITY_VERSION, used: [], blocks: {}, edits: {} };
+  const attachEdits = [];
+  found.targets.forEach((target, i) => {
+    const key = `#new${i + 1}`;
+    allocation.blocks[key] = placementFor(target);
+    const block = target.block;
+    if (block.locked !== true && block.userEdited !== true) return;
+    attachEdits.push({
+      luid: key,
+      intent: 'imported',
+      contentId: block.anchor?.contentId ?? null,
+      locked: block.locked === true,
+      userEdited: block.userEdited === true,
+      provenance: 'legacy_initialization'
+    });
+  });
+
+  return runPhases({
+    priorIdentity: trip?.identity?.used ? { used: trip.identity.used, blocks: {}, edits: {} } : null,
+    nextTrip: trip,
+    data,
+    tokens,
+    allocation,
+    attachEdits
+  });
+}
+
+// ---------------------------------------------------------------------------
+// §2.1 Bounded-edit intent.
+
+/** A complete intent entry, constructed whether or not the placement had one before. */
+function intentEntry({ intent, contentId = null, locked = false, userEdited = false, provenance }) {
+  return { intent, contentId: contentId ?? null, locked: locked === true, userEdited: userEdited === true, provenance };
+}
+
+/**
+ * The live placement covering one block of this trip.
+ *
+ * Packet 1b creates identity nowhere, so a trip with no map has no `luid` for an intent to
+ * attach to: that refuses BY NAME rather than fabricating a partial map, which would fail
+ * §3.5's coverage check and would be identity creation on a path §4 forbids.
+ *
+ * @param {Trip} trip
+ * @param {Block} block
+ */
+export function placementForBlock(trip, block) {
+  const identity = trip?.identity;
+  if (identity == null || typeof identity !== 'object') {
+    return identityRefusal('absent', { blockId: block?.id ?? null });
+  }
+  const target = identityTargetFor(block);
+  if (target === null) return identityRefusal('block_not_qualifying', { blockId: block?.id ?? null });
+  if (target.ok !== true) return target;
+
+  for (const [luid, placement] of Object.entries(identity.blocks ?? {})) {
+    if (placement?.state === 'live' && placementKey(placement) === target.key) {
+      return { ok: true, luid, placement, target };
+    }
+  }
+  return identityRefusal('coverage_target_uncovered', {
+    blockId: target.blockId, stopKey: target.stopKey, kind: target.kind, address: target.address
+  });
+}
+
+/**
+ * Writes one or more complete intent entries onto a copy of the trip's map, resolving each
+ * block to its own live placement first so a refusal leaves the caller's trip untouched.
+ *
+ * `blocks` is never written here: identity belongs to the logical block, independently of
+ * intent, so a swap changes `edits[luid].contentId` and leaves `blocks[luid]` alone. A
+ * `rejectActivity` with no eligible alternative records `contentId: null` on a placement
+ * that stays `live` at an unchanged address — the window still exists, it is empty — and
+ * that carries no trip-wide meaning: `choices.rejected` keeps exactly the content-id
+ * exclusion meaning it has today, and no refill or rebuild policy is widened by it.
+ *
+ * @param {Trip} trip
+ * @param {Array<{block: Block, intent: string, contentId?: string|null, locked?: boolean,
+ *                userEdited?: boolean, provenance: string}>} updates
+ */
+export function recordBlockIntents(trip, updates) {
+  const identity = trip?.identity;
+  if (identity == null || typeof identity !== 'object') return identityRefusal('absent');
+
+  const resolved = [];
+  for (const update of updates) {
+    const found = placementForBlock(trip, update.block);
+    if (!found.ok) return found;
+    resolved.push([found.luid, update]);
+  }
+
+  const edits = { ...(identity.edits ?? {}) };
+  for (const [luid, update] of resolved) edits[luid] = intentEntry(update);
+  return { ok: true, identity: { ...identity, edits } };
+}
+
+// ---------------------------------------------------------------------------
+// §3.8 Undo — the `used` union and the mixed-history refusal, both opt-in only.
+
+/**
+ * The restored snapshot's order first, then whatever the current trip added. No entry is
+ * ever deleted to free a key.
+ */
+export function unionUsed(restored, current) {
+  const out = [...(restored ?? [])];
+  const seen = new Set(out);
+  for (const luid of current ?? []) {
+    if (!seen.has(luid)) {
+      seen.add(luid);
+      out.push(luid);
+    }
+  }
+  return out;
+}
+
+/**
+ * `blocks` and `edits` rewind with the snapshot; `used` is the only field that does not.
+ *
+ * Mixed history — one side carrying a map and the other not — refuses BY NAME. Packet 1b
+ * does not fabricate a `used`-only map for the missing side: that would be a partial map,
+ * would fail §3.5's coverage check, and would be identity creation on a path §4 forbids.
+ * Activation (packet 2) must guarantee D-B §4.1's "no pre-first-save window" precondition
+ * so that mixed history cannot arise in production.
+ *
+ * @param {Trip} priorTrip   The snapshot being restored.
+ * @param {Trip} currentTrip The trip undo was called on.
+ */
+export function undoIdentity(priorTrip, currentTrip) {
+  const prior = priorTrip?.identity ?? null;
+  const current = currentTrip?.identity ?? null;
+  const priorHas = prior != null && typeof prior === 'object';
+  const currentHas = current != null && typeof current === 'object';
+
+  if (priorHas !== currentHas) {
+    return identityRefusal('mixed_history', { snapshot: priorHas, current: currentHas });
+  }
+  if (!priorHas) return { ok: true, identity: undefined };
+  return { ok: true, identity: { ...prior, used: unionUsed(prior.used, current.used) } };
+}
+
+// ---------------------------------------------------------------------------
+// §3.6 The relocation API — D-A §5.3's four conditions, erratum 01 B's wording.
+
+/** Is this block actually in this trip? `blockContext` throws when it is not. */
+function blockPresent(trip, blockId) {
+  for (const day of trip?.days ?? []) {
+    for (const block of day?.blocks ?? []) if (block?.id === blockId) return true;
+  }
+  return false;
+}
+
+/**
+ * Condition 4, and the ONLY place this module calls the engine's gate.
+ *
+ * `eligibleItemsForBlock` THROWS when the block is not in the trip (`fill.js:120`, via
+ * `:153`), so presence is established first and a foreign block produces a NAMED REFUSAL
+ * rather than a throw. The caller's own `choices.rejected` exclusions are passed, which the
+ * gate itself applies; no check the gate performs is reimplemented here, and no rule of
+ * this module's own is added. If the gate later gains a rule, the offer inherits it.
+ *
+ * @param {Trip} trip
+ * @param {Block} block
+ * @param {string} contentId
+ * @param {ContentItem[]} content
+ */
+export function relocationTargetEligible(trip, block, contentId, content) {
+  const blockId = block?.id ?? null;
+  if (blockId == null || !blockPresent(trip, blockId)) {
+    return identityRefusal('target_not_in_trip', { blockId });
+  }
+  const excludeContentIds = [...(trip?.spec?.choices?.rejected ?? [])];
+  const eligible = eligibleItemsForBlock(trip, block, content, { excludeContentIds });
+  return { ok: true, eligible: eligible.some((item) => item.id === contentId) };
+}
+
+/** Does this placement carry a traveller edit of its own — a pin, a swap or a lock? */
+function carriesOwnEdit(identity, luid, block) {
+  if (identity.edits?.[luid] !== undefined) return true;
+  return block?.locked === true || block?.userEdited === true;
+}
+
+/**
+ * Every window this displaced placement may be offered, and nothing else.
+ *
+ * A window is offered only if all four hold: same `stopKey`; its own placement is `live`
+ * in this build; it carries no traveller edit of its own; and the content is eligible
+ * there under the engine's own gate. Slot fit alone is explicitly not sufficient.
+ *
+ * The offer is advisory until accepted. Where the edit names no content there is nothing
+ * to test eligibility for, so no window is offered and the reason is named.
+ *
+ * @param {Trip} trip
+ * @param {string} luid
+ * @param {{data?: Object, content: ContentItem[]}} opts
+ */
+export function relocationOffers(trip, luid, { data, content } = {}) {
+  const identity = trip?.identity;
+  if (identity == null || typeof identity !== 'object') return identityRefusal('absent');
+  const sourcePlacement = identity.blocks?.[luid];
+  if (sourcePlacement === undefined) return identityRefusal('unknown_placement', { luid });
+
+  const contentId = identity.edits?.[luid]?.contentId ?? null;
+  if (contentId == null) return { ok: true, offers: [], why: 'no_content_to_relocate' };
+
+  const found = qualifyingTargets(trip, { data });
+  if (!found.ok) return found;
+
+  const liveByKey = new Map();
+  for (const [candidate, placement] of Object.entries(identity.blocks ?? {})) {
+    if (placement?.state === 'live') liveByKey.set(placementKey(placement), candidate);
+  }
+
+  const offers = [];
+  for (const target of found.targets) {
+    if (target.stopKey !== sourcePlacement.stopKey) continue; // 1
+    const targetLuid = liveByKey.get(target.key);
+    if (targetLuid === undefined || targetLuid === luid) continue; // 2
+    if (carriesOwnEdit(identity, targetLuid, target.block)) continue; // 3
+    const gate = relocationTargetEligible(trip, target.block, contentId, content); // 4
+    if (!gate.ok) return gate;
+    if (!gate.eligible) continue;
+    offers.push({
+      luid: targetLuid,
+      blockId: target.blockId,
+      stopKey: target.stopKey,
+      kind: target.kind,
+      address: { ...target.address }
+    });
+  }
+  return { ok: true, offers };
+}
+
+/**
+ * Accepting an offer attaches the traveller's intent to the TARGET's OWN existing `luid`.
+ * Nothing is minted into an occupied address, no identity is moved, reissued or replaced,
+ * and NO TOKEN IS ISSUED — `used` is unchanged.
+ *
+ * The target is re-validated against all four conditions against the trip AS IT STANDS at
+ * this moment, so a stale offer can never overwrite another edit: if the window was edited
+ * meanwhile, or the content is no longer eligible, the acceptance refuses and writes
+ * nothing. The source placement becomes `dismissed`, with provenance recording where its
+ * intent went.
+ */
+export function acceptRelocation(trip, luid, targetLuid, { data, content } = {}) {
+  const offered = relocationOffers(trip, luid, { data, content });
+  if (!offered.ok) return offered;
+  if (!offered.offers.some((offer) => offer.luid === targetLuid)) {
+    return identityRefusal('target_not_offered', { luid, targetLuid });
+  }
+
+  const identity = trip.identity;
+  const intent = identity.edits[luid];
+  return {
+    ok: true,
+    identity: {
+      ...identity,
+      used: [...(identity.used ?? [])],
+      blocks: { ...identity.blocks, [luid]: { ...identity.blocks[luid], state: 'dismissed' } },
+      edits: {
+        ...identity.edits,
+        [targetLuid]: { ...intent, provenance: `relocated_from:${luid}` },
+        [luid]: { ...intent, provenance: `relocated_to:${targetLuid}` }
+      }
+    }
+  };
+}

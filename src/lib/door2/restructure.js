@@ -7,6 +7,7 @@ import { iso, validateCatalogue } from './connectionModel.js';
 
 import { tripFingerprint } from './fingerprint.js';
 import { activityFor, classifySlot, eligibleItemsForBlock, fillTrip } from './fill.js';
+import { allocateIdentity, commitIdentity, identityOptions } from './identity.js';
 import { PILOT_CONTENT } from './pilotContent.js';
 import { PILOT_DATA, buildTripFromRoutePlan, findRoutePackage, planSelection, resolveExcursions } from './planner.js';
 import { PILOT_ROUTE_FAMILIES } from './pilotData.js';
@@ -28,6 +29,33 @@ import { validateExcursionSelections, validateFilled } from './validate.js';
 //
 // Deterministic: no randomness, no Date.now(). Identical input gives
 // identical proposals, ids and order.
+//
+// ---------------------------------------------------------------------------
+// Q8 packet 1b — the identity opt-in route, and why it is shaped this way.
+//
+// THE OPT-IN IS `options.identity === true` at the seven public previews, which are the
+// only public boundary here that already has an options argument (`:1152-1178`). No call
+// site in `src/pages/**` passes it, so every path below behaves exactly as it did before
+// packet 1b. `data` needs no new channel: `context` already threads `options.data`.
+//
+// THE MODE IS RECORDED ON THE PROPOSAL, not re-derived at apply. `context` captures
+// `baseFingerprint` in the mode the caller asked for, and the built proposal carries
+// `identityMode: true`; `applyProposal` reads that field for the comparator and for every
+// identity phase. Capture and comparison are therefore the same value BY CONSTRUCTION,
+// not by discipline: if apply re-derived the mode from its own argument, a valid proposal
+// would be refused as stale, and if both wrongly omitted identity an identity-only change
+// would be missed.
+//
+// THE FIELD IS EMITTED ONLY ON THE OPTED-IN ROUTE. A default proposal carries NO
+// `identityMode` key at all — not `identityMode: false` — because adding a key to every
+// proposal would break the deep-equality and hash-equality guarantees even with identical
+// execution: the proposal object itself would differ.
+//
+// ALLOCATION IS NOT ISSUANCE. Under the opt-in `reconcile` attaches a proposal-local
+// ALLOCATION (`#new1`, `#new2` …), which is advisory: `applyProposal` recomputes
+// correspondence itself and never trusts an allocation as the committed map, so a planted
+// or stale one cannot reach a trip. Internal forwarding inside this file is required and
+// is conditional on the public caller's own opt-in; it is not a production root.
 
 const HISTORY_CAP = 20; // same cap as edit.js
 const MAX_DONOR_PROPOSALS = 2;
@@ -163,9 +191,13 @@ function replaceBlock(trip, newBlock) {
  * @param {Trip} oldTrip
  * @param {Trip} newSkeleton  Unfilled skeleton (buildTripFromRoutePlan).
  * @param {ContentItem[]} [content]
- * @returns {{trip: Trip, keptItemsAffected: Object[], activitiesLost: Object[], activitiesAdded: Object[]}}
+ * @param {null|true|{data?: Object}} [identity]  Q8 packet 1b's opt-in. `null` is exactly
+ *   the behaviour this function had before that packet, and is what every production
+ *   caller gets. Under the opt-in the result gains ONE extra field,
+ *   `identityAllocation` — the proposal-local allocation, never an issuance.
+ * @returns {{trip: Trip, keptItemsAffected: Object[], activitiesLost: Object[], activitiesAdded: Object[], identityAllocation?: Object}}
  */
-export function reconcile(oldTrip, newSkeleton, content = PILOT_CONTENT) {
+export function reconcile(oldTrip, newSkeleton, content = PILOT_CONTENT, identity = null) {
   const choices = oldTrip.spec.choices ?? { pinned: [], rejected: [], placed: [] };
   const spec = { ...newSkeleton.spec, choices };
   const skeleton = { ...newSkeleton, spec };
@@ -229,11 +261,16 @@ export function reconcile(oldTrip, newSkeleton, content = PILOT_CONTENT) {
   const afterList = activityBlocks(filled);
   const after = new Map(afterList.map(({ block }) => [block.anchor.contentId, block]));
   const entry = (b) => ({ contentId: b.anchor.contentId, title: b.activity.title, placeId: b.placeId, blockId: b.id });
+  // The allocation is proposal-local and advisory; nothing is minted here and the result
+  // of a failed allocation is carried as-is rather than thrown, so a preview never throws
+  // and apply's phase 1 stays the authority on every refusal.
+  const identityOpts = identityOptions(identity);
   return {
     trip: filled,
     keptItemsAffected,
     activitiesLost: oldActivities.filter(({ block }) => !after.has(block.anchor.contentId)).map(({ block }) => entry(block)),
-    activitiesAdded: afterList.filter(({ block }) => !before.has(block.anchor.contentId)).map(({ block }) => entry(block))
+    activitiesAdded: afterList.filter(({ block }) => !before.has(block.anchor.contentId)).map(({ block }) => entry(block)),
+    ...(identityOpts ? { identityAllocation: allocateIdentity(oldTrip, filled, { data: identityOpts.data }) } : {})
   };
 }
 
@@ -250,7 +287,7 @@ function buildNightsProposal(trip, { id, label, kind, nights, totalDays }, ctx) 
   const spec = { ...trip.spec, totalDays };
   const skeleton = buildTripFromRoutePlan(spec, plan, ctx.data, { reviewPolicy: ctx.reviewPolicy });
   if (skeleton.ok === false) return null;
-  const rec = reconcile(trip, skeleton, ctx.content);
+  const rec = reconcile(trip, skeleton, ctx.content, identityForward(ctx));
   const newTrip = { ...rec.trip, history: [] };
   validateExcursionSelections(newTrip, ctx.data);
   return {
@@ -258,6 +295,7 @@ function buildNightsProposal(trip, { id, label, kind, nights, totalDays }, ctx) 
     kind,
     label,
     baseFingerprint: ctx.baseFingerprint,
+    ...identityFields(ctx, rec),
     routePlan: newTrip.routePlan,
     trip: newTrip,
     diff: withExcursionDiff(
@@ -283,13 +321,41 @@ function buildNightsProposal(trip, { id, label, kind, nights, totalDays }, ctx) 
 
 function context(trip, options) {
   if (!trip.routePlan) throw new Error('restructure: trip has no routePlan (door2-v6 required)');
+  // Q8 1b: the mode, and `baseFingerprint` captured IN THAT MODE so that capture and the
+  // apply comparator cannot diverge. `options.identity !== true` leaves the call below
+  // one-argument, which is byte-identical to this function before packet 1b.
+  const identity = options.identity === true;
+  const data = options.data ?? PILOT_DATA;
   return {
-    data: options.data ?? PILOT_DATA,
+    data,
     content: options.content ?? PILOT_CONTENT,
     reviewPolicy: options.reviewPolicy ?? reviewPolicyFor(trip),
     families: options.families ?? PILOT_ROUTE_FAMILIES,
-    baseFingerprint: tripFingerprint(trip)
+    identity,
+    ...(identity && options.tokens !== undefined ? { tokens: options.tokens } : {}),
+    baseFingerprint: tripFingerprint(trip, identity ? { data } : null)
   };
+}
+
+/**
+ * The identity envelope a proposal carries, EMITTED ONLY ON THE OPTED-IN ROUTE. On the
+ * default route this returns `{}` and so adds no key to any proposal.
+ * @param {Object} ctx
+ * @param {Object} [rec]  A `reconcile` result, when the proposal was built from one.
+ */
+function identityFields(ctx, rec) {
+  if (!ctx.identity) return {};
+  return {
+    identityMode: true,
+    identityData: ctx.data,
+    ...(ctx.tokens !== undefined ? { identityTokens: ctx.tokens } : {}),
+    ...(rec?.identityAllocation !== undefined ? { identityAllocation: rec.identityAllocation } : {})
+  };
+}
+
+/** The `identity` argument the four internal `reconcile` call sites forward (§3.0 step 4). */
+function identityForward(ctx) {
+  return ctx.identity ? { data: ctx.data } : null;
 }
 
 const nightsMap = (rp) => Object.fromEntries(rp.stops.map((s) => [s.key, s.nights]));
@@ -549,7 +615,7 @@ function shorterRouteAlternative(trip, newTotalDays, ctx) {
   };
   const skeleton = buildTripFromRoutePlan({ ...spec, routeTemplateId: backbone.id }, plan, ctx.data, { reviewPolicy: ctx.reviewPolicy });
   if (skeleton.ok === false) return null;
-  const rec = reconcile(trip, skeleton, ctx.content);
+  const rec = reconcile(trip, skeleton, ctx.content, identityForward(ctx));
   const newTrip = { ...rec.trip, history: [] };
   validateExcursionSelections(newTrip, ctx.data);
   const newPlaces = new Set(newTrip.routePlan.stops.filter((s) => s.nights > 0).map((s) => s.placeId));
@@ -559,6 +625,7 @@ function shorterRouteAlternative(trip, newTotalDays, ctx) {
     kind: 'switch_route',
     label: 'Switch to the shorter route',
     baseFingerprint: ctx.baseFingerprint,
+    ...identityFields(ctx, rec),
     routePlan: newTrip.routePlan,
     trip: newTrip,
     diff: withExcursionDiff(
@@ -699,7 +766,7 @@ function buildVariantProposal(trip, { id, kind, label, pkg, nights, totalDays },
   };
   const skeleton = buildTripFromRoutePlan(spec, plan, ctx.data, { reviewPolicy: ctx.reviewPolicy });
   if (skeleton.ok === false) return null;
-  const rec = reconcile(trip, skeleton, ctx.content);
+  const rec = reconcile(trip, skeleton, ctx.content, identityForward(ctx));
   const newTrip = { ...rec.trip, history: [] };
   validateExcursionSelections(newTrip, ctx.data);
   const oldNights = nightsMap(trip.routePlan);
@@ -710,6 +777,7 @@ function buildVariantProposal(trip, { id, kind, label, pkg, nights, totalDays },
     kind,
     label,
     baseFingerprint: ctx.baseFingerprint,
+    ...identityFields(ctx, rec),
     routePlan: newTrip.routePlan,
     trip: newTrip,
     diff: withExcursionDiff(
@@ -963,7 +1031,7 @@ function buildExcursionProposal(trip, { id, kind, label, nights, totalDays, sele
   };
   const skeleton = buildTripFromRoutePlan({ ...trip.spec, totalDays }, plan, ctx.data, { reviewPolicy: ctx.reviewPolicy });
   if (skeleton.ok === false) return null;
-  const rec = reconcile(trip, skeleton, ctx.content);
+  const rec = reconcile(trip, skeleton, ctx.content, identityForward(ctx));
   const newTrip = { ...rec.trip, history: [] };
   validateExcursionSelections(newTrip, ctx.data);
   return {
@@ -971,6 +1039,7 @@ function buildExcursionProposal(trip, { id, kind, label, nights, totalDays, sele
     kind,
     label,
     baseFingerprint: ctx.baseFingerprint,
+    ...identityFields(ctx, rec),
     routePlan: newTrip.routePlan,
     trip: newTrip,
     diff: withExcursionDiff(
@@ -1129,14 +1198,26 @@ export function listExcursionMenu(trip, stopKey, options = {}) {
  * Commits a proposal. Refuses a stale one (the trip changed since the
  * preview). Nothing is recalculated: the committed trip is proposal.trip, with
  * history pushed so the existing Undo covers structural edits too.
+ *
+ * Q8 packet 1b: the signature is UNCHANGED. The mode comes from the proposal, read ONCE
+ * into `identityMode` below, and that one value selects EVERY identity phase of this
+ * apply — the comparator, the correspondence pass, the four phases and the validation. No
+ * part of this function may take the identity path while another takes the default.
+ *
+ * The evidence guards and the staleness comparison still precede every mutation, so the
+ * phases insert after them: there are ZERO token-source calls for an evidence refusal, a
+ * stale refusal or any phase-1 abort. From phase 2 onwards candidates may have been
+ * generated, and that is not a failure — what must hold is that nothing is committed.
+ *
  * @param {Trip} trip
  * @param {Object} proposal
- * @returns {{ok: true, trip: Trip} | {ok: false, reason: 'stale_preview', message: string}}
+ * @returns {{ok: true, trip: Trip} | {ok: false, reason: string, message: string}}
  */
 export function applyProposal(trip, proposal) {
   const evidenceFailure = structuralEvidenceGuard(trip) ?? structuralEvidenceGuard(proposal?.trip);
   if (evidenceFailure) return evidenceFailure;
-  if (tripFingerprint(trip) !== proposal.baseFingerprint) {
+  const identityMode = proposal?.identityMode === true;
+  if (tripFingerprint(trip, identityMode ? { data: proposal.identityData } : null) !== proposal.baseFingerprint) {
     return { ok: false, reason: 'stale_preview', message: 'Your trip changed since this preview. Take another look before applying it.' };
   }
   const before = nightsMap(trip.routePlan);
@@ -1146,7 +1227,22 @@ export function applyProposal(trip, proposal) {
   const history = [...(trip.history ?? []), { ...trip, history: [] }];
   const capped = history.length > HISTORY_CAP ? history.slice(history.length - HISTORY_CAP) : history;
   const routePlan = nightsChanged ? { ...proposal.trip.routePlan, nightsSource: 'user' } : proposal.trip.routePlan;
-  return { ok: true, trip: { ...proposal.trip, routePlan, history: capped } };
+  const committedTrip = { ...proposal.trip, routePlan, history: capped };
+  if (!identityMode) return { ok: true, trip: committedTrip };
+  // Phases 1-3, against the trip exactly as it is about to be committed. The prior map
+  // comes from `trip` — never from `proposal.trip`, whose own `identity` is not read here.
+  const committed = commitIdentity({
+    currentTrip: trip,
+    nextTrip: committedTrip,
+    data: proposal.identityData,
+    tokens: proposal.identityTokens,
+    allocation: proposal.identityAllocation?.ok === true ? proposal.identityAllocation.identity : null
+  });
+  if (!committed.ok) return committed;
+  // Phase 4 installs the resolved map EXPLICITLY. Returning a bare spread of
+  // `proposal.trip` would carry `proposal.trip.identity` through — the same mechanism as
+  // D-B §1's downgrade hole — so the key is assigned, never inherited.
+  return { ok: true, trip: { ...committedTrip, identity: committed.identity } };
 }
 
 export function previewAdjustNights(trip, stopKey, delta, options = {}) {

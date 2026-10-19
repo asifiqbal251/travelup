@@ -5,6 +5,20 @@
 // `history` is excluded, so an undo that restores an earlier trip restores its
 // fingerprint too. This detects staleness; it is not a security feature.
 //
+// Q8 packet 1b adds ONE optional trailing parameter. Every existing input stays with its
+// current behaviour, `history` is still excluded, and `evidence` is still included only
+// when present. A ONE-ARGUMENT CALL IS BYTE-IDENTICAL TO BEFORE FOR EVERY INPUT,
+// identity-bearing ones included: the `identity` key is absent from the canonical object
+// unless the caller opts in AND the trip actually carries a map — the same conditional
+// treatment `evidence` already receives. Adding `identity: null` unconditionally would
+// change every hash, and `identity: undefined` would be inert because `canonicalJson`
+// drops it, so the key's ABSENCE is the contract.
+//
+// `used` is deliberately excluded from the digest (D-A §6.4). Non-reuse rests on phase 2
+// minting against the working registry as it stands at commit, not on this guard;
+// including `used` would invalidate every open preview whenever any unrelated apply
+// occurred, with no safety gained.
+//
 // FNV-1a (64-bit arithmetic, truncated to 53 bits) over the UTF-8 bytes of a
 // canonical JSON (object keys sorted recursively; undefined dropped as in JSON).
 
@@ -37,9 +51,28 @@ export function fnv1a53(text) {
 }
 
 /**
- * @param {Trip} trip
+ * A digest of the whole `trip.identity` object EXCEPT `used`. Every other field
+ * participates: `version`, every field of every `blocks` entry, and `edits`. So an
+ * identity-only change — a dismissal, a state change, an address written on a match —
+ * invalidates an open preview, which the existing guard cannot detect.
+ * @param {Object} identity
  * @returns {string}
  */
-export function tripFingerprint(trip) {
-  return fnv1a53(canonicalJson({ spec: trip.spec, routePlan: trip.routePlan ?? null, days: trip.days, ...(trip.evidence !== undefined ? { evidence: trip.evidence } : {}), ...(trip.versions?.connectionEvidence !== undefined ? { connectionEvidence: trip.versions.connectionEvidence } : {}) }));
+export function identityDigest(identity) {
+  if (identity === null || typeof identity !== 'object') return fnv1a53(canonicalJson(identity ?? null));
+  const withoutUsed = {};
+  for (const key of Object.keys(identity)) {
+    if (key !== 'used') withoutUsed[key] = identity[key];
+  }
+  return fnv1a53(canonicalJson(withoutUsed));
+}
+
+/**
+ * @param {Trip} trip
+ * @param {null|true|Object} [identity]  Q8 packet 1b's opt-in. `null` is exactly the
+ *   behaviour this function had before that packet; no production call site passes one.
+ * @returns {string}
+ */
+export function tripFingerprint(trip, identity = null) {
+  return fnv1a53(canonicalJson({ spec: trip.spec, routePlan: trip.routePlan ?? null, days: trip.days, ...(trip.evidence !== undefined ? { evidence: trip.evidence } : {}), ...(trip.versions?.connectionEvidence !== undefined ? { connectionEvidence: trip.versions.connectionEvidence } : {}), ...(identity != null && identity !== false && trip.identity !== undefined ? { identity: identityDigest(trip.identity) } : {}) }));
 }
