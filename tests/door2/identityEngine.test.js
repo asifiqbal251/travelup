@@ -36,6 +36,7 @@ import {
   restBlock,
   spec,
   synthTrip,
+  TRANSITION_AT,
   travelBlock
 } from './helpers/identityFixtures.js';
 
@@ -258,7 +259,7 @@ test('test 3 (case 3): add then remove an excursion — the displaced pin return
 
   // E added: d1 becomes half.
   const reshaped = windows('half');
-  const step1 = id.commitIdentity({ currentTrip: prior, nextTrip: reshaped, data: PILOT_DATA, tokens: countingTokens('e').env });
+  const step1 = id.commitIdentity({ currentTrip: prior, nextTrip: reshaped, data: PILOT_DATA, tokens: countingTokens('e').env, at: TRANSITION_AT });
   assert.equal(step1.ok, true, step1.reason);
   assert.deepStrictEqual(states(step1.identity), { b6: 'live', b7: 'displaced', b8: 'live', e1: 'live' });
   // Its address is NOT rewritten on displacement — that is what lets it recover.
@@ -267,7 +268,7 @@ test('test 3 (case 3): add then remove an excursion — the displaced pin return
 
   // E removed: d1 full returns, and b7 is in the domain because displaced is retained.
   const restored = { ...reshaped, identity: step1.identity };
-  const step2 = id.commitIdentity({ currentTrip: restored, nextTrip: windows('full'), data: PILOT_DATA, tokens: countingTokens('z').env });
+  const step2 = id.commitIdentity({ currentTrip: restored, nextTrip: windows('full'), data: PILOT_DATA, tokens: countingTokens('z').env, at: TRANSITION_AT });
   assert.equal(step2.ok, true, step2.reason);
   assert.deepStrictEqual(states(step2.identity), { b6: 'live', b7: 'live', b8: 'live', e1: 'displaced' });
   assert.deepStrictEqual(step2.identity.edits.b7, prior.identity.edits.b7, 'the pin is intact');
@@ -277,7 +278,7 @@ test('test 3 (case 3): add then remove an excursion — the displaced pin return
     ...reshaped,
     identity: { ...step1.identity, blocks: { ...step1.identity.blocks, b7: { ...step1.identity.blocks.b7, state: 'dismissed' } } }
   };
-  const step3 = id.commitIdentity({ currentTrip: dismissed, nextTrip: windows('full'), data: PILOT_DATA, tokens: countingTokens('y').env });
+  const step3 = id.commitIdentity({ currentTrip: dismissed, nextTrip: windows('full'), data: PILOT_DATA, tokens: countingTokens('y').env, at: TRANSITION_AT });
   assert.equal(step3.ok, true, step3.reason);
   assert.equal(step3.identity.blocks.b7.state, 'dismissed', 'a dismissed placement never reclaims its address');
   assert.equal(step3.identity.blocks.y1.state, 'live', 'the returning window received a NEW luid');
@@ -323,7 +324,7 @@ test('test 6 (case 6): when a stop is gone every placement there is orphaned, ed
     })
   };
   const after = synthTrip({ stops: ['a'], days: [[travelBlock('origin', 'a')], [opBlock({ stopKey: 'a', dayOffset: 0 })]] });
-  const committed = id.commitIdentity({ currentTrip: prior, nextTrip: after, data: PILOT_DATA, tokens: countingTokens('n').env });
+  const committed = id.commitIdentity({ currentTrip: prior, nextTrip: after, data: PILOT_DATA, tokens: countingTokens('n').env, at: TRANSITION_AT });
   assert.equal(committed.ok, true, committed.reason);
   assert.deepStrictEqual(states(committed.identity), { x1: 'live', x2: 'orphaned' });
   assert.deepStrictEqual(committed.identity.edits.x2, prior.identity.edits.x2);
@@ -334,7 +335,7 @@ test('test 6 (case 6): when a stop is gone every placement there is orphaned, ed
     stops: ['a', 'b'],
     days: [[travelBlock('origin', 'a')], [opBlock({ stopKey: 'a', dayOffset: 0 })], [travelBlock('a', 'b')]]
   });
-  const kept = id.commitIdentity({ currentTrip: prior, nextTrip: stopKept, data: PILOT_DATA, tokens: countingTokens('m').env });
+  const kept = id.commitIdentity({ currentTrip: prior, nextTrip: stopKept, data: PILOT_DATA, tokens: countingTokens('m').env, at: TRANSITION_AT });
   assert.equal(kept.ok, true, kept.reason);
   assert.equal(kept.identity.blocks.x2.state, 'displaced');
 });
@@ -364,7 +365,7 @@ test('test 7: the two-pin counterexample — the survivor keeps its id, the disp
     })
   };
   const reshaped = windows('half');
-  const committed = id.commitIdentity({ currentTrip: prior, nextTrip: reshaped, data: PILOT_DATA, tokens: countingTokens('e').env });
+  const committed = id.commitIdentity({ currentTrip: prior, nextTrip: reshaped, data: PILOT_DATA, tokens: countingTokens('e').env, at: TRANSITION_AT });
   assert.equal(committed.ok, true, committed.reason);
   assert.deepStrictEqual(states(committed.identity), { b6: 'live', b7: 'displaced', b8: 'live', e1: 'live' });
   assert.deepStrictEqual(committed.identity.blocks.b8.address, { dayOffset: 2, ordinal: 1, slot: 'full' }, 'the survivor keeps its own address');
@@ -396,7 +397,7 @@ test('test 14 (case A): the established holder keeps the window, the dormant cla
     }
   });
 
-  const first = id.commitIdentity({ currentTrip: { ...trip, identity: contested }, nextTrip: trip, data: PILOT_DATA, tokens: countingTokens('n').env });
+  const first = id.commitIdentity({ currentTrip: { ...trip, identity: contested }, nextTrip: trip, data: PILOT_DATA, tokens: countingTokens('n').env, at: TRANSITION_AT });
   assert.equal(first.ok, true, first.reason);
   assert.deepStrictEqual(states(first.identity), { holder: 'live', claimant: 'retired' });
   assert.deepStrictEqual(first.identity.edits.claimant, contested.edits.claimant, 'the retired claimant keeps its edit');
@@ -436,7 +437,7 @@ test('test 15 (case B): a genuine tie refuses the apply whole, names both edits,
 
   // PAIRED CONTROL: one established holder among the same claimants resolves as case A.
   const resolvable = { ...current, identity: { ...tie, blocks: { ...tie.blocks, one: livePlacement('b', 0, 1, 'full') } } };
-  const landed = id.commitIdentity({ currentTrip: resolvable, nextTrip: trip, data: PILOT_DATA, tokens: countingTokens('m').env });
+  const landed = id.commitIdentity({ currentTrip: resolvable, nextTrip: trip, data: PILOT_DATA, tokens: countingTokens('m').env, at: TRANSITION_AT });
   assert.equal(landed.ok, true, landed.reason);
   assert.deepStrictEqual(states(landed.identity), { one: 'live', two: 'retired' });
 });
@@ -444,7 +445,7 @@ test('test 15 (case B): a genuine tie refuses the apply whole, names both edits,
 test('mutation 1 guard: correspondence never falls back to a nearest window — an off-by-one offset does not match', () => {
   const trip = synthTrip({ stops: ['b'], days: [[travelBlock('origin', 'b')], [opBlock({ stopKey: 'b', dayOffset: 1 })]] });
   const prior = { ...trip, identity: map({ used: ['x'], blocks: { x: livePlacement('b', 0, 1, 'full') }, edits: {} }) };
-  const committed = id.commitIdentity({ currentTrip: prior, nextTrip: trip, data: PILOT_DATA, tokens: countingTokens('n').env });
+  const committed = id.commitIdentity({ currentTrip: prior, nextTrip: trip, data: PILOT_DATA, tokens: countingTokens('n').env, at: TRANSITION_AT });
   assert.equal(committed.ok, true, committed.reason);
   assert.equal(committed.identity.blocks.x.state, 'displaced', 'd0 does not match d1');
   assert.equal(committed.identity.blocks.n1.state, 'live');
@@ -476,7 +477,7 @@ test('test 18 (synthetic, not producer-reproduced): ordinal re-numbering moves a
   };
   // The second gap disappears, so only ordinal 1 remains.
   const one = synthTrip({ stops: ['b'], days: [[travelBlock('origin', 'b')], [opBlock({ stopKey: 'b', dayOffset: 0, slot: 'half' })]] });
-  const committed = id.commitIdentity({ currentTrip: prior, nextTrip: one, data: PILOT_DATA, tokens: countingTokens('n').env });
+  const committed = id.commitIdentity({ currentTrip: prior, nextTrip: one, data: PILOT_DATA, tokens: countingTokens('n').env, at: TRANSITION_AT });
   assert.equal(committed.ok, true, committed.reason);
   assert.deepStrictEqual(states(committed.identity), { first: 'live', second: 'displaced' });
   assert.deepStrictEqual(committed.identity.blocks.second.address, { dayOffset: 0, ordinal: 2, slot: 'short' }, 'the address is untouched by displacement');
@@ -527,7 +528,7 @@ test('test 10: the Niagara 8-day reversal, THROUGH THE REAL PRODUCER — every s
   const seeded = id.initialiseIdentityForBuild(forward, { data: PILOT_DATA, tokens: countingTokens('f').env });
   assert.equal(seeded.ok, true, seeded.reason);
   const withMap = { ...forward, identity: seeded.identity };
-  const committed = id.commitIdentity({ currentTrip: withMap, nextTrip: reversed, data: PILOT_DATA, tokens: countingTokens('n').env });
+  const committed = id.commitIdentity({ currentTrip: withMap, nextTrip: reversed, data: PILOT_DATA, tokens: countingTokens('n').env, at: TRANSITION_AT });
   assert.equal(committed.ok, true, `${committed.reason ?? ''} ${JSON.stringify(committed.detail ?? {})}`);
 
   // THE COMPLETE EFFECT. Every prior placement takes exactly the state its own exact
@@ -707,7 +708,7 @@ test('T-P3: no #new key survives anywhere after a successful commit, by exhausti
 test('T-P4: a map planted on the proposal trip with an unresolved provisional key does not reach the committed trip (mutation 7)', () => {
   // Driven on real producer output, because the planted map has to survive a real apply.
   const real = buildFamilyWithIdentity('peru');
-  const realPreview = rs.previewAdjustNights(real, real.routePlan.stops[0].key, 1, { ...PREVIEW_OPTIONS, identity: true, data: PILOT_DATA });
+  const realPreview = rs.previewAdjustNights(real, real.routePlan.stops[0].key, 1, { ...PREVIEW_OPTIONS, identity: true, data: PILOT_DATA, at: TRANSITION_AT });
   assert.equal(realPreview.ok, true, `${realPreview.why ?? ''}`);
   const proposal = realPreview.proposals[0];
   const planted = {
@@ -1112,7 +1113,7 @@ test('T-R2: acceptance attaches to the target OWN luid with used UNCHANGED — n
   assert.equal(offers.ok, true, offers.reason);
   assert.deepStrictEqual(offers.offers, [{ luid: 'tgt', blockId: 'op:a:d1', stopKey: 'a', kind: 'open', address: { dayOffset: 1, ordinal: 1, slot: 'full' } }]);
 
-  const accepted = id.acceptRelocation(withMap, 'src', 'tgt', { data: PILOT_DATA, content: PILOT_CONTENT });
+  const accepted = id.acceptRelocation(withMap, 'src', 'tgt', { data: PILOT_DATA, content: PILOT_CONTENT, at: TRANSITION_AT });
   assert.equal(accepted.ok, true, accepted.reason);
   assert.deepStrictEqual(accepted.identity.used, ['src', 'tgt'], 'NO token was issued');
   assert.deepStrictEqual(accepted.identity.blocks.tgt, identity.blocks.tgt, 'the target keeps its own identity and address');

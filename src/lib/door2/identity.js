@@ -2,6 +2,7 @@
 /** @typedef {import('./types.js').Block} Block */
 /** @typedef {import('./types.js').ContentItem} ContentItem */
 
+import { FAILURE_STATES } from './failureStates.js';
 import { activityFor, classifySlot, eligibleItemsForBlock } from './fill.js';
 import { findRoutePackage } from './planner.js';
 
@@ -72,10 +73,27 @@ import { findRoutePackage } from './planner.js';
 // they record is SUPPLIED BY THE CALLER through the same opt-in channel as the rest of the
 // identity mode (`at`). That keeps this module deterministic for fixed inputs, which was
 // the whole of the original objection, without deviating from the design: a supplied value
-// is not a clock. There is deliberately no fallback. Where no time is supplied there is
-// nothing to write and no clock to reach for, so the stamp is simply absent; an invalid
-// supplied value refuses by name rather than being coerced. No production root passes
-// `at`, any more than it passes the opt-in itself.
+// is not a clock. There is deliberately no fallback and no ambient lifecycle time source
+// on any path; an invalid supplied value refuses by name rather than being coerced. No
+// production root passes `at`, any more than it passes the opt-in itself.
+//
+// THE WRITE IS MANDATORY AT A COMMITTING TRANSITION. A map that moves a placement to
+// `displaced`, `orphaned`, `dismissed` or `retired` and commits that move WITHOUT the
+// matching stamp is refused by name, and installs nothing. "Stamps when a time happens to
+// be supplied" is not the design's contract: a lifecycle field that is present or absent
+// depending on the caller's generosity cannot be read by anything downstream, and the
+// moment a transition happened is unrecoverable once the operation has committed without
+// it. So the requirement is enforced where the commit is made — `runPhases` and
+// `acceptRelocation`, through one guard (`requireTransitionStamps`) — and not inside
+// `transition` or `correspond`, which also serve the ADVISORY allocation that
+// `applyProposal` recomputes and discards. Stamping or refusing advice would write a time
+// onto something thrown away, and would make a preview depend on a value only the commit
+// needs.
+//
+// What that leaves untouched: a fresh build and a legacy initialisation transition nothing
+// and so need no time; an operation that commits no transition needs none either; and a
+// placement already in a terminal or displaced state, carried through unchanged, is not a
+// transition and is never re-examined — including one that arrived unstamped.
 //
 // A stamp is written at the TRANSITION only. A placement that was already `displaced` and
 // stays `displaced` keeps its original `displacedAt`, so the field means "when this
@@ -155,6 +173,35 @@ function transition(placement, state, at) {
   if (placement?.state === state) return placement;
   const field = TRANSITION_STAMP[state];
   return { ...placement, state, ...(at != null && field !== undefined ? { [field]: at } : {}) };
+}
+
+/**
+ * D-A §6.2's write, required of every transition this operation is about to COMMIT.
+ *
+ * Compares the map as it will be installed against the map it came from, and refuses by
+ * name if any placement has MOVED into a stamp-bearing state without its stamp. Comparing
+ * the two maps, rather than trusting whichever function made the move, is what makes this
+ * one guard cover every transition any committing path can produce — correspondence's
+ * three, acceptance's one, and any later one — instead of one check per instance.
+ *
+ * Deliberately not a check on the placements themselves: a placement whose state is
+ * unchanged is not a transition, so an entry that arrived unstamped from an earlier map is
+ * carried through exactly as it is rather than being retro-stamped with a time that would
+ * be a fabrication.
+ *
+ * @param {Object|undefined} priorBlocks  The map's placements before this operation.
+ * @param {Object} nextBlocks             The placements about to be committed.
+ */
+function requireTransitionStamps(priorBlocks, nextBlocks) {
+  for (const [luid, placement] of Object.entries(nextBlocks)) {
+    const field = TRANSITION_STAMP[placement?.state];
+    if (field === undefined) continue; // `live` records no moment; neither does issuance
+    if (priorBlocks?.[luid]?.state === placement.state) continue; // not a transition
+    if (placement[field] === undefined) {
+      return identityRefusal('transition_time_required', { luid, state: placement.state, field });
+    }
+  }
+  return { ok: true };
 }
 
 // ---------------------------------------------------------------------------
@@ -710,6 +757,11 @@ function runPhases({ priorIdentity, nextTrip, data, tokens, at, allocation, atta
   const corr = correspond(priorIdentity, found.targets, stopKeys, time.at);
   if (!corr.ok) return corr; // a case-B tie aborts here, with zero token-source calls
 
+  // D-A §6.2 is mandatory at a commit, and this is a commit (R5). Phase 1, so a missing
+  // time costs zero token-source calls and nothing is installed, exactly like a tie.
+  const stamped = requireTransitionStamps(priorIdentity?.blocks, corr.blocks);
+  if (!stamped.ok) return stamped;
+
   // --- Phase 2 — issue and resolve. --------------------------------------------------
   const blocks = { ...corr.blocks };
   const resolvedFromProvisional = new Map();
@@ -841,22 +893,44 @@ export function initialiseIdentityForLegacyTrip(trip, { data, tokens, at } = {})
 // WHAT IS RESTORED, and the conservative limit. Only intent the itinerary can honour
 // COMPLETELY is written:
 //
-//   retained contentId is null            -> flags only; there is no content to place
-//   retained contentId already in place   -> flags only
+//   retained contentId is null             -> flags only; there is no content to place
+//   retained contentId INELIGIBLE there    -> NOTHING is written to the block
+//   retained contentId not in the shelf    -> NOTHING is written to the block
+//   retained contentId already in place    -> the flags, once the gate has allowed it
 //   retained contentId eligible there      -> the content is placed, then the flags
-//   otherwise                              -> NOTHING is written to the block
 //
-// The last row is the honest case, not a silent one. Pinning content the traveller never
-// chose would be worse than leaving the filler's choice, so the block is left alone, the
-// retained edit stays recorded exactly as §3.3 promises, and the placement is REPORTED in
-// `unrestorable` so the divergence is visible rather than invented away. Eligibility is
-// the engine's own gate, through this module's single call site, with the caller's own
-// `choices.rejected` exclusions — no rule of this module's own is added.
+// The two "nothing" rows are the honest case, not a silent one. Pinning content the
+// traveller never chose would be worse than leaving the filler's choice, so the block is
+// left alone, the retained edit stays recorded exactly as §3.3 promises, and the placement
+// is REPORTED in `unrestorable` so the divergence is visible rather than invented away.
+// Eligibility is the engine's own gate, through this module's single call site, with the
+// caller's own `choices.rejected` exclusions — no rule of this module's own is added.
+//
+// THE GATE IS CONSULTED FOR EVERY CONTENT-BEARING INTENT, including one whose content is
+// ALREADY in the block (R2.2). Restoring the flags is as much a restoration as placing the
+// content: a pin asserts "this content, here", and asserting it over content the trip now
+// excludes is the same divergence whichever way the content arrived. Checking only the
+// differing case made the gate reachable by one branch of two and left the other restoring
+// content the engine's own gate refuses — a rejected item among them. The gate is
+// applicable in the already-present case because it does not count a block's own content
+// as used (`fill.js:160`), so a block's current content is eligible there unless some
+// other rule — an exclusion, the accepted slots, `minDayAtStop`, `visitsPlaceId` — says
+// otherwise, which is exactly the question being asked.
 //
 // Restoration never changes a block's `id`, `startTime`, `durationHours` or
 // `anchor.stopId`, and `classifySlot` reads only `startTime` and `durationHours`
 // (`fill.js:42-48`), so NO ADDRESS CAN CHANGE and phase 3's validation of the resolved map
 // still holds over the restored trip.
+//
+// DERIVED METADATA (R2.3). Placing content closes a gap, so the trip's own derived
+// summary of its gaps must follow: writing `days` alone left `contentGaps` naming a block
+// that is now an activity, which is the same class of defect as a map that disagrees with
+// its itinerary. `contentGaps`, `status` and `warnings` are therefore recomputed from the
+// restored `days` exactly as `edit.js`'s own `applyMeta` recomputes them after a bounded
+// edit (`edit.js:46-67`) — duplicated here with its citation rather than hoisted, because
+// `edit.js`'s diff is confined to the seven exports the brief names. The recomputation
+// runs only when restoration actually replaced a block, and is a no-op when the gap
+// picture did not change.
 
 /**
  * @param {Trip} trip        The build about to be committed, with the resolved map's addresses.
@@ -887,17 +961,27 @@ export function restoreRecoveredIntents(trip, identity, recovered, { content } =
     const wanted = intent.contentId ?? null;
     let next = block;
 
-    if (wanted !== null && block.anchor?.contentId !== wanted) {
+    if (wanted !== null) {
+      // The gate first, for the already-present case as much as the differing one (R2.2).
       const gate = relocationTargetEligible(working, block, wanted, content ?? []);
       if (!gate.ok) return gate;
-      const item = gate.eligible ? (content ?? []).find((c) => c.id === wanted) : undefined;
-      if (item === undefined) {
-        // The retained content cannot be placed here any more. Leave the block exactly as
-        // the filler left it, keep the edit, and say so.
-        unrestorable.push({ luid, blockId: target.blockId, contentId: wanted, why: gate.eligible ? 'content_not_in_shelf' : 'content_not_eligible' });
+      if (!gate.eligible) {
+        // The retained content may not be honoured here any more. Leave the block exactly
+        // as the filler left it, keep the edit, and say so.
+        unrestorable.push({ luid, blockId: target.blockId, contentId: wanted, why: 'content_not_eligible' });
         continue;
       }
-      next = activityBlockFor(block, item);
+      if (block.anchor?.contentId !== wanted) {
+        const item = (content ?? []).find((c) => c.id === wanted);
+        if (item === undefined) {
+          // A guard, not a branch the gate can reach: the gate answers from a filtered
+          // subset of this very shelf, so "eligible" already implies "in the shelf". It
+          // reports rather than throwing if that ever stops being true.
+          unrestorable.push({ luid, blockId: target.blockId, contentId: wanted, why: 'content_not_in_shelf' });
+          continue;
+        }
+        next = activityBlockFor(block, item);
+      }
     }
 
     next = {
@@ -910,7 +994,44 @@ export function restoreRecoveredIntents(trip, identity, recovered, { content } =
     restored.push({ luid, blockId: target.blockId, contentId: next.anchor?.contentId ?? null, locked: next.locked });
   }
 
-  return { ok: true, trip: replacements.size === 0 ? trip : working, restored, unrestorable };
+  return {
+    ok: true,
+    trip: replacements.size === 0 ? trip : withContentMeta(working, trip),
+    restored,
+    unrestorable
+  };
+}
+
+/**
+ * The gap list, status and warnings recomputed from the restored `days`, exactly as
+ * `edit.js`'s `applyMeta` recomputes them after a bounded edit (`edit.js:46-67`). Placing
+ * content closes a gap, so leaving these three fields alone would return a trip whose own
+ * summary contradicted its days (R2.3).
+ *
+ * `before` supplies the pre-restoration status and warnings, which is what `applyMeta`
+ * means by its `preTrip` arguments: `CONTENT_INSUFFICIENT` is dropped and re-added from
+ * the recomputed gaps, so it is never stale in either direction.
+ *
+ * @param {Trip} working  The trip with the restored blocks.
+ * @param {Trip} before   The trip as it stood before restoration.
+ */
+function withContentMeta(working, before) {
+  const contentGaps = [];
+  for (const day of working.days) {
+    for (const block of day.blocks) {
+      if (block.type === 'open' && block.gap) {
+        contentGaps.push({ blockId: block.id, dayNumber: day.dayNumber, placeId: block.placeId, slot: block.gap.slot });
+      }
+    }
+  }
+  const hasGaps = contentGaps.length > 0;
+  const baseWarnings = (before.warnings ?? []).filter((w) => w !== FAILURE_STATES.CONTENT_INSUFFICIENT);
+  return {
+    ...working,
+    contentGaps,
+    status: hasGaps ? 'incomplete' : before.status,
+    warnings: hasGaps ? [...baseWarnings, FAILURE_STATES.CONTENT_INSUFFICIENT] : baseWarnings
+  };
 }
 
 /** One block of this trip by id, or null. */
@@ -1211,12 +1332,20 @@ export function acceptRelocation(trip, luid, targetLuid, { data, content, at } =
   if (!stillEligible.ok) return { ...stillEligible, detail: { ...stillEligible.detail, luid } };
 
   const intent = identity.edits[luid];
+  const blocks = { ...identity.blocks, [luid]: transition(identity.blocks[luid], 'dismissed', time.at) };
+  // The same §6.2 guard as the four-phase commit, because this is the other path that
+  // commits a transition (R5). A `displaced` source always moves here, so acceptance
+  // always needs its time; refusing writes nothing — no intent is attached and `used` is
+  // untouched.
+  const stamped = requireTransitionStamps(identity.blocks, blocks);
+  if (!stamped.ok) return stamped;
+
   return {
     ok: true,
     identity: {
       ...identity,
       used: [...(identity.used ?? [])],
-      blocks: { ...identity.blocks, [luid]: transition(identity.blocks[luid], 'dismissed', time.at) },
+      blocks,
       edits: {
         ...identity.edits,
         [targetLuid]: { ...intent, provenance: `relocated_from:${luid}` },

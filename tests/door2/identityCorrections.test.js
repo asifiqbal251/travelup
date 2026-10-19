@@ -24,6 +24,7 @@ import * as edit from '../../src/lib/door2/edit.js';
 import { compileFamilies } from '../../src/lib/door2/families.js';
 import { buildFilledTrip } from '../../src/lib/door2/planner.js';
 import { eligibleItemsForBlock } from '../../src/lib/door2/fill.js';
+import { tripFingerprint } from '../../src/lib/door2/fingerprint.js';
 import { synBundle, synSpec } from './helpers/syntheticHub.js';
 
 // ---------------------------------------------------------------------------
@@ -44,9 +45,17 @@ function producerTrip(totalDays, routeTemplateId) {
 }
 
 /**
+ * D-A §6.2's supplied transition time. A COMMITTING lifecycle transition requires one
+ * (R5), and most routes below displace, orphan or retire a window, so it travels in the
+ * opt-in bag. It is a fixed value: the engine reads no clock, and two identical runs
+ * produce identical maps.
+ */
+const AT = '2026-10-18T19:30:00.000Z';
+
+/**
  * A deterministic harness: a counting token source, the opted-in option bag and the paired
  * default bag built from the SAME options, so the only difference between the two is the
- * opt-in itself.
+ * opt-in itself. The default bag carries no time, exactly as no production root does.
  */
 function harness(prefix = 'k') {
   const state = { calls: 0 };
@@ -55,7 +64,7 @@ function harness(prefix = 'k') {
   return {
     tokens,
     state,
-    optIn: { ...common, identity: true, tokens },
+    optIn: { ...common, identity: true, tokens, at: AT },
     dflt: { ...common },
     /** A seeded trip, through the engine's own fresh-build entry point. */
     seed(trip) {
@@ -333,6 +342,262 @@ test('R2: restoration cannot move an address — only content and the intent fla
 });
 
 // ---------------------------------------------------------------------------
+// R2.1 — an outcome the operation could not honour must survive the PUBLIC boundary.
+//
+// The first R2 fix was made where the defect was reproduced — inside the restoration
+// helper — rather than where the contract is made, which is the opted-in public
+// operation. The helper computed an honest report and `applyProposal` dropped it, so
+// §3.3's "keeps its identity and edit and IS REPORTED" held for a local variable and for
+// nothing a caller could reach.
+
+test('R2.1: through the real opted-in public route, a recovery the itinerary cannot honour is REPORTED ON THE COMMITTED RECORD, not discarded', () => {
+  const h = harness('u1');
+  const seeded = h.seed(producerTrip(4, 'syn_hub'));
+
+  // 1. Pin the real full-day activity through the real `pinActivity`.
+  const pinned = edit.pinActivity(seeded, 'op:lx_base:d1', { data: B.data, tokens: h.tokens });
+  assert.equal(pinned.ok, true, `${pinned.reason ?? ''}`);
+  const start = pinned.trip;
+  const luid = Object.entries(start.identity.blocks).find(([, p]) => p.address.dayOffset === 1)[0];
+  const pinnedContent = blockOf(start, 'op:lx_base:d1').anchor.contentId;
+  assert.equal(blockOf(start, 'op:lx_base:d1').locked, true, 'the pin really landed');
+
+  // 2. Adding the excursion reshapes that day, so the pinned window is displaced.
+  const displaced = applyOptedIn(start, (t, o) => rs.previewAddExcursion(t, 'lx_base', 'sintra', o), h.optIn);
+  assert.equal(displaced.identity.blocks[luid].state, 'displaced');
+  assert.deepStrictEqual(displaced.identity.edits[luid].contentId, pinnedContent, 'the retained intent names the pinned content');
+
+  // 3. The pinned content is WITHDRAWN from the caller's shelf, the way a catalogue
+  //    change withdraws one. The shelf is the caller's own, so this is the supported way
+  //    to reach the branch, not a planted engine state.
+  const withdrawn = B.content.filter((item) => item.id !== pinnedContent);
+  const reducedOptIn = { ...h.optIn, content: withdrawn };
+
+  // 4. Remove the excursion through the real opted-in public route: the exact window
+  //    returns, correspondence recovers it, and its retained content can no longer be
+  //    placed there.
+  const preview = rs.previewRemoveExcursion(displaced, 'lx_base', 'sintra', reducedOptIn);
+  assert.equal(preview.ok, true, preview.why ?? '');
+  const applied = rs.applyProposal(displaced, preview.proposals[0]);
+  assert.equal(applied.ok, true, `${applied.reason ?? ''} ${JSON.stringify(applied.detail ?? {})}`);
+
+  // The success shape is unchanged — the outcome rides on the RECORD, where a caller that
+  // keeps only `result.trip` still has it.
+  assert.deepStrictEqual(Object.keys(applied).sort(), ['ok', 'trip'], 'the result shape is still exactly { ok, trip }');
+  assert.deepStrictEqual(applied.trip.identityUnrestorable, [
+    { luid, blockId: 'op:lx_base:d1', contentId: pinnedContent, why: 'content_not_eligible' }
+  ], 'THE OUTCOME SURVIVES THE PUBLIC BOUNDARY');
+
+  // And the engine's own correct behaviour is unchanged: the window recovered, the edit
+  // is kept, and the block is exactly as the filler left it — unlocked, with the filler's
+  // own content, never the withdrawn one.
+  assert.equal(applied.trip.identity.blocks[luid].state, 'live', 'the window recovered');
+  assert.deepStrictEqual(applied.trip.identity.edits[luid], displaced.identity.edits[luid], 'the retained edit is kept verbatim');
+  const block = blockOf(applied.trip, 'op:lx_base:d1');
+  assert.notEqual(block.anchor.contentId, pinnedContent, 'the withdrawn content was not placed');
+  assert.equal(block.locked, false, 'and no pin was asserted over content the traveller never chose');
+  assert.deepStrictEqual(id.validateIdentity(applied.trip, applied.trip.identity, { data: B.data }), { ok: true });
+
+  // PAIRED CONTROL — the same cycle with the content still on the shelf honours the pin
+  // completely and reports NOTHING, so the channel is not simply always present.
+  const honoured = applyOptedIn(displaced, (t, o) => rs.previewRemoveExcursion(t, 'lx_base', 'sintra', o), h.optIn);
+  assert.equal('identityUnrestorable' in honoured, false, 'nothing unhonoured, so no outcome key at all');
+  assert.equal(blockOf(honoured, 'op:lx_base:d1').locked, true, 'and the pin really did return');
+  assert.equal(blockOf(honoured, 'op:lx_base:d1').anchor.contentId, pinnedContent);
+});
+
+test('R2.1: the outcome is installed EXPLICITLY — a stale one planted on the proposal trip never reaches the committed record', () => {
+  const h = harness('u2');
+  const start = h.seed(producerTrip(4, 'syn_hub'));
+
+  const preview = rs.previewAdjustNights(start, 'lx_base', 1, h.optIn);
+  assert.equal(preview.ok, true, preview.why ?? '');
+  const planted = {
+    ...preview.proposals[0],
+    trip: { ...preview.proposals[0].trip, identityUnrestorable: [{ luid: 'ghost', blockId: 'op:ghost:d9', contentId: 'nope', why: 'content_not_eligible' }] }
+  };
+  const applied = rs.applyProposal(start, planted);
+  assert.equal(applied.ok, true, `${applied.reason ?? ''}`);
+  assert.equal('identityUnrestorable' in applied.trip, false, 'a planted outcome is removed, never inherited by spread');
+});
+
+test('R2.1: the outcome is outside BOTH digests, so it can never make a valid preview stale', () => {
+  const h = harness('u3');
+  const start = h.seed(producerTrip(4, 'syn_hub'));
+  const withOutcome = {
+    ...start,
+    identityUnrestorable: [{ luid: 'x', blockId: 'op:lx_base:d1', contentId: 'c', why: 'content_not_eligible' }]
+  };
+  assert.equal(tripFingerprint(withOutcome), tripFingerprint(start), 'the default digest cannot see it');
+  assert.equal(
+    tripFingerprint(withOutcome, { data: B.data }),
+    tripFingerprint(start, { data: B.data }),
+    'and neither can the identity-inclusive one — it is a sibling of the map, not part of it'
+  );
+
+  // Behaviourally: a preview captured before the outcome exists still applies after it.
+  const preview = rs.previewAdjustNights(start, 'lx_base', 1, h.optIn);
+  assert.equal(preview.ok, true, preview.why ?? '');
+  const applied = rs.applyProposal(withOutcome, preview.proposals[0]);
+  assert.equal(applied.ok, true, `a recovery outcome must never cause staleness: ${applied.reason ?? ''}`);
+});
+
+// ---------------------------------------------------------------------------
+// R2.2 — eligibility is a question about the intent, not about whether the content moved.
+
+test('R2.2: a retained intent whose content is ALREADY in the block is still put to the eligibility gate, and a refused one restores nothing', () => {
+  const h = harness('u4');
+  const trip = h.seed(producerTrip(4, 'syn_hub'));
+  const block = blockOf(trip, 'op:lx_base:d1');
+  const present = block.anchor.contentId;
+  assert.ok(present, 'the fixture needs a filled full-day window');
+  assert.equal(block.locked, false, 'and an UNLOCKED one, so a restoration would be visible');
+
+  const luid = Object.entries(trip.identity.blocks).find(([, p]) => p.address.dayOffset === 1)[0];
+  const intent = { intent: 'pin', contentId: present, locked: true, userEdited: true, provenance: 'pinActivity' };
+
+  // The content the intent names is excluded trip-wide, exactly as `rejectActivity`
+  // excludes one (`edit.js:173`). The engine's OWN gate is what answers.
+  const excluded = {
+    ...trip,
+    spec: { ...trip.spec, choices: { ...trip.spec.choices, rejected: [...(trip.spec.choices?.rejected ?? []), present] } },
+    identity: { ...trip.identity, edits: { [luid]: intent } }
+  };
+  assert.equal(
+    id.relocationTargetEligible(excluded, blockOf(excluded, 'op:lx_base:d1'), present, B.content).eligible,
+    false,
+    'the engine gate itself says this content may not be honoured here'
+  );
+
+  const before = clone(excluded);
+  const result = id.restoreRecoveredIntents(
+    excluded, excluded.identity,
+    [{ luid, target: id.identityTargetFor(blockOf(excluded, 'op:lx_base:d1')) }],
+    { content: B.content }
+  );
+  assert.equal(result.ok, true, result.reason);
+  assert.deepStrictEqual(result.restored, [], 'nothing was restored');
+  assert.deepStrictEqual(result.unrestorable, [
+    { luid, blockId: 'op:lx_base:d1', contentId: present, why: 'content_not_eligible' }
+  ], 'and the refusal is reported with its reason');
+  assert.deepStrictEqual(result.trip, before, 'THE COMPLETE TRIP IS UNTOUCHED — no lock was asserted over excluded content');
+  assert.deepStrictEqual(result.trip.identity.edits[luid], intent, 'the intent is retained');
+
+  // PAIRED CONTROL: the same already-present intent WITHOUT the exclusion restores its
+  // flags, so the gate is the only thing that changed the outcome.
+  const allowed = { ...trip, identity: { ...trip.identity, edits: { [luid]: intent } } };
+  const landed = id.restoreRecoveredIntents(
+    allowed, allowed.identity,
+    [{ luid, target: id.identityTargetFor(blockOf(allowed, 'op:lx_base:d1')) }],
+    { content: B.content }
+  );
+  assert.equal(landed.ok, true, landed.reason);
+  assert.deepStrictEqual(landed.unrestorable, []);
+  assert.deepStrictEqual(landed.restored, [{ luid, blockId: 'op:lx_base:d1', contentId: present, locked: true }]);
+  const after = blockOf(landed.trip, 'op:lx_base:d1');
+  assert.equal(after.locked, true, 'the flags really are the thing being restored here');
+  assert.equal(after.userEdited, true);
+  assert.equal(after.anchor.contentId, present, 'and the content was already in place, so it did not move');
+});
+
+// ---------------------------------------------------------------------------
+// R2.3 — writing content back must leave the trip's own summary of itself true.
+
+test('R2.3: restoring content closes the gap it fills — contentGaps, status and warnings follow, asserted on the COMPLETE returned trip', () => {
+  const h = harness('u5');
+  // A genuine producer trip built with an EMPTY shelf, so every open window is a real gap
+  // the filler could not fill — not a hand-made one.
+  const empty = buildFilledTrip(synSpec(4, { routeTemplateId: 'syn_hub' }), B.data, { content: [] });
+  const seeded = id.initialiseIdentityForBuild(empty, { data: B.data, tokens: h.tokens });
+  assert.equal(seeded.ok, true, seeded.reason);
+  const trip = { ...empty, identity: seeded.identity };
+
+  const block = blockOf(trip, 'op:lx_base:d1');
+  assert.equal(block.type, 'open', 'the window really is unfilled');
+  assert.ok(trip.contentGaps.some((g) => g.blockId === 'op:lx_base:d1'), 'and the trip says so');
+  assert.equal(trip.status, 'incomplete');
+  assert.ok(trip.warnings.includes('content_insufficient'));
+
+  // A retained intent naming content that IS eligible there once the full shelf is back.
+  const wanted = B.content.find((item) => item.placeId === 'syn_lisbon' && item.slots.includes('full'));
+  assert.ok(wanted, 'the control needs a genuinely eligible full-day item');
+  const luid = Object.entries(trip.identity.blocks).find(([, p]) => p.address.dayOffset === 1)[0];
+  const withIntent = {
+    ...trip,
+    identity: {
+      ...trip.identity,
+      edits: { [luid]: { intent: 'swap', contentId: wanted.id, locked: true, userEdited: true, provenance: 'swapActivity' } }
+    }
+  };
+
+  const result = id.restoreRecoveredIntents(
+    withIntent, withIntent.identity,
+    [{ luid, target: id.identityTargetFor(block) }],
+    { content: B.content }
+  );
+  assert.equal(result.ok, true, result.reason);
+
+  const restoredBlock = blockOf(result.trip, 'op:lx_base:d1');
+  assert.equal(restoredBlock.type, 'activity', 'the content was placed');
+  assert.equal(restoredBlock.anchor.contentId, wanted.id);
+  assert.equal(restoredBlock.gap, undefined);
+
+  // THE DEFECT: `days` said activity while the trip's own summary still said gap.
+  assert.equal(
+    result.trip.contentGaps.some((g) => g.blockId === 'op:lx_base:d1'),
+    false,
+    'the closed gap is gone from contentGaps'
+  );
+  // The complete returned trip: the gap list is exactly the blocks that are still gaps.
+  const stillGaps = result.trip.days.flatMap((day) =>
+    day.blocks.filter((b) => b.type === 'open' && b.gap).map((b) => ({ blockId: b.id, dayNumber: day.dayNumber, placeId: b.placeId, slot: b.gap.slot }))
+  );
+  assert.deepStrictEqual(result.trip.contentGaps, stillGaps, 'contentGaps exactly matches the gap blocks');
+  assert.equal(result.trip.status, 'incomplete', 'other windows are still empty, so the trip is still incomplete');
+  assert.deepStrictEqual(
+    result.trip.warnings.filter((w) => w === 'content_insufficient'),
+    ['content_insufficient'],
+    'and the warning is present exactly once, never doubled'
+  );
+  // Everything else about the trip is untouched.
+  assert.deepStrictEqual(
+    { ...result.trip, days: null, contentGaps: null, status: null, warnings: null },
+    { ...withIntent, days: null, contentGaps: null, status: null, warnings: null },
+    'no other field of the trip moved'
+  );
+
+  // PAIRED CONTROL: filling the LAST gap clears the warning and the status with it.
+  const oneGap = { ...trip, days: trip.days.map((day) => ({ ...day, blocks: day.blocks.map((b) => (b.id === 'op:lx_base:d1' ? b : fillAnyGap(b))) })) };
+  const singleGapTrip = {
+    ...oneGap,
+    contentGaps: oneGap.contentGaps.filter((g) => g.blockId === 'op:lx_base:d1'),
+    identity: {
+      ...trip.identity,
+      edits: { [luid]: { intent: 'swap', contentId: wanted.id, locked: true, userEdited: true, provenance: 'swapActivity' } }
+    }
+  };
+  const cleared = id.restoreRecoveredIntents(
+    singleGapTrip, singleGapTrip.identity,
+    [{ luid, target: id.identityTargetFor(block) }],
+    { content: B.content }
+  );
+  assert.equal(cleared.ok, true, cleared.reason);
+  assert.deepStrictEqual(cleared.trip.contentGaps, [], 'the last gap is closed');
+  assert.equal(cleared.trip.warnings.includes('content_insufficient'), false, 'so the warning goes');
+  // And the status takes the pre-restoration status back, which is exactly what
+  // `edit.js`'s own `applyMeta` does after a bounded edit closes the last gap
+  // (`edit.js:59-67`): `hasGaps ? 'incomplete' : preTripStatus`. The mirror is the point —
+  // restoration must not invent a status rule the bounded edits do not have.
+  assert.equal(cleared.trip.status, singleGapTrip.status, 'the status is the pre-restoration status, per edit.js applyMeta');
+});
+
+/** A gap block turned into something that is not a gap, for the last-gap control. */
+function fillAnyGap(block) {
+  if (block.type !== 'open' || !block.gap) return block;
+  return { ...block, type: 'activity', gap: undefined, generationStatus: 'ok', activity: { title: 'placeholder', summary: 'placeholder' } };
+}
+
+// ---------------------------------------------------------------------------
 // R3 — the seven public routes, proved by SUCCESSFUL paths in both modes.
 //
 // Each row is a real supported call that LANDS. The previous rows passed ids such as
@@ -502,7 +767,7 @@ test('R4 (CONTROL): a DISPLACED source is offered its eligible window and the ac
   assert.equal(offers.ok, true, offers.reason);
   assert.ok(offers.offers.some((o) => o.luid === targetLuid), 'the control must really produce an offer');
 
-  const accepted = id.acceptRelocation(withMap, sourceLuid, targetLuid, { data: B.data, content: B.content });
+  const accepted = id.acceptRelocation(withMap, sourceLuid, targetLuid, { data: B.data, content: B.content, at: AT });
   assert.equal(accepted.ok, true, accepted.reason);
   assert.deepStrictEqual(accepted.identity.used, withMap.identity.used, 'no token was issued');
   assert.equal(accepted.identity.blocks[sourceLuid].state, 'dismissed');
@@ -555,11 +820,9 @@ test('R4: the source state is re-checked AT ACCEPTANCE, so an offer enumerated w
 // ---------------------------------------------------------------------------
 // R5 — D-A §6.2's transition writes, from an explicitly supplied deterministic time.
 
-const AT = '2026-10-18T19:30:00.000Z';
-
 test('R5: all four lifecycle transitions write their §6.2 stamp from the SUPPLIED time, through the real public opted-in route', () => {
   const h = harness('t');
-  const optInAt = { ...h.optIn, at: AT };
+  const optInAt = h.optIn;
   const start = h.seed(producerTrip(4, 'syn_hub'));
 
   const preview = rs.previewAddExcursion(start, 'lx_base', 'sintra', optInAt);
@@ -592,21 +855,117 @@ test('R5: all four lifecycle transitions write their §6.2 stamp from the SUPPLI
   assert.equal(accepted.identity.blocks[sourceLuid].dismissedAt, AT, 'dismissedAt is written at the transition');
 });
 
-test('R5: no ambient clock — with no time supplied no stamp is written, and the engine reaches for no clock of its own', () => {
+/** The opt-in bag with no supplied time — what a caller that forgot §6.2 would pass. */
+function optInWithoutTime(h) {
+  const bag = { ...h.optIn };
+  delete bag.at;
+  return bag;
+}
+
+// This test replaces the one added in `c9a5c6c`, which asserted the OPPOSITE of the
+// contract below: that an unstamped committing transition succeeds with the stamp simply
+// absent. The owner's decision is to IMPLEMENT D-A §6.2's writes, so "stamps when a time
+// happens to be supplied" is not the contract and a test demanding it was wrong. The
+// no-clock assertion it also carried is genuine and is kept, in its own test.
+test('R5: a committing transition REFUSES without a supplied time, through the real public opted-in route, and installs nothing', () => {
   const h = harness('n');
   const start = h.seed(producerTrip(4, 'syn_hub'));
-  const added = applyOptedIn(start, (t, o) => rs.previewAddExcursion(t, 'lx_base', 'sintra', o), h.optIn);
+  const snapshot = clone(start);
+  const noTime = optInWithoutTime(h);
+  const mintedBySeeding = h.state.calls; // the seed issued this trip's own luids
 
-  for (const [luid, placement] of Object.entries(added.identity.blocks)) {
-    for (const field of ['displacedAt', 'orphanedAt', 'dismissedAt', 'retiredAt']) {
-      assert.equal(field in placement, false, `${luid}: ${field} was invented with no time supplied`);
+  // The real route: adding the excursion reshapes the full day, so a window is displaced.
+  const preview = rs.previewAddExcursion(start, 'lx_base', 'sintra', noTime);
+  assert.equal(preview.ok, true, preview.why ?? '');
+  assert.equal(preview.proposals[0].identityMode, true, 'the opt-in really is in force');
+  assert.equal('identityAt' in preview.proposals[0], false, 'and no time travels with it');
+  // The PREVIEW is unaffected: it allocates advisory keys and commits nothing, so it must
+  // not acquire a requirement only the commit has.
+  assert.equal(preview.proposals[0].identityAllocation.ok, true, 'the advisory allocation still succeeds');
+
+  const refused = rs.applyProposal(start, preview.proposals[0]);
+  assert.equal(refused.ok, false, 'a committed transition with no §6.2 time must refuse');
+  assert.equal(refused.reason, 'transition_time_required');
+  assert.deepStrictEqual(refused.detail, { luid: 'n1', state: 'displaced', field: 'displacedAt' }, 'named, with the placement and the field');
+  assert.equal(refused.trip, undefined, 'nothing is installed');
+  assert.deepStrictEqual(start, snapshot, 'and the caller trip is exactly as it was');
+  assert.equal(h.state.calls, mintedBySeeding, 'a phase-1 abort, so this operation made zero token-source calls');
+
+  // PAIRED CONTROL: the same operation with a time lands, and lands stamped.
+  const landed = applyOptedIn(start, (t, o) => rs.previewAddExcursion(t, 'lx_base', 'sintra', o), h.optIn);
+  const [displacedLuid, displaced] = Object.entries(landed.identity.blocks).find(([, p]) => p.state === 'displaced');
+  assert.ok(displacedLuid, 'the control must really displace a window');
+  assert.equal(displaced.displacedAt, AT, 'and the committed transition carries the supplied time');
+});
+
+test('R5: relocation acceptance is a COMMITTING transition too — with no supplied time it refuses by name and transfers nothing', () => {
+  const { withMap, sourceLuid, targetLuid, contentId } = relocationFixture('displaced');
+  const snapshot = clone(withMap);
+
+  // The offer is genuinely enumerable: enumeration is advisory and commits nothing, so it
+  // must NOT acquire the commit's time requirement.
+  const offers = id.relocationOffers(withMap, sourceLuid, { data: B.data, content: B.content });
+  assert.equal(offers.ok, true, `enumeration must not need a time: ${offers.reason ?? ''}`);
+  assert.ok(offers.offers.some((o) => o.luid === targetLuid), 'the offer really exists');
+
+  const refused = id.acceptRelocation(withMap, sourceLuid, targetLuid, { data: B.data, content: B.content });
+  assert.equal(refused.ok, false, 'accepting dismisses the source, which is a committing transition');
+  assert.equal(refused.reason, 'transition_time_required');
+  assert.deepStrictEqual(refused.detail, { luid: sourceLuid, state: 'dismissed', field: 'dismissedAt' });
+  assert.equal(refused.identity, undefined, 'nothing is installed');
+  assert.deepStrictEqual(withMap, snapshot, 'the caller trip, the target intent and the registry are untouched');
+
+  // PAIRED CONTROL: with the time, the same acceptance lands and lands stamped.
+  const accepted = id.acceptRelocation(withMap, sourceLuid, targetLuid, { data: B.data, content: B.content, at: AT });
+  assert.equal(accepted.ok, true, accepted.reason);
+  assert.equal(accepted.identity.blocks[sourceLuid].state, 'dismissed');
+  assert.equal(accepted.identity.blocks[sourceLuid].dismissedAt, AT);
+  assert.equal(accepted.identity.edits[targetLuid].contentId, contentId);
+});
+
+test('R5 (CONTROL): an opted-in commit that transitions NOTHING still needs no time — the requirement is on the transition, not on the mode', () => {
+  const h = harness('q');
+  const start = h.seed(producerTrip(4, 'syn_hub'));
+  const noTime = optInWithoutTime(h);
+
+  // Two real public routes on this trip commit no lifecycle transition: every prior
+  // placement keeps its exact address and the new windows are issued live.
+  for (const [name, call] of [
+    ['previewAdjustNights', (t, o) => rs.previewAdjustNights(t, 'lx_base', 1, o)],
+    ['previewChangeLength', (t, o) => rs.previewChangeLength(t, t.spec.totalDays + 1, o)]
+  ]) {
+    const preview = call(start, noTime);
+    assert.equal(preview.ok, true, `${name}: ${preview.why ?? ''}`);
+    const applied = rs.applyProposal(start, preview.proposals[0]);
+    assert.equal(applied.ok, true, `${name} must not acquire a time requirement: ${applied.reason ?? ''}`);
+    for (const [luid, placement] of Object.entries(applied.trip.identity.blocks)) {
+      assert.equal(placement.state, 'live', `${name}: ${luid} transitioned after all, so the control proves nothing`);
     }
   }
-  assert.equal(added.identity.blocks.n1.state, 'displaced', 'the transition still happened — only the stamp is absent');
 
-  // The source carries no ambient time source on any map-shaping path. The one `Date.now`
-  // reference is the token tier the brief specifies (§3.4's `sessionId.js:34-70` pattern),
-  // which names no lifecycle state and is overridable by a supplied token environment.
+  // And directly at the commit: an unchanged trip transitions nothing and needs no time.
+  const same = id.commitIdentity({ currentTrip: start, nextTrip: start, data: B.data, tokens: h.tokens });
+  assert.equal(same.ok, true, same.reason);
+
+  // A placement that was ALREADY displaced and stays displaced is likewise not a
+  // transition: it is carried through untouched, unstamped, rather than retro-stamped.
+  const luid = Object.keys(start.identity.blocks)[0];
+  const away = {
+    ...start,
+    identity: {
+      ...start.identity,
+      blocks: { ...start.identity.blocks, [luid]: { ...start.identity.blocks[luid], state: 'displaced' } }
+    }
+  };
+  const carried = id.commitIdentity({ currentTrip: away, nextTrip: { ...start, days: away.days }, data: B.data, tokens: h.tokens });
+  assert.equal(carried.ok, true, `an unchanged displaced placement must not demand a time: ${carried.reason ?? ''}`);
+});
+
+test('R5: the engine reaches for no clock of its own — the supplied time is the only lifecycle time source', () => {
+  // The one `Date.now` reference is the token tier the brief specifies (§3.4's
+  // `sessionId.js:34-70` pattern), which names no lifecycle state and is overridable by a
+  // supplied token environment. It is a separate, previously approved issuance tier, not a
+  // lifecycle clock: no §6.2 stamp can be written from it.
   const source = readFileSync('src/lib/door2/identity.js', 'utf8');
   const code = source.split('\n').filter((line) => !line.trim().startsWith('//') && !line.trim().startsWith('*'));
   const clocks = code.filter((line) => /Date\.now|new Date|performance\.now|hrtime/.test(line));
@@ -615,12 +974,17 @@ test('R5: no ambient clock — with no time supplied no stamp is written, and th
     ["const now = source(env, 'now', () => Date.now);"],
     'the only clock in identity.js is the specified token fallback tier'
   );
+  const stampLines = code.filter((line) => /displacedAt|orphanedAt|dismissedAt|retiredAt/.test(line));
+  assert.ok(stampLines.length > 0, 'the stamp fields must exist to be checked');
+  for (const line of stampLines) {
+    assert.equal(/Date\.now|new Date/.test(line), false, `a stamp is written from a clock: ${line.trim()}`);
+  }
 });
 
 test('R5: a stamp is written at the TRANSITION only, so an already-displaced placement keeps the moment it happened', () => {
   const h = harness('d');
   const start = h.seed(producerTrip(4, 'syn_hub'));
-  const first = applyOptedIn(start, (t, o) => rs.previewAddExcursion(t, 'lx_base', 'sintra', o), { ...h.optIn, at: AT });
+  const first = applyOptedIn(start, (t, o) => rs.previewAddExcursion(t, 'lx_base', 'sintra', o), h.optIn);
   const luid = Object.entries(first.identity.blocks).find(([, p]) => p.state === 'displaced')[0];
   assert.equal(first.identity.blocks[luid].displacedAt, AT);
 
@@ -655,7 +1019,7 @@ test('R5: the engine stays deterministic — one trip, one supplied time, two id
   const run = () => {
     const h = harness('z');
     const start = h.seed(producerTrip(4, 'syn_hub'));
-    return applyOptedIn(start, (t, o) => rs.previewAddExcursion(t, 'lx_base', 'sintra', o), { ...h.optIn, at: AT });
+    return applyOptedIn(start, (t, o) => rs.previewAddExcursion(t, 'lx_base', 'sintra', o), h.optIn);
   };
   const a = run();
   const b = run();

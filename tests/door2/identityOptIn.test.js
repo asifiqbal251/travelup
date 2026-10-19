@@ -29,7 +29,8 @@ import {
   clone,
   countingTokens,
   livePlacement,
-  map
+  map,
+  TRANSITION_AT
 } from './helpers/identityFixtures.js';
 
 // A localStorage stand-in, the same shape flowDraftStorage's seeding pattern uses.
@@ -55,10 +56,13 @@ const BASE_FINGERPRINTS = {
   'eastern-canada-reversible': '1d0e8cffe949b'
 };
 
-const OPT_IN = Object.freeze({ ...PREVIEW_OPTIONS, identity: true, data: PILOT_DATA });
+// D-A §6.2's supplied time travels with the opt-in, because a COMMITTING lifecycle
+// transition requires one (R5) and several routes below displace a window. It is a fixed
+// value, so every run is identical; the default bags deliberately carry none.
+const OPT_IN = Object.freeze({ ...PREVIEW_OPTIONS, identity: true, data: PILOT_DATA, at: TRANSITION_AT });
 
 /** The opt-in preview options with a counting token source wired in. */
-const optInWith = (tokens, data = PILOT_DATA) => ({ ...PREVIEW_OPTIONS, identity: true, data, tokens });
+const optInWith = (tokens, data = PILOT_DATA) => ({ ...PREVIEW_OPTIONS, identity: true, data, tokens, at: TRANSITION_AT });
 
 /**
  * An identity-bearing door2-v7 record the reader admits, built the way the landed oracle
@@ -306,7 +310,7 @@ test('T-O1(d): synthetic/custom data is honoured across the whole route, never d
   assert.equal(customTargets.targets.find((t) => t.kind === 'excursion').excursionId, 'custom_mp', 'with the caller data it resolves');
 
   // And the whole public route honours it: the committed map records the resolved id.
-  const preview = rs.previewAdjustNights(trip, stopKey, 1, { ...PREVIEW_OPTIONS, identity: true, data: custom });
+  const preview = rs.previewAdjustNights(trip, stopKey, 1, { ...PREVIEW_OPTIONS, identity: true, data: custom, at: TRANSITION_AT });
   assert.equal(preview.ok, true, `${preview.why ?? ''}`);
   assert.equal(preview.proposals[0].identityData, custom, 'the proposal carries the caller data, not a default');
   const applied = rs.applyProposal(trip, preview.proposals[0]);
@@ -503,7 +507,8 @@ test('T-U2: a token issued after the snapshot is not reissuable after an undo', 
     currentTrip: undone.trip,
     nextTrip: preview.proposals[0].trip,
     data: PILOT_DATA,
-    tokens: { crypto: { randomUUID: () => issued[0] } }
+    tokens: { crypto: { randomUUID: () => issued[0] } },
+    at: TRANSITION_AT
   });
   assert.equal(reissue.ok, false);
   assert.equal(reissue.reason, 'token_exhausted');

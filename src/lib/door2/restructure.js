@@ -56,6 +56,12 @@ import { validateExcursionSelections, validateFilled } from './validate.js';
 // correspondence itself and never trusts an allocation as the committed map, so a planted
 // or stale one cannot reach a trip. Internal forwarding inside this file is required and
 // is conditional on the public caller's own opt-in; it is not a production root.
+//
+// AN ENGINE OUTCOME THE OPERATION CANNOT HONOUR LEAVES THROUGH THE PUBLIC BOUNDARY. The
+// identity contract is made here, not inside the engine, so an outcome computed inside it
+// and discarded on the way out was never reported at all. `applyProposal` carries an
+// unhonourable recovery on the committed record, outside both digests. See its own
+// comment; the result's success shape is unchanged.
 
 const HISTORY_CAP = 20; // same cap as edit.js
 const MAX_DONOR_PROPOSALS = 2;
@@ -1273,11 +1279,27 @@ export function applyProposal(trip, proposal) {
   // Phase 4 installs the resolved map EXPLICITLY. Returning a bare spread of
   // `proposal.trip` would carry `proposal.trip.identity` through — the same mechanism as
   // D-B §1's downgrade hole — so the key is assigned, never inherited.
-  // The result shape stays exactly `{ ok, trip }` in BOTH modes: the only difference an
-  // opted-in apply makes to this object is `trip.identity`. `restoreRecoveredIntents`
-  // returns its own `restored` / `unrestorable` report to callers that want it — packet 1b
-  // has none, and surfacing an unhonourable intent to a traveller is packet 3's work.
-  return { ok: true, trip: { ...restoration.trip, identity: committed.identity } };
+  const committedWithMap = { ...restoration.trip, identity: committed.identity };
+  // R2.1: AN OUTCOME THE OPERATION COULD NOT HONOUR SURVIVES THIS BOUNDARY. §3.3 promises
+  // that a placement whose content is no longer eligible "keeps its identity and edit and
+  // is reported", and a report that reaches only a local variable inside the helper is not
+  // reported: an integrated caller keeps `result.trip`, so an outcome kept only on the
+  // result object is lost at the first state assignment. It is therefore carried ON THE
+  // COMMITTED RECORD.
+  //
+  // It is OUTSIDE BOTH DIGESTS, by construction: `tripFingerprint` hashes `{ spec,
+  // routePlan, days }` plus conditional evidence (`fingerprint.js:43-45`), and the
+  // identity addition digests `trip.identity` minus `used` (§3.7). A top-level sibling of
+  // `identity` is in neither, so a recovery outcome can never make a valid preview stale.
+  //
+  // Emitted only on the opted-in route and only when there IS something unhonoured, so
+  // the success shape stays exactly `{ ok, trip }` and an opted-in trip with nothing
+  // unhonoured is key-for-key what it was before this correction. Installed EXPLICITLY,
+  // never inherited — the same discipline as the map above, so a stale outcome cannot ride
+  // in on `proposal.trip`.
+  if (restoration.unrestorable.length > 0) committedWithMap.identityUnrestorable = restoration.unrestorable;
+  else delete committedWithMap.identityUnrestorable;
+  return { ok: true, trip: committedWithMap };
 }
 
 export function previewAdjustNights(trip, stopKey, delta, options = {}) {

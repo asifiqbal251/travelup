@@ -36,6 +36,14 @@ export const BUILD_OPTIONS = Object.freeze({
 /** Preview options with the frozen generation time every evidence-bearing trip needs. */
 export const PREVIEW_OPTIONS = Object.freeze({ generatedAt: FROZEN });
 
+/**
+ * D-A §6.2's supplied transition time, fixed so every run is identical. A committing
+ * lifecycle transition REQUIRES one (R5), so any opted-in operation below that displaces,
+ * orphans, retires or dismisses a placement passes this value; an operation that commits
+ * no transition deliberately does not, which is what keeps the no-op case proved.
+ */
+export const TRANSITION_AT = '2026-10-18T19:30:00.000Z';
+
 export const clone = (value) => JSON.parse(JSON.stringify(value));
 
 export function spec(countryId, totalDays, requiredPlaceIds = []) {
