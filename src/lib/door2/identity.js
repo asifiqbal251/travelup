@@ -2,7 +2,7 @@
 /** @typedef {import('./types.js').Block} Block */
 /** @typedef {import('./types.js').ContentItem} ContentItem */
 
-import { classifySlot, eligibleItemsForBlock } from './fill.js';
+import { activityFor, classifySlot, eligibleItemsForBlock } from './fill.js';
 import { findRoutePackage } from './planner.js';
 
 // Q8 durable edit identity — the engine (packet 1b).
@@ -64,12 +64,22 @@ import { findRoutePackage } from './planner.js';
 // introduces no seasonal or availability behaviour. It never writes metadata into a saved
 // trip. It never reads `tripSequence.js`'s unrelated `stopKey`.
 //
-// Deterministic apart from `newLuid`: no `Date.now()` on any path that shapes a map, so a
-// preview built twice from one trip is byte-identical. State transitions are recorded as
-// `state` alone; D-A §6.2's optional `displacedAt`/`orphanedAt`/`retiredAt`/`dismissedAt`
-// stamps are NOT written, because the only clock available here would make `restructure.js`
-// non-deterministic against its own stated contract. Recorded as a finding for the diff
-// review; packet 2 can add them with a supplied clock.
+// Deterministic apart from `newLuid`: no `Date.now()`, no `new Date()` and no other ambient
+// time source on any path, so a preview built twice from one trip is byte-identical.
+//
+// D-A §6.2's LIFECYCLE STAMPS. The transition writes the design specifies —
+// `displacedAt`, `orphanedAt`, `dismissedAt`, `retiredAt` — are implemented, and the time
+// they record is SUPPLIED BY THE CALLER through the same opt-in channel as the rest of the
+// identity mode (`at`). That keeps this module deterministic for fixed inputs, which was
+// the whole of the original objection, without deviating from the design: a supplied value
+// is not a clock. There is deliberately no fallback. Where no time is supplied there is
+// nothing to write and no clock to reach for, so the stamp is simply absent; an invalid
+// supplied value refuses by name rather than being coerced. No production root passes
+// `at`, any more than it passes the opt-in itself.
+//
+// A stamp is written at the TRANSITION only. A placement that was already `displaced` and
+// stays `displaced` keeps its original `displacedAt`, so the field means "when this
+// happened" and never decays into "when it was last noticed".
 
 export const IDENTITY_VERSION = 1;
 
@@ -97,16 +107,54 @@ export function identityRefusal(reason, detail = {}) {
 /**
  * Normalises the trailing `identity` parameter the touched exports accept. `null`,
  * `undefined` and `false` mean today's behaviour exactly; anything else opts in. An
- * object supplies `data` (for excursion metadata) and `tokens` (a token environment,
- * which only a test ever supplies).
+ * object supplies `data` (for excursion metadata), `tokens` (a token environment, which
+ * only a test ever supplies) and `at` (D-A §6.2's supplied transition time).
  *
- * @param {null|true|{data?: Object, tokens?: Object}} identity
- * @returns {{data: Object|null, tokens: Object|undefined}|null}
+ * @param {null|true|{data?: Object, tokens?: Object, at?: string|number}} identity
+ * @returns {{data: Object|null, tokens: Object|undefined, at: string|number|undefined}|null}
  */
 export function identityOptions(identity) {
   if (identity == null || identity === false) return null;
   const o = typeof identity === 'object' ? identity : {};
-  return { data: o.data ?? null, tokens: o.tokens };
+  return { data: o.data ?? null, tokens: o.tokens, at: o.at };
+}
+
+// ---------------------------------------------------------------------------
+// §6.2 The supplied transition time.
+
+/** The D-A §6.2 field each lifecycle state records when it is entered. */
+const TRANSITION_STAMP = Object.freeze({
+  displaced: 'displacedAt',
+  orphaned: 'orphanedAt',
+  dismissed: 'dismissedAt',
+  retired: 'retiredAt'
+});
+
+/**
+ * Resolves the caller's supplied transition time ONCE per operation, so every stamp one
+ * operation writes carries the same value. A VALUE, never a function and never a clock:
+ * a caller that wants the current time reads it and passes the result, which is what keeps
+ * this module's output a function of its inputs alone.
+ *
+ * @param {string|number|null|undefined} at
+ * @returns {{ok: true, at: string|number|null} | {ok: false, reason: string, message: string, detail: Object}}
+ */
+function identityTime(at) {
+  if (at === undefined || at === null) return { ok: true, at: null };
+  if (typeof at === 'string' && at !== '') return { ok: true, at };
+  if (typeof at === 'number' && Number.isFinite(at) && at >= 0) return { ok: true, at };
+  return identityRefusal('transition_time_invalid', { type: typeof at });
+}
+
+/**
+ * A placement entering `state`, with §6.2's stamp when a time was supplied. Returns the
+ * placement untouched when it is already in that state: that is not a transition, and
+ * rewriting the stamp there would lose the moment it is meant to record.
+ */
+function transition(placement, state, at) {
+  if (placement?.state === state) return placement;
+  const field = TRANSITION_STAMP[state];
+  return { ...placement, state, ...(at != null && field !== undefined ? { [field]: at } : {}) };
 }
 
 // ---------------------------------------------------------------------------
@@ -259,6 +307,33 @@ function placementFor(target) {
 // §3.3 Correspondence — D-A §5.1, one pass, exact address, within one stop.
 
 /**
+ * The state a RETAINED placement takes when its exact address is no longer a target of
+ * this build and its stop is still present. The placement's own kind decides, and the two
+ * outcomes are not interchangeable (R1).
+ *
+ * An OPEN window is `displaced`. The scheduler regenerates `op:` windows on every rebuild,
+ * so their absence is genuinely transient — a night added, a day reshaped from full to
+ * half — and D-A's recovery promise is that the exact window's return restores the edit
+ * that was waiting for it. Its address is therefore left untouched on displacement.
+ *
+ * An EXCURSION site window is `retired`, terminally, with its edit and its registry entry
+ * retained. An `ex:…:site` block exists if and only if that excursion is part of the trip
+ * at that stop, so the window does not vanish because the scheduler reshaped a day: it
+ * vanishes because the excursion itself left the trip. What returns afterwards is a NEW
+ * selection of that excursion, not the same window coming back, and reusing the old `luid`
+ * would attach an old edit to a decision the traveller made afresh. Re-selection therefore
+ * issues a DISTINCT `luid`, which is what D-A §5.5 case 3 and §6.2 require of a removed
+ * selection's placement.
+ *
+ * Retiring is also the conservative direction: it never carries an identity across a
+ * boundary where the logical thing may have changed, and it loses nothing, because the
+ * edit and the `used` entry both survive.
+ */
+function vanishedState(placement) {
+  return placement?.kind === 'excursion' ? 'retired' : 'displaced';
+}
+
+/**
  * Carries a prior map onto the targets a new build has.
  *
  * Domain: RETAINED placements only — `live` or `displaced`. `dismissed`, `retired` and
@@ -285,8 +360,9 @@ function placementFor(target) {
  * @param {Object|null|undefined} priorIdentity
  * @param {Object[]} targets
  * @param {Set<string>} stopKeys  The stops the new build has.
+ * @param {string|number|null} [at]  D-A §6.2's supplied transition time, already resolved.
  */
-export function correspond(priorIdentity, targets, stopKeys) {
+export function correspond(priorIdentity, targets, stopKeys, at = null) {
   const prior = priorIdentity?.blocks ?? {};
   const targetByKey = new Map(targets.map((t) => [t.key, t]));
 
@@ -306,22 +382,28 @@ export function correspond(priorIdentity, targets, stopKeys) {
   }
 
   const matched = new Set();
+  /** Placements that were `displaced` and have just been matched back to a live window (R2). */
+  const recovered = [];
   for (const [key, claimants] of claims) {
     const target = targetByKey.get(key);
 
     if (target === undefined) {
-      // No window at this address in this build. Its stop decides which state it takes,
-      // and its address is left exactly as it was so the window's return can recover it.
+      // No window at this address in this build. A missing stop decides `orphaned`;
+      // otherwise the placement's own kind decides, per `vanishedState`. An open
+      // window's address is left exactly as it was, which is what lets its return
+      // recover it.
       for (const [luid, placement] of claimants) {
         const stopGone = placement.stopKey != null && !stopKeys.has(placement.stopKey);
-        blocks[luid] = { ...placement, state: stopGone ? 'orphaned' : 'displaced' };
+        blocks[luid] = transition(placement, stopGone ? 'orphaned' : vanishedState(placement), at);
       }
       continue;
     }
 
     if (claimants.length === 1) {
-      blocks[claimants[0][0]] = { ...claimants[0][1], ...placementFor(target) };
+      const [luid, placement] = claimants[0];
+      blocks[luid] = { ...placement, ...placementFor(target) };
       matched.add(key);
+      if (placement.state === 'displaced') recovered.push({ luid, target });
       continue;
     }
 
@@ -332,8 +414,9 @@ export function correspond(priorIdentity, targets, stopKeys) {
       const [holderLuid, holder] = holders[0];
       blocks[holderLuid] = { ...holder, ...placementFor(target) };
       matched.add(key);
+      // A case-A holder is `live` by definition, so it is never a recovery.
       for (const [luid, placement] of claimants) {
-        if (luid !== holderLuid) blocks[luid] = { ...placement, state: 'retired' };
+        if (luid !== holderLuid) blocks[luid] = transition(placement, 'retired', at);
       }
       continue;
     }
@@ -356,7 +439,7 @@ export function correspond(priorIdentity, targets, stopKeys) {
     });
   }
 
-  return { ok: true, blocks, newTargets: targets.filter((t) => !matched.has(t.key)) };
+  return { ok: true, blocks, recovered, newTargets: targets.filter((t) => !matched.has(t.key)) };
 }
 
 // ---------------------------------------------------------------------------
@@ -537,11 +620,13 @@ function mint(registry, env) {
  *
  * @returns {{ok: true, identity: Object} | {ok: false, reason: string, message: string, detail: Object}}
  */
-export function allocateIdentity(currentTrip, nextTrip, { data } = {}) {
+export function allocateIdentity(currentTrip, nextTrip, { data, at } = {}) {
+  const time = identityTime(at);
+  if (!time.ok) return time;
   const found = qualifyingTargets(nextTrip, { data });
   if (!found.ok) return found;
   const stopKeys = new Set((nextTrip?.routePlan?.stops ?? []).map((s) => s.key));
-  const corr = correspond(currentTrip?.identity, found.targets, stopKeys);
+  const corr = correspond(currentTrip?.identity, found.targets, stopKeys, time.at);
   if (!corr.ok) return corr;
 
   const blocks = { ...corr.blocks };
@@ -602,12 +687,18 @@ function validateProvisional(allocation) {
  * issuance.
  *
  * @param {{priorIdentity?: Object, nextTrip: Trip, data?: Object, tokens?: Object,
- *          allocation?: Object, attachEdits?: Object[]}} args
- * @returns {{ok: true, identity: Object} | {ok: false, reason: string, message: string, detail: Object}}
+ *          at?: string|number, allocation?: Object, attachEdits?: Object[]}} args
+ * @returns {{ok: true, identity: Object, recovered: Object[]}
+ *          | {ok: false, reason: string, message: string, detail: Object}}
  */
-function runPhases({ priorIdentity, nextTrip, data, tokens, allocation, attachEdits }) {
+function runPhases({ priorIdentity, nextTrip, data, tokens, at, allocation, attachEdits }) {
   // --- Phase 1 — prepare. Nothing here touches the live trip, and nothing mints. -----
   const registry = new Set(priorIdentity?.used ?? []);
+
+  // The supplied transition time, resolved once here so every stamp this operation writes
+  // carries one value, and refused by name before any other work if it is not a time.
+  const time = identityTime(at);
+  if (!time.ok) return time;
 
   const found = qualifyingTargets(nextTrip, { data });
   if (!found.ok) return found; // includes the duplicate-site refusal, before any issuance
@@ -616,7 +707,7 @@ function runPhases({ priorIdentity, nextTrip, data, tokens, allocation, attachEd
   if (!provisional.ok) return provisional;
 
   const stopKeys = new Set((nextTrip?.routePlan?.stops ?? []).map((s) => s.key));
-  const corr = correspond(priorIdentity, found.targets, stopKeys);
+  const corr = correspond(priorIdentity, found.targets, stopKeys, time.at);
   if (!corr.ok) return corr; // a case-B tie aborts here, with zero token-source calls
 
   // --- Phase 2 — issue and resolve. --------------------------------------------------
@@ -663,16 +754,20 @@ function runPhases({ priorIdentity, nextTrip, data, tokens, allocation, attachEd
   if (!valid.ok) return valid;
 
   // --- Phase 4 — the caller installs this EXPLICITLY, never by spread. ---------------
-  return { ok: true, identity };
+  // `recovered` travels with the map so the caller can honour a returning window's
+  // retained intent in the ITINERARY as well (R2). It names placements only; it is not
+  // itself an itinerary change, and a caller that ignores it gets exactly the map.
+  return { ok: true, identity, recovered: corr.recovered };
 }
 
 /**
  * The rebuild/apply path: carry the current trip's map onto the build a proposal produced.
  *
- * @param {{currentTrip: Trip, nextTrip: Trip, data?: Object, tokens?: Object, allocation?: Object}} args
+ * @param {{currentTrip: Trip, nextTrip: Trip, data?: Object, tokens?: Object,
+ *          at?: string|number, allocation?: Object}} args
  */
-export function commitIdentity({ currentTrip, nextTrip, data, tokens, allocation }) {
-  return runPhases({ priorIdentity: currentTrip?.identity, nextTrip, data, tokens, allocation });
+export function commitIdentity({ currentTrip, nextTrip, data, tokens, at, allocation }) {
+  return runPhases({ priorIdentity: currentTrip?.identity, nextTrip, data, tokens, at, allocation });
 }
 
 /**
@@ -680,8 +775,8 @@ export function commitIdentity({ currentTrip, nextTrip, data, tokens, allocation
  * issued in phase 2. IMPLEMENTED AND CALLED FROM NOWHERE: wiring it into `buildF6Trip` is
  * packet 2's work and is not authorized here.
  */
-export function initialiseIdentityForBuild(trip, { data, tokens } = {}) {
-  return runPhases({ priorIdentity: null, nextTrip: trip, data, tokens });
+export function initialiseIdentityForBuild(trip, { data, tokens, at } = {}) {
+  return runPhases({ priorIdentity: null, nextTrip: trip, data, tokens, at });
 }
 
 /**
@@ -694,7 +789,7 @@ export function initialiseIdentityForBuild(trip, { data, tokens } = {}) {
  *
  * IMPLEMENTED AND CALLED FROM NOWHERE: wiring it into the open path is packet 2's work.
  */
-export function initialiseIdentityForLegacyTrip(trip, { data, tokens } = {}) {
+export function initialiseIdentityForLegacyTrip(trip, { data, tokens, at } = {}) {
   const found = qualifyingTargets(trip, { data });
   if (!found.ok) return found;
 
@@ -721,9 +816,142 @@ export function initialiseIdentityForLegacyTrip(trip, { data, tokens } = {}) {
     nextTrip: trip,
     data,
     tokens,
+    at,
     allocation,
     attachEdits
   });
+}
+
+// ---------------------------------------------------------------------------
+// R2 — restoring a returning window's retained intent to the ITINERARY.
+//
+// Correspondence recovers a `displaced` placement when its exact address returns, and
+// that recovery is recorded in the map. On its own that is not enough: the itinerary is
+// produced by `reconcile`'s legacy content pass, whose `tryKeep` can preserve a pin only
+// while the pinned block is still in the previous itinerary. Once the window has been
+// displaced, nothing carries the retained intent back into the block that returns — so the
+// map would say a pin survived while every later command read an unlocked block. A map
+// recording a recovery the itinerary does not honour is not a recovery.
+//
+// So, on the opted-in path only, a recovered placement's retained intent is written back
+// onto its exact returning block. `tryKeep` is NOT touched and the default path is
+// unchanged: this runs after the legacy pass, from the committed map, and only for
+// placements correspondence itself reports as recovered.
+//
+// WHAT IS RESTORED, and the conservative limit. Only intent the itinerary can honour
+// COMPLETELY is written:
+//
+//   retained contentId is null            -> flags only; there is no content to place
+//   retained contentId already in place   -> flags only
+//   retained contentId eligible there      -> the content is placed, then the flags
+//   otherwise                              -> NOTHING is written to the block
+//
+// The last row is the honest case, not a silent one. Pinning content the traveller never
+// chose would be worse than leaving the filler's choice, so the block is left alone, the
+// retained edit stays recorded exactly as §3.3 promises, and the placement is REPORTED in
+// `unrestorable` so the divergence is visible rather than invented away. Eligibility is
+// the engine's own gate, through this module's single call site, with the caller's own
+// `choices.rejected` exclusions — no rule of this module's own is added.
+//
+// Restoration never changes a block's `id`, `startTime`, `durationHours` or
+// `anchor.stopId`, and `classifySlot` reads only `startTime` and `durationHours`
+// (`fill.js:42-48`), so NO ADDRESS CAN CHANGE and phase 3's validation of the resolved map
+// still holds over the restored trip.
+
+/**
+ * @param {Trip} trip        The build about to be committed, with the resolved map's addresses.
+ * @param {Object} identity  The resolved map, whose `edits` carry the retained intent.
+ * @param {Array<{luid: string, target: Object}>} recovered
+ * @param {{content: ContentItem[]}} opts
+ * @returns {{ok: true, trip: Trip, restored: Object[], unrestorable: Object[]}
+ *          | {ok: false, reason: string, message: string, detail: Object}}
+ */
+export function restoreRecoveredIntents(trip, identity, recovered, { content } = {}) {
+  const restored = [];
+  const unrestorable = [];
+  if (!Array.isArray(recovered) || recovered.length === 0) return { ok: true, trip, restored, unrestorable };
+
+  const replacements = new Map();
+  let working = trip;
+
+  for (const { luid, target } of recovered) {
+    const intent = identity?.edits?.[luid];
+    if (intent === undefined) continue; // a window with no retained intent has nothing to restore
+
+    // Read the block from the working trip, so two recoveries on one day compose.
+    const block = blockById(working, target.blockId);
+    if (block === null) {
+      return identityRefusal('recovered_block_missing', { luid, blockId: target.blockId });
+    }
+
+    const wanted = intent.contentId ?? null;
+    let next = block;
+
+    if (wanted !== null && block.anchor?.contentId !== wanted) {
+      const gate = relocationTargetEligible(working, block, wanted, content ?? []);
+      if (!gate.ok) return gate;
+      const item = gate.eligible ? (content ?? []).find((c) => c.id === wanted) : undefined;
+      if (item === undefined) {
+        // The retained content cannot be placed here any more. Leave the block exactly as
+        // the filler left it, keep the edit, and say so.
+        unrestorable.push({ luid, blockId: target.blockId, contentId: wanted, why: gate.eligible ? 'content_not_in_shelf' : 'content_not_eligible' });
+        continue;
+      }
+      next = activityBlockFor(block, item);
+    }
+
+    next = {
+      ...next,
+      locked: intent.locked === true,
+      userEdited: intent.userEdited === true
+    };
+    replacements.set(target.blockId, next);
+    working = withBlock(working, next);
+    restored.push({ luid, blockId: target.blockId, contentId: next.anchor?.contentId ?? null, locked: next.locked });
+  }
+
+  return { ok: true, trip: replacements.size === 0 ? trip : working, restored, unrestorable };
+}
+
+/** One block of this trip by id, or null. */
+function blockById(trip, blockId) {
+  for (const day of trip?.days ?? []) {
+    for (const block of day?.blocks ?? []) if (block?.id === blockId) return block;
+  }
+  return null;
+}
+
+/** The trip with one block replaced in place, leaving the calendar untouched. */
+function withBlock(trip, block) {
+  return {
+    ...trip,
+    days: trip.days.map((day) => ({
+      ...day,
+      blocks: day.blocks.map((b) => (b.id === block.id ? block : b))
+    }))
+  };
+}
+
+/**
+ * An activity block carrying `item`, built the same way `edit.js`'s own `buildActivityBlock`
+ * builds one (`edit.js:79-95`) so a restored block is indistinguishable in shape from a
+ * swapped one. The slot is the block's own, so the address cannot move.
+ */
+function activityBlockFor(block, item) {
+  return {
+    ...block,
+    type: 'activity',
+    anchor: { ...block.anchor, contentId: item.id },
+    activity: activityFor(item, classifySlot(block)),
+    generationStatus: 'ok',
+    gap: undefined,
+    provenance: {
+      source: 'curated',
+      reviewed: false,
+      confidence: item.source.kind === 'extracted' ? 'high' : 'medium',
+      content: { ...item.source }
+    }
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -873,6 +1101,26 @@ export function relocationTargetEligible(trip, block, contentId, content) {
   return { ok: true, eligible: eligible.some((item) => item.id === contentId) };
 }
 
+/**
+ * Only a DISPLACED placement may be relocated (R4). D-A §5.3 defines relocation as an
+ * offer for a displaced edit, and the other states are not near-misses of that:
+ *
+ *   `live`      holds its own window; there is nothing displaced to move.
+ *   `orphaned`  its stop left the trip and receives no offer at all.
+ *   `dismissed` retained history — its intent has already gone somewhere else.
+ *   `retired`   retained history — superseded, or a removed selection (R1).
+ *
+ * The check runs when offers are ENUMERATED and again at ACCEPTANCE, because an offer is
+ * advisory until accepted and the source's own state can move between the two. Without the
+ * second check a `retired` source could still transfer its old intent to a clean target and
+ * become `dismissed` — which is what the review reproduced on all four states.
+ */
+function sourceEligibleForRelocation(placement) {
+  return placement?.state === 'displaced'
+    ? { ok: true }
+    : identityRefusal('source_not_displaced', { state: placement?.state ?? null });
+}
+
 /** Does this placement carry a traveller edit of its own — a pin, a swap or a lock? */
 function carriesOwnEdit(identity, luid, block) {
   if (identity.edits?.[luid] !== undefined) return true;
@@ -898,6 +1146,10 @@ export function relocationOffers(trip, luid, { data, content } = {}) {
   if (identity == null || typeof identity !== 'object') return identityRefusal('absent');
   const sourcePlacement = identity.blocks?.[luid];
   if (sourcePlacement === undefined) return identityRefusal('unknown_placement', { luid });
+
+  // The source's own lifecycle state, BEFORE any window is considered (R4).
+  const sourceEligible = sourceEligibleForRelocation(sourcePlacement);
+  if (!sourceEligible.ok) return { ...sourceEligible, detail: { ...sourceEligible.detail, luid } };
 
   const contentId = identity.edits?.[luid]?.contentId ?? null;
   if (contentId == null) return { ok: true, offers: [], why: 'no_content_to_relocate' };
@@ -941,7 +1193,9 @@ export function relocationOffers(trip, luid, { data, content } = {}) {
  * nothing. The source placement becomes `dismissed`, with provenance recording where its
  * intent went.
  */
-export function acceptRelocation(trip, luid, targetLuid, { data, content } = {}) {
+export function acceptRelocation(trip, luid, targetLuid, { data, content, at } = {}) {
+  const time = identityTime(at);
+  if (!time.ok) return time;
   const offered = relocationOffers(trip, luid, { data, content });
   if (!offered.ok) return offered;
   if (!offered.offers.some((offer) => offer.luid === targetLuid)) {
@@ -949,13 +1203,20 @@ export function acceptRelocation(trip, luid, targetLuid, { data, content } = {})
   }
 
   const identity = trip.identity;
+  // The source's lifecycle state AGAIN, against the trip as it now stands, and stated here
+  // rather than inherited from the enumeration above so that removing either check leaves
+  // the other to fail by name (R4). Refusing here writes nothing: no target intent is
+  // attached and `used` is untouched.
+  const stillEligible = sourceEligibleForRelocation(identity.blocks?.[luid]);
+  if (!stillEligible.ok) return { ...stillEligible, detail: { ...stillEligible.detail, luid } };
+
   const intent = identity.edits[luid];
   return {
     ok: true,
     identity: {
       ...identity,
       used: [...(identity.used ?? [])],
-      blocks: { ...identity.blocks, [luid]: { ...identity.blocks[luid], state: 'dismissed' } },
+      blocks: { ...identity.blocks, [luid]: transition(identity.blocks[luid], 'dismissed', time.at) },
       edits: {
         ...identity.edits,
         [targetLuid]: { ...intent, provenance: `relocated_from:${luid}` },

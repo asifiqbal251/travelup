@@ -7,7 +7,7 @@ import { iso, validateCatalogue } from './connectionModel.js';
 
 import { tripFingerprint } from './fingerprint.js';
 import { activityFor, classifySlot, eligibleItemsForBlock, fillTrip } from './fill.js';
-import { allocateIdentity, commitIdentity, identityOptions } from './identity.js';
+import { allocateIdentity, commitIdentity, identityOptions, restoreRecoveredIntents } from './identity.js';
 import { PILOT_CONTENT } from './pilotContent.js';
 import { PILOT_DATA, buildTripFromRoutePlan, findRoutePackage, planSelection, resolveExcursions } from './planner.js';
 import { PILOT_ROUTE_FAMILIES } from './pilotData.js';
@@ -270,7 +270,9 @@ export function reconcile(oldTrip, newSkeleton, content = PILOT_CONTENT, identit
     keptItemsAffected,
     activitiesLost: oldActivities.filter(({ block }) => !after.has(block.anchor.contentId)).map(({ block }) => entry(block)),
     activitiesAdded: afterList.filter(({ block }) => !before.has(block.anchor.contentId)).map(({ block }) => entry(block)),
-    ...(identityOpts ? { identityAllocation: allocateIdentity(oldTrip, filled, { data: identityOpts.data }) } : {})
+    ...(identityOpts
+      ? { identityAllocation: allocateIdentity(oldTrip, filled, { data: identityOpts.data, at: identityOpts.at }) }
+      : {})
   };
 }
 
@@ -326,6 +328,9 @@ function context(trip, options) {
   // one-argument, which is byte-identical to this function before packet 1b.
   const identity = options.identity === true;
   const data = options.data ?? PILOT_DATA;
+  // D-A §6.2's transition time, supplied by the caller or absent. There is no fallback:
+  // `context` reads no clock, so an opted-in preview with no `at` writes no stamps.
+  const at = options.at;
   return {
     data,
     content: options.content ?? PILOT_CONTENT,
@@ -333,6 +338,7 @@ function context(trip, options) {
     families: options.families ?? PILOT_ROUTE_FAMILIES,
     identity,
     ...(identity && options.tokens !== undefined ? { tokens: options.tokens } : {}),
+    ...(identity && at !== undefined ? { at } : {}),
     baseFingerprint: tripFingerprint(trip, identity ? { data } : null)
   };
 }
@@ -348,12 +354,26 @@ function identityFields(ctx, rec) {
   return {
     identityMode: true,
     identityData: ctx.data,
+    // Apply needs the caller's own content shelf to test whether a returning window's
+    // retained content is still eligible there (R2). It travels the same opt-in channel as
+    // `identityData` and, like it, is emitted on no default proposal.
+    identityContent: ctx.content,
     ...(ctx.tokens !== undefined ? { identityTokens: ctx.tokens } : {}),
+    ...(ctx.at !== undefined ? { identityAt: ctx.at } : {}),
     ...(rec?.identityAllocation !== undefined ? { identityAllocation: rec.identityAllocation } : {})
   };
 }
 
-/** The `identity` argument the four internal `reconcile` call sites forward (§3.0 step 4). */
+/**
+ * The `identity` argument the four internal `reconcile` call sites forward (§3.0 step 4).
+ *
+ * `at` is deliberately NOT forwarded. What `reconcile` produces under the opt-in is the
+ * proposal-local ALLOCATION, which is advisory: `applyProposal` recomputes correspondence
+ * itself and never trusts an allocation as the committed map, so no state an allocation
+ * records is ever installed. D-A §6.2's stamps belong to the operation that actually
+ * commits a transition, and that is apply, which takes the time from `proposal.identityAt`.
+ * Stamping the allocation would write a time onto something discarded.
+ */
 function identityForward(ctx) {
   return ctx.identity ? { data: ctx.data } : null;
 }
@@ -1236,13 +1256,28 @@ export function applyProposal(trip, proposal) {
     nextTrip: committedTrip,
     data: proposal.identityData,
     tokens: proposal.identityTokens,
+    at: proposal.identityAt,
     allocation: proposal.identityAllocation?.ok === true ? proposal.identityAllocation.identity : null
   });
   if (!committed.ok) return committed;
+  // R2: a window that has just returned from `displaced` gets its retained intent put
+  // BACK INTO THE ITINERARY, not only into the map. Without this the map would record a
+  // pin that the returned block does not carry, and every later command would read the
+  // unlocked block. Only intent the itinerary can honour completely is written; the rest
+  // is reported. This cannot change any address (see `restoreRecoveredIntents`), so the
+  // map validated in phase 3 still describes the trip returned here.
+  const restoration = restoreRecoveredIntents(committedTrip, committed.identity, committed.recovered, {
+    content: proposal.identityContent
+  });
+  if (!restoration.ok) return restoration;
   // Phase 4 installs the resolved map EXPLICITLY. Returning a bare spread of
   // `proposal.trip` would carry `proposal.trip.identity` through — the same mechanism as
   // D-B §1's downgrade hole — so the key is assigned, never inherited.
-  return { ok: true, trip: { ...committedTrip, identity: committed.identity } };
+  // The result shape stays exactly `{ ok, trip }` in BOTH modes: the only difference an
+  // opted-in apply makes to this object is `trip.identity`. `restoreRecoveredIntents`
+  // returns its own `restored` / `unrestorable` report to callers that want it — packet 1b
+  // has none, and surfacing an unhonourable intent to a traveller is packet 3's work.
+  return { ok: true, trip: { ...restoration.trip, identity: committed.identity } };
 }
 
 export function previewAdjustNights(trip, stopKey, delta, options = {}) {
