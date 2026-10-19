@@ -10,21 +10,94 @@
 - This file records state and decisions made elsewhere. It changes no gate, contract or approval. Gates and product choices keep their normal approval path.
 - Routine evidenced updates do not need cross-model review. A changed gate, product decision or architecture decision does.
 
-## Current snapshot — 18 October 2026
+## Current snapshot — 19 October 2026
 
 **This is the live summary. Everything below it is dated history, kept as evidence and not rewritten.** Read current HEAD from Git rather than trusting any SHA written here.
 
 | | |
 |---|---|
-| **Live build** | **`31b5f52d8b9f54043c9477c61ade246f765ea22a`**, checkpoint `6ad144bd3ae501e5e9f4b039`, deployed **15 October 2026 at 21:28:20 UTC (14:28 Vancouver)**. **Identity source:** Claude read this from Base44's checkpoint metadata (`GET /api/apps/{app_id}/app-checkpoints`: `git_commit_hash`, `last_deployed_at`) **on 15 October**. That is the last observation; it was **not re-read on 18 October**, and Codex did not independently read Base44. **Corroboration only:** strings in the served bundle `index-IqZ-wLxc.js` (the packet 1a lock sentences, the `door2-v8` literal, the v8 block types) show the packet 1a features are present. They do not establish the exact revision, and byte-for-byte equivalence with a local build was **not** established — see the unexplained 523-byte difference in the packet 1a section |
-| **GitHub `main`** | `31b5f52` at the time of that deployment: Q8 packet 1a's three commits (`18ee1de`, `4e991dc`, `31b5f52`) rebased onto the Base44-bot commits `2cee987` and `2a8c7f9`. Push and publication by the owner. Read current HEAD from Git |
-| **Packet 1a** | **Released and hosted-accepted.** The reader for `door2-v8` payloads plus an enforced read-only lock. **The writer still stamps `door2-v7`. Identity is created nowhere. Q8 is unmet.** See the section "Q8 packet 1a" below |
-| **Checks at `31b5f52`** | **Independent (Codex, 15 October):** on an isolated archive of the combined tree, the Door 2 suite passed **803 / 0 fail** with nothing skipped, lint exit 0, production build exit 0; `git range-diff` showed all three packet commits patch-identical to the approved ones, and the tree difference from `e749006` was `package.json` and `package-lock.json` only (10 insertions, 10 deletions). Codex did not run a separate full `npm ci`. **Owner (Mac, after the rebase):** `npm ci`, 803 tests, lint and build, from the owner's pasted terminal output. Claude did not re-run them |
-| **Hosted checks** | H1, H2, H3, H5 and a dependency smoke check **run by Claude** on the published build; **H4 owner-reported**. All passed. **Claude-reported; not independently re-run by Codex.** Detailed report: Claude project file `claude/hosted-checks-q8-packet1a-31b5f52-2026-10-15.md`, supplied alongside this update |
-| **Dependencies** | `@base44/sdk` 0.8.53 → 0.8.54 and `@base44/vite-plugin` 1.0.45 → 1.0.47 (bot commits `2cee987`, `2a8c7f9`), independent review **KEEP**, 15 October. Both lockfile integrity values match the registry |
-| **D16 — F7 preparation** | Design packet approved by the owner at revision 6 (13 October). **Packet 1a is the only implementation authorized under it.** The approved split (draft 7 §1): **1a** the v8 reader and read-only lock (released); **1b** the *dormant* identity engine — correspondence, four-phase commit, fingerprint extension, real Undo registry union, swap intent, relocation API and full identity validation; **2** activation — identity created at the live producer and on open, writer stamps v8, v8 lock lifted; **3** the required placement explanations, relocation offer and consent. **None of 1b, 2 or 3 is authorized.** Activation stays held until the lifecycle, explanations and consent paths are implemented, independently reviewed and accepted |
-| **Erratum 01 v3** | Independently supported (14 and 18 October). **Approved by the owner, items A–D, on 18 October 2026**, recorded against the revision-6 packet as erratum 01 v3 (Claude project file `claude/f7-rev6-erratum-01-v3-APPROVED-2026-10-18.md`). It is **dated 18 October; no earlier approval is claimed.** Approval authorizes no code, migration or activation. The explicit **Delete exception** to D-B §7 remains approved |
-| **Held** | production estimate and experience activation · any record migration · Q8 durable identity · all Q10 conditions · packets 1b, 2 and 3 (**including writing the 1b brief**) |
+| **Live build** | **`5aa72df901efbd94cd457917a2fb3dac42e8ed63`**, checkpoint `6ad6665ee9659a9c81bb2a9a`, deployed **19 October 2026 at 18:50:43 UTC (11:50 Vancouver)**, `is_github_sync: true`. **Identity source:** Claude read this from Base44's checkpoint metadata (`GET /api/apps/{app_id}/app-checkpoints`: `git_commit_hash`, `last_deployed_at`) on **19 October**, read-only, no builder credit. **Corroborated from the client the same day:** the served bundle `index-BAY7eyQi.js` (1,120,069 bytes) was fetched and searched, and carries all four packet-1b lifecycle stamps `displacedAt` / `orphanedAt` / `dismissedAt` / `retiredAt`, plus `content_not_in_shelf`, `identityMode` and 21 occurrences of `luid`, while retaining the packet-1a markers `door2-v8`, `door2-v7` and the lock sentence. Byte-for-byte equivalence with a local build is **not** established — the served bundle differs from the writer's 1,120.09 kB and Codex's independently measured 1,120.05 kB by about 519 bytes, closely matching the unexplained 523-byte difference seen at 1a |
+| **GitHub `main`** | `5aa72df`. Packet 1b's four commits — `f4b6f18`, `c9a5c6c`, `0928272`, `5aa72df` — pushed by the owner on 19 October directly onto `bc58722`, fast-forward, no rebase. Verified before the push: no source or test modification outstanding, nothing staged, `ahead 4`, `behind 0`. Read current HEAD from Git |
+| **Packet 1a** | **Released and hosted-accepted, 15 October.** The reader for `door2-v8` payloads plus an enforced read-only lock, at `31b5f52`, checkpoint `6ad144bd3ae501e5e9f4b039`, deployed 15 October at 21:28:20 UTC |
+| **Packet 1b** | **Released and hosted-accepted, 19 October.** The **dormant** identity engine: correspondence, four-phase commit, fingerprint extension, Undo registry union, swap intent, relocation API, full identity validation, and the D-A §6.2 lifecycle stamps from an explicitly supplied deterministic time. **The writer still stamps `door2-v7`. Identity is created nowhere. No production root passes the opt-in. Q8 is unmet.** |
+| **Checks at `5aa72df`** | **Writer (Claude Code, Opus 5, Extra High):** 918 tests pass / 0 fail / 0 skipped, lint exit 0, build succeeds; P1-D dormancy oracle and the real-page dormancy test byte-identical to `0928272` and passing; 190 cross-version default-path comparisons against unchanged `bc58722`, 0 differing, 124 of them successful operations; production-root audit clean. **Independent (Codex, GPT-6 Astra, Extra High, 19 October):** reproduced 918/918, lint 0 and a successful build in an isolated clone, and independently ran the 190-comparison matrix plus 42 preview/apply/fingerprint and 16 bounded-edit comparisons. **Four review rounds** — `f4b6f18` REQUEST CHANGES, `c9a5c6c` REQUEST CHANGES, `0928272` REQUEST CHANGES, `5aa72df` **APPROVE WITH CLARIFICATIONS**, with R1–R5 and C1 all closed |
+| **Hosted checks at `5aa72df`** | **H1, H2, H3, H3b and H5 run by Claude** on the published build; **H4 owner-reported**. All passed. **Claude-reported; not independently re-run by Codex.** The central result: a real hosted save carries `envelopeVersion 2` and `trip.versions.schema: "door2-v7"`, with **no `identity`, no `luid` and no `identityUnrestorable` anywhere in the serialised record** — the brief §4 prohibition holding at the live storage boundary. Detailed report: `claude/hosted-checks-q8-packet1b-5aa72df-2026-10-19.md` |
+| **D16 — F7 preparation** | Design packet approved by the owner at revision 6 (13 October). The approved split (draft 7 §1): **1a** the v8 reader and read-only lock (**released**); **1b** the dormant identity engine (**released**); **2** activation — identity created at the live producer and on open, writer stamps v8, v8 lock lifted; **3** the required placement explanations, relocation offer and consent. **Neither 2 nor 3 is authorized.** Activation stays held until the persistence policy, explanations and consent paths are decided, implemented, independently reviewed and accepted |
+| **Erratum 01 v3** | Approved by the owner, items A–D, 18 October 2026; recorded at `claude/f7-rev6-erratum-01-v3-APPROVED-2026-10-18.md`. The explicit **Delete exception** to D-B §7 remains approved |
+| **Erratum 02 v2** | **The minting surface.** Approved by the owner **18 October 2026**; **recorded 19 October** at `claude/f7-rev6-erratum-02-v2-minting-surface-APPROVED-2026-10-19.md`. Packet 1b's brief draft 4 FINAL was written against it. The proposal file of 18 October still reads PROPOSED and is retained as the proposal. **`families.js` is unchanged; the fixed/fixed compiler gap is a separate open owner question** |
+| **Held** | production estimate and experience activation · any record migration · Q8 durable identity · all Q10 conditions · packets 2 and 3 · the `families.js` compiler gap |
+
+## Q8 packet 1b — the dormant identity engine, 18–19 October 2026
+
+**Governing document:** `docs/q8-1b-BRIEF-draft4-FINAL.md`, SHA-256
+`8409959d35fec34fc594a27d47279539a48be32f66b62fbba0db3277d5ec12a1`.
+**Unchanged and unamended throughout.** Four correction rounds were taken
+against it; none amended it.
+
+**Declared writer:** Claude Code, Claude Opus 5 (`claude-opus-5`), Extra High
+(`xhigh`), packet 1b only. **Reviewer:** Codex, GPT-6 Astra, Extra High.
+**Claude in chat wrote the briefs and review requests and pushed and published
+nothing.**
+
+### The commit chain, all four pushed together on 19 October
+
+| Commit | Tree | What it carried |
+|---|---|---|
+| `f4b6f18` | `ee34fe46b0ca76d7dbba01b9eb92531ae7f68617` | The engine as first built |
+| `c9a5c6c` | `768086800ce5c24acc2fc56821e782fe37353111` | R1–R5 and C1 |
+| `0928272` | `5690936c06f225cd8f3c551a8e2d58d3965f21e6` | R2.1–R2.3 and R5 |
+| `5aa72df` | `7a3222fbdcc918f4b82cd1afe71363cbdf7bc202` | R2.1 and R5, final |
+
+No commit was amended, rebased or squashed; the earlier trees are intact. Base
+was `bc58722`. Test counts ran 805 → 880 → 908 → 916 → 918.
+
+### What the four rounds were actually about
+
+Two defects were each fixed one layer short of where the promise lives, and the
+reviewer caught both by execution rather than inspection.
+
+- **R2.1.** Round 2 reported an unhonourable recovery to the helper's own local
+  variable. Round 3 moved it onto the committed **trip** — and Codex showed by a
+  composed cycle (opted-in recovery → an ordinary **default** adjust-nights apply
+  → `saveDraftTrip`) that it then reached storage at
+  `trip.history[3].identityUnrestorable`, because the writer's guard reads only
+  the top level. **The owner decided on 19 October to move the report off the
+  trip**, to an operation-outcome channel, rather than amend §4. Round 4 did
+  that: `{ ok, trip, identityOutcome }`, opted-in and conditional.
+- **R5.** The transition guard tested whether the resulting stamp field was
+  `undefined`, so a value inherited from an earlier operation satisfied it.
+  **The owner decided on 18 October to implement D-A §6.2's writes with an
+  explicitly supplied deterministic time**, no ambient clock. Round 4 made the
+  guard a function of *this operation's* supplied time.
+
+### Recorded qualifications, carried deliberately
+
+- **`assertNoOutcomeMetadata` is not a universal JSON sanitizer.** It checks the
+  trip node and, recursively, `history`, for three reserved key names. A key
+  planted on an unrelated branch such as `trip.extra` passes it — Codex
+  demonstrated this and the writer reproduced it. The guard has exactly two call
+  sites; **no bounded-edit export acquires it.**
+- **Two mutations survive**, both documented defensive redundancies, neither
+  resolved by deleting safe code: the equality half of the R5 time guard
+  (M-R5c), and the acceptance-side relocation re-check. **No claim is made that
+  every mutation is detected.**
+- **A nested `identity` map still reaches storage by the same composed path**,
+  because the writer's guard is not recursive. Ruled a **required packet-2
+  activation/persistence finding, not a 1b blocker.** Nothing creates identity on
+  any production path, so no record a traveller can produce today contains one.
+- **The source comment at `identity.js:282` carries a withdrawn "unspoofable"
+  claim.** Round 4 changed no source, so it is recorded as owed wording for
+  whichever packet next edits that file.
+
+### Release
+
+Pushed by the owner, 19 October, four commits fast-forward onto `bc58722`.
+Published by the owner from Base44 the same day; deployed 18:50:43 UTC.
+Hosted checks H1–H5 followed and all passed — H4 owner-reported, the rest run by
+Claude. See `claude/hosted-checks-q8-packet1b-5aa72df-2026-10-19.md`.
+
+**Q8 remains unmet.** The writer stamps v7, identity is created nowhere, and
+packets 2 and 3 are unauthorized.
 
 ## Historical — snapshot as recorded on 13 October 2026, evening
 
