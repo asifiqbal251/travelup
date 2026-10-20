@@ -1430,3 +1430,84 @@ test('C-15 (the normalization COUNTEREXAMPLES): values the old serialization cha
   // No number policy, no repair, no admission change was needed to get here.
   assert.equal(raw().includes('1e400'), true, 'the stored text still spells it exactly as it was stored');
 });
+
+// ---------------------------------------------------------------------------
+// C-16: layer 3's domain is the materialized TRIP PAYLOAD, not the envelope around it.
+// Correction round 2, finding R1 of codex-diff-review-…-967910a-AMEND-2026-10-20.md.
+//
+// At 967910a layer 3 scanned the whole materialized ENTRY, so a reserved key sitting in
+// the caller's own `label` argument refused a save of an entirely clean trip: an inert
+// object label carrying `identity: null` wrote nothing, where at 85e2f0f that same call
+// saved once and the record reopened. The barrier's domain is the candidate PAYLOAD
+// (contract §3.3; brief draft 5 §3.1 and §3.3 step 8), so refusing on envelope metadata
+// was a write regression on inert input, not a stronger reading of the rule.
+//
+// The pair below pins the domain from both sides, and neither side introduces a label or
+// metadata policy: the label is stored exactly as handed — never stringified, stripped,
+// replaced by a fallback or validated — and the payload scan is unchanged in strength.
+
+test('C-16: a CLEAN trip saved with an inert object-valued `label` carrying a reserved key still saves, writes once and reopens, with the label stored exactly as handed', () => {
+  store.clear();
+  const kept = control();
+  const trip = { ...clone(PERU), history: [] };
+  const label = { display: 'fallback label', identity: null };
+  const labelSnapshot = inertSnapshot(label);
+  const tripSnapshot = inertSnapshot(trip);
+
+  // Non-vacuity, from both sides. The TRIP is clean in memory and stays clean through
+  // serialization, so the barrier has nothing in its domain to refuse; the LABEL does
+  // carry the reserved key, which is the only thing the envelope-wide scan saw.
+  assert.deepStrictEqual(identityKeysIn(trip), [], 'the trip carries no reserved key in memory');
+  assert.deepStrictEqual(identityKeysIn(json(trip)), [], 'and none once serialized either');
+  assert.deepStrictEqual(identityKeysIn(label), ['$.identity'], 'while the label carries exactly one');
+
+  const writesBefore = writes;
+  const draftId = saveDraftTrip(trip, label, 'Peru');
+  assert.ok(draftId, 'the save must land: a clean payload is storable whatever the label holds');
+  assert.equal(writes, writesBefore + 1, 'and it writes exactly once');
+  assert.equal(loadDraftTrip(draftId).compatible, true, 'the record reopens');
+
+  // The label is stored EXACTLY as handed. This is the whole point of the case: the fix
+  // is to stop scanning metadata, NOT to sanitise it into something scannable.
+  const stored = JSON.parse(raw()).find((e) => e.id === draftId);
+  assert.deepStrictEqual(stored.label, labelSnapshot, 'the stored label is exactly what was handed in');
+  assert.equal(typeof stored.label, 'object', 'it was not stringified');
+  assert.equal('identity' in stored.label, true, 'and its reserved key was not stripped to make the save fit');
+  assert.deepStrictEqual(identityKeysIn(stored.trip), [], 'while the stored payload carries no reserved key');
+
+  // Existing reader behaviour, asserted rather than changed: a non-string label was always
+  // listable and openable, and both records are still there afterwards.
+  const listed = listDraftTrips().map((d) => d.id);
+  assert.equal(listed.length, 2, 'both records are listed');
+  assert.ok(listed.includes(kept) && listed.includes(draftId), 'the control and the new record');
+  assert.deepStrictEqual(inertSnapshot(trip), tripSnapshot, 'the input trip is unmutated');
+  assert.deepStrictEqual(inertSnapshot(label), labelSnapshot, 'and so is the label argument');
+});
+
+test('C-16 (control): with that SAME object label, a reserved key in the PAYLOAD is still refused by name — in memory, and when only the materialization carries it — with zero writes and the stored bytes retained', () => {
+  // The scan changed domain; it did not weaken. Two fixtures, because only the second of
+  // them can be caught by layer 3: the first carries the key in memory, so layer 2 sees
+  // it, while the second is clean in memory and acquires the key at serialization time.
+  const label = { display: 'fallback label', identity: null };
+
+  for (const [which, build] of [
+    ['in memory', () => tripWithBranch(PERU, { nested: [{ identity: null }] })],
+    ['introduced at serialization time, so ONLY the materialized payload carries it', () => tripWithBranch(PERU, hookedBranch({ nested: [{ identity: null }] }).branch)]
+  ]) {
+    store.clear();
+    const kept = control();
+    const before = raw();
+    const trip = build();
+    const snapshot = inertSnapshot(trip);
+
+    const err = refuses(() => saveDraftTrip(trip, label, 'Peru'), 'identity');
+    assert.equal(err.name, FROZEN.name, `${which}: the frozen class`);
+    assert.equal(err.schema, FROZEN.schema, `${which}: the version it could only be written under`);
+    assert.equal(err.field, FROZEN.field, `${which}: the frozen field`);
+    assert.equal(err.message, FROZEN.message, `${which}: the frozen message`);
+
+    assert.deepStrictEqual(inertSnapshot(trip), snapshot, `${which}: the input is unmutated`);
+    assert.equal(raw(), before, `${which}: the existing bytes are retained exactly`);
+    assert.deepEqual(listDraftTrips().map((d) => d.id), [kept], `${which}: and nothing was appended`);
+  }
+});

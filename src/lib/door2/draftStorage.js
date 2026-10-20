@@ -106,10 +106,10 @@ export class DraftStorageUnreadableError extends Error {
  * holds what it was). check 'shape': the door2-v7 candidate fails the reader's shape
  * check (field names the first failing field). check 'identity': a reserved identity key
  * (RESERVED_IDENTITY_KEYS) is present in the candidate, at its root or at any depth, or in
- * the materialized entry the save would store, so it cannot be written under an old schema
- * version (Rule B). Presence alone does NOT make it a valid door2-v8 save either: validity
- * is a separate rule, and this version writes no door2-v8 at all. The message below
- * predates that distinction and is frozen as it stands.
+ * the materialized trip payload the save would store, so it cannot be written under an old
+ * schema version (Rule B). Presence alone does NOT make it a valid door2-v8 save either:
+ * validity is a separate rule, and this version writes no door2-v8 at all. The message
+ * below predates that distinction and is frozen as it stands.
  * The field is for diagnosis, not display: it names the reserved key, never a path to it.
  */
 export class DraftNotStorableError extends Error {
@@ -145,9 +145,14 @@ export class DraftNotStorableError extends Error {
  *
  * The walk is ITERATIVE, over an explicit worklist, and never recurses: a recursive walk
  * exhausts the call stack on an ordinary deep payload that this writer accepts and the
- * reader admits, long before serialization would fail on it, which would turn a save that
- * worked into a RangeError. Depth is simply not this scan's business, and no depth, size
- * or number policy is introduced anywhere to make that true.
+ * reader admits, turning a save that worked into a RangeError. That was OBSERVED on a
+ * measured input in a measured runtime, where the recursive walk overflowed while
+ * serialization of the same payload still succeeded. It is NOT a universal ordering of
+ * the two limits: which one is reached first depends on the runtime, the architecture and
+ * how much stack the caller has already consumed. Nothing here rests on that ordering —
+ * an iterative walk simply stops this scan from being a limit at all. Depth is not this
+ * scan's business, and no depth, size or number policy is introduced anywhere to make
+ * that true.
  *
  * `seen` keeps the walk total on a self-referential payload: such an input is unwritable
  * either way (JSON.stringify throws when the entry is materialized, which is the existing
@@ -253,12 +258,13 @@ function appendEntryText(store, entryText) {
 //    non-empty string. Nothing is inserted into the candidate itself.
 // 7. The entry is materialized ONCE — serialized as a singleton array and parsed back.
 //    This is the only serialization the save performs.
-// 8. Reserved identity keys anywhere in that MATERIALIZED entry, and then the same shape
-//    and evidence checks again, on the payload as it will actually be stored. Steps 5 and
-//    8 scan different objects on purpose: a toJSON hook, own or inherited from the
-//    prototype chain, can hand serialization data the in-memory candidate never held, and
-//    only this step looks at that data. Parsing strips OWN hooks, not inherited ones, so
-//    checking a parsed copy and then serializing again would reopen the same gap.
+// 8. Reserved identity keys anywhere in the MATERIALIZED TRIP PAYLOAD — the entry's
+//    `trip`, not the envelope assembled around it — and then the same shape and evidence
+//    checks again, on that same payload as it will actually be stored. Steps 5 and 8 scan
+//    different objects on purpose: a toJSON hook, own or inherited from the prototype
+//    chain, can hand serialization data the in-memory candidate never held, and only this
+//    step looks at that data. Parsing strips OWN hooks, not inherited ones, so checking a
+//    parsed copy and then serializing again would reopen the same gap.
 // 9. Only then is it written, in envelope version 2: the materialized entry's own text,
 //    spliced into the retained stored text. No object is serialized again, so no hook can
 //    run between the check and the write, and every stored record keeps its exact bytes.
@@ -297,11 +303,19 @@ export function saveDraftTrip(trip, label, destinationLabel) {
     savedAt,
     trip: candidate
   };
-  // Rule B on the MATERIALIZED entry, and the two checks again on the payload it carries
-  // at `trip`. This is the only scan that can see identity a serialization hook introduced,
-  // and the text it approves is the text the splice below writes.
+  // Rule B on the MATERIALIZED TRIP PAYLOAD the entry carries at `trip`, and then the two
+  // checks again on that same payload. This is the only scan that can see identity a
+  // serialization hook introduced, and the text it approves is the text the splice below
+  // writes.
+  //
+  // The domain is the payload, not the envelope around it: the contract's barrier is over
+  // "the complete candidate payload", traversed "as it will be serialized". The envelope's
+  // other fields are this writer's own generated metadata and the caller's label
+  // arguments. They carry no trip meaning, so nothing in them can take new meaning out
+  // under an old version number, and treating them as refusable would add a write
+  // eligibility rule for metadata that no decision authorizes.
   const framed = materializeEntry(entry);
-  if (carriesReservedIdentity(framed.entry)) throw new DraftNotStorableError('identity', V8_SCHEMA);
+  if (carriesReservedIdentity(framed.entry?.trip)) throw new DraftNotStorableError('identity', V8_SCHEMA);
   refuseUnlessStorable(framed.entry?.trip);
   writeText(appendEntryText(store, framed.text));
   return id;
