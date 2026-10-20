@@ -21,6 +21,12 @@ const SAVABLE_SCHEMAS = ['door2-v6', ENVELOPE_SCHEMA];
 // Identity versions this packet recognises structurally. Structural classification is
 // never a claim of full validity: D-B §4.2's coverage validation belongs to packet 1b.
 const KNOWN_IDENTITY_VERSIONS = [1];
+// The identity keys the version barrier reserves, enumerated in exactly one place so the
+// writer's two identity checks cannot drift apart, in the manner of identity.js's
+// OUTCOME_KEYS. Stage A reserves `identity` and nothing else: not `luid`, not the
+// OUTCOME_KEYS set, and not every key whose name merely contains "identity". Adding a
+// name is a change to the governing persistence contract, not to this line.
+const RESERVED_IDENTITY_KEYS = Object.freeze(['identity']);
 // Block types the producers emit at this revision (schedule.js travel/open/rest,
 // fill.js and edit.js activity, edit.js open). types.js additionally declares meal and
 // free, and the page has an `arrive` branch; neither is produced today, so neither is
@@ -86,9 +92,12 @@ export class DraftStorageUnreadableError extends Error {
  * Thrown by saveDraftTrip when the trip itself can't be stored as a draft that reopens;
  * nothing is written. check 'schema': the input is neither door2-v6 nor door2-v7 (schema
  * holds what it was). check 'shape': the door2-v7 candidate fails the reader's shape
- * check (field names the first failing field). check 'identity': the trip carries an
- * identity map, so it saves only as door2-v8, which this version cannot write (Rule B).
- * The field is for diagnosis, not display.
+ * check (field names the first failing field). check 'identity': a reserved identity key
+ * (RESERVED_IDENTITY_KEYS) is present in the candidate, at its root or at any depth, so it
+ * cannot be written under an old schema version (Rule B). Presence alone does NOT make it
+ * a valid door2-v8 save either: validity is a separate rule, and this version writes no
+ * door2-v8 at all. The message below predates that distinction and is frozen as it stands.
+ * The field is for diagnosis, not display: it names the reserved key, never a path to it.
  */
 export class DraftNotStorableError extends Error {
   constructor(check, detail) {
@@ -106,17 +115,51 @@ export class DraftNotStorableError extends Error {
   }
 }
 
-// The order below is required (Stage B brief §2); each step stops something that got
-// past the one before it.
+/**
+ * Does this value, or anything nested in it at any depth, carry a reserved identity key?
+ * Arrays, history snapshots and branches unrelated to either are all walked: the writer
+ * preserves unknown fields by construction, so any one of them would otherwise carry new
+ * meaning out under an old version number.
+ *
+ * Presence is KEY presence, independent of value. `{}` and `[]` are truthy and `null`, 0,
+ * false, '' and an explicit `undefined` are falsey, yet every one of them is a present
+ * key and must refuse; only a genuinely absent key may proceed. It is not a keyword scan
+ * over serialized text: a string whose VALUE contains the word "identity" is not a
+ * matching key and must still save.
+ *
+ * `in` is used at every level, the same operator the root check uses, so one rule governs
+ * both and neither can be narrower than the other. `seen` keeps the walk total on a
+ * self-referential payload: such an input is unwritable either way (JSON.stringify throws
+ * in writeAll, which is the existing refusal for it), and this scan must not be what
+ * decides that. Nothing is mutated.
+ */
+function carriesReservedIdentity(value, seen = new WeakSet()) {
+  if (value === null || typeof value !== 'object') return false;
+  if (seen.has(value)) return false;
+  seen.add(value);
+  for (const key of RESERVED_IDENTITY_KEYS) if (key in value) return true;
+  for (const nested of Object.values(value)) if (carriesReservedIdentity(nested, seen)) return true;
+  return false;
+}
+
+// The order below is required (Stage B brief §2; Q8 packet 2 stage A §3.3); each step
+// stops something that got past the one before it.
 // 1. Readability, from current storage on every save: writing over a store that can't be
 //    read would destroy its bytes.
-// 2. Input schema: only door2-v6 or door2-v7. A raw door2-v5 has no routePlan.
-// 3. The candidate: a v6 input is stamped door2-v7 on a copy with a fresh versions object
+// 2. A reserved identity key at the ROOT of the input as handed. `in` sees one inherited
+//    from the prototype chain, which the shallow copy at step 4 discards before step 5
+//    could see it. Supplementary to step 5, never a substitute for it.
+// 3. Input schema: only door2-v6 or door2-v7. A raw door2-v5 has no routePlan.
+// 4. The candidate: a v6 input is stamped door2-v7 on a copy with a fresh versions object
 //    (the page hands in a shallow copy, so assigning into trip.versions would change the
 //    trip still being edited); a v7 input is taken as handed. history is not touched.
-// 4. The candidate passes the same shape check the reader applies, so whatever is
+// 5. Reserved identity keys ANYWHERE in that actual candidate. It runs on the object the
+//    append below writes, so what is checked is what is written, and it runs before
+//    steps 6 and 7 so identity outranks both.
+// 6. The candidate passes the same shape check the reader applies, so whatever is
 //    written reopens. Nothing is repaired, rescheduled or rebuilt to make it pass.
-// 5. Only then is it written, in envelope version 2. destinationLabel is included only
+// 7. The candidate's connection evidence, by the inspection the reader also applies.
+// 8. Only then is it written, in envelope version 2. destinationLabel is included only
 //    when it is a non-empty string; otherwise the key is left out entirely.
 export function saveDraftTrip(trip, label, destinationLabel) {
   const store = readStore();
@@ -128,16 +171,19 @@ export function saveDraftTrip(trip, label, destinationLabel) {
   // The test is presence, not truthiness. `{}` and `[]` are truthy and `null`, 0, false,
   // '' and an explicit undefined are falsey, yet every one of them is a present identity
   // key and must refuse; only a genuinely absent key may proceed. `in` throws on null
-  // and primitives, so the object check comes first — which also refuses a non-object
-  // payload here instead of letting it reach the schema allowlist.
+  // and primitives, so the object check comes first.
   // isObject only guards the `in` operator, which throws on null and primitives. It
   // deliberately does not refuse a non-object payload here: the schema allowlist below
   // already refuses one by name and retains, and pre-empting it would change the
   // existing error that draftStorageGuard.test.js B3 asserts for a null trip.
-  if (isObject(trip) && 'identity' in trip) throw new DraftNotStorableError('identity', V8_SCHEMA);
+  if (isObject(trip) && RESERVED_IDENTITY_KEYS.some((key) => key in trip)) throw new DraftNotStorableError('identity', V8_SCHEMA);
   const schema = trip?.versions?.schema;
   if (!SAVABLE_SCHEMAS.includes(schema)) throw new DraftNotStorableError('schema', String(schema));
   const candidate = schema === ENVELOPE_SCHEMA ? trip : { ...trip, versions: { ...trip.versions, schema: ENVELOPE_SCHEMA } };
+  // Rule B on the ACTUAL candidate: the object scanned here is the object appended below,
+  // so there is no gap between what is checked and what is written. Same error as the root
+  // check above, by name and in every field — a caller cannot tell which one fired.
+  if (carriesReservedIdentity(candidate)) throw new DraftNotStorableError('identity', V8_SCHEMA);
   const failed = v7ShapeFailure(candidate);
   if (failed) throw new DraftNotStorableError('shape', failed);
   const evidence = inspectEvidence(candidate);

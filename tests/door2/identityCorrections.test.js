@@ -471,7 +471,26 @@ test('R2.1: through the real opted-in public route, a recovery the itinerary can
   assert.equal(blockOf(honoured.trip, 'op:lx_base:d1').anchor.contentId, pinnedContent);
 });
 
-test("R2.1 (THE REVIEW'S COMPOSED CYCLE, END TO END AT THE REAL WRITER): opted-in recovery, then a DEFAULT structural apply, then a save — and the stored record carries no outcome anywhere, history included", () => {
+// AMENDED for Q8 packet 2, stage A, under the owner's authorization of 19 October 2026
+// (option A) — the sole exception to the no-pre-existing-test rule, limited to this test.
+//
+// The composed chain itself is UNCHANGED and nothing is stripped or planted: steps 1 and
+// 2 below stand as they were. What changed is step 3's OUTCOME. Stage A's recursive
+// writer barrier refuses any candidate carrying a reserved identity key anywhere in its
+// payload, and this candidate carries one inside the history snapshot that step 2
+// genuinely produces — so the save that used to succeed is now a named refusal with zero
+// writes and unchanged bytes.
+//
+// R2.1's purpose is preserved rather than weakened. Its promise is that the recovery
+// outcome must not enter the SERIALIZABLE TRIP GRAPH, history included. THE RULING below
+// still runs that exact scan, under all three spellings, on the exact candidate handed to
+// the writer — one envelope layer closer to the engine than the stored bytes were, and
+// now independent of whether the record is writable at all. The stored-bytes half is kept
+// alive on a REAL successful write by writerBarrier.test.js's W-9, whose test-only
+// projection is proven there to retain a planted historical report; the engine-graph
+// assertion is mutation-checked independently of the barrier by W-10, with W-11 as the
+// separate writer-refusal control.
+test("R2.1 (THE REVIEW'S COMPOSED CYCLE, END TO END AT THE REAL WRITER): opted-in recovery, then a DEFAULT structural apply, then a save — and the candidate handed to the writer carries no outcome anywhere, history included, while the writer now refuses it by name", () => {
   const h = harness('st');
   const { result } = unhonourableRecovery(h);
   // Non-vacuity first: the cycle must really have produced an outcome, or the absence of
@@ -502,26 +521,37 @@ test("R2.1 (THE REVIEW'S COMPOSED CYCLE, END TO END AT THE REAL WRITER): opted-i
   const downstream = rs.applyProposal(result.trip, preview.proposals[0]);
   assert.equal(downstream.ok, true, `${downstream.reason ?? ''}`);
   assert.deepStrictEqual(Object.keys(downstream).sort(), ['ok', 'trip'], 'and a default result is exactly { ok, trip }');
-  assert.equal('identity' in downstream.trip, false, 'the rebuilt trip has no top-level map — which is why the writer guard passes');
+  assert.equal('identity' in downstream.trip, false, 'the rebuilt trip has no top-level map — which is why the ROOT check is not what refuses it');
   assert.ok(downstream.trip.history.length > 0, 'while history retains the previous trip — the route the report took');
   assert.ok(downstream.trip.history.some((h2) => h2.identity), 'and that retained snapshot really does carry a map');
 
-  // Step 3: the real writer, with the real history the page would not have stripped.
+  // Step 3: the real writer, with the real history the page would not have stripped, on
+  // the UNTOUCHED candidate. It now refuses, by name, with zero writes.
   store.clear();
-  const draftId = saveDraftTrip(downstream.trip, 'composed', 'composed');
-  assert.ok(draftId, 'THE SAVE MUST SUCCEED — if it refused, the absence of a report would prove nothing');
-  const raw = store.get(STORAGE_KEY);
-  assert.ok(raw.length > 0, 'and something was really written');
-
-  // THE RULING. Not in the stored bytes, under any spelling; not anywhere in the parsed
-  // record, at any depth, history included.
-  for (const key of ['identityOutcome', 'identityUnrestorable', 'identityRestored']) {
-    assert.equal(raw.includes(key), false, `${key} reached the stored bytes`);
+  const step3Control = saveDraftTrip({ ...producerTrip(4, 'syn_hub'), history: [] }, 'step 3 control', 'step 3 control');
+  assert.ok(step3Control, 'a control save really works, so this refusal is about the input');
+  const bytesAtStep3 = store.get(STORAGE_KEY);
+  const untouched = clone(downstream.trip);
+  let composedRefusal = null;
+  try {
+    saveDraftTrip(downstream.trip, 'composed', 'composed');
+  } catch (err) {
+    composedRefusal = err;
   }
-  const stored = JSON.parse(raw);
-  assert.deepStrictEqual(outcomeKeysIn(stored), [], 'the stored record carries no outcome anywhere');
-  const entry = stored.find((e) => e.id === draftId);
-  assert.ok(entry?.trip?.history?.length > 0, 'the stored record really retains history, so the scan had somewhere to look');
+  assert.equal(composedRefusal?.check, 'identity', 'the composed candidate is refused by name');
+  assert.equal(composedRefusal?.schema, 'door2-v8', 'and the refusal names the version it could only be written under');
+  assert.equal(store.get(STORAGE_KEY), bytesAtStep3, 'the stored bytes are unchanged — zero writes');
+  assert.deepStrictEqual(downstream.trip, untouched, 'and nothing was stripped, normalised or repaired to make it fit');
+
+  // THE RULING. Not in the serialized candidate, under any spelling; not anywhere in its
+  // graph, at any depth, history included. This is the same scan the old assertion ran on
+  // the stored bytes, run on the object those bytes would have carried.
+  const serialized = JSON.stringify(downstream.trip);
+  for (const key of ['identityOutcome', 'identityUnrestorable', 'identityRestored']) {
+    assert.equal(serialized.includes(key), false, `${key} reached the serializable graph`);
+  }
+  assert.deepStrictEqual(outcomeKeysIn(downstream.trip), [], 'the candidate carries no outcome anywhere');
+  assert.ok(downstream.trip.history.length > 0, 'and it really retains history, so the scan had somewhere to look');
 });
 
 test('R2.1: the engine REFUSES to hand back a trip whose graph carries an outcome — at the top level and nested in history alike, whatever its provenance', () => {
