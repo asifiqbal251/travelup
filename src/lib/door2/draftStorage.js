@@ -38,26 +38,38 @@ const V8_BLOCK_TYPES = ['travel', 'open', 'rest', 'activity'];
  * 'empty' — no key. 'unreadable' — the stored value can't be read, doesn't parse, or
  * parses to a non-array; its bytes are left exactly as they are. 'ok' — an array,
  * which may still hold malformed entries (see isListable).
- * @returns {{status: 'empty' | 'ok' | 'unreadable', drafts: any[]}}
+ *
+ * `raw` is the stored TEXT exactly as it was read, retained from this same read for
+ * saveDraftTrip's append. Stored text does not always survive a parse and a reserialize
+ * unchanged — interior whitespace, a field spelled 1.00, -0, 1e400 — so rebuilding the
+ * list from `drafts` rewrites records this writer never touched. It is private
+ * bookkeeping: nothing is exported, no caller outside this module reads it, and no
+ * admission rule or reader output depends on it. It is null whenever there is no text to
+ * retain, which is every status but 'ok'.
+ * @returns {{status: 'empty' | 'ok' | 'unreadable', drafts: any[], raw: string | null}}
  */
 function readStore() {
   let raw;
   try {
     raw = localStorage.getItem(STORAGE_KEY);
   } catch {
-    return { status: 'unreadable', drafts: [] };
+    return { status: 'unreadable', drafts: [], raw: null };
   }
-  if (raw === null) return { status: 'empty', drafts: [] };
+  if (raw === null) return { status: 'empty', drafts: [], raw: null };
   try {
     const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? { status: 'ok', drafts: parsed } : { status: 'unreadable', drafts: [] };
+    return Array.isArray(parsed) ? { status: 'ok', drafts: parsed, raw } : { status: 'unreadable', drafts: [], raw: null };
   } catch {
-    return { status: 'unreadable', drafts: [] };
+    return { status: 'unreadable', drafts: [], raw: null };
   }
 }
 
+function writeText(text) {
+  localStorage.setItem(STORAGE_KEY, text);
+}
+
 function writeAll(drafts) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(drafts));
+  writeText(JSON.stringify(drafts));
 }
 
 export function isSchemaSupported(versions) {
@@ -93,10 +105,11 @@ export class DraftStorageUnreadableError extends Error {
  * nothing is written. check 'schema': the input is neither door2-v6 nor door2-v7 (schema
  * holds what it was). check 'shape': the door2-v7 candidate fails the reader's shape
  * check (field names the first failing field). check 'identity': a reserved identity key
- * (RESERVED_IDENTITY_KEYS) is present in the candidate, at its root or at any depth, so it
- * cannot be written under an old schema version (Rule B). Presence alone does NOT make it
- * a valid door2-v8 save either: validity is a separate rule, and this version writes no
- * door2-v8 at all. The message below predates that distinction and is frozen as it stands.
+ * (RESERVED_IDENTITY_KEYS) is present in the candidate, at its root or at any depth, or in
+ * the materialized entry the save would store, so it cannot be written under an old schema
+ * version (Rule B). Presence alone does NOT make it a valid door2-v8 save either: validity
+ * is a separate rule, and this version writes no door2-v8 at all. The message below
+ * predates that distinction and is frozen as it stands.
  * The field is for diagnosis, not display: it names the reserved key, never a path to it.
  */
 export class DraftNotStorableError extends Error {
@@ -128,24 +141,100 @@ export class DraftNotStorableError extends Error {
  * matching key and must still save.
  *
  * `in` is used at every level, the same operator the root check uses, so one rule governs
- * both and neither can be narrower than the other. `seen` keeps the walk total on a
- * self-referential payload: such an input is unwritable either way (JSON.stringify throws
- * in writeAll, which is the existing refusal for it), and this scan must not be what
- * decides that. Nothing is mutated.
+ * both and neither can be narrower than the other.
+ *
+ * The walk is ITERATIVE, over an explicit worklist, and never recurses: a recursive walk
+ * exhausts the call stack on an ordinary deep payload that this writer accepts and the
+ * reader admits, long before serialization would fail on it, which would turn a save that
+ * worked into a RangeError. Depth is simply not this scan's business, and no depth, size
+ * or number policy is introduced anywhere to make that true.
+ *
+ * `seen` keeps the walk total on a self-referential payload: such an input is unwritable
+ * either way (JSON.stringify throws when the entry is materialized, which is the existing
+ * refusal for it), and this scan must not be what decides that. A visited set stops
+ * repeated visits; it is the worklist, not the set, that makes the walk total over a
+ * finite graph. Nothing is mutated and nothing walked is copied.
  */
-function carriesReservedIdentity(value, seen = new WeakSet()) {
-  if (value === null || typeof value !== 'object') return false;
-  if (seen.has(value)) return false;
-  seen.add(value);
-  for (const key of RESERVED_IDENTITY_KEYS) if (key in value) return true;
-  for (const nested of Object.values(value)) if (carriesReservedIdentity(nested, seen)) return true;
+function carriesReservedIdentity(root) {
+  const seen = new WeakSet();
+  const pending = [root];
+  while (pending.length > 0) {
+    const value = pending.pop();
+    if (value === null || typeof value !== 'object') continue;
+    if (seen.has(value)) continue;
+    seen.add(value);
+    for (const key of RESERVED_IDENTITY_KEYS) if (key in value) return true;
+    for (const nested of Object.values(value)) pending.push(nested);
+  }
   return false;
 }
 
-// The order below is required (Stage B brief §2; Q8 packet 2 stage A §3.3); each step
-// stops something that got past the one before it.
+/**
+ * The shape check and the evidence check the writer has always run, in that order, with
+ * their existing errors and their existing field names. One definition, two call sites:
+ * once on the candidate in memory, and again on the payload the save is about to store,
+ * so a serialization hook cannot change the schema, drop a required field or invalidate
+ * evidence after the first pass has approved it. Neither pass repairs anything.
+ */
+function refuseUnlessStorable(payload) {
+  const failed = v7ShapeFailure(payload);
+  if (failed) throw new DraftNotStorableError('shape', failed);
+  const evidence = inspectEvidence(payload);
+  if (!evidence.ok || evidence.readOnly) throw new DraftNotStorableError('shape', evidence.readOnly ? 'evidence_version_unsupported' : evidence.field);
+}
+
+/**
+ * Materializes the entry ONCE, and returns both the parsed result and the exact text it
+ * came from, so the save can check one and write the other without serializing anything
+ * a second time.
+ *
+ * The entry is framed as the single element of a singleton array. The candidate still
+ * reaches JSON.stringify under property key `trip`, exactly as it always has, so no hook
+ * sees a different key than before. The framing is ESTABLISHED before any text is taken
+ * from it: the serialized form must open and close as an array and must parse back to
+ * exactly one element. Given that, `[` and `]` are the only characters around the
+ * element's own serialization, so slicing them off yields precisely the text that parsed
+ * to the returned entry — which is what makes "the bytes that were checked are the bytes
+ * that are written" true by construction rather than by discipline.
+ *
+ * A framing that does not hold returns a null entry, and the caller's existing shape check
+ * refuses it by name with nothing written. No new refusal policy is invented here.
+ * @returns {{entry: any, text: string | null}}
+ */
+function materializeEntry(entry) {
+  const framed = JSON.stringify([entry]);
+  if (typeof framed !== 'string' || !framed.startsWith('[') || !framed.endsWith(']')) return { entry: null, text: null };
+  const parsed = JSON.parse(framed);
+  if (!Array.isArray(parsed) || parsed.length !== 1) return { entry: null, text: null };
+  return { entry: parsed[0], text: framed.slice(1, -1) };
+}
+
+/**
+ * Splices the materialized entry's own text into the retained stored text, at the outer
+ * array's closing delimiter, and returns the complete new text.
+ *
+ * Every existing record therefore keeps its exact bytes: nothing already stored is parsed
+ * back out, reserialized, normalised, reordered or dropped. The retained text is the one
+ * from this save's single read — storage is never read again once a hook may have run.
+ *
+ * The outer array closed at the LAST `]` in the text: JSON permits only whitespace after
+ * it, so no later `]` can exist. Whatever sits before that delimiter is kept as it was,
+ * including an empty array's whitespace-only interior, and whatever follows it is kept
+ * too, including trailing whitespace. The separating comma is decided by the retained
+ * parsed length, never by inspecting the text, so an entry whose strings contain brackets
+ * or commas changes nothing.
+ */
+function appendEntryText(store, entryText) {
+  if (store.raw === null) return `[${entryText}]`;
+  const close = store.raw.lastIndexOf(']');
+  return `${store.raw.slice(0, close)}${store.drafts.length > 0 ? ',' : ''}${entryText}${store.raw.slice(close)}`;
+}
+
+// The order below is required (Stage B brief §2; Q8 packet 2 stage A correction round 1
+// §3.3); each step stops something that got past the one before it.
 // 1. Readability, from current storage on every save: writing over a store that can't be
-//    read would destroy its bytes.
+//    read would destroy its bytes. The stored TEXT is retained from that same read, for
+//    step 9, and storage is not read again afterwards.
 // 2. A reserved identity key at the ROOT of the input as handed. `in` sees one inherited
 //    from the prototype chain, which the shallow copy at step 4 discards before step 5
 //    could see it. Supplementary to step 5, never a substitute for it.
@@ -153,14 +242,26 @@ function carriesReservedIdentity(value, seen = new WeakSet()) {
 // 4. The candidate: a v6 input is stamped door2-v7 on a copy with a fresh versions object
 //    (the page hands in a shallow copy, so assigning into trip.versions would change the
 //    trip still being edited); a v7 input is taken as handed. history is not touched.
-// 5. Reserved identity keys ANYWHERE in that actual candidate. It runs on the object the
-//    append below writes, so what is checked is what is written, and it runs before
-//    steps 6 and 7 so identity outranks both.
-// 6. The candidate passes the same shape check the reader applies, so whatever is
-//    written reopens. Nothing is repaired, rescheduled or rebuilt to make it pass.
-// 7. The candidate's connection evidence, by the inspection the reader also applies.
-// 8. Only then is it written, in envelope version 2. destinationLabel is included only
-//    when it is a non-empty string; otherwise the key is left out entirely.
+// 5. Reserved identity keys ANYWHERE in that actual candidate, IN MEMORY, and then the
+//    same shape and evidence checks, in their existing position with their existing
+//    errors. The in-memory walk reads keys, so it sees what serialization drops — an
+//    explicit `identity: undefined` — and it gives a circular payload that also carries
+//    identity its named refusal rather than a TypeError. Both are reasons it must run
+//    before step 7, not instead of step 8.
+// 6. The envelope entry is assembled AROUND the checked candidate: envelopeVersion, id,
+//    label, savedAt, the candidate at `trip`, and destinationLabel only when it is a
+//    non-empty string. Nothing is inserted into the candidate itself.
+// 7. The entry is materialized ONCE — serialized as a singleton array and parsed back.
+//    This is the only serialization the save performs.
+// 8. Reserved identity keys anywhere in that MATERIALIZED entry, and then the same shape
+//    and evidence checks again, on the payload as it will actually be stored. Steps 5 and
+//    8 scan different objects on purpose: a toJSON hook, own or inherited from the
+//    prototype chain, can hand serialization data the in-memory candidate never held, and
+//    only this step looks at that data. Parsing strips OWN hooks, not inherited ones, so
+//    checking a parsed copy and then serializing again would reopen the same gap.
+// 9. Only then is it written, in envelope version 2: the materialized entry's own text,
+//    spliced into the retained stored text. No object is serialized again, so no hook can
+//    run between the check and the write, and every stored record keeps its exact bytes.
 export function saveDraftTrip(trip, label, destinationLabel) {
   const store = readStore();
   if (store.status === 'unreadable') throw new DraftStorageUnreadableError();
@@ -180,14 +281,12 @@ export function saveDraftTrip(trip, label, destinationLabel) {
   const schema = trip?.versions?.schema;
   if (!SAVABLE_SCHEMAS.includes(schema)) throw new DraftNotStorableError('schema', String(schema));
   const candidate = schema === ENVELOPE_SCHEMA ? trip : { ...trip, versions: { ...trip.versions, schema: ENVELOPE_SCHEMA } };
-  // Rule B on the ACTUAL candidate: the object scanned here is the object appended below,
-  // so there is no gap between what is checked and what is written. Same error as the root
-  // check above, by name and in every field — a caller cannot tell which one fired.
+  // Rule B on the ACTUAL candidate, in memory — the object the entry below wraps. Every
+  // identity refusal in this writer uses the same error class and the same frozen
+  // check/schema/field/name/message contract (§3.5, addendum C4). Nothing more is
+  // promised: different throw sites naturally keep their own stack traces.
   if (carriesReservedIdentity(candidate)) throw new DraftNotStorableError('identity', V8_SCHEMA);
-  const failed = v7ShapeFailure(candidate);
-  if (failed) throw new DraftNotStorableError('shape', failed);
-  const evidence = inspectEvidence(candidate);
-  if (!evidence.ok || evidence.readOnly) throw new DraftNotStorableError('shape', evidence.readOnly ? 'evidence_version_unsupported' : evidence.field);
+  refuseUnlessStorable(candidate);
   const id = `d2draft_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
   const savedAt = new Date().toISOString();
   const entry = {
@@ -198,7 +297,13 @@ export function saveDraftTrip(trip, label, destinationLabel) {
     savedAt,
     trip: candidate
   };
-  writeAll([...store.drafts, entry]);
+  // Rule B on the MATERIALIZED entry, and the two checks again on the payload it carries
+  // at `trip`. This is the only scan that can see identity a serialization hook introduced,
+  // and the text it approves is the text the splice below writes.
+  const framed = materializeEntry(entry);
+  if (carriesReservedIdentity(framed.entry)) throw new DraftNotStorableError('identity', V8_SCHEMA);
+  refuseUnlessStorable(framed.entry?.trip);
+  writeText(appendEntryText(store, framed.text));
   return id;
 }
 

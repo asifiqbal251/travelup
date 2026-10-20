@@ -1,5 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { execFileSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
 
 // Q8 packet 2, stage A: the RECURSIVE WRITER BARRIER on saveDraftTrip.
 // Build brief docs/briefs/q8-p2-stage-a/build-brief-q8-packet2-stage-a-writer-barrier-
@@ -463,7 +465,7 @@ test('W-5 (C3): a nested reserved key outranks an EVIDENCE fault, while the iden
 // ---------------------------------------------------------------------------
 // W-6: the error contract frozen, asserted against BOTH paths.
 
-test('W-6: both identity refusals carry the identical frozen contract — check, schema, field, name, message and class — so a caller cannot tell which check fired', () => {
+test('W-6: both identity refusals carry the identical frozen contract — the same error class and the frozen check, schema, field, name and message, with stack traces free to differ', () => {
   store.clear();
   control();
 
@@ -618,4 +620,813 @@ test('W-11: the same map-bearing candidate is refused by the writer with zero wr
   refuses(() => saveDraftTrip(downstream.trip, 'w11', 'w11'), 'identity');
   assert.equal(raw(), before, 'the existing bytes are retained exactly');
   assert.deepEqual(listDraftTrips().map((d) => d.id), [kept], 'and nothing was appended');
+});
+
+// ---------------------------------------------------------------------------
+// Q8 packet 2, stage A, CORRECTION ROUND 1 — C-1 to C-15.
+// correction-brief-q8-packet2-stage-a-round1-2026-10-20-draft5.md §4, as approved by
+// codex-review-…-draft5-APPROVE-2026-10-20.md. Governing contract unchanged:
+// decision-record-q8-packet2-persistence-contract-2026-10-19-APPROVED.md §§3.2-3.3.
+//
+// Three findings from the diff review of 85e2f0f:
+//
+//   R1  A toJSON hook — own, or INHERITED from the prototype chain — hands serialization
+//       data the in-memory candidate never held. At 85e2f0f the scan ran on the object,
+//       the later serialization introduced identity, and the record was written as
+//       door2-v7 and admitted by the reader.
+//   R2  A recursive presence walk exhausts the call stack on an ordinary deep payload
+//       this writer accepted at base and the reader still admits — a save that worked
+//       became a RangeError. The limits of a recursive walk and of serialization differ.
+//   —   Whole-array reserialization rewrote the bytes of records the save never touched:
+//       interior whitespace stripped, a field spelled 1.00 rewritten as 1.
+//
+// The writer now runs three layers over one frozen RESERVED_IDENTITY_KEYS registry, all
+// raising the identical existing error, and each row below says which layer it pins:
+//
+//   1  root presence on the input AS HANDED — an INHERITED root key a shallow copy drops
+//   2  a full walk of the candidate IN MEMORY — keys serialization drops (an explicit
+//      `identity: undefined`), and a named refusal rather than a TypeError when a
+//      circular payload also carries identity
+//   3  a full walk of the MATERIALIZED entry — identity a hook introduced on the way out
+//
+// Layer 3 is an addition, never a substitute. Parsing strips OWN hooks and not inherited
+// ones, so checking a parsed copy and then serializing again would reopen R1; what closes
+// it is that the bytes appended are the bytes that were checked.
+//
+// What is NOT claimed here, and is not closed by this round (brief §3.4): an enumerable
+// getter can install an inherited toJSON BEFORE materialization and alter the envelope id,
+// leaving a valid v7 payload. That sits in the stateful-getter domain this round expressly
+// excludes. No test below asserts universal envelope equivalence, and none claims complete
+// protection from executable input effects.
+
+/**
+ * A deep snapshot that NEVER invokes a toJSON hook: functions are kept by reference and
+ * everything else is copied key by key, cycles included. `clone` would fire the very
+ * hooks these tests are about, so it cannot be used to snapshot one of these fixtures.
+ */
+function inertSnapshot(value, seen = new Map()) {
+  if (value === null || typeof value !== 'object') return value;
+  if (seen.has(value)) return seen.get(value);
+  const copy = Array.isArray(value) ? [] : {};
+  seen.set(value, copy);
+  for (const [key, v] of Object.entries(value)) copy[key] = inertSnapshot(v, seen);
+  return copy;
+}
+
+/**
+ * Every place a reserved identity KEY appears in an in-memory graph, at any depth. Written
+ * here rather than imported: a regression test should prove the property, not re-run the
+ * production helper it is checking. A function VALUE is a value, never a matching key —
+ * which is exactly what made R1 invisible to a scan of the object alone.
+ */
+function identityKeysIn(value, path = '$', seen = new WeakSet()) {
+  const hits = [];
+  if (value === null || typeof value !== 'object' || seen.has(value)) return hits;
+  seen.add(value);
+  if (Array.isArray(value)) {
+    value.forEach((v, i) => hits.push(...identityKeysIn(v, `${path}[${i}]`, seen)));
+    return hits;
+  }
+  if ('identity' in value) hits.push(`${path}.identity`);
+  for (const [key, v] of Object.entries(value)) hits.push(...identityKeysIn(v, `${path}.${key}`, seen));
+  return hits;
+}
+
+/**
+ * Records every JSON.stringify performed while fn runs, with the exact text each produced.
+ * A test-only observation seam: no production export, observer or hook is added, and the
+ * real function is restored in a finally. `frame()` picks out the writer's single entry
+ * materialization — a one-element array holding an envelope — and returns the exact text
+ * of the entry inside it, which is the text the write must then have appended verbatim.
+ */
+function capturingSerializations(fn) {
+  const real = JSON.stringify;
+  const calls = [];
+  JSON.stringify = (v, ...rest) => {
+    const text = real(v, ...rest);
+    calls.push({ value: v, text });
+    return text;
+  };
+  let result;
+  try {
+    result = fn();
+  } finally {
+    JSON.stringify = real;
+  }
+  const frames = calls.filter((c) => Array.isArray(c.value) && c.value.length === 1 && c.value[0]?.envelopeVersion === 2);
+  return {
+    result,
+    calls,
+    frames,
+    frameText() {
+      assert.equal(frames.length, 1, `exactly one entry materialization expected, saw ${frames.length}`);
+      const text = frames[0].text;
+      assert.ok(text.startsWith('[') && text.endsWith(']'), 'the framing is an array');
+      return text.slice(1, -1);
+    }
+  };
+}
+
+/** A branch whose OWN toJSON hands serialization whatever `returns` says, call by call. */
+function hookedBranch(returns) {
+  const calls = { count: 0 };
+  return {
+    calls,
+    branch: {
+      toJSON: () => {
+        calls.count += 1;
+        return typeof returns === 'function' ? returns(calls.count) : returns;
+      }
+    }
+  };
+}
+
+/** A v6 or v7 trip carrying `branch` on a field neither the shape nor the evidence check
+ *  inspects, with history retained as the page would hand it (empty). */
+const tripWithBranch = (trip, branch) => ({ ...clone(trip), history: [], extra: branch });
+
+/** A self-referential object, optionally carrying a reserved key at its own root. */
+function circular(extra = {}) {
+  const node = { note: 'a cycle', ...extra };
+  node.self = node;
+  return node;
+}
+
+// ---------------------------------------------------------------------------
+// C-1, C-2: an own toJSON returning identity-bearing data — R1, under v7 and v6.
+
+for (const [version, prepare] of [['v7', (t) => stampV7(t)], ['v6', (t) => t]]) {
+  test(`C-1/C-2 (${version}): an own toJSON that returns identity-bearing data is refused by name, with zero writes, the stored bytes byte-identical and the input unmutated`, () => {
+    store.clear();
+    const kept = control();
+    const before = raw();
+
+    const { branch } = hookedBranch({ nested: [{ identity: null }] });
+    const trip = tripWithBranch(prepare(PERU), branch);
+    const snapshot = inertSnapshot(trip);
+
+    // Non-vacuity. Layers 1 and 2 cannot see this: there is no reserved KEY anywhere in
+    // the in-memory graph — only a function value. At 85e2f0f this input saved as
+    // door2-v7 and the reader admitted it. Only the materialized payload carries the key.
+    assert.equal('identity' in trip, false, 'no key at the root');
+    assert.deepStrictEqual(identityKeysIn(trip), [], 'and none anywhere in the in-memory graph');
+    assert.deepStrictEqual(identityKeysIn(JSON.parse(JSON.stringify({ trip }))), ['$.trip.extra.nested[0].identity'], 'yet serializing it produces exactly one');
+
+    const err = refuses(() => saveDraftTrip(trip, 'hooked', 'hooked'), 'identity');
+    assert.equal(err.schema, FROZEN.schema, 'the refusal names the version it could only be written under');
+    assert.equal(err.field, FROZEN.field);
+    assert.equal(err.message, FROZEN.message);
+
+    // Nothing stripped, normalised or repaired to make it fit, and nothing appended.
+    assert.deepStrictEqual(inertSnapshot(trip), snapshot, 'the input is unmutated');
+    assert.equal(raw(), before, 'the existing bytes are retained exactly');
+    assert.deepEqual(listDraftTrips().map((d) => d.id), [kept], 'and nothing was appended');
+  });
+}
+
+// ---------------------------------------------------------------------------
+// C-3: the control — a constant identity-free hook still saves.
+// Deliberately NO call-count assertion: it has to stay green under mutations 15 and 16.
+
+test('C-3: a constant identity-free toJSON still saves and reopens, and the stored bytes carry exactly what the hook returned', () => {
+  store.clear();
+  const returned = { shaped: 'by the hook', list: [1, 2, 3] };
+  const { branch } = hookedBranch(returned);
+  const trip = tripWithBranch(PERU, branch);
+
+  const { draftId, loaded } = saves(trip, 'clean hook');
+  const stored = JSON.parse(raw()).find((e) => e.id === draftId);
+  assert.deepStrictEqual(stored.trip.extra, returned, 'the stored bytes carry exactly what the hook returned');
+  assert.deepStrictEqual(loaded.trip.extra, returned, 'and so does the reopened record');
+  assert.deepStrictEqual(identityKeysIn(stored), [], 'with no reserved key anywhere in it');
+});
+
+// ---------------------------------------------------------------------------
+// C-4, C-5: depth — R2. Both run in a FRESH Node process, because a warmed stack can hide
+// a call-stack limit, and the base finding was reproduced in a cold one.
+
+// R2's reproduction needs a runtime in which an ordinary deep payload is SERIALIZABLE
+// while a RECURSIVE presence walk over it is not. Those two limits are independent, which
+// is exactly R2's point — but their ORDER is not universal. MEASURED FINDING, recorded
+// rather than assumed: on this machine (Node v26.7.0, darwin arm64) at the DEFAULT stack
+// size, a real producer trip carrying a depth-5,000 chain — the review's figure — is
+// handled by a recursive walk as well as by the serializer, and both fail together above
+// roughly depth 5,500. The review measured the opposite order on its own run. The
+// threshold depends on how much stack the surrounding harness has already consumed, so
+// neither figure generalises.
+//
+// So the child is given an EXPLICIT stack size, and it measures all four facts itself:
+// the input serializes, it parses back, a RECURSIVE REPLICA of the 85e2f0f walk exhausts
+// the stack on that very input, and the real writer nevertheless saves it and the reader
+// admits it. "Deep enough to overflow a recursive walk" is therefore asserted, never
+// assumed: if the band ever moves, these tests fail loudly instead of passing vacuously,
+// and they cannot pass while the production walk is recursive. None of this is a product
+// limit, and no depth, size or number policy exists in the writer.
+const DEEP = 4200;
+const DEEP_STACK_KB = 800;
+const STORAGE_MODULE = new URL('../../src/lib/door2/draftStorage.js', import.meta.url).href;
+const PLANNER_MODULE = new URL('../../src/lib/door2/planner.js', import.meta.url).href;
+const FIXTURES_MODULE = new URL('./fixtures/skeletonFixtures.js', import.meta.url).href;
+
+/**
+ * One deep-payload probe, in its own process with a stated stack size. The payload is a
+ * real producer trip with one ordinary identity-free object chain added, and the child
+ * counts its own writes.
+ */
+function deepProbe({ depth, identityAtDepth = false }) {
+  const source = `
+    const store = new Map();
+    let writes = 0;
+    globalThis.localStorage = {
+      getItem: (k) => store.get(k) ?? null,
+      setItem: (k, v) => { writes += 1; store.set(k, String(v)); },
+      removeItem: (k) => store.delete(k)
+    };
+    const { saveDraftTrip, loadDraftTrip } = await import(${JSON.stringify(STORAGE_MODULE)});
+    const { PILOT_DATA, buildFilledTrip } = await import(${JSON.stringify(PLANNER_MODULE)});
+    const { SKELETON_FIXTURES } = await import(${JSON.stringify(FIXTURES_MODULE)});
+
+    // The walk as it stood at 85e2f0f, recursive, replicated here rather than imported.
+    // Its only job is to establish in THIS runtime, on THIS input, that a recursive walk
+    // really does exhaust the call stack where the serializer does not.
+    const KEYS = Object.freeze(['identity']);
+    function recursiveReplica(value, seen = new WeakSet()) {
+      if (value === null || typeof value !== 'object') return false;
+      if (seen.has(value)) return false;
+      seen.add(value);
+      for (const key of KEYS) if (key in value) return true;
+      for (const nested of Object.values(value)) if (recursiveReplica(nested, seen)) return true;
+      return false;
+    }
+
+    const base = buildFilledTrip(SKELETON_FIXTURES.F2, PILOT_DATA, { reviewPolicy: 'allow_drafts' });
+    const chain = {};
+    let node = chain;
+    for (let i = 0; i < ${depth}; i += 1) node = node.child = {};
+    ${identityAtDepth ? 'node.identity = null;' : ''}
+    const trip = { ...base, history: [], extra: chain };
+
+    const out = {
+      depth: ${depth},
+      identityAtDepth: ${Boolean(identityAtDepth)},
+      producerSchema: base.versions.schema,
+      deepestKeys: Object.keys(node).length
+    };
+    const attempt = (fn) => { try { fn(); return 'ok'; } catch (e) { return e.name; } };
+    out.stringify = attempt(() => { out.serializedBytes = JSON.stringify(trip).length; });
+    out.parse = attempt(() => { out.reparsedDeep = JSON.parse(JSON.stringify(trip)).extra.child !== undefined; });
+    out.recursiveReplica = attempt(() => { out.replicaFound = recursiveReplica(trip); });
+    try {
+      const draftId = saveDraftTrip(trip, 'deep', 'deep');
+      out.savedId = draftId;
+      out.reopened = loadDraftTrip(draftId).compatible;
+      out.storedBytes = (store.get('door2_drafts_v1') ?? '').length;
+    } catch (e) {
+      out.errorName = e.name;
+      out.errorCheck = e.check ?? null;
+      out.errorSchema = e.schema ?? null;
+      out.errorField = e.field ?? null;
+    }
+    out.writes = writes;
+    console.log('__PROBE__' + JSON.stringify(out));
+  `;
+  const stdout = execFileSync(process.execPath, [`--stack-size=${DEEP_STACK_KB}`, '--input-type=module', '-e', source], { encoding: 'utf8' });
+  const line = stdout.split('\n').find((l) => l.startsWith('__PROBE__'));
+  assert.ok(line, `the child process produced no result:\n${stdout}`);
+  return JSON.parse(line.slice('__PROBE__'.length));
+}
+
+/** The three facts that make a deep probe interpretable at all, asserted before its result
+ *  is read: the input really is serializable and re-parseable in that runtime, and a
+ *  recursive walk really does fail on it there. */
+function assertDeepProbeIsLoadBearing(r, label) {
+  assert.equal(r.producerSchema, 'door2-v6', `${label}: a real producer trip, not a hand-built one`);
+  assert.equal(r.stringify, 'ok', `${label}: the input must be SERIALIZABLE in that runtime, got ${r.stringify}`);
+  assert.equal(r.parse, 'ok', `${label}: and must parse back there, got ${r.parse}`);
+  assert.ok(r.serializedBytes > 30000, `${label}: a real deep payload, ${r.serializedBytes} bytes`);
+  assert.equal(r.reparsedDeep, true, `${label}: the chain really survives the round trip`);
+  assert.equal(r.recursiveReplica, 'RangeError', `${label}: a RECURSIVE walk must exhaust the stack on this very input, or the probe proves nothing — got ${r.recursiveReplica}`);
+}
+
+test('C-4: an ordinary identity-free payload deep enough to exhaust a recursive walk still saves and reopens — fresh process, stated stack size, serializability proved in that same runtime', () => {
+  const r = deepProbe({ depth: DEEP });
+  assertDeepProbeIsLoadBearing(r, 'C-4');
+  assert.equal(r.deepestKeys, 0, 'the deepest node carries no key at all — nothing is planted');
+
+  assert.equal(r.errorName, undefined, `the save must not fail: ${r.errorName} / ${r.errorCheck ?? ''}`);
+  assert.ok(r.savedId, 'it saved');
+  assert.equal(r.writes, 1, 'with exactly one write');
+  // The reader ADMITS it. A reader-admission limit must not be what makes this pass.
+  assert.equal(r.reopened, true, 'and the unchanged reader reopens it');
+  assert.ok(r.storedBytes > 30000, 'the deep payload really reached storage');
+});
+
+test('C-5: a reserved key at that same depth is refused BY NAME, not by RangeError, in the same isolated runtime', () => {
+  const r = deepProbe({ depth: DEEP, identityAtDepth: true });
+  assertDeepProbeIsLoadBearing(r, 'C-5');
+  assert.equal(r.deepestKeys, 1, 'the key really is at the deepest node');
+  assert.equal(r.replicaFound, undefined, 'and the recursive walk never got far enough to find it — which is the regression');
+
+  // The whole point of R2: at 85e2f0f, in a runtime like this one, this was a RangeError
+  // from the scan rather than the refusal the contract requires.
+  assert.equal(r.errorName, 'DraftNotStorableError', `expected a named refusal, got ${r.errorName}`);
+  assert.equal(r.errorCheck, 'identity', 'refused by name');
+  assert.equal(r.errorSchema, 'door2-v8');
+  assert.equal(r.errorField, 'identity');
+  assert.equal(r.writes, 0, 'with zero writes');
+  assert.equal(r.savedId, undefined, 'and no record');
+});
+
+test('C-5: the circular pair — circular PLUS identity is the named identity refusal, while circular and identity-free keeps the existing TypeError, both with zero writes', () => {
+  store.clear();
+  const kept = control();
+  const before = raw();
+
+  // Circular AND carrying a reserved key: the in-memory walk terminates on the cycle and
+  // refuses by name. This is one of the two reasons layer 2 must run before layer 3 —
+  // layer 3 never sees this input, because it cannot be serialized at all.
+  const dirty = tripWithBranch(PERU, circular({ identity: {} }));
+  assert.deepStrictEqual(identityKeysIn(dirty), ['$.extra.identity'], 'the key really is in the cycle');
+  const err = refuses(() => saveDraftTrip(dirty, 'circular identity', 'x'), 'identity');
+  assert.equal(err.schema, FROZEN.schema);
+
+  // Circular and identity-free: the EXISTING behaviour, unchanged — a TypeError from
+  // serialization, with nothing written. It may now originate at the materialization
+  // rather than at the whole-list write, which is not a contract this stage changes.
+  const clean = tripWithBranch(PERU, circular());
+  const writesBefore = writes;
+  let thrown = null;
+  try {
+    saveDraftTrip(clean, 'circular clean', 'x');
+  } catch (e) {
+    thrown = e;
+  }
+  assert.ok(thrown instanceof TypeError, `the existing TypeError is preserved, got ${thrown?.name}`);
+  assert.equal(thrown instanceof DraftNotStorableError, false, 'this scan is NOT what decides a cycle is unwritable');
+  assert.equal(writes, writesBefore, 'zero writes');
+  assert.equal(raw(), before, 'bytes retained');
+  assert.deepEqual(listDraftTrips().map((d) => d.id), [kept]);
+});
+
+// ---------------------------------------------------------------------------
+// C-6: ordinary output unchanged, against evidence PINNED from 85e2f0f.
+
+const sha256 = (text) => createHash('sha256').update(text, 'utf8').digest('hex');
+
+/**
+ * Pins the two volatile inputs to the envelope — Date.now and Math.random for the id, and
+ * `new Date()` for savedAt — so a byte comparison is possible at all. Nothing else about
+ * the writer is touched, and both are restored in a finally.
+ */
+const PINNED_MS = Date.parse('2026-10-20T12:00:00.000Z');
+const PINNED_ISO = '2026-10-20T12:00:00.000Z';
+function withPinnedMetadata(fn) {
+  const RealDate = globalThis.Date;
+  const realRandom = Math.random;
+  class PinnedDate extends RealDate {
+    constructor(...args) {
+      super(...(args.length === 0 ? [PINNED_MS] : args));
+    }
+    static now() {
+      return PINNED_MS;
+    }
+  }
+  globalThis.Date = PinnedDate;
+  Math.random = () => 0.5;
+  try {
+    return fn();
+  } finally {
+    globalThis.Date = RealDate;
+    Math.random = realRandom;
+  }
+}
+
+/**
+ * The SHA-256 of the complete stored bytes produced by saving each named producer fixture
+ * FROM ABSENT STORAGE, with the metadata above pinned. MEASURED AT 85e2f0f, before this
+ * round's change, and pinned here as evidence rather than recomputed from the code under
+ * test. Whole-store comparison is confined to absent storage for the reason A3 gives: a
+ * non-canonical existing record now keeps its own spelling, so a whole-store comparison
+ * that started from one would differ by design (the second test below).
+ */
+const C6_PINS_AT_85E2F0F = {
+  F1: 'c59689544fc105e85682044ed096e78782102bb137b2f0d2fb18a85a2eecb1d3',
+  F2: 'c40cdb5997c4e187ca0f57d5a32b38f745234c3871d593c5aff5fc77b5b9dee0',
+  F4: '399ecd98dd5597714c04acfb00f0917f4f9bfa6c3763ae461106fbd4b423fd52',
+  F6: '015a3cae4a2e7197df5428d27170b1b596979202f7c1d16033cbebaa8d9e2afb',
+  NYC14: '1d492aefef2ba687de16b114f8625cf1801f42910d1db1177f2d0e6685a8fa50',
+  G5: 'adeacfe8692f21da9b0a61745938017c87c2d2e8e4258273ad14ed24f0a3dbe9',
+  G6: 'bff7b70a265f98c598372ebee78689e4d50a0e6e85ddc32a037ace87cb9d139c',
+  G7: '98fd7a41c4ef667762eb8686eb3902562d3bb1cc52a84739f25a999cc4c0ffd4',
+  G8: '0eefc5fbc788eaa09f6515effa512d2234f0e1b8d4125ca25e43443ad4e30a9d',
+  G9: '6387c65ffef527a6090c6239e5634a393807e2742e7da5fce6fa8c3fed626e2c',
+  G10: '53f870639510d805c74669dc97bc196c2fe33b0a75c7c4414ff88d03cc33790e',
+  PE8: 'ca511c40d93c822adc2b10a00eb733c356d8c46bb6d0adc61174261f1f447f26',
+  PE11: 'bbb1e579d916456839f543209f48f8578db2fbbc6c551c93cfea074e3c7eda9a',
+  PE12: 'f389e51b646d93589e1e0c5bfb759ac28b31e747db5feccedb8c37cb5829bcb1',
+  PH11: 'ade204c207a7b0162a102c525c7cec984e67e7a003eec004c6de9c70a58162d5',
+  PH18: '78d05544cb9e2ca3ed0890ee9c69fc87730ac9b3585ad43e08adae5854273f16',
+  'F2 swapped and pinned': 'fe8115907fddfaa7b396fc5841c10f737b9599cc2dd18ddf803658e505ef2c74',
+  'F2 cusco +1 night': '5dabf6110a9716faec9a0104970b07fb388033d79b9c4c1ac28f72ecfec9866e',
+  'synthetic hub with a day trip': '3f42be2b53141c296faf1e40459029ddfd4594d79cfa5468c53e623c01cac7be'
+};
+
+/** Saves one named C-6 fixture from absent storage, with the metadata pinned. */
+function pinnedSave(trip, name) {
+  store.clear();
+  const draftId = withPinnedMetadata(() => saveDraftTrip({ ...trip, history: [] }, `${name} label`, name));
+  return { draftId, bytes: raw() };
+}
+
+test('C-6: every named producer fixture, saved from absent storage with the metadata pinned, still produces the bytes measured at 85e2f0f — hook-free and accessor-free ordinary output is untouched', () => {
+  assert.equal(TRIPS.length, Object.keys(C6_PINS_AT_85E2F0F).length, 'the pinned set and the fixture set must still line up');
+  for (const [name, t] of TRIPS) {
+    const pin = C6_PINS_AT_85E2F0F[name];
+    assert.ok(pin, `${name} has no pinned baseline`);
+    const { draftId, bytes } = pinnedSave(t, name);
+    assert.equal(sha256(bytes), pin, `${name}: the stored bytes differ from the 85e2f0f baseline`);
+    assert.equal(draftId, `d2draft_${PINNED_MS}_i`, `${name}: the pinned id`);
+    const parsed = JSON.parse(bytes);
+    assert.equal(parsed.length, 1, `${name}: one entry`);
+    assert.equal(parsed[0].savedAt, PINNED_ISO, `${name}: the pinned timestamp`);
+    assert.equal(loadDraftTrip(draftId).compatible, true, `${name}: and it reopens`);
+  }
+});
+
+test('C-6 (A3): the same ordinary trip appended to a NON-CANONICAL old store deliberately gives different WHOLE-STORE bytes, while the new entry’s own text is byte-identical to the pinned baseline’s', () => {
+  // From absent storage: the pinned baseline. The whole store is the outer brackets and
+  // this one entry, so the entry's own text is exactly what sits between them.
+  const fromAbsent = pinnedSave(PERU, 'F2');
+  assert.equal(sha256(fromAbsent.bytes), C6_PINS_AT_85E2F0F.F2, 'the baseline pin holds');
+  const entryText = fromAbsent.bytes.slice(1, -1);
+
+  // The same save over a store whose existing record is not canonically spelled.
+  const seeded = `[\n  {"envelopeVersion":   2, "id":"old_1", "savedAt":"2026-01-01T00:00:00.000Z", "label":"old", "trip":{"n":1.00}}\n]`;
+  store.set(KEY, seeded);
+  const draftId = withPinnedMetadata(() => saveDraftTrip({ ...PERU, history: [] }, 'F2 label', 'F2'));
+
+  // A3's two claims, and only those two. Byte-level preservation of the OLD record is
+  // C-14's subject; asserting it here as well would turn this test into a second detector
+  // for mutation 20 instead of the unaffected control the plan makes it.
+  assert.notEqual(sha256(raw()), C6_PINS_AT_85E2F0F.F2, 'the whole store cannot match the absent-storage pin, and is not expected to');
+  assert.ok(raw().includes(entryText), 'while the new entry’s own text is byte-identical to the baseline’s');
+
+  assert.equal(JSON.parse(raw()).length, 2, 'both records are there');
+  assert.equal(JSON.parse(raw()).at(-1).id, draftId, 'the new one appended last');
+  assert.equal(loadDraftTrip(draftId).compatible, true, 'and the new record reopens');
+});
+
+// ---------------------------------------------------------------------------
+// C-7: shared references — aliasing is not duplication.
+
+test('C-7: an ALIASED identity-free object saves and reopens, while the same shape carrying a nested explicit `identity: undefined` refuses by name — the visited set must not let the second branch slip past', () => {
+  store.clear();
+  const shared = { note: 'one object, reached twice' };
+  const aliased = { ...clone(PERU), history: [], left: shared, right: shared };
+  assert.equal(aliased.left, aliased.right, 'the fixture really is aliased, not two objects of the same shape');
+
+  const { draftId } = saves(aliased, 'aliased');
+  const stored = JSON.parse(raw()).find((e) => e.id === draftId);
+  assert.deepStrictEqual(stored.trip.left, shared, 'both branches are stored');
+  assert.deepStrictEqual(stored.trip.right, shared);
+  assert.notEqual(stored.trip.left, stored.trip.right, 'serialization duplicates a shared object, as it always has');
+
+  // The same SHAPE, with an explicit undefined — which serialization DROPS entirely, so
+  // only the in-memory walk can see it. Reached twice, it must still refuse.
+  const dirty = { identity: undefined };
+  assert.equal(JSON.stringify(dirty), '{}', 'the key really does vanish from the serialized form');
+  assert.equal('identity' in dirty, true, 'while remaining present as a key');
+  const shapedLikeIt = { ...clone(PERU), history: [], left: dirty, right: dirty };
+
+  store.clear();
+  const kept = control();
+  const err = refuses(() => saveDraftTrip(shapedLikeIt, 'aliased identity', 'x'), 'identity');
+  assert.equal(err.schema, FROZEN.schema);
+  assert.deepEqual(listDraftTrips().map((d) => d.id), [kept], 'nothing was appended');
+});
+
+// ---------------------------------------------------------------------------
+// C-8a, C-8b: a STATEFUL hook — the one fixture that can tell how many times the writer
+// serializes. Neither fixture is serialized by the test before the save.
+
+test('C-8a: a hook that is clean on its FIRST call and dirty afterwards saves, is invoked EXACTLY ONCE, and the stored bytes carry the first call’s data with no reserved key', () => {
+  store.clear();
+  const { calls, branch } = hookedBranch((n) => (n === 1 ? { pass: 'first' } : { pass: `call ${n}`, identity: null }));
+  const trip = tripWithBranch(PERU, branch);
+  assert.equal(calls.count, 0, 'the fixture has not been serialized by this test');
+
+  const { draftId, loaded } = saves(trip, 'clean first');
+  assert.equal(calls.count, 1, 'the writer materialized the entry exactly ONCE — a second serialization would store the dirty call');
+
+  const stored = JSON.parse(raw()).find((e) => e.id === draftId);
+  assert.deepStrictEqual(stored.trip.extra, { pass: 'first' }, 'the FIRST call’s data is what was stored');
+  assert.deepStrictEqual(loaded.trip.extra, { pass: 'first' }, 'and what reopens');
+  assert.deepStrictEqual(identityKeysIn(stored), [], 'no reserved key reached storage');
+  assert.equal(raw().includes('"identity"'), false, 'under any spelling in the bytes');
+});
+
+test('C-8b: a hook that is dirty on its FIRST call is refused by name, with zero writes and the stored bytes retained', () => {
+  store.clear();
+  const kept = control();
+  const before = raw();
+  const { calls, branch } = hookedBranch((n) => (n === 1 ? { identity: null } : { pass: `call ${n}` }));
+  const trip = tripWithBranch(PERU, branch);
+  assert.equal(calls.count, 0, 'the fixture has not been serialized by this test');
+
+  const err = refuses(() => saveDraftTrip(trip, 'dirty first', 'x'), 'identity');
+  assert.equal(err.schema, FROZEN.schema);
+  assert.equal(calls.count, 1, 'the hook ran once, and the data it returned is what was refused');
+  assert.equal(raw(), before, 'the existing bytes are retained exactly');
+  assert.deepEqual(listDraftTrips().map((d) => d.id), [kept]);
+});
+
+// ---------------------------------------------------------------------------
+// C-9 to C-11: validation bound to the right object. The in-memory candidate passes every
+// check; the payload that would actually be stored does not. At 85e2f0f the v8 schema was
+// WRITTEN and admitted, and the two shape faults wrote a record the reader then refused.
+
+/** A v7 trip whose own toJSON hands serialization a different payload. The hook is the
+ *  only thing added; `returns` is built from an inert copy, so it carries no hook itself. */
+function hookedTrip(trip, buildReturn) {
+  const inert = { ...clone(stampV7(trip)), history: [] };
+  return { ...inert, toJSON: () => buildReturn(inert) };
+}
+
+test('C-9: a hook whose serialized output carries schema door2-v8 is refused by name on versions.schema, with zero writes — it is never written and never left for the reader to refuse', () => {
+  store.clear();
+  const kept = control();
+  const before = raw();
+
+  const trip = hookedTrip(PERU, (inert) => ({ ...inert, versions: { ...inert.versions, schema: 'door2-v8' } }));
+  assert.equal(trip.versions.schema, 'door2-v7', 'the in-memory candidate is a perfectly valid v7 — it passes the first pass');
+
+  const err = refuses(() => saveDraftTrip(trip, 'serialized v8', 'x'), 'shape');
+  assert.equal(err.field, 'versions.schema', 'named on the field that failed');
+  assert.equal(err.schema, 'door2-v7', 'and the error reports the envelope schema, as a shape refusal always has');
+  assert.equal(raw(), before);
+  assert.deepEqual(listDraftTrips().map((d) => d.id), [kept]);
+});
+
+test('C-10: a hook that removes a required field from its serialized output is refused by name on that field, with zero writes', () => {
+  store.clear();
+  const kept = control();
+  const before = raw();
+
+  const trip = hookedTrip(PERU, (inert) => {
+    const { status, ...rest } = inert;
+    assert.equal(typeof status, 'string', 'the field really was there to remove');
+    return rest;
+  });
+  assert.equal(typeof trip.status, 'string', 'the in-memory candidate still has it — the first pass passes');
+
+  const err = refuses(() => saveDraftTrip(trip, 'serialized shape fault', 'x'), 'shape');
+  assert.equal(err.field, 'status');
+  assert.equal(raw(), before);
+  assert.deepEqual(listDraftTrips().map((d) => d.id), [kept]);
+});
+
+test('C-11: a hook that invalidates evidence in its serialized output is refused by name on evidence, with zero writes', () => {
+  store.clear();
+  const kept = control();
+  const before = raw();
+
+  // The same independent evidence fault W-5's C3 case uses: the marker is present, so the
+  // inspection runs, and there is no evidence object to satisfy it.
+  const trip = hookedTrip(PERU, (inert) => ({ ...inert, versions: { ...inert.versions, connectionEvidence: 'not-a-ruleset' } }));
+  assert.equal(trip.versions.connectionEvidence, undefined, 'the in-memory candidate carries no marker — the first pass passes');
+
+  const err = refuses(() => saveDraftTrip(trip, 'serialized evidence fault', 'x'), 'shape');
+  assert.equal(err.field, 'evidence');
+  assert.equal(raw(), before);
+  assert.deepEqual(listDraftTrips().map((d) => d.id), [kept]);
+});
+
+// ---------------------------------------------------------------------------
+// C-12: precedence against MATERIALIZATION failure. The first validation pass must stay,
+// or a circular payload's TypeError pre-empts the named refusal that used to fire.
+
+test('C-12: a circular identity-free candidate that ALSO fails shape or evidence keeps its existing NAMED refusal, not a TypeError from the materialization', () => {
+  store.clear();
+  const kept = control();
+  const before = raw();
+
+  const shapeFault = (t) => { const { status, ...rest } = t; return rest; };
+  const evidenceFault = (t) => ({ ...t, versions: { ...t.versions, connectionEvidence: 'not-a-ruleset' } });
+
+  for (const [name, fault, field] of [['shape', shapeFault, 'status'], ['evidence', evidenceFault, 'evidence']]) {
+    const trip = fault(tripWithBranch(PERU, circular()));
+    // Non-vacuity: the cycle is really there, and really is unserializable.
+    assert.throws(() => JSON.stringify(trip), TypeError, `${name}: the fixture really cannot be serialized`);
+    assert.deepStrictEqual(identityKeysIn(trip), [], `${name}: and carries no reserved key, so identity is not what refuses it`);
+
+    const err = refuses(() => saveDraftTrip(trip, `circular plus ${name}`, 'x'), 'shape');
+    assert.equal(err.field, field, `${name}: the existing named field`);
+    assert.equal(err.message, `A trip that fails the saved-trip check (${field}) can't be saved as a draft.`, `${name}: the existing message`);
+  }
+  assert.equal(raw(), before);
+  assert.deepEqual(listDraftTrips().map((d) => d.id), [kept]);
+});
+
+// ---------------------------------------------------------------------------
+// C-13: the INHERITED hook — the construction that withdrew the inert-copy design. A clean
+// branch hook installs Object.prototype.toJSON, so a SECOND serialization of the parsed
+// entry would inject identity at key `trip` into data that layer 3 had already approved.
+// Parsing strips own hooks, not inherited ones. The positive assertions are the test: the
+// clean snapshot must SAVE, with ONE write, and the stored entry text must be exactly the
+// text that was checked.
+
+test('C-13: a hook that returns clean data while installing an INHERITED Object.prototype.toJSON saves successfully, writes once, and the stored entry text is EXACTLY the text that was checked', () => {
+  store.clear();
+  const injected = { nested: { identity: { v: 1 } } };
+  let installed = 0;
+  const branch = {
+    toJSON() {
+      // Clean data on the way out — and from here on, every object inherits a hook that
+      // would replace the trip payload if anything serialized it again.
+      installed += 1;
+      Object.prototype.toJSON = function toJSONHook(key) {
+        return key === 'trip' ? injected : this;
+      };
+      return { clean: 'snapshot' };
+    }
+  };
+  const trip = tripWithBranch(PERU, branch);
+
+  const writesBefore = writes;
+  let captured;
+  try {
+    captured = capturingSerializations(() => saveDraftTrip(trip, 'inherited hook', 'inherited hook'));
+  } finally {
+    delete Object.prototype.toJSON;
+  }
+  assert.equal(Object.prototype.toJSON, undefined, 'the prototype is restored');
+  assert.equal(installed, 1, 'the hook really ran, and really installed the inherited one');
+
+  // The positive assertions. "No identity reached storage" alone could be satisfied by an
+  // unrelated refusal, so the successful save and the write count are asserted first.
+  const draftId = captured.result;
+  assert.ok(draftId, 'the clean snapshot SAVES — it must not be refused');
+  assert.equal(writes, writesBefore + 1, 'with exactly one write');
+  assert.equal(loadDraftTrip(draftId).compatible, true, 'and it reopens');
+
+  const checkedText = captured.frameText();
+  assert.equal(raw(), `[${checkedText}]`, 'the stored bytes are the checked entry text, exactly, and nothing else');
+  assert.ok(checkedText.includes('"clean":"snapshot"'), 'the checked text really is the clean snapshot');
+
+  const stored = JSON.parse(raw())[0];
+  assert.deepStrictEqual(stored.trip.extra, { clean: 'snapshot' }, 'the clean branch is what was stored');
+  assert.deepStrictEqual(identityKeysIn(stored), [], 'and no reserved key reached storage at any depth');
+  assert.equal(raw().includes('"identity"'), false, 'under any spelling in the bytes');
+});
+
+// ---------------------------------------------------------------------------
+// C-14: an existing NON-CANONICAL record is preserved byte for byte. This test FAILS on
+// unmodified 85e2f0f, which is the evidence that the canonicalization finding is real:
+// there, the whole-array reserialize stripped the interior whitespace and rewrote 1.00 as
+// 1. The complete original entry span is compared, not parsed equality and not an
+// incidental substring.
+
+test('C-14: an admitted record whose stored text is NOT canonical keeps its complete entry span byte for byte across an unrelated save', () => {
+  // Seeded from a real save, so the record is genuinely ADMITTED rather than hand-built,
+  // and then respelled in two independent ways that JSON.parse accepts and reserialization
+  // does not preserve.
+  store.clear();
+  const seededId = saveDraftTrip({ ...clone(PERU), history: [], extra: { marker: 1 } }, 'seeded', 'seeded');
+  const canonicalSpan = raw().slice(1, -1);
+  const noncanonicalSpan = canonicalSpan
+    .replace('"marker":1', '"marker":1.00')
+    .replace('"envelopeVersion":2,', '"envelopeVersion":   2,\n  ');
+  assert.notEqual(noncanonicalSpan, canonicalSpan, 'the seed really is respelled');
+  store.set(KEY, `[${noncanonicalSpan}]`);
+
+  // It must still be admitted, or the fixture proves nothing about real records.
+  assert.equal(loadDraftTrip(seededId).compatible, true, 'the non-canonical record still reopens');
+  assert.equal(JSON.parse(raw())[0].trip.extra.marker, 1, 'and 1.00 really does parse to 1');
+
+  const writesBefore = writes;
+  const unrelatedId = saveDraftTrip({ ...clone(PERU), history: [], extra: { marker: 2 } }, 'unrelated', 'unrelated');
+  assert.equal(writes, writesBefore + 1, 'one write');
+
+  // THE RULING: the complete original entry span, intact, in its original position.
+  assert.ok(raw().startsWith(`[${noncanonicalSpan},`), 'the complete original entry span is byte-identical and still first');
+  assert.ok(raw().includes('"marker":1.00'), 'the number keeps its original spelling');
+  assert.ok(raw().includes('"envelopeVersion":   2,\n  '), 'and the interior whitespace is retained');
+  assert.equal(sha256(raw().slice(1, 1 + noncanonicalSpan.length)), sha256(noncanonicalSpan), 'span hashes match');
+
+  // And nothing was lost to achieve it: both records are there, in order, and both reopen.
+  const parsed = JSON.parse(raw());
+  assert.equal(parsed.length, 2);
+  assert.deepEqual(parsed.map((e) => e.id), [seededId, unrelatedId], 'the original first, the new one appended');
+  assert.equal(loadDraftTrip(seededId).compatible, true, 'the old record still reopens');
+  assert.equal(loadDraftTrip(unrelatedId).compatible, true, 'and so does the new one');
+});
+
+// ---------------------------------------------------------------------------
+// C-15: the append is structurally correct, across every store shape the splice must cope
+// with. The structural contract is the one A3 corrected: the result parses to the ORIGINAL
+// PARSED ENTRIES, in their original order, followed by the checked new entry. It is NOT
+// that the bytes equal what the old writer would have produced — where old normalization
+// changed a value, raw preservation deliberately differs (see the second test below).
+
+/** The store shapes, with the number of entries each one parses to. */
+const APPEND_STORES = [
+  ['absent storage', null, 0, true],
+  ['an empty array', '[]', 0, true],
+  ['an empty array with a whitespace-only interior', '[\n \t  \n]', 0, false],
+  ['a populated array', JSON.stringify([{ id: 'a', savedAt: '2026-01-01T00:00:00.000Z', label: 'one' }, null, 42]), 3, true],
+  ['a populated array with trailing JSON whitespace', `${JSON.stringify([{ id: 'b', savedAt: '2026-01-02T00:00:00.000Z' }])}  \n\t `, 1, false],
+  ['entries whose strings contain brackets and commas', JSON.stringify([{ id: 'c],[', savedAt: '2026-01-03T00:00:00.000Z', note: '}],[{"identityish":1},' }]), 1, true]
+];
+
+test('C-15: across absent storage, an empty array, a whitespace-only interior, a populated array, trailing whitespace and bracket/comma strings, the result is valid JSON that parses to the original parsed entries in order, followed by the checked new entry', () => {
+  for (const [name, seeded, count] of APPEND_STORES) {
+    store.clear();
+    if (seeded !== null) store.set(KEY, seeded);
+    const before = seeded === null ? [] : JSON.parse(seeded);
+    assert.equal(before.length, count, `${name}: the fixture parses to ${count}`);
+
+    const captured = capturingSerializations(() => saveDraftTrip({ ...clone(PERU), history: [] }, `${name} label`, name));
+    const draftId = captured.result;
+    assert.ok(draftId, `${name}: it saved`);
+    const checkedEntry = JSON.parse(`[${captured.frameText()}]`)[0];
+
+    // Valid JSON, and exactly the structural contract.
+    let parsed;
+    assert.doesNotThrow(() => { parsed = JSON.parse(raw()); }, `${name}: the result is valid JSON`);
+    assert.ok(Array.isArray(parsed), `${name}: still an array`);
+    assert.equal(parsed.length, before.length + 1, `${name}: one entry longer`);
+    assert.deepStrictEqual(parsed.slice(0, before.length), before, `${name}: the ORIGINAL PARSED ENTRIES, in their original order`);
+    assert.deepStrictEqual(parsed.at(-1), checkedEntry, `${name}: followed by the CHECKED new entry`);
+    assert.equal(parsed.at(-1).id, draftId, `${name}: which is the record the writer reported`);
+    assert.equal(loadDraftTrip(draftId).compatible, true, `${name}: and it reopens`);
+
+    // Whatever sat before the outer closing delimiter is still there, byte for byte, and
+    // so is whatever followed it.
+    if (seeded !== null) {
+      const close = seeded.lastIndexOf(']');
+      assert.ok(raw().startsWith(seeded.slice(0, close)), `${name}: the text before the delimiter is untouched`);
+      assert.ok(raw().endsWith(seeded.slice(close)), `${name}: and the text after it, trailing whitespace included`);
+    }
+  }
+});
+
+test('C-15 (the ORDINARY subsection): for fixtures whose parsed values survive the old serialization unchanged, the result is byte-identical to what the writer at 85e2f0f would have stored', () => {
+  /**
+   * What the writer at 85e2f0f stored: JSON.stringify of the whole list — the existing
+   * parsed drafts followed by the new entry. The entry's field ORDER is the writer's
+   * documented envelope (envelopeVersion, id, label, destinationLabel only when it is a
+   * non-empty string, savedAt, trip), which is what makes this a BYTE comparison rather
+   * than a structural one. Reconstructed from the stored entry's own parsed fields, so no
+   * production export, observer or hook is needed to obtain it.
+   */
+  const baselineWriterOutput = (draftsBefore, stored) => JSON.stringify([
+    ...draftsBefore,
+    {
+      envelopeVersion: stored.envelopeVersion,
+      id: stored.id,
+      label: stored.label,
+      ...(typeof stored.destinationLabel === 'string' && stored.destinationLabel !== '' ? { destinationLabel: stored.destinationLabel } : {}),
+      savedAt: stored.savedAt,
+      trip: stored.trip
+    }
+  ]);
+
+  for (const [name, seeded, count, canonical] of APPEND_STORES) {
+    if (!canonical) continue; // the non-canonical shapes are C-14's subject, not this one
+    store.clear();
+    if (seeded !== null) store.set(KEY, seeded);
+    const before = seeded === null ? [] : JSON.parse(seeded);
+    assert.equal(before.length, count, `${name}: the fixture parses to ${count}`);
+
+    const draftId = saveDraftTrip({ ...clone(PERU), history: [] }, `${name} label`, name);
+    const stored = JSON.parse(raw()).find((e) => e?.id === draftId);
+    assert.equal(raw(), baselineWriterOutput(before, stored), `${name}: byte-identical to the 85e2f0f writer's output`);
+  }
+
+});
+
+test('C-15 (the normalization COUNTEREXAMPLES): values the old serialization changed are deliberately NOT equal to what 85e2f0f would have stored, which is why the baseline comparison above is restricted rather than universal', () => {
+  // A3's correction, proved rather than merely asserted. These fixtures are the reason the
+  // structural contract is "parses to the original parsed entries, in order, followed by
+  // the checked new entry" and NOT "equals what the old writer would have produced". They
+  // sit OUTSIDE the ordinary subsection above on purpose: that subsection alone is
+  // mutation 20's unaffected control, and these two values do not survive mutation 20.
+  store.clear();
+  const seeded = '[{"id":"z","savedAt":"2026-01-01T00:00:00.000Z","negativeZero":-0,"overflow":1e400}]';
+  store.set(KEY, seeded);
+  const draftId = saveDraftTrip({ ...clone(PERU), history: [] }, 'counterexamples', 'counterexamples');
+  const parsed = JSON.parse(raw());
+
+  assert.ok(Object.is(parsed[0].negativeZero, -0), 'negative zero is retained, where the old writer rewrote it as positive zero');
+  assert.equal(parsed[0].overflow, Infinity, 'and 1e400 stays Infinity, where the old writer rewrote it as null');
+  // Non-vacuity: these really are values a parse-and-reserialize would have changed.
+  assert.equal(JSON.stringify(parsed[0].negativeZero), '0', 'reserializing them is exactly what used to lose them');
+  assert.equal(JSON.stringify(parsed[0].overflow), 'null');
+
+  assert.ok(raw().startsWith(`${seeded.slice(0, seeded.lastIndexOf(']'))},`), 'the original entry span is preserved byte for byte');
+  assert.equal(parsed.length, 2, 'and the new entry follows it');
+  assert.equal(parsed.at(-1).id, draftId);
+  assert.equal(loadDraftTrip(draftId).compatible, true, 'and the new record reopens');
+  // No number policy, no repair, no admission change was needed to get here.
+  assert.equal(raw().includes('1e400'), true, 'the stored text still spells it exactly as it was stored');
 });
