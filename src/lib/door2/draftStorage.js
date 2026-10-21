@@ -110,6 +110,13 @@ export class DraftStorageUnreadableError extends Error {
  * schema version (Rule B). Presence alone does NOT make it a valid door2-v8 save either:
  * validity is a separate rule, and this version writes no door2-v8 at all. The message
  * below predates that distinction and is frozen as it stands.
+ * check 'envelope': the materialized entry the save was about to write is no longer the
+ * entry the save assembled — one of the generated scalars (envelopeVersion, id, savedAt)
+ * is missing as an own property or differs from the value assembled from, or the entry
+ * carries an own key the assembly did not (Rule W, step 8b; field names the violated
+ * field or the added key). That covers those three scalars and the no-new-keys condition
+ * only: it is not a claim of id uniqueness, complete envelope equality or payload
+ * fidelity.
  * The field is for diagnosis, not display: it names the reserved key, never a path to it.
  */
 export class DraftNotStorableError extends Error {
@@ -119,12 +126,14 @@ export class DraftNotStorableError extends Error {
         ? `A trip with schema "${detail}" can't be saved as a draft.`
         : check === 'identity'
           ? `A trip that carries durable edit identity can only be saved as "${detail}", which this version can't write. The saved trips already in this browser have not been changed.`
-          : `A trip that fails the saved-trip check (${detail}) can't be saved as a draft.`
+          : check === 'envelope'
+            ? `The record this save assembled was not the record it was about to write (${detail}), so nothing was saved.`
+            : `A trip that fails the saved-trip check (${detail}) can't be saved as a draft.`
     );
     this.name = 'DraftNotStorableError';
     this.check = check;
     this.schema = check === 'schema' || check === 'identity' ? detail : ENVELOPE_SCHEMA;
-    this.field = check === 'shape' ? detail : check === 'identity' ? 'identity' : 'versions.schema';
+    this.field = check === 'shape' || check === 'envelope' ? detail : check === 'identity' ? 'identity' : 'versions.schema';
   }
 }
 
@@ -265,6 +274,11 @@ function appendEntryText(store, entryText) {
 //    chain, can hand serialization data the in-memory candidate never held, and only this
 //    step looks at that data. Parsing strips OWN hooks, not inherited ones, so checking a
 //    parsed copy and then serializing again would reopen the same gap.
+// 8b. The envelope write-integrity check (Rule W): the entry about to be written must
+//    still be the entry that was assembled — each of the three scalars this writer
+//    generated present as an OWN property and strictly equal to the local it came from,
+//    and no own key the assembly did not have. It runs AFTER step 8, so when a payload
+//    fault and an envelope fault coexist the payload keeps its existing refusal.
 // 9. Only then is it written, in envelope version 2: the materialized entry's own text,
 //    spliced into the retained stored text. No object is serialized again, so no hook can
 //    run between the check and the write, and every stored record keeps its exact bytes.
@@ -303,6 +317,10 @@ export function saveDraftTrip(trip, label, destinationLabel) {
     savedAt,
     trip: candidate
   };
+  // Rule W's key-name baseline, taken BEFORE the materialization below: taken afterwards
+  // it would be a baseline a serialization hook had already enlarged. Key NAMES only — no
+  // caller metadata value is read here, and nothing is serialized a second time.
+  const assembledKeys = new Set(Object.keys(entry));
   // Rule B on the MATERIALIZED TRIP PAYLOAD the entry carries at `trip`, and then the two
   // checks again on that same payload. This is the only scan that can see identity a
   // serialization hook introduced, and the text it approves is the text the splice below
@@ -317,6 +335,30 @@ export function saveDraftTrip(trip, label, destinationLabel) {
   const framed = materializeEntry(entry);
   if (carriesReservedIdentity(framed.entry?.trip)) throw new DraftNotStorableError('identity', V8_SCHEMA);
   refuseUnlessStorable(framed.entry?.trip);
+  // Step 8b, Rule W (addendum A2): the record this save assembled must still be the record
+  // it is about to write. Each of the three scalars this writer generated is checked on the
+  // MATERIALIZED entry — present as an OWN property, and strictly equal to the local it was
+  // assembled from. The expected values come from those locals and are never re-read from
+  // `entry`, so a hook that rewrote both sides cannot make the comparison agree with
+  // itself. F3 settles the types — a template string, an ISO string and the number 2 — so
+  // `===` is the right comparison and there is no Date round-trip to allow for.
+  //
+  // Own presence is read with Object.hasOwn, never an unguarded property read: with `id`
+  // deleted from the returned envelope and an inherited Object.prototype.id getter
+  // supplying the expected value, an unguarded read agrees while the record actually
+  // stored carries no own `id` at all, and is then neither listable nor openable.
+  //
+  // The key check is a SUBSET in one direction only. A key present at assembly may be
+  // absent afterwards, and one legitimately is: `label` is spread unconditionally and
+  // serialization drops it when it is undefined, so exact key equality would refuse a save
+  // that works today. What this refuses is an own key the assembly never had.
+  //
+  // It covers those three scalars and the no-new-keys condition, and nothing further: no id
+  // uniqueness, no complete envelope equality, no payload fidelity.
+  for (const [field, assembled] of [['envelopeVersion', ENVELOPE_VERSION], ['id', id], ['savedAt', savedAt]]) {
+    if (!Object.hasOwn(framed.entry, field) || framed.entry[field] !== assembled) throw new DraftNotStorableError('envelope', field);
+  }
+  for (const key of Object.keys(framed.entry)) if (!assembledKeys.has(key)) throw new DraftNotStorableError('envelope', key);
   writeText(appendEntryText(store, framed.text));
   return id;
 }
