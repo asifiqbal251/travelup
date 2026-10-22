@@ -247,6 +247,8 @@ test('D-2: an ARMED save through the real page — clicking the page\'s own Save
 
   const protoNamesBefore = Object.getOwnPropertyNames(Object.prototype);
   const protoToJSONBefore = Object.getOwnPropertyDescriptor(Object.prototype, 'toJSON');
+  const storageDescriptorBefore = Object.getOwnPropertyDescriptor(globalThis, 'localStorage');
+  const consoleErrorBefore = console.error;
 
   // The fixture RETURNS a value: an envelope copy with a changed id and an untouched
   // payload. Nothing here throws, and nothing here names the refusal.
@@ -262,6 +264,8 @@ test('D-2: an ARMED save through the real page — clicking the page\'s own Save
   assert.deepStrictEqual(Object.getOwnPropertyNames(Object.prototype), protoNamesBefore, 'Object.prototype gained and lost no keys');
   assert.deepStrictEqual(Object.getOwnPropertyDescriptor(Object.prototype, 'toJSON'), protoToJSONBefore, 'and its toJSON descriptor is exactly as it was');
   assert.equal(Object.hasOwn(Object.prototype, 'toJSON'), false, 'with no leftover hook');
+  assert.deepStrictEqual(Object.getOwnPropertyDescriptor(globalThis, 'localStorage'), storageDescriptorBefore, 'the globalThis.localStorage descriptor is exactly as it was before arming');
+  assert.equal(console.error, consoleErrorBefore, 'and console.error is the same function reference it was');
 
   // NON-VACUITY (B1.2): the hook really reached the envelope frame, and the frame it
   // returned really carried the covered id alteration — matched against the writer's own
