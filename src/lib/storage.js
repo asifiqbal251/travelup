@@ -58,9 +58,18 @@ export function getSelectedDestinationId() {
   return loadState().selectedDestinationId || null;
 }
 
+// ODI, one-destination-intent (W-1/W-3): choosing a single destination retires
+// any multi-stop plan, so stale legs can never outrank the destination the
+// traveller just picked when TripDetail resolves the trip. A null/undefined id
+// means "no single destination is chosen", never "abandon the multi-stop plan"
+// -- DoorB writes the legs and then nulls the selection, so clearing here would
+// destroy every multi-stop trip at the moment it is built. Cancelling a plan
+// stays the explicit job of clearMultiStopLegs(). Both fields change on the one
+// loaded object so the pair is written in a single persistState call.
 export function setSelectedDestinationId(id) {
   const s = loadState();
   s.selectedDestinationId = id;
+  if (id != null) delete s.multiStopLegs;
   persistState(s);
 }
 
@@ -540,9 +549,15 @@ export function buildTripSnapshot({
 // destination and assemble the stitched itinerary. Cleared when a new trip is
 // built (single or multi-stop) so stale legs never bleed into a subsequent trip.
 
+// ODI in the other direction (W-2): a real multi-stop plan retires any single
+// destination. Guarded on the same non-empty-array shape getMultiStopLegs()
+// accepts, so a write the getter would ignore is not treated as new intent --
+// and a bad input is still stored rather than thrown on, exactly as before.
+// One persistState call covers both fields.
 export function setMultiStopLegs(legs) {
   const s = loadState();
   s.multiStopLegs = legs;
+  if (Array.isArray(legs) && legs.length > 0) s.selectedDestinationId = null;
   persistState(s);
 }
 

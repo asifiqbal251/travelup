@@ -264,3 +264,178 @@ export async function mountWithBuiltTrip(M, spec, { confirmDeparture: confirm = 
   return { ...view, user, trip };
 }
 
+// ---- Classic-planner variant (additive; nothing above this line changes) ----
+//
+// loadDoor2PlanModule bundles a FIXED entry list that exports Door2Plan. The
+// classic planner pages (/results, /trip) are not in it, and the stale-legs
+// build brief
+// (docs/briefs/q8-p2-getter/build-brief-stale-multistop-legs-override-2026-10-27-rev2.md
+// §4.3) needs a real DOM user flow across both of them under standing rule 2.
+// This is a SECOND variant -- its own cache key, its own stdin, its own
+// plugin -- reusing the jsdom install, the `@` alias, the
+// `.flow.bundle.*` cache-and-rmSync pattern and teardown() above. No existing
+// export or variant is touched, and the pages are bundled exactly as shipped:
+// no production file is modified to make this testable.
+//
+// Two seams are stubbed, both so the flow is deterministic rather than to
+// change what is under test:
+//
+//   @/api/base44Client            -- the network. Every call delegates to
+//                                    globalThis.__classicHarness at CALL time,
+//                                    so a test sets its own responses.
+//   @base44/sdk/.../axios-client  -- the app-public-settings GET that
+//                                    AuthProvider issues on mount.
+//
+// `@/lib/AuthContext` is deliberately NOT stubbed. The real provider is what
+// §6's S2-1 has to drive, and the real provider is also what gives the page
+// flow its guest identity -- so both tests run the shipped auth consumer and
+// differ only in what the stubbed `auth.me()` does.
+
+/** Per-test control surface for the classic variant. Read at call time, so a
+ * test can reassign any field between renders. */
+export function classicHarness(overrides = {}) {
+  const h = {
+    // The /results list and the /trip fetch.
+    destinations: [],
+    getDestination: null,
+    // AuthProvider's `base44.auth.me()`. Rejecting keeps the traveller a guest.
+    me: () => Promise.reject(Object.assign(new Error('no session'), { status: 500 })),
+    // The app-public-settings GET AuthProvider makes before it checks the user.
+    publicSettings: () => Promise.resolve({ id: 'harness-app', public_settings: {} }),
+    // Everything the stub records rather than performs.
+    calls: { redirectToLogin: [], me: 0, logout: [] },
+    savedTripRecords: [],
+    ...overrides,
+  };
+  globalThis.__classicHarness = h;
+  return h;
+}
+
+const BASE44_CLIENT_STUB = `
+const H = () => globalThis.__classicHarness;
+export const base44 = {
+  entities: {
+    Destination: {
+      list: async () => H().destinations,
+      get: async (id) => (H().getDestination
+        ? H().getDestination(id)
+        : (H().destinations.find((d) => d.id === id)
+            || Promise.reject(new Error('harness: no destination ' + id)))),
+    },
+    DestinationRequest: { create: async (r) => r },
+    SavedTrip: {
+      filter: async () => H().savedTripRecords,
+      create: async (r) => { H().savedTripRecords.push(r); return r; },
+      update: async (id, r) => r,
+      delete: async () => ({}),
+    },
+  },
+  auth: {
+    me: () => { H().calls.me += 1; return H().me(); },
+    isAuthenticated: () => false,
+    logout: (to) => { H().calls.logout.push(to); },
+    redirectToLogin: (from) => { H().calls.redirectToLogin.push(from); },
+    loginWithProvider: () => {},
+    loginViaEmailPassword: async () => ({}),
+    register: async () => ({}),
+    verifyOtp: async () => ({}),
+    resendOtp: async () => ({}),
+    resetPassword: async () => ({}),
+    resetPasswordRequest: async () => ({}),
+    setToken: () => {},
+  },
+};
+`;
+
+const AXIOS_CLIENT_STUB = `
+export const createAxiosClient = () => ({
+  get: async () => globalThis.__classicHarness.publicSettings(),
+  post: async () => ({}),
+  put: async () => ({}),
+  delete: async () => ({}),
+});
+export default createAxiosClient;
+`;
+
+/** Browser APIs jsdom does not implement that the classic pages touch on mount
+ * (use-mobile's media query, TripView's scrollIntoView). Installed from inside
+ * loadClassicPlannerModule only, so the jsdom environment the existing Door2
+ * flow tests see is bit-for-bit what it was. */
+function installClassicDomExtras() {
+  if (typeof window.matchMedia !== 'function') {
+    const matchMedia = (query) => ({
+      matches: false,
+      media: String(query),
+      onchange: null,
+      addEventListener() {},
+      removeEventListener() {},
+      addListener() {},
+      removeListener() {},
+      dispatchEvent: () => false,
+    });
+    window.matchMedia = matchMedia;
+    define('matchMedia', matchMedia);
+  }
+  if (typeof window.Element.prototype.scrollIntoView !== 'function') {
+    window.Element.prototype.scrollIntoView = function scrollIntoView() {};
+  }
+}
+
+/** Bundle the real Results and TripDetail pages, the real AuthContext and the
+ * real storage module, with only the two seams above replaced. Cached under
+ * its own key so it can never collide with the Door2Plan variants. */
+export async function loadClassicPlannerModule() {
+  const variant = 'classic';
+  installClassicDomExtras();
+  if (cachedModules.has(variant)) return cachedModules.get(variant);
+  const outfile = fileURLToPath(new URL(`./.flow.bundle.${variant}.${process.pid}.mjs`, import.meta.url));
+  // appParams reads this once, at bundle-import time, and AuthProvider only
+  // reaches auth.me() when a token is present.
+  window.localStorage.setItem('base44_access_token', 'harness-token');
+  const stubPlugin = {
+    name: 'classic-planner-stubs',
+    setup(build) {
+      // The SDK's axios client is an external package, so it is intercepted at
+      // resolve time into its own namespace rather than on load.
+      build.onResolve({ filter: /^@base44\/sdk\/dist\/utils\/axios-client$/ }, () => ({
+        path: 'classic-axios-client',
+        namespace: 'classic-stub',
+      }));
+      build.onLoad({ filter: /.*/, namespace: 'classic-stub' }, () => ({ contents: AXIOS_CLIENT_STUB, loader: 'js' }));
+      // The app's own client resolves to a real file, so it is replaced on load
+      // -- the same mechanism the Door2Plan expose seam above uses.
+      build.onLoad({ filter: /src[/\\]api[/\\]base44Client\.js$/ }, () => ({ contents: BASE44_CLIENT_STUB, loader: 'js' }));
+    },
+  };
+  await build({
+    plugins: [stubPlugin],
+    stdin: {
+      contents: `
+        export { default as Results } from './src/pages/Results.jsx';
+        export { default as TripDetail } from './src/pages/TripDetail.jsx';
+        export { AuthProvider, useAuth } from './src/lib/AuthContext.jsx';
+        export { clearMultiStopLegs, getMultiStopLegs, getSelectedDestinationId, getSavedTrips, loadState, setMultiStopLegs, setPrefs, setSelectedDestinationId, tripFingerprint } from './src/lib/storage.js';
+        export { default as React } from 'react';
+        export * as ReactDOMClient from 'react-dom/client';
+        export { MemoryRouter, Route, Routes } from 'react-router-dom';`,
+      resolveDir: root,
+    },
+    bundle: true,
+    format: 'esm',
+    platform: 'node',
+    outfile,
+    alias: {
+      '@/lib/PageNotFound': fileURLToPath(new URL('./stubPageNotFound.js', import.meta.url)),
+      '@': root + 'src',
+    },
+    loader: { '.jsx': 'jsx', '.js': 'jsx' },
+    jsx: 'automatic',
+    define: { 'import.meta.env': '{}' },
+    packages: 'external',
+    logLevel: 'silent',
+  });
+  const mod = await import(outfile);
+  rmSync(outfile);
+  cachedModules.set(variant, mod);
+  return mod;
+}
